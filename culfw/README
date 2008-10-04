@@ -1,0 +1,266 @@
+Firmware for different busware.de gadgets
+
+Copyright Rudolf Koenig, 2008.
+License: GPL v2
+
+These gadgets all feature one or more CC1101 transceiver and an Atmel MCU, so
+the can be used for low-power wireless communication in the 868 band.
+
+  blocks are an Atmel AT90USB162 MCU and a TI CC1101 transceiver.  See
+
+- The CUL (CC110x USB Light) has one CC1101 and an AT90USB162 MCU.
+  See http://busware.de/tiki-index.php?page=CUL for details and on how to buy
+  it.
+- The CUR (CC110x USB Remote) is a device with following features: CC1101 /
+  AT90USB1286 / IR: TX & RX / 128x128 color display / 5-way jogdial / Battery.
+
+
+This firmware makes it possible to use these devices with fhem. Right now the
+following device families are supported:
+- FS20
+- FHT
+- EM
+- KS300/S300TH
+
+Thanks to the MyUSB project (http://www.fourwalledcubicle.com/MyUSB.php, ) the
+device/firmware combination confirms to the Universal Serial Bus Communication
+Device Class Abstract Control Model (USB CDC ACM) specification, so it can be
+used out of the box with a lot of operating systems. We incorporated the
+relevant parts of MyUSB, version 1.5.2.
+
+
+Prerequisites
+=============
+  You'll need following packets to install the firmware (in paranthesis is the
+  version of the corresponding packet for my installation):
+  - dfu-programmer (0.4.4)
+
+  If you want to modify the firmware:
+  - avr-libc       (1.6.2)
+  - binutils-avr   (2.18)
+  - gcc-avr        (4.3.0)
+
+
+Compile (optional)
+==================
+  Change into your device directory (e.g. CUL)
+  Type "make", which will output text like:
+    Compiling C: FW_CUL.c
+    [...]
+
+
+Install / Flash the firmware
+============================
+  Change into your device directory (e.g. CUL)
+  - CUL: Insert the USB-Stick while pressing the micro-switch.
+  - CUR: Remove Battery/USB. Put the device on a table with the jogdial facing
+         down. Press the case, until you hear the jogdial is pressed. Insert
+         the battery, then the USB-Cable.
+
+  A USB device "03eb:2ffa Atmel Corp." should appear.
+  Now execute "make usbprogram", which will output text like:
+    dfu-programmer at90usb162 erase
+    dfu-programmer at90usb162 flash FW_CUL.hex
+    Validating...
+    6312 bytes used (51.37%)
+    dfu-programmer at90usb162 start
+  The last command will reset the device, a new USB device should appear:
+  "03eb:204b Atmel Corp.", if it does try to reinsert the CUL without pressing
+  the micro-switch.
+
+Quick Test:
+===========
+  Linux
+  =====
+    Hopefully you see a device /dev/ttyACM0 (if you use a newer kernel, which
+    loads the cdc_acm kernel module), or a /dev/ttyUSB0 (if your kernel uses
+    usbserial). For usbserial kernel you may need to add the module options
+    "usbserial vendor=0x03eb product=0x204b" to modprobe.conf.
+
+    Connect to the device e.g. with "screen /dev/ttyACM0".
+
+  Windows
+  =======
+    Install a virtual COM port, use MyUSB_USBtoSerial.inf from the tools
+    directory. Locate the COM-port in the device manager shown as
+    "USB Virtual Serial Port (COMx)". Start Hyperterminal, open a connection
+    to COMx 9600,8,n,1.
+
+  Type "V<return>". The string "V 1.0..." should appear. Type X01<return> to
+  enable the data reporting.
+
+
+Protocol
+=========
+  The data is readable ASCII with cr/nl as a message terminator.
+
+  PC -> CUL:
+  ----------
+    The first byte is the command (case significant), the rest ist a hex string
+    (case insignificant), non-hex characters will be ignored, you can insert
+    spaces for aesthetic.  Commands are _not_ echoed.
+    Following commands are supported:
+
+    b
+      Reboot device
+
+    B
+      Reboot device and enter bootloader mode
+
+    C<reg>
+      <reg> is a (two digit) hex number: return the value of the cc1101
+      register
+      Example: C35 -> C35 = 0x0D / 13
+
+    F<hex>
+      Send out an FS20 message. <hex> is a hex string of the following form:
+      hhhhaacc or hhhhaaccee, where 
+      - hhhh is the FS20 housecode, 
+      - aa is the FS20 device address, 
+      - cc is the FS20 command
+      - ee is the FS20 timespec. Note that cc must have the extension bit set.
+      Example: F12340111
+
+    T<hex>
+      Send out an FHT message. Same as the F command, but with FHT checksum
+      instead of FS20 checksum.
+      Example: T123400A600
+
+
+    R<AA> or R<AAAA>
+      Read eeprom (i.e. "saved configuration") byte. Arguments: one or two
+      byte hex address <AA> or <AAAA>
+      Adress-Slots:
+      - 0x00 - 0x28
+        Configuration registers of the CC1101 chip as described in the "Table
+        35: Configuration Registers Overview" of the CC1101 datasheet.
+      - 0x29 - 0x30
+        CC1101 PA Table (8 bytes).
+      - 0x31 - Request-Bootloader flag
+        If it is set, and the MCU is resetted, jump to the bootloader.
+        Used by the B command.
+      - 0x01FF (MCU dependent)
+        If it is FF, then reset to "factory defaults" next time the firmware
+        is resetted.
+      Example: R01FF -> 00
+
+    t
+      Output the time since boot. The output has the following form: 
+      DDD HH:MM:SS:mmm. Note: the mmm msec has an 8msec resolution.
+      Example: t -> 000 00:00:07.888
+
+    V
+      Print the firmware version.
+      Example: V -> V 1.0
+
+    W<AA><DD> or W<AAAA><DD>
+      Write eeprom byte.  Arguments: one or two-byte hex address <AAAA>
+      followed by one byte hex data <DD>. See R above for address (AAAA)
+      explanation.
+      Example: W01FFFF
+      Note: Writing the CC1101 register adresses (0x00-0x28) will cause a
+            ccInitChip, thus writing the modified data directly to the chip.
+            The reception is disabled after initialization.
+
+    X<RR>
+      Enable data reporting. <RR> is a one-byte hex value, with following bits:
+      - Bit 1: Report known messages (parity & checksum ok), with type prefix.
+      - Bit 2: Report each of the (repeated) packets of a message
+      - Bit 3: Report detailed data, even with wrong parity / checksum.
+      - Bit 4: Monitor mode: output an r/s/t/u on a risings edge (the letter
+               depends on the internal state), g/h/i on a falling edge
+      - Bit 5: Timing: in monitor mode output two additional bytes (high byte,
+               low byte) of the internal microsecond timer. This is binary!
+      - Bit 6: RSSI: report RSSI value as an additional HEX byte after digested
+               data or as a separate byte if Bit 3 is set too.
+
+      Note: 00 disables radio reception, any other value initialize the radio
+      chip and enable reception.
+      Default is 00: do not report anything, radio chip uninitialized.
+      Example: X01
+
+    Unknown commands
+      Prints the "help", the list of supported commands
+      Example:
+        ? -> ?? B C F R V W X
+
+
+  CUL -> PC:
+  ----------
+    The CUL reports following data (as a HEX string, uppercase):
+
+    For FS20:
+      Fhhhhaacc or Fhhhhaaccee, explanation see above.
+    For FHT:
+      ThhhhNNNNNN
+    For EM:
+      Ettaacc111122223333
+        tt:type 01=EM-1000s, 02=EM-100-EM, 03=1000GZ
+        aa:address, depending on the type above 01:01-04, 02:05-08, 03:09-12
+        cc:counter, will be incremented by one for each message
+        1111: cumulated value
+        2222: last value (Not set for type 2)
+        3333: top value  (Not set for type 2)
+    For KS300:
+      KFFTTTHWHWWRRFR
+        Data must be read backwards
+    For S300TH:
+      KaaTTHTHH
+        Data must be read backwards
+    For Hoermann Garage door openers:
+      Hxxxxx
+        Note: this protocol is not really understood.
+
+    If bit 3 in the X command is set, then report raw data, even if it has a
+    wrong checksum or parity
+      b State Nzero NAvg Nsync Nbyte Nbit [RSSI] NNNNNNNN
+        State  State of the rise-rise (4bit) and rise-fall (4bit) machines (hex)
+        Nzero  time for the zero bit
+        Navg   time for (zero+one)/2
+        Nsync  Number of 0 sync bits
+        Nbyte  Next byteidx to write
+        Nbit   Next bit to write
+        RSSI   RSSI, if the RSSI bit is set, see X cmd
+
+Notes
+=====
+
+- 1% LIMIT
+  The firmware respects the 1% limit for this band, so only 128 messages per
+  hour will be sent. The counter has a minute resolution.
+
+- Repeat-filter
+  The FS20 protocol sends each message 3 times. The firmware filters optionally
+  (See Command X bit 3) repeated messages.
+
+- cc1100 settings. See cc1100.h / official PDF from TI  for details.
+
+  - Change receiver sensitivity / target amplitude
+
+    AGCCTRL2 (0x1B), bits 2:0, target amplitude:
+      0:24dB, 1:27dB, 2:30dB, 3:33dB, 4:36dB, 5:38dB, 6:40dB, 7:42dB
+      Default value: R1B -> 07 (42dB)
+
+    AGCCTRL0 (0x1D), bits 1:0, decision boundery
+      0:4dB, 1:8dB, 2:12dB, 3:16dB
+      Default value: R1D -> 91 (8db)
+
+    Example: W1B06
+
+  - Change frequency 
+     FREQ2(0D), FREQ1(0E), FREQ0(0F), Fosc = 26MHz
+     Fcarrier = Fosc/65536*(FREQ2.FREQ1.FREQ0)
+     Example: W0D21, W0E65, W0FE8 (868.35MHz, default)
+              W0D21, W0E62, W0F76 (868.00MHz)
+
+  - Change channel bandwidth 
+    MDMCFG4 (10). CHANBW_E (bits 7:6), CHANBW_M (bits 5:4)
+    BWchannel =  Fosc/(8 * (4+CHANBW_M) * 2 ^ CHANBW_E)
+    Example: W1055 (325MHz, default)
+             W1045 (406MHz)
+             W1035 (464MHz)
+
+  - Read-Only-Registers:
+    RSSI:    : C34 -> 217 (217-256-74 = -113 dBm)
+    MARCSTATE: C35 -> 01 (Idle), 13 (RX)
+

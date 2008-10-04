@@ -1,0 +1,17 @@
+Version 1.03
+- File reorganization to accomodate CUR and other projects
+
+Version 1.02
+- Version string will be updated manually
+- R/W can take one or two bytes as address.
+- Factory reset byte moved to 0x1FF
+- PATABLE changed to transmit "louder" (+10dB, no PA ramping)
+- Recalibrating every 2 minutes (busy for 1ms, less than 0.01%)
+- Factory defaults chenged to measured optimum.
+
+TODO
+============
+- BUG: The CUL resets if the USB data is not consumed by the host
+- Receive HMS
+- Send FHT (Sync, FHTBUFFER?)
+- Compute S300TH/KS300 second half of checksum (Nice to have)
