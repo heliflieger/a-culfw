@@ -48,7 +48,7 @@ USB_Descriptor_Device_t DeviceDescriptor PROGMEM =
 		
 	ManufacturerStrIndex:   0x01,
 	ProductStrIndex:        0x02,
-	SerialNumStrIndex:      0x03,
+	SerialNumStrIndex:      NO_DESCRIPTOR_STRING,
 		
 	NumberOfConfigurations: 1
 };
@@ -93,7 +93,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
 										 Type: 0x24},
 									 SubType: 0x00},
 			
-			Data:                   {0x10, 0x01}
+			Data:                   {0x01, 0x10}
 		},
 
 	CDC_Functional_CallManagement:
@@ -133,7 +133,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
 			EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_IN | CDC_NOTIFICATION_EPNUM),
 			Attributes:       		EP_TYPE_INTERRUPT,
 			EndpointSize:           CDC_NOTIFICATION_EPSIZE,
-			PollingIntervalMS:		0x02
+			PollingIntervalMS:		0xFF
 		},
 
 	DCI_Interface:
@@ -176,26 +176,22 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
 USB_Descriptor_String_t LanguageString PROGMEM =
 {
 	Header:                 {Size: USB_STRING_LEN(1), Type: DTYPE_String},
+		
 	UnicodeString:          {LANGUAGE_ID_ENG}
 };
 
 USB_Descriptor_String_t ManufacturerString PROGMEM =
 {
 	Header:                 {Size: USB_STRING_LEN(11), Type: DTYPE_String},
+		
 	UnicodeString:          L"busware.de"
 };
 
 USB_Descriptor_String_t ProductString PROGMEM =
 {
 	Header:                 {Size: USB_STRING_LEN(20), Type: DTYPE_String},
-	UnicodeString:          BOARD_ID_USTR
-};
-
-USB_Descriptor_String_t SerialNumberString PROGMEM =
-{
-	Header:                 {Size: USB_STRING_LEN(12), Type: DTYPE_String},
 		
-	UnicodeString:          L"000000000001"
+	UnicodeString:          BOARD_ID_USTR
 };
 
 bool USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex,
@@ -228,10 +224,6 @@ bool USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex,
 				case 0x02:
 					Address = DESCRIPTOR_ADDRESS(ProductString);
 					Size    = pgm_read_byte(&ProductString.Header.Size);
-					break;
-				case 0x03:
-					Address = DESCRIPTOR_ADDRESS(SerialNumberString);
-					Size    = pgm_read_byte(&SerialNumberString.Header.Size);
 					break;
 			}
 			
