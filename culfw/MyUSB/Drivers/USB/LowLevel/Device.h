@@ -71,7 +71,9 @@
 			 *  host computer when the host has suspended all USB devices to enter a low power state.
 			 *
 			 *  \note This macro should only be used if the device has indicated to the host that it
-			 *        supports the Remote Wakeup feature in the device descriptors.
+			 *        supports the Remote Wakeup feature in the device descriptors, and should only be
+			 *        issued if the host is currently allowing remote wakeup events from the device (i.e.,
+			 *        the USB_RemoteWakeupEnabled flag is set, see DevChapter9.h documentation).
 			 *
 			 *  \see StdDescriptors.h for more information on the RMWAKEUP feature and device descriptors.
 			 */

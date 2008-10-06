@@ -97,7 +97,7 @@
 				#define DESCRIPTOR_SIZE(DescriptorPtr)    DESCRIPTOR_CAST(DescriptorPtr, USB_Descriptor_Header_t).bLength
 			#endif
 			
-			/** Creates a prototype or begins a descriptor comparitor routine. Descriptor comparitor routines are 
+			/** Creates a prototype for or begins a descriptor comparitor routine. Descriptor comparitor routines are 
 			 *  small search routines which are passed a pointer to the current sub descriptor in the configuration
 			 *  descriptor, and which analyse the sub descriptor to determine whether or not it matches the routine's
 			 *  search parameters. Comparitor routines provide a powerful way to scan through the config descriptor

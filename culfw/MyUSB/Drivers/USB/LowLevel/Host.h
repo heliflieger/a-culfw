@@ -200,7 +200,7 @@
 			#define USB_Host_VBUS_Auto_On()         MACROS{ OTGCON |= (1 << VBUSREQ);         }MACROE
 			#define USB_Host_VBUS_Manual_On()       MACROS{ PORTE  |= (1 << 7);               }MACROE
 
-			#define USB_Host_VBUS_Auto_Off()        MACROS{ OTGCON |= (1 << VBUSRQC);         }MACROE
+			#define USB_Host_VBUS_Auto_Off()        MACROS{ OTGCON |=  (1 << VBUSRQC);        }MACROE
 			#define USB_Host_VBUS_Manual_Off()      MACROS{ PORTE  &= ~(1 << 7);              }MACROE
 
 			#define USB_Host_SetDeviceAddress(addr) MACROS{ UHADDR  =  (addr & 0b00111111);   }MACROE

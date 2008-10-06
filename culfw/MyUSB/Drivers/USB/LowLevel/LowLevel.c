@@ -185,7 +185,9 @@ void USB_SetupInterface(void)
 	#endif
 
 	#if defined(USB_CAN_BE_DEVICE)
-	USB_ConfigurationNumber = 0;
+	USB_ConfigurationNumber  = 0;
+	USB_RemoteWakeupEnabled  = false;
+	USB_CurrentlySelfPowered = false;
 	#endif
 	
 	#if defined(USB_MODIFIED_FULL_CONTROLLER) && !defined(MANUAL_PLL_CONTROL)

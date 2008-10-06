@@ -28,28 +28,35 @@
   this software.
 */
 
-/** \file
- *
- *  Version constants for informational purposes and version-specific macro creation. This header file contains the
- *  current MyUSB version number in several forms, for use in the user-application (for example, for printing out 
- *  whilst debugging, or for testing for version compatibility).
- */
+#include "Serial.h"
 
-#ifndef __MYUSB_VERSION_H__
-#define __MYUSB_VERSION_H__
+void Serial_Init(const uint16_t BaudRate)
+{
+	UCSR1A = 0;
+	UCSR1B = ((1 << RXEN1)  | (1 << TXEN1));
+	UCSR1C = ((1 << UCSZ11) | (1 << UCSZ10));
+	
+	UBRR1  = SERIAL_UBBRVAL(BaudRate);
+}
 
-	/* Public Interface - May be used in end-application: */
-		/* Macros: */
-			/** Indicates the major version number of the library as an integer. */
-			#define MYUSB_VERSION_MAJOR       1
+void Serial_TxString_P(const char *FlashStringPtr)
+{
+	uint8_t CurrByte;
 
-			/** Indicates the minor version number of the library as an integer. */
-			#define MYUSB_VERSION_MINOR       5
+	while ((CurrByte = pgm_read_byte(FlashStringPtr)) != 0x00)
+	{
+		Serial_TxByte(CurrByte);
+		FlashStringPtr++;
+	}
+}
 
-			/** Indicates the revision version number of the library as an integer. */
-			#define MYUSB_VERSION_REVISION    3
+void Serial_TxString(const char *StringPtr)
+{
+	uint8_t CurrByte;
 
-			/** Indicates the complete version number of the library, in string form. */
-			#define MYUSB_VERSION_STRING      "1.5.3"
-
-#endif
+	while ((CurrByte = *StringPtr) != 0x00)
+	{
+		Serial_TxByte(CurrByte);
+		StringPtr++;
+	}
+}

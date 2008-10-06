@@ -105,7 +105,7 @@
 	/* Public Interface - May be used in end-application: */
 		/* Enums: */
 			/** Enum for indicating what type of report item an entry in a HID_ReportInfo_t ReportItem array is */
-			enum HID_Types_t
+			enum HID_ReportItemTypes_t
 			{
 				REPORT_ITEM_TYPE_In                   = 0, /**< Indicates that the item is an IN report type. */
 				REPORT_ITEM_TYPE_Out                  = 1, /**< Indicates that the item is an OUT report type. */
@@ -133,7 +133,7 @@
 				uint8_t                      Type;   /**< Collection type (for example "Generic Desktop"). */
 				uint16_t                     Usage;  /**< Collection usage. */
 				struct CollectionPath*       Parent; /**< Reference to parent collection, or NULL if root collection. */
-			} CollectionPath_t;
+			} HID_CollectionPath_t;
 		
 			/** Type define for an attribute with both minimum and maximum values (e.g. Logical Min/Max). */
 			typedef struct
@@ -174,7 +174,7 @@
 				uint16_t                     BitOffset;      /**< Bit offset in the IN, OUT or FEATURE report of the item. */
 				uint8_t                      ItemType;       /**< Report item type, a value in HID_Types_t. */
 				uint16_t                     ItemFlags;      /**< Item data flags, such as constant/variable, etc. */
-				CollectionPath_t*            CollectionPath; /**< Collection path of the item. */
+				HID_CollectionPath_t*        CollectionPath; /**< Collection path of the item. */
 
 				HID_ReportItem_Attributes_t  Attributes;     /**< Report item attributes. */
 							
@@ -190,7 +190,7 @@
 				HID_ReportItem_t             ReportItems[HID_MAX_REPORTITEMS]; /**< Report items array, including
 			                                                                    *   all IN, OUT and FEATURE items. */
 
-				CollectionPath_t             CollectionPaths[HID_MAX_COLLECTIONS]; /**< All collection items, referenced
+				HID_CollectionPath_t         CollectionPaths[HID_MAX_COLLECTIONS]; /**< All collection items, referenced
 				                                                                    *   by the report items. */
 			} HID_ReportInfo_t;
 			

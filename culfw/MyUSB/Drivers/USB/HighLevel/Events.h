@@ -380,9 +380,9 @@
 				static void __stub (void) ATTR_CONST;
 
 				#if defined(USB_FULL_CONTROLLER) || defined(USB_MODIFIED_FULL_CONTROLLER)
-				ALIAS_STUB(USB_VBUSChange);
-				ALIAS_STUB(USB_VBUSConnect);
-				ALIAS_STUB(USB_VBUSDisconnect);
+					ALIAS_STUB(USB_VBUSChange);
+					ALIAS_STUB(USB_VBUSConnect);
+					ALIAS_STUB(USB_VBUSDisconnect);
 				#endif
 				
 				ALIAS_STUB(USB_Connect);

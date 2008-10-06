@@ -41,7 +41,7 @@ uint8_t ProcessHIDReport(const uint8_t* ReportData, uint16_t ReportSize, HID_Rep
 #if defined(HID_ENABLE_FEATURE_PROCESSING)
 	uint16_t          BitOffsetFeature             = 0;
 #endif
-	CollectionPath_t* CurrCollectionPath           = NULL;
+	HID_CollectionPath_t* CurrCollectionPath       = NULL;
 
 	memset((void*)ParserData, 0x00, sizeof(HID_ReportInfo_t)); 
 
@@ -126,7 +126,7 @@ uint8_t ProcessHIDReport(const uint8_t* ReportData, uint16_t ReportSize, HID_Rep
 				}
 				else
 				{
-					CollectionPath_t* ParentCollectionPath = CurrCollectionPath;
+					HID_CollectionPath_t* ParentCollectionPath = CurrCollectionPath;
 			
 					CurrCollectionPath = &ParserData->CollectionPaths[1];
 

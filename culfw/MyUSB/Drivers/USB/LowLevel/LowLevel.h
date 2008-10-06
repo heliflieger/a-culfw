@@ -184,6 +184,17 @@
 			 */
 			#define USB_Attach()                    MACROS{ UDCON  &= ~(1 << DETACH);  }MACROE
 			
+			#if !defined(USB_STREAM_TIMEOUT_MS) || defined(__DOXYGEN__)
+				/** Constant for the maximum software timeout period of the USB data stream transfer functions
+				 *  (both control and standard) when in either device or host mode. If the next packet of a stream
+				 *  is not received or acknowedged within this time period, the stream function will fail.
+				 *
+				 *  This value may be overridden in the user project makefile as the value of the 
+				 *  USB_STREAM_TIMEOUT_MS token, and passed to the compiler using the -D switch.
+				 */
+				#define USB_STREAM_TIMEOUT_MS       50
+			#endif
+
 		/* Function Prototypes: */
 			/** Main function to initialize and start the USB interface. Once active, the USB interface will
 			 *  allow for device connection to a host when in device mode, or for device enumeration while in

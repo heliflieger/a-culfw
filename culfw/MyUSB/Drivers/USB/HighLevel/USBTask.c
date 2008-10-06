@@ -106,7 +106,7 @@ static void USB_HostTask(void)
 					
 				USB_Host_ResumeBus();
 				Pipe_ClearPipes();
-				
+
 				if (USB_Host_WaitMS(100) != HOST_WAITERROR_Successful)
 				{
 					ErrorCode = HOST_ENUMERROR_WaitStage;
@@ -114,7 +114,7 @@ static void USB_HostTask(void)
 				}
 					
 				USB_Host_ResetDevice();
-					
+
 				if (USB_Host_WaitMS(100) != HOST_WAITERROR_Successful)
 				{
 					ErrorCode = HOST_ENUMERROR_WaitStage;
@@ -123,7 +123,7 @@ static void USB_HostTask(void)
 
 				USB_HostState = HOST_STATE_Powered;
 			}
-			
+
 			if (USB_INT_HasOccurred(USB_INT_BCERRI))
 			{
 				USB_INT_Clear(USB_INT_BCERRI);
@@ -131,7 +131,7 @@ static void USB_HostTask(void)
 				ErrorCode = HOST_ENUMERROR_NoDeviceDetected;
 				break;
 			}
-				
+
 			break;
 		case HOST_STATE_Powered:
 			if (USB_Host_WaitMS(100) != HOST_WAITERROR_Successful)
@@ -139,11 +139,11 @@ static void USB_HostTask(void)
 				ErrorCode = HOST_ENUMERROR_WaitStage;
 				break;
 			}
- 
+
 			Pipe_ConfigurePipe(PIPE_CONTROLPIPE, EP_TYPE_CONTROL,
 							   PIPE_TOKEN_SETUP, PIPE_CONTROLPIPE,
-							   PIPE_CONTROLPIPE_DEFAULT_SIZE, PIPE_BANK_SINGLE);
-
+							   PIPE_CONTROLPIPE_DEFAULT_SIZE, PIPE_BANK_SINGLE);		
+		
 			USB_HostState = HOST_STATE_Default;
 			
 			break;

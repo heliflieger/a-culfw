@@ -186,7 +186,7 @@
 			
 		/* Enums: */
 			/** Enum for the possible standard descriptor types, as given in each descriptor's header. */
-			enum DescriptorTypes_t
+			enum USB_DescriptorTypes_t
 			{
 				DTYPE_Device               = 0x01, /**< Indicates that the descriptor is a device descriptor. */
 				DTYPE_Configuration        = 0x02, /**< Indicates that the descriptor is a configuration descriptor. */
@@ -385,9 +385,9 @@
 				uint8_t                 SubClass; /**< Interface subclass ID. */
 				uint8_t                 Protocol; /**< Interface protocol ID. */
 
-				uint8_t                 InterfaceAssStrIndex; /**< Index of the string descriptor describing the
-				                                               *   interface association.
-				                                               */
+				uint8_t                 IADStrIndex; /**< Index of the string descriptor describing the
+				                                      *   interface association.
+				                                      */
 				#else
 				uint8_t                 bLength;
 				uint8_t                 bDescriptorType;

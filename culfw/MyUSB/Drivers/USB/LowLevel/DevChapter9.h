@@ -56,14 +56,28 @@
 
 	/* Public Interface - May be used in end-application: */
 		/* Global Variables: */
-			/** Currently set configuration number of the device. USB devices may have several different
-			 *  configurations which the host can select between; this indicates the currently selected
+			/** Indicates the currently set configuration number of the device. USB devices may have several
+			 *  different configurations which the host can select between; this indicates the currently selected
 			 *  value, or 0 if no configuration has been selected.
 			 *
 			 *  \note This variable should be treated as read-only in the user application, and never manually
 			 *        changed in value.
 			 */
 			extern uint8_t USB_ConfigurationNumber;
+			
+			/** Indicates if the host is currently allowing the device to issue remote wakeup events. If this
+			 *  flag is cleared, the device should not issue remote wakeup events to the host.
+			 *
+			 *  \note This variable should be treated as read-only in the user application, and never manually
+			 *        changed in value.
+			 */
+			extern bool USB_RemoteWakeupEnabled;
+			
+			/** Indicates if the device is currently being powered by its own power supply, rather than being
+			 *  powered by the host's USB supply. This flag should remain cleared if the device does not
+			 *  support self powered mode, as indicated in the device descriptors.
+			 */
+			extern bool USB_CurrentlySelfPowered;
 
 		/* Throwable Events: */
 			/** This module raises the USB_UnhandledControlPacket event when a request to the default control

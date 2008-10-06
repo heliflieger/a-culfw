@@ -106,11 +106,11 @@
 	/* Private Interface - For use in library only: */
 	#if !defined(__DOXYGEN__)
 		/* Enums: */
-			enum WaitForTypes_t
+			enum USB_WaitForTypes_t
 			{
-				Wait_For_Setup_Sent,
-				Wait_For_In_Received,
-				Wait_For_Out_Ready,
+				USB_HOST_WAITFOR_SetupSent,
+				USB_HOST_WAITFOR_InReceived,
+				USB_HOST_WAITFOR_OutReady,
 			};
 	
 		/* Function Prototypes: */

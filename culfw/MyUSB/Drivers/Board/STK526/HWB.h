@@ -30,26 +30,50 @@
 
 /** \file
  *
- *  Version constants for informational purposes and version-specific macro creation. This header file contains the
- *  current MyUSB version number in several forms, for use in the user-application (for example, for printing out 
- *  whilst debugging, or for testing for version compatibility).
+ *  Board specific HWB driver header for the STK526.
+ *
+ *  \note This file should not be included directly. It is automatically included as needed by the HWB driver
+ *        dispatch header located in MyUSB/Drivers/Board/HWB.h.
  */
+ 
+#ifndef __HWB_STK526_H__
+#define __HWB_STK526_H__
 
-#ifndef __MYUSB_VERSION_H__
-#define __MYUSB_VERSION_H__
+	/* Includes: */
+		#include <avr/io.h>
+		#include <stdbool.h>
 
+		#include "../../../Common/Common.h"
+
+	/* Enable C linkage for C++ Compilers: */
+		#if defined(__cplusplus)
+			extern "C" {
+		#endif
+
+	/* Preprocessor Checks: */
+		#if !defined(INCLUDE_FROM_HWB_H)
+			#error Do not include this file directly. Include MyUSB/Drivers/Board/HWB.h instead.
+		#endif
+		
 	/* Public Interface - May be used in end-application: */
-		/* Macros: */
-			/** Indicates the major version number of the library as an integer. */
-			#define MYUSB_VERSION_MAJOR       1
+		/* Inline Functions: */
+		#if !defined(__DOXYGEN__)
+			static inline void HWB_Init(void)
+			{
+				DDRD  &= ~(1 << 7);
+				PORTD |=  (1 << 7);
+			}
 
-			/** Indicates the minor version number of the library as an integer. */
-			#define MYUSB_VERSION_MINOR       5
-
-			/** Indicates the revision version number of the library as an integer. */
-			#define MYUSB_VERSION_REVISION    3
-
-			/** Indicates the complete version number of the library, in string form. */
-			#define MYUSB_VERSION_STRING      "1.5.3"
-
+			static inline bool HWB_GetStatus(void) ATTR_WARN_UNUSED_RESULT;
+			static inline bool HWB_GetStatus(void)
+			{
+				return (!(PIND & (1 << 7)));
+			}
+		#endif
+			
+	/* Disable C linkage for C++ Compilers: */
+		#if defined(__cplusplus)
+			}
+		#endif
+	
 #endif

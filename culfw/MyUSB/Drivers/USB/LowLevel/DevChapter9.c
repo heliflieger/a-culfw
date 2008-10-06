@@ -35,6 +35,8 @@
 #include "DevChapter9.h"
 
 uint8_t USB_ConfigurationNumber;
+bool    USB_RemoteWakeupEnabled;
+bool    USB_CurrentlySelfPowered;
 
 void USB_Device_ProcessControlPacket(void)
 {
@@ -46,7 +48,7 @@ void USB_Device_ProcessControlPacket(void)
 	{
 		case REQ_GetStatus:
 			if (((bmRequestType & (CONTROL_REQTYPE_DIRECTION | CONTROL_REQTYPE_TYPE)) ==
-			                            (REQDIR_HOSTTODEVICE | REQTYPE_STANDARD)) &&
+			                            (REQDIR_DEVICETOHOST | REQTYPE_STANDARD)) &&
 			    ((bmRequestType & CONTROL_REQTYPE_RECIPIENT) != REQREC_OTHER))
 			{
 				USB_Device_GetStatus(bmRequestType);
@@ -110,7 +112,7 @@ static void USB_Device_SetAddress(void)
 {
 	uint8_t wValue_LSB = Endpoint_Read_Byte();
 
-	UDADDR = ((UDADDR & (1 << ADDEN)) | (wValue_LSB & 0x3F));
+	UDADDR = ((UDADDR & (1 << ADDEN)) | (wValue_LSB & 0x7F));
 
 	Endpoint_ClearSetupReceived();
 
@@ -224,7 +226,7 @@ static void USB_Device_GetDescriptor(void)
 
 static void USB_Device_GetStatus(const uint8_t bmRequestType)
 {
-	uint8_t StatusByte = 0;
+	uint16_t CurrentStatus = 0;
 	
 	USB_Descriptor_Configuration_Header_t* ConfigDescriptorPtr;
 	uint16_t                               ConfigDescriptorSize;
@@ -251,11 +253,11 @@ static void USB_Device_GetStatus(const uint8_t bmRequestType)
 			ConfigAttributes = pgm_read_byte(&ConfigDescriptorPtr->ConfigAttributes);
 #endif
 
-			if (ConfigAttributes & USB_CONFIG_ATTR_SELFPOWERED)
-			  StatusByte |= FEATURE_SELFPOWERED;
+			if (USB_CurrentlySelfPowered)
+			  CurrentStatus |= FEATURE_SELFPOWERED_ENABLED;
 			
-			if (ConfigAttributes & USB_CONFIG_ATTR_REMOTEWAKEUP)
-			  StatusByte |= FEATURE_REMOTE_WAKEUP;
+			if (USB_RemoteWakeupEnabled)
+			  CurrentStatus |= FEATURE_REMOTE_WAKEUP_ENABLED;
 			
 			break;
 		case REQREC_INTERFACE:
@@ -265,7 +267,7 @@ static void USB_Device_GetStatus(const uint8_t bmRequestType)
 		case REQREC_ENDPOINT:
 			Endpoint_SelectEndpoint(wIndex);
 
-			StatusByte = !(Endpoint_IsEnabled());
+			CurrentStatus = Endpoint_IsStalled();
 
 			Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);			  
 			break;
@@ -275,7 +277,7 @@ static void USB_Device_GetStatus(const uint8_t bmRequestType)
 	
 	Endpoint_ClearSetupReceived();
 	
-	Endpoint_Write_Word_LE(StatusByte);
+	Endpoint_Write_Word_LE(CurrentStatus);
 
 	Endpoint_ClearSetupIN();
 	
@@ -286,23 +288,25 @@ static void USB_Device_GetStatus(const uint8_t bmRequestType)
 static void USB_Device_ClearSetFeature(const uint8_t bRequest, const uint8_t bmRequestType)
 {
 	uint16_t wValue = Endpoint_Read_Word_LE();
-	uint16_t wIndex = (Endpoint_Read_Word_LE() & ENDPOINT_EPNUM_MASK);
-
+	uint16_t wIndex = Endpoint_Read_Word_LE();
+	
 	switch (bmRequestType & CONTROL_REQTYPE_RECIPIENT)
 	{
 		case REQREC_ENDPOINT:
-			if (wValue == FEATURE_ENDPOINT)
+			if (wValue == FEATURE_ENDPOINT_HALT)
 			{
-				Endpoint_SelectEndpoint(wIndex);
+				uint8_t EndpointIndex = (wIndex & ENDPOINT_EPNUM_MASK);
+				
+				if (EndpointIndex != ENDPOINT_CONTROLEP)
+				{
+					Endpoint_SelectEndpoint(EndpointIndex);
 
-				if (Endpoint_IsEnabled())
-				{				
-					if (wIndex != ENDPOINT_CONTROLEP)
-					{
+					if (Endpoint_IsEnabled())
+					{				
 						if (bRequest == REQ_ClearFeature)
 						{
 							Endpoint_ClearStall();
-							Endpoint_ResetFIFO(wIndex);
+							Endpoint_ResetFIFO(EndpointIndex);
 							Endpoint_ResetDataToggle();
 						}
 						else
@@ -314,10 +318,6 @@ static void USB_Device_ClearSetFeature(const uint8_t bRequest, const uint8_t bmR
 					Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
 					Endpoint_ClearSetupReceived();
 					Endpoint_ClearSetupIN();
-				}
-				else
-				{
-					Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
 				}
 			}
 			

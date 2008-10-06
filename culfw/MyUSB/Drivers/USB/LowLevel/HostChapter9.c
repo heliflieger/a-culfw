@@ -62,7 +62,7 @@ uint8_t USB_Host_SendControlRequest(void* BufferPtr)
 
 	Pipe_ClearSetupOUT();
 	
-	if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(Wait_For_Setup_Sent)))
+	if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(USB_HOST_WAITFOR_SetupSent)))
 	  goto End_Of_Control_Send;
 
 	Pipe_ClearSetupSent();
@@ -81,7 +81,7 @@ uint8_t USB_Host_SendControlRequest(void* BufferPtr)
 			{
 				Pipe_Unfreeze();
 
-				if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(Wait_For_In_Received)))
+				if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(USB_HOST_WAITFOR_InReceived)))
 				  goto End_Of_Control_Send;
 							
 				if (!(Pipe_BytesInPipe()))
@@ -98,7 +98,7 @@ uint8_t USB_Host_SendControlRequest(void* BufferPtr)
 		Pipe_SetToken(PIPE_TOKEN_OUT);
 		Pipe_Unfreeze();
 		
-		if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(Wait_For_Out_Ready)))
+		if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(USB_HOST_WAITFOR_OutReady)))
 		  goto End_Of_Control_Send;
 
 		Pipe_ClearSetupOUT();
@@ -125,7 +125,7 @@ uint8_t USB_Host_SendControlRequest(void* BufferPtr)
 					DataLen -= USB_ControlPipeSize;
 				}
 				
-				if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(Wait_For_Out_Ready)))
+				if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(USB_HOST_WAITFOR_OutReady)))
 				  goto End_Of_Control_Send;
 
 				Pipe_ClearSetupOUT();
@@ -136,7 +136,7 @@ uint8_t USB_Host_SendControlRequest(void* BufferPtr)
 		Pipe_SetToken(PIPE_TOKEN_IN);
 		Pipe_Unfreeze();
 
-		if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(Wait_For_In_Received)))
+		if ((ReturnStatus = USB_Host_Wait_For_Setup_IOS(USB_HOST_WAITFOR_InReceived)))
 		  goto End_Of_Control_Send;
 
 		Pipe_ClearSetupIN();
@@ -157,9 +157,9 @@ static uint8_t USB_Host_Wait_For_Setup_IOS(const uint8_t WaitType)
 {
 	uint16_t TimeoutCounter = USB_HOST_TIMEOUT_MS;
 
-	while (!(((WaitType == Wait_For_Setup_Sent)  && Pipe_IsSetupSent())       ||
-	         ((WaitType == Wait_For_In_Received) && Pipe_IsSetupINReceived()) ||
-	         ((WaitType == Wait_For_Out_Ready)   && Pipe_IsSetupOUTReady())))
+	while (!(((WaitType == USB_HOST_WAITFOR_SetupSent)  && Pipe_IsSetupSent())       ||
+	         ((WaitType == USB_HOST_WAITFOR_InReceived) && Pipe_IsSetupINReceived()) ||
+	         ((WaitType == USB_HOST_WAITFOR_OutReady)   && Pipe_IsSetupOUTReady())))
 	{
 		uint8_t ErrorCode;
 

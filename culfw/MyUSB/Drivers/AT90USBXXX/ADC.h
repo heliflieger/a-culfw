@@ -30,26 +30,28 @@
 
 /** \file
  *
- *  Version constants for informational purposes and version-specific macro creation. This header file contains the
- *  current MyUSB version number in several forms, for use in the user-application (for example, for printing out 
- *  whilst debugging, or for testing for version compatibility).
+ *  This file is the master dispatch header file for the device-specific ADC driver, for AVRs containing an ADC.
+ *
+ *  User code should include this file, which will in turn include the correct ADC driver header file for the
+ *  currently selected AVR model.
  */
+ 
+#ifndef __ADC_H__
+#define __ADC_H__
 
-#ifndef __MYUSB_VERSION_H__
-#define __MYUSB_VERSION_H__
+	/* Macros: */
+	#if !defined(__DOXYGEN__)
+		#define INCLUDE_FROM_ADC_H
+		#define INCLUDE_FROM_CHIP_DRIVER
+	#endif
 
-	/* Public Interface - May be used in end-application: */
-		/* Macros: */
-			/** Indicates the major version number of the library as an integer. */
-			#define MYUSB_VERSION_MAJOR       1
-
-			/** Indicates the minor version number of the library as an integer. */
-			#define MYUSB_VERSION_MINOR       5
-
-			/** Indicates the revision version number of the library as an integer. */
-			#define MYUSB_VERSION_REVISION    3
-
-			/** Indicates the complete version number of the library, in string form. */
-			#define MYUSB_VERSION_STRING      "1.5.3"
+	/* Includes: */
+		#if (defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB646__) || \
+		     defined(__AVR_AT90USB1287__) || defined(__AVR_AT90USB647__) || \
+			 defined(__AVR_ATmega16U4__)  || defined(__AVR_ATmega32U4__))
+			#include "AT90USBXXX67/ADC.h"
+		#else
+			#error "ADC is not avaliable for the currently selected AVR model."
+		#endif
 
 #endif

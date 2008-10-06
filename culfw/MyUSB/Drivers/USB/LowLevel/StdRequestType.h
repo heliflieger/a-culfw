@@ -117,6 +117,20 @@
 			 *  \see CONTROL_REQTYPE_RECIPIENT macro.
 			 */
 			#define REQREC_OTHER               (3 << 0)
+			
+			/** Feature indicator for Clear Feature or Set Feature commands. When used in a Clear Feature
+			 *  request this indicates that an endpoint (whose address is given elsewhere in the request
+			 *  should have its stall condition cleared. If used in a similar manner inside a Set Feature
+			 *  request, this stalls an endpoint.
+			 */
+			#define FEATURE_ENDPOINT_HALT           0x00
+
+			/** Feature indicator for Clear Feature or Set Feature commands. When used in a Clear Feature
+			 *  request this indicates that the remote wakeup enabled device should not issue remote
+			 *  wakeup requests until further notice. If used in a similar manner inside a Set Feature
+			 *  request, this re-enabled the remote wakeup feature on the device.
+			 */
+			#define FEATURE_REMOTE_WAKEUP           0x01
 
 		/* Enums: */
 			/** Enumeration for the various standard request commands. These commands are applicable when the
@@ -125,7 +139,7 @@
 			 *
 			 *  \see Chapter 9 of the USB 2.0 Specification.
 			 */
-			enum Control_Request_t
+			enum USB_Control_Request_t
 			{
 				REQ_GetStatus           = 0, /**< Implemented in the library for device, endpoint and interface
 				                              *   recipients. Passed to the user application for other recipients
@@ -170,9 +184,8 @@
 /* Private Interface - For use in library only: */
 	#if !defined(__DOXYGEN__)
 		/* Macros: */
-			#define FEATURE_ENDPOINT           0b00000000
-			#define FEATURE_REMOTE_WAKEUP      0b00000001		
-			#define FEATURE_SELFPOWERED        0b00000010
+			#define FEATURE_SELFPOWERED_ENABLED     (1 << 0)
+			#define FEATURE_REMOTE_WAKEUP_ENABLED   (1 << 1)
 	#endif
 	
 #endif
