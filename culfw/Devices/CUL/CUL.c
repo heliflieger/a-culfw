@@ -105,6 +105,7 @@ main(void)
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);
 
+  Scheduler_Init();                            
   USB_Init();
   Scheduler_Start();                            // Won't return
 }
