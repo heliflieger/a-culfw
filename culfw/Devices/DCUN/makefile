@@ -85,7 +85,6 @@ TARGET = DCUN
 #     this an empty or blank macro!
 OBJDIR = .
 
-
 # List C source files here. (C dependencies are automatically generated.)
 SRC = $(TARGET).c                                                  \
 		../clib/Descriptors.c                              \
@@ -106,8 +105,13 @@ SRC = $(TARGET).c                                                  \
 		../MyUSB/Drivers/USB/HighLevel/USBInterrupt.c      \
 		../MyUSB/Drivers/USB/HighLevel/Events.c            \
 		../MyUSB/Drivers/USB/HighLevel/StdDescriptors.c    \
+                avr-uip/drivers/enc28j60/enc28j60.c                \
+                avr-uip/drivers/enc28j60/network.c \
+                avr-uip/uip/uip.c avr-uip/uip/uip_arp.c avr-uip/uip/uiplib.c avr-uip/uip/psock.c avr-uip/uip/timer.c avr-uip/uip/uip-neighbor.c \
+		avr-uip/apps/simple-httpd/simple-httpd.c           \
 		../Drivers/AT90USB162/SPI.c
 
+#		avr-uip/apps/dhcpc/dhcpc.c	                   \
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC = 
@@ -135,13 +139,11 @@ OPT = s
 #     AVR [Extended] COFF format requires stabs, plus an avr-objcopy run.
 DEBUG = dwarf-2
 
-
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = .. ../clib
-
+EXTRAINCDIRS = .. ../clib avr-uip/uip avr-uip/apps/simple-httpd avr-uip/apps/dhcpc avr-uip/drivers/enc28j60 avr-uip/drivers/interfaces
 
 # Compiler flag to set the C Standard level.
 #     c89   = "ANSI" C
