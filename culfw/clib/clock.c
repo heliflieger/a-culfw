@@ -7,6 +7,9 @@
 #include "transceiver.h"
 
 uint8_t day,hour,minute,sec,hsec;
+
+//Counted time
+clock_time_t clock_datetime = 0;
 	
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
@@ -23,6 +26,8 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
     // one second, 1% duty cycle, 10ms resolution => this is simple ;-)
     if (credit_10ms < MAX_CREDIT)
       credit_10ms += 1;
+
+    clock_datetime++;
 
     sec++; hsec = 0;
     if(sec == 60) {
@@ -46,6 +51,17 @@ gettime(char *unused)
   display_udec(sec, 2,'0');    DC('.');
   display_udec(hsec*8, 3,'0');       // convert it to msec
   DNL();
+}
+
+//Return time
+clock_time_t clock_time(){
+	clock_time_t time;
+
+	cli();
+	time = clock_datetime;
+	sei();
+
+	return time;
 }
 
 TASK(Minute_Task)
