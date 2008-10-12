@@ -26,9 +26,9 @@
 // KS300 NULL  854us high, 366us low
 // KS300 ONE:  366us high, 854us low
 
-#define FS20_ZERO      400    // 400uS
-#define FS20_ONE       600    // 600uS
-#define FS20_PAUSE      10    // 10000uS =  10ms
+#define FS20_ZERO      400    //   400uS
+#define FS20_ONE       600    //   600uS
+#define FS20_PAUSE      10    // 10000mS
 
 #define TIMEDIFF       166    // tolerated diff to previous null value
 #define TIMEDIFF_RISE  266    // FS20: min diff between one and null (1200-800)
@@ -52,17 +52,17 @@ int16_t credit_10ms;
 uint8_t tx_report;              // global verbose / output-filter
 static bucket_t bucket_array[N_BUCKETS];
 static uint8_t bucket_in, bucket_out, bucket_nrused;
-static uint8_t oby, obuf[10];    // parity-stripped output
+static uint8_t oby, obuf[10], nibble;    // parity-stripped output
 static uint8_t roby, robuf[10];  // For repeat check: last buffer and time
 static uint8_t rday,rhour,rminute,rsec,rhsec;
+static uint16_t wait_high_zero, wait_low_zero, wait_high_one, wait_low_one;
 
 
+static void send_bit(uint8_t bit);
+static void sendraw(uint8_t msg[], uint8_t nbyte, uint8_t bitoff,
+                    uint8_t repeat, uint8_t pause);
 
-static void fs20_send_zero(void);
-static void fs20_send_one(void);
-static void fs20_send_sync(void);
-static inline void fs20_send_bit(uint8_t bit);
-static inline void fs20_send_byte(uint8_t byte);
+
 static uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
 static uint8_t cksum2(uint8_t *buf, uint8_t len);
 static uint8_t cksum3(uint8_t *buf, uint8_t len);
@@ -79,9 +79,7 @@ tx_init(void)
   EIFR  |= _BV(CC1100_INTF);
   EIMSK |= _BV(CC1100_INT);
 
-  // Timer1 
-  TCCR1A = 0;
-  TCCR1B = _BV(CS11) | _BV(WGM12); // 8MHz/8 -> 1MHz / 1us
+  credit_10ms = MAX_CREDIT/2;
 
   for(int i = 1; i < N_BUCKETS; i += 2) // falling buckets start at 1
     bucket_array[i].state = STATE_INIT;
@@ -113,57 +111,35 @@ set_txreport(char *in)
 
 ////////////////////////////////////////////////////
 // Transmitter
-void
-fs20_send_zero(void)
+static void
+send_bit(uint8_t bit)
 {
-  CC1100_CS_PORT |= _BV(CC1100_PINOUT);
-  my_delay_us(FS20_ZERO);
-  CC1100_CS_PORT &= ~_BV(CC1100_PINOUT);
-  my_delay_us(FS20_ZERO);
+  CC1100_CS_PORT |= _BV(CC1100_PINOUT);         // High
+  if(bit) {
+
+    my_delay_us(wait_high_one);
+    CC1100_CS_PORT &= ~_BV(CC1100_PINOUT);      // Low
+    my_delay_us(wait_low_one);
+
+  } else {
+
+    my_delay_us(wait_high_zero);
+    CC1100_CS_PORT &= ~_BV(CC1100_PINOUT);      // Low
+    my_delay_us(wait_low_zero);
+
+  }
 }
 
-void fs20_send_one(void)
-{
-  CC1100_CS_PORT |= _BV(CC1100_PINOUT);
-  my_delay_us(FS20_ONE);
-  CC1100_CS_PORT &= ~_BV(CC1100_PINOUT);
-  my_delay_us(FS20_ONE);
-}
 
-void
-fs20_send_sync(void)
-{
-  for(uint8_t i = 0; i < 12; i++)
-      fs20_send_zero();
-  fs20_send_one();
-}
 
-void
-fs20_send_bit(uint8_t bit)
+// msg is with parity/checksum already added
+static void
+sendraw(uint8_t *msg, uint8_t nbyte, uint8_t bitoff,
+                uint8_t repeat, uint8_t pause)
 {
-  if(bit > 0)
-    fs20_send_one();
-  else
-    fs20_send_zero();
-}
-
-void
-fs20_send_byte(uint8_t byte)
-{
-  uint8_t i = 7;
-  do {
-    fs20_send_bit(byte & _BV(i));
-  } while (i-- > 0);
-
-  fs20_send_bit(parity_even_bit(byte));
-}
-
-void
-fs20_send(uint8_t csstart, uint8_t msg[], uint8_t msglen, uint8_t repeat)
-{
-  // (12*800+1200+8*(9*1000)+800+10000) = 93.6 msec to send (avg. value).
-  //
-  uint8_t sum = 9*repeat+repeat/2;
+  // 12*800+1200+nbyte*(8*1000)+(bits*1000)+800+10000 
+  // message len is < (nbyte+2)*repeat in 10ms units.
+  int8_t i, j, sum = (nbyte+2)*repeat;
   if (credit_10ms < sum) {
     DS_P(PSTR("LOVF\r\n"));
     return;
@@ -171,22 +147,23 @@ fs20_send(uint8_t csstart, uint8_t msg[], uint8_t msglen, uint8_t repeat)
   credit_10ms -= sum;
 
   LED_ON();
-
-  ccTX();                       // Enable TX
+  ccTX();
+  my_delay_ms(1);
 
   do {
-    fs20_send_sync();
+    for(i = 0; i < 12; i++)                     // sync
+      send_bit(0);
+    send_bit(1);
     
-    uint8_t sum = csstart;
-    for(uint8_t j = 0; j < msglen; j++) {
-      fs20_send_byte(msg[j]);
-      sum += msg[j];
+    for(j = 0; j < nbyte; j++) {                // whole bytes
+      for(i = 7; i >= 0; i--)
+        send_bit(msg[j] & _BV(i));
     }
-    fs20_send_byte(sum);
-    
-    fs20_send_zero();
-    
-    my_delay_ms(FS20_PAUSE);
+    for(i = 7; i > bitoff; i--)                 // broken bytes
+      send_bit(msg[j] & _BV(i));
+
+    my_delay_ms(pause);                         // pause
+
   } while(--repeat > 0);
 
   if(tx_report) {               // Enable RX
@@ -198,20 +175,73 @@ fs20_send(uint8_t csstart, uint8_t msg[], uint8_t msglen, uint8_t repeat)
   LED_OFF();
 }
 
+
+static void
+addParityAndSend(char *in, uint8_t startcs, uint8_t repeat)
+{
+  uint8_t hb[7], hblen, iby;
+  int8_t ibi, obi;
+
+  hblen = fromhex(in+1, hb, 5);
+
+  hb[hblen] = cksum1(startcs, hb, hblen);
+  hblen++;
+
+  // Copy the message and add parity-bits
+  iby=oby=0;
+  ibi=obi=7;
+  obuf[oby] = 0;
+
+  while(iby<hblen) {
+    if(hb[iby] & _BV(ibi))
+      obuf[oby] |= _BV(obi);
+
+    if(obi-- == 0) {
+      obi = 7; obuf[++oby] = 0;
+    }
+
+    if(ibi-- == 0) {
+      ibi = 7;
+      if(parity_even_bit(hb[iby]))
+        obuf[oby] |= _BV(obi);
+      if(obi-- == 0) {
+        obi = 7; obuf[++oby] = 0;
+      }
+      iby++;
+    }
+  }
+  if(obi-- == 0) {              // Trailing 0 bit
+    obi = 7; ++oby;
+  }
+
+  wait_high_zero = wait_low_zero = FS20_ZERO;
+  wait_high_one  = wait_low_one  = FS20_ONE;
+  sendraw(obuf, oby, obi, repeat, FS20_PAUSE);
+}
+
 void
 fs20send(char *in)
 {
-  uint8_t hb[5], hblen;
-  hblen = fromhex(in+1, hb, 5);
-  fs20_send(6, hb, hblen, 3);
+  addParityAndSend(in, 6, 3);
 }
 
 void
 fhtsend(char *in)
 {
-  uint8_t hb[5], hblen;
-  hblen = fromhex(in+1, hb, 5);
-  fs20_send(12, hb, hblen, 2);
+  addParityAndSend(in, 12, 1);
+}
+
+void
+rawsend(char *in)
+{
+  uint8_t hb[16];
+
+  fromhex(in+1, hb, 16);
+  wait_high_zero = hb[0]*10;
+  wait_low_zero  = hb[1]*10;
+  wait_high_one  = hb[2]*10;
+  wait_low_one   = hb[3]*10;
+  sendraw(hb+8, hb[6], 7-hb[7], hb[5], hb[4]);
 }
 
 
@@ -238,11 +268,13 @@ cksum2(uint8_t *buf, uint8_t len)               // EM
 static uint8_t
 cksum3(uint8_t *buf, uint8_t len)               // KS300
 {
-  uint8_t x = 0;
+  uint8_t x = 0, cnt = 0;
   while(len) {
     uint8_t d = buf[--len];
     x ^= (d>>4);
-    x ^= (d&0xf);
+    if(!nibble || cnt)
+      x ^= (d&0xf);
+    cnt++;
   }
   return x;
 }
@@ -251,7 +283,7 @@ cksum3(uint8_t *buf, uint8_t len)               // KS300
 static uint8_t
 analyze(bucket_t *b, uint8_t t)
 {
-  uint8_t cnt=0, isok = 1, max, iby = 0, nibble=1;
+  uint8_t cnt=0, isok = 1, max, iby = 0;
   int8_t ibi=7, obi=7;
 
   oby = 0;
@@ -265,7 +297,7 @@ analyze(bucket_t *b, uint8_t t)
     }
 
     if(t == TYPE_KS300 && obi == 3) {                           // nibble check
-      if(nibble) {
+      if(!nibble) {
         if(!bit) {
           isok = 0;
           break;
@@ -305,6 +337,8 @@ analyze(bucket_t *b, uint8_t t)
   if(cnt <= max)
     isok = 0;
   else if(isok && t == TYPE_EM && obi == -1)           // missing last stopbit
+    oby++;
+  else if(nibble)                                      // Nibble data
     oby++;
   if(oby == 0)
     isok = 0;
@@ -352,7 +386,7 @@ TASK(RfAnalyze_Task)
   if(!datatype && fb->state == STATE_COLLECT) {
     if(analyze(fb, TYPE_KS300)) {
       oby--;                                 
-      if(cksum3(obuf, oby) == (obuf[oby]&0xf))
+      if(cksum3(obuf, oby) == (obuf[oby-nibble]&0xf))
         datatype = TYPE_KS300;
     }
 
@@ -402,8 +436,12 @@ TASK(RfAnalyze_Task)
 
     if(!isrep) {
       DC(datatype);
+      if(nibble)
+        oby--;
       for(uint8_t i=0; i < oby; i++)
         DH(obuf[i],2);
+      if(nibble)
+        DH(obuf[oby]&0xf,1);
       if(tx_report & REP_RSSI)
         DH(cc1100_readReg(CC1100_RSSI),2);
       DNL();

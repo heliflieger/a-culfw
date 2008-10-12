@@ -9,8 +9,8 @@
 #include "cc1100.h"
 
 PROGMEM prog_uint8_t CC1100_PA[8] =
-{0x00,0x32,0x38,0x3f,0x3f,0x3f,0x3f,0x3f};    //
-//{0x00,0x03,0x0F,0x27,0x50,0xC8,0xC3,0xC2};    // +10dB, PA Ramping
+//{0x00,0x32,0x38,0x3f,0x3f,0x3f,0x3f,0x3f};    //
+{0x00,0x03,0x0F,0x27,0x50,0xC8,0xC3,0xC2};    // +10dB, PA Ramping
 //{0x00,0xC2,0x00,0x00,0x00,0x00,0x00,0x00};    // +10dB, no PA Ramping
 
 PROGMEM prog_uint8_t CC1100_CFG[0x29] = {
@@ -103,7 +103,6 @@ ccInitChip(void)
   uint8_t *p = EE_START_CC1100;
 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
-  CC1100_DEASSERT;
 
   CC1100_DEASSERT;                           // Toggle chip select signal
   my_delay_us(30);
@@ -132,6 +131,7 @@ ccInitChip(void)
   CC1100_DEASSERT;
 
   ccStrobe( CC1100_SCAL );
+  my_delay_ms(1);
 }
 
 //--------------------------------------------------------------------

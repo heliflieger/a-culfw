@@ -4,8 +4,9 @@
 void
 analyze_ttydata(uint8_t ucCommand)
 {
-  static char cmdbuf[16];
-  static uint8_t idx, cmdlen;
+  static char cmdbuf[33];
+  static uint8_t cmdlen;
+  uint8_t idx;
     
   //DC(ucCommand);                       // echo
 
@@ -29,7 +30,7 @@ analyze_ttydata(uint8_t ucCommand)
     cmdlen = 0;
 
   } else {
-    if(idx < sizeof(cmdbuf)-1)
+    if(cmdlen < sizeof(cmdbuf)-1)
       cmdbuf[cmdlen++] = ucCommand;
   }
 }

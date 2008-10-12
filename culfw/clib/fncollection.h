@@ -17,4 +17,6 @@ void version(char *);
 
 #define EE_FACT_RESET        (uint8_t *)0x1FF    // Factory reset
 
+extern uint8_t led_mode;
+
 #endif

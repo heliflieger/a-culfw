@@ -20,6 +20,8 @@
 #define BOARD_ID_STR            "CUL"
 #define BOARD_ID_USTR           L"CUL"
 
+#define HAS_USB                 1
+
 #define BUSWARE_CUL
 
 #endif

@@ -2,6 +2,7 @@
 #include <avr/wdt.h>
 
 #include "led.h"
+#include "fncollection.h"
 #include "clock.h"
 #include "display.h"
 #include "transceiver.h"
@@ -21,7 +22,8 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 
     wdt_reset();
 
-    LED_TOGGLE();
+    if(led_mode & 2)
+      LED_TOGGLE();
 
     // one second, 1% duty cycle, 10ms resolution => this is simple ;-)
     if (credit_10ms < MAX_CREDIT)

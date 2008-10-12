@@ -3,9 +3,12 @@
 #include <MyUSB/Drivers/USB/USB.h>
 
 #include "display.h"
+#include "delay.h"
 #include "fncollection.h"
 #include "cc1100.h"
 #include "version.h"
+
+uint8_t led_mode = 2;   // Start blinking
 
 //////////////////////////////////////////////////
 // EEprom
@@ -55,9 +58,8 @@ write_eeprom(char *in)
 void
 ledfunc(char *in)
 {
-  uint8_t hb = 0;
-  fromhex(in+1, &hb, 1);
-  if(hb)
+  fromhex(in+1, &led_mode, 1);
+  if(led_mode & 1)
     LED_ON();
   else
     LED_OFF();
@@ -70,13 +72,12 @@ prepare_boot( uint8_t bl )
      USB_ShutDown();
 
      // next reboot we like to jump to Bootloader ...
-     if (bl)
+     if(bl)
 	  eeprom_write_byte( EE_REQBL, 1 );
 
-     // give USB a bit time to recover from disconnect
-     wdt_enable(WDTO_2S); 
+     TIMSK0 = 0;        // Disable the clock which resets the watchdog
 
-     // go to bed
+     // go to bed, the wathchdog will take us to reset
      while (1);
 
 }

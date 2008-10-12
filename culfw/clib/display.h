@@ -19,4 +19,11 @@ void display_nl(void);
 #define DH(a,b) display_hex(a,b,'0')
 #define DNL display_nl
 
+#define DISPLAY_USB         (1<<0)
+#define DISPLAY_GLCD        (1<<1)
+
+#if defined(HAS_GLCD) && defined(USB_OPTIONAL)
+extern uint8_t display_channels;
+#endif
+
 #endif

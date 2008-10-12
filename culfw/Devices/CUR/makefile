@@ -96,8 +96,10 @@ SRC = $(TARGET).c                                                  \
 		../clib/display.c                                  \
 		../clib/fncollection.c                             \
 		../clib/ringbuffer.c                               \
+		../clib/spi.c                                      \
 		../clib/transceiver.c                              \
 		../clib/ttydata.c                                  \
+		../clib/glcd.c                                     \
 		../MyUSB/Scheduler/Scheduler.c                     \
 		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
 		../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \

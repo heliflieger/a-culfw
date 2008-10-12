@@ -1,5 +1,15 @@
+Version 1.04 (Sun Oct 12 11:24:02 MEST 2008)
+- l command added (CUL/CUR)
+- L / s command (CUR). Note, s is experimental and will go away.
+- Accepting half-byte S300 messages
+- various small fixes
+- MyUSB update
+- r command (sending raw data)
+
+
 Version 1.03
 - File reorganization to accomodate CUR and other projects
+
 
 Version 1.02
 - Version string will be updated manually
@@ -9,9 +19,14 @@ Version 1.02
 - Recalibrating every 2 minutes (busy for 1ms, less than 0.01%)
 - Factory defaults chenged to measured optimum.
 
+
 TODO
 ============
 - BUG: The CUL resets if the USB data is not consumed by the host
 - Receive HMS
 - Send FHT (Sync, FHTBUFFER?)
 - Compute S300TH/KS300 second half of checksum (Nice to have)
+- CUR: Read/Write file
+- CUR: Menu
+- CUR: IR
+- CUR: Battery

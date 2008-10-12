@@ -1,5 +1,14 @@
+#include "board.h"
 #include "display.h"
 #include "ringbuffer.h"
+#ifdef HAS_GLCD
+#include "glcd.h"
+#endif
+
+#if defined(USB_OPTIONAL)
+uint8_t display_channels = DISPLAY_USB | DISPLAY_GLCD;
+//uint8_t display_channels = DISPLAY_USB;
+#endif
 
 extern rb_t *Tx_Buffer;
 
@@ -31,12 +40,26 @@ fromhex(const char *in, uint8_t *out, uint8_t buflen)
   return op-out;
 }
 
+#if defined(USB_OPTIONAL)
+#define CHECK(a) if(display_channels & a)
+#else
+#define CHECK(a)
+#endif
+
 //////////////////////////////////////////////////
 // Display routines
 void
 display_char(char data)
 {
+#ifdef HAS_USB
+  CHECK(DISPLAY_USB)
   rb_put(Tx_Buffer, data);
+#endif
+
+#ifdef HAS_GLCD
+  CHECK(DISPLAY_GLCD)
+  lcd_putchar(data, NULL);
+#endif
 }
 
 void

@@ -121,11 +121,16 @@ Protocol
       - ee is the FS20 timespec. Note that cc must have the extension bit set.
       Example: F12340111
 
-    T<hex>
-      Send out an FHT message. Same as the F command, but with FHT checksum
-      instead of FS20 checksum.
-      Example: T123400A600
+    l<hex>
+      Set the led mode.
+      - Bit 0: Set LED on/off
+      - Bit 1: The LED will blink once a second if the bit is set
 
+    L<hex> (CUR only)
+      Set the LCD mode.
+      - Byte 0: Switch LCD+Backlight on/off
+      - Byte 1: Contrast setting
+      - Byte 2: Font setting
 
     R<AA> or R<AAAA>
       Read eeprom (i.e. "saved configuration") byte. Arguments: one or two
@@ -143,6 +148,37 @@ Protocol
         If it is FF, then reset to "factory defaults" next time the firmware
         is resetted.
       Example: R01FF -> 00
+
+    r<hex>
+      Send raw data. Parameters (each 1 byte, times are in 10us units):
+      - high_zero  x 10us wait after the rising edge when sending a 0
+      - low_zero   x 10us wait after the falling edge, when sending a 0
+      - high_one   x 10us wait after the rising edge, when sending a 1
+      - low_one    x 10us wait after the falling edge, when sending a 1
+      - pause      x 1000us time between repeats
+      - repeat     number of repetitions
+      - nbyte      number of bytes to interpret
+      - bits       valid (upper) bits in the last byte (0-7)
+      - data       up to 8 bytes
+      E.g. the command F80C20200 looks like this in raw:
+      r28283C3C0A03050580E140A004A8
+      Best to set reception to X05 and calculate/copy data from there.
+
+    s<hex> (CUR only)
+      Set the scoll region / partial display
+      - No arg
+        Display normal mode.
+      - 1 Byte
+        Set scroll offset, enter scroll mode
+      - 2 Bytes
+        Set partial mode, top and bottom offsets
+      - 3 Bytes
+        Scroll mode definition (top/middle/bottom)
+
+    T<hex>
+      Send out an FHT message. Same as the F command, but with FHT checksum
+      instead of FS20 checksum.
+      Example: T123400A600
 
     t
       Output the time since boot. The output has the following form: 

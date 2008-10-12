@@ -9,6 +9,7 @@
 #include <string.h>
 #include <avr/wdt.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
 #include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
@@ -24,6 +25,8 @@
 #include "ringbuffer.h"
 #include "transceiver.h"
 #include "ttydata.h"
+#include "glcd.h"
+#include "spi.h"
 
 
 /* Scheduler Task List */
@@ -42,7 +45,9 @@ t_fntab fntab[] = {
   { 'C', ccreg },
   { 'F', fs20send },
   { 'l', ledfunc },
+  { 'L', lcdfunc },
   { 'R', read_eeprom },
+  { 's', lcdscroll },
   { 'T', fhtsend },
   { 't', gettime },
   { 'V', version },
@@ -85,34 +90,45 @@ EVENT_HANDLER(USB_Disconnect)
 int
 main(void)
 {
-
   // if we had been restarted by watchdog check the REQ BootLoader byte in the
   // EEPROM ...
   if (bit_is_set(MCUSR,WDRF) && eeprom_read_byte(EE_REQBL)) {
-       eeprom_write_byte( EE_REQBL, 0 ); // clear flag
-       start_bootloader();
+     eeprom_write_byte( EE_REQBL, 0 ); // clear flag
+     start_bootloader();
   }
-
   MCUSR &= ~(1 << WDRF);
-
   wdt_enable(WDTO_2S); 
 
   SetSystemClockPrescaler(0);                   // Disable Clock Division
 
   led_init();
+  //spi_init();
   SPI_MasterInit(DATA_ORDER_MSB);
   
   rb_init(Tx_Buffer, TX_SIZE);
-  credit_10ms = MAX_CREDIT/2;
 
-  minute = 0;
+  // Setup the timers
   OCR0A  = 249;  // Timer0: 0.008s (1/125sec) = 8MHz/256/250  (?)
   TCCR0B = _BV(CS02);       
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);
 
+  TCCR1A = 0;
+  TCCR1B = _BV(CS11) | _BV(WGM12); // 8MHz/8 -> 1MHz / 1us
+
   Scheduler_Init();                            
   USB_Init();
+
+  // LCD
+
+  // Joystick
+  DDRE   = 0;
+  DDRA   = 0;
+  PORTE |= (_BV(PE2) | _BV(PE6) | _BV(PE7));
+  PORTA |= (_BV(PA0) | _BV(PA1));
+
+  // Battery
+  PORTF |= (_BV(PF1) | _BV(PF2));
+
   Scheduler_Start();                            // Won't return
 }
-

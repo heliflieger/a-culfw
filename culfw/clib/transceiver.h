@@ -17,10 +17,10 @@
 #define REP_RSSI     _BV(5)
 
 /* public prototypes */
-void tx_init(void);
-void set_txreport(char *);
-void fs20send(char *);
-void fhtsend(char *);
+void set_txreport(char *in);
+void fs20send(char *in);
+void fhtsend(char *in);
+void rawsend(char *in);
 
 extern uint8_t tx_report;
 

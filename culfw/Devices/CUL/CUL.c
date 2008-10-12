@@ -43,6 +43,7 @@ t_fntab fntab[] = {
   { 'F', fs20send },
   { 'l', ledfunc },
   { 'R', read_eeprom },
+  { 'r', rawsend },
   { 'T', fhtsend },
   { 't', gettime },
   { 'V', version },
@@ -80,6 +81,8 @@ EVENT_HANDLER(USB_Disconnect)
 int
 main(void)
 {
+  TCCR1A = 0;                      // Setup Timer1, needed for delay
+  TCCR1B = _BV(CS11) | _BV(WGM12); // 8MHz/8 -> 1MHz / 1us
 
   // if we had been restarted by watchdog check the REQ BootLoader byte in the
   // EEPROM ...
@@ -91,7 +94,7 @@ main(void)
   MCUSR &= ~(1 << WDRF);
 
   wdt_enable(WDTO_2S); 
-  SetSystemClockPrescaler(0);                   // Disable Clock Division
+  SetSystemClockPrescaler(0);      // Disable Clock Division
 
   led_init();
   SPI_MasterInit(DATA_ORDER_MSB);
@@ -99,14 +102,12 @@ main(void)
   rb_init(Tx_Buffer, TX_SIZE);
   credit_10ms = MAX_CREDIT/2;
 
-  minute = 0;
-  OCR0A  = 249;  // Timer0: 0.008s (1/125sec) = 8MHz/256/250  (?)
+  TCCR0A = _BV(WGM01);             // Timer 0
   TCCR0B = _BV(CS02);       
-  TCCR0A = _BV(WGM01);
+  OCR0A  = 249;                    // 0.008s (1/125sec) = 8MHz/256/250  (?)
   TIMSK0 = _BV(OCIE0A);
 
   Scheduler_Init();                            
   USB_Init();
-  Scheduler_Start();                            // Won't return
+  Scheduler_Start();               // Won't return
 }
-
