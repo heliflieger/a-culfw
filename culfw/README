@@ -199,15 +199,16 @@ Protocol
             The reception is disabled after initialization.
 
     X<RR>
-      Enable data reporting. <RR> is a one-byte hex value, with following bits:
-      - Bit 1: Report known messages (parity & checksum ok), with type prefix.
-      - Bit 2: Report each of the (repeated) packets of a message
-      - Bit 3: Report detailed data, even with wrong parity / checksum.
-      - Bit 4: Monitor mode: output an r/s/t/u on a risings edge (the letter
+      Enable data reporting. <RR> is a one-byte hex value, with following bits
+      (bit 0 is the LSB bit):
+      - Bit 0: Report known messages (parity & checksum ok), with type prefix.
+      - Bit 1: Report each of the (repeated) packets of a message
+      - Bit 2: Report detailed data, even with wrong parity / checksum.
+      - Bit 3: Monitor mode: output an r/s/t/u on a risings edge (the letter
                depends on the internal state), g/h/i on a falling edge
-      - Bit 5: Timing: in monitor mode output two additional bytes (high byte,
+      - Bit 4: Timing: in monitor mode output two additional bytes (high byte,
                low byte) of the internal microsecond timer. This is binary!
-      - Bit 6: RSSI: report RSSI value as an additional HEX byte after digested
+      - Bit 5: RSSI: report RSSI value as an additional HEX byte after digested
                data or as a separate byte if Bit 3 is set too.
 
       Note: 00 disables radio reception, any other value initialize the radio
