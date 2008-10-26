@@ -1,16 +1,13 @@
 #include "board.h"
 #include "display.h"
 #include "ringbuffer.h"
-#ifdef HAS_GLCD
-#include "glcd.h"
-#endif
+#include "cdc.h"
+#include "led.h"
+#include "delay.h"
 
 #if defined(USB_OPTIONAL)
-uint8_t display_channels = DISPLAY_USB | DISPLAY_GLCD;
-//uint8_t display_channels = DISPLAY_USB;
+uint8_t display_channels = DISPLAY_USB; // GLCD will be switched on
 #endif
-
-extern rb_t *Tx_Buffer;
 
 /*
  * Converts a hex string to a buffer. Not hex characters will be skipped
@@ -53,12 +50,31 @@ display_char(char data)
 {
 #ifdef HAS_USB
   CHECK(DISPLAY_USB)
-  rb_put(Tx_Buffer, data);
+  {
+    if(USB_Tx_Buffer->nbytes >= USB_Tx_Buffer->size)
+      CDC_Task();
+    rb_put(USB_Tx_Buffer, data);
+  }
 #endif
+#if 0
+  {
+    static uint8_t buf[20];
+    static uint8_t off = 2;
 
-#ifdef HAS_GLCD
-  CHECK(DISPLAY_GLCD)
-  lcd_putchar(data, NULL);
+    if(data == '\r')
+      return;
+    if(data == '\n') {
+      buf[off] = 0;
+      buf[1] = '0';
+      buf[2] = '9';
+      lcdfunc(buf);
+      off = 3;
+      return;
+    } else {
+      if(off < 19)
+        buf[off++] = data;
+    }
+  }
 #endif
 }
 

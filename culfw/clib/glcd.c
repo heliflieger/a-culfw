@@ -33,6 +33,7 @@
 #include "led.h"
 #include "delay.h"
 #include "display.h"
+#include "clock.h"
 
 // check which font file should be used, define default
 #if 0
@@ -75,16 +76,15 @@ uint8_t font_h = 8, font_w = 6;
 void
 lcdfunc(char *in)
 {
-  uint8_t hb[3];    // backlight, contrast, font
+  uint8_t hb[5];    // backlight, contrast, font
 
-  fromhex(in+1, hb, 3);
+  fromhex(in+1, hb, 5);
 
   if(hb[0]) {
 
     LCD_BL_DDR  |= _BV(LCD_BL_PIN);            // Switch on, init
     LCD_BL_PORT |= _BV(LCD_BL_PIN);
     lcd_init();
-    lcd_setcolor( WHITE, BLACK );
     display_channels |= DISPLAY_GLCD;
 
   } else  {
@@ -105,6 +105,8 @@ lcdfunc(char *in)
     flash_font = OEM_6x8_font;
     font_h = 8; font_w = 6;
   }
+  lcd_setcolor( hb[3], hb[4] );
+  lcd_cls();
 }
 
 void
@@ -118,51 +120,66 @@ lcdscroll(char *in)
     lcd_senddata (hb[0]);
     lcd_senddata (hb[1]);
     lcd_senddata (hb[2]);
+/*
   } else if(r == 2) {
     lcd_sendcmd (LCD_CMD_PTLAR);    // Partial area
     lcd_senddata (hb[0]);
     lcd_senddata (hb[1]);
     lcd_sendcmd (LCD_CMD_PTLON);    // Partial area
+*/
+  } else if(r == 2) {
+    for(r = 0; r < hb[0]; r+=3) {
+      lcd_sendcmd (LCD_CMD_SEP);      // Scrolling
+      lcd_senddata(r);
+      my_delay_ms(hb[1]);
+    }
   } else if(r == 1) {
-    lcd_sendcmd (LCD_CMD_SEP);    // Scrolling
-    lcd_senddata (hb[0]);
+    for(r = 0; r < hb[0]; r+=3) {
+      lcd_sendcmd (LCD_CMD_SEP);      // Scrolling
+      lcd_senddata(r);
+      my_delay_ms(10);
+    }
   } else if(r == 0) {
-    lcd_sendcmd (LCD_CMD_NORON);    // Scrolling
+    lcd_sendcmd (LCD_CMD_NORON); 
+    lcd_line (WINDOW_LEFT, WINDOW_TOP,
+	    WINDOW_RIGHT, WINDOW_BOTTOM, background_color);
   }
 }
 
-void lcd_send( uint16_t data ) {
-     CLEAR_BIT( SPCR, SPE );		// disable SPI
+void
+lcd_send( uint16_t data )
+{
+  CLEAR_BIT( SPCR, SPE );		// disable SPI
 
-     CLEAR_BIT( SPI_PORT, SCK);	        // SCK Low
-     asm volatile ("nop");
+  CLEAR_BIT( SPI_PORT, SCK);	        // SCK Low
+  asm volatile ("nop");
 
-     CLEAR_BIT( LCD_PORT, LCD_CS);	// select Display
-     asm volatile ("nop");
+  CLEAR_BIT( LCD_PORT, LCD_CS);	// select Display
+  asm volatile ("nop");
 
-     data = data << 7;
+  data = data << 7;
 
-     for (uint8_t i=0; i<9; i++) {
-	  
-	  if (data & 0x8000) {
-	       SET_BIT( SPI_PORT, MOSI);
-	  } else {
-	       CLEAR_BIT( SPI_PORT, MOSI);
-	  }
+  for (uint8_t i=0; i<9; i++) {
+       
+       if (data & 0x8000) {
+            SET_BIT( SPI_PORT, MOSI);
+       } else {
+            CLEAR_BIT( SPI_PORT, MOSI);
+       }
 
-	  asm volatile ("nop");
-	  SET_BIT( SPI_PORT, SCK);	        // SCK Hi
-	  asm volatile ("nop");
-	  CLEAR_BIT( SPI_PORT, SCK);	        // SCK Low
+       asm volatile ("nop");
+       SET_BIT( SPI_PORT, SCK);	        // SCK Hi
+       asm volatile ("nop");
+       CLEAR_BIT( SPI_PORT, SCK);	        // SCK Low
 
-	  data = data << 1;
-     }
+       data = data << 1;
+  }
 
-     asm volatile ("nop");
-     
-     SET_BIT( LCD_PORT, LCD_CS);	// deselect Display
+  asm volatile ("nop");
+  
+  SET_BIT( LCD_PORT, LCD_CS);	// deselect Display
 
-     SET_BIT( SPCR, SPE );		// enable SPI
+  SET_BIT( SPCR, SPE );		// enable SPI
 }
 
 
@@ -246,17 +263,15 @@ lcd_window (uint8_t xs,
 void
 lcd_cls (void)
 {
-
     lcd_window (0, 0, 131, 131);	// set clearance window
-
     lcd_sendcmd (LCD_CMD_RAMWR);	// write memory
 
     uint16_t i;
-
     // clear screen with background color (full screen 132x132 pixel)
     for (i = 0; i < 0x4410; i++) {
         lcd_senddata (background_color);
     }
+
 }
 
 //*****************************************************************************
@@ -301,7 +316,6 @@ lcd_init (void)
 
     lcd_sendcmd (LCD_CMD_COLMOD);	// Colour mode
     lcd_senddata (COLORMODE_256);	//  256 colour mode select
-
     lcd_sendcmd (LCD_CMD_INVON);	// Non Invert mode
     lcd_sendcmd (LCD_CMD_RGBSET);	// LUT write
 
@@ -402,8 +416,12 @@ lcd_newline (void)
 {
 
     lcd_x = WINDOW_LEFT;
-    if (lcd_y < WINDOW_BOTTOM-font_h)
-        lcd_y += font_h;
+    lcd_y += font_h;
+
+    if ((lcd_y + font_h) > WINDOW_BOTTOM) {
+      lcd_y = WINDOW_TOP;
+      lcd_cls();
+    }
 }
 
 //*****************************************************************************
@@ -477,11 +495,6 @@ lcd_putchar (char data,
     // set LF/CR on column overflow
     if ((lcd_x + font_w) >= WINDOW_RIGHT)
         lcd_newline ();
-    // set HOME on row overflow
-    if ((lcd_y + font_h) > WINDOW_BOTTOM) {
-      lcd_y = WINDOW_TOP;
-      lcd_cls();
-    }
 
     switch (data) {
             // change text color to value of data byte

@@ -25,9 +25,11 @@
 #include "ringbuffer.h"
 #include "transceiver.h"
 #include "ttydata.h"
-#include "glcd.h"
+#include "pcf8833.h"
 #include "spi.h"
-
+#include "battery.h"
+#include "fswrapper.h"
+#include "ttydata.h"
 
 /* Scheduler Task List */
 TASK_LIST
@@ -38,21 +40,27 @@ TASK_LIST
   { Task: Minute_Task,   TaskStatus: TASK_RUN },
 };
 
+extern void SPI_MasterInit2(void);
+
 t_fntab fntab[] = {
 
-  { 'b', prepare_b },
   { 'B', prepare_B },
   { 'C', ccreg },
   { 'F', fs20send },
-  { 'l', ledfunc },
-  { 'L', lcdfunc },
   { 'R', read_eeprom },
-  { 's', lcdscroll },
   { 'T', fhtsend },
-  { 't', gettime },
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
+
+  { 'a', batfunc },
+  { 'b', prepare_b },
+  { 'd', lcdfunc },
+  { 'l', ledfunc },
+  { 'r', read_file },
+  { 't', gettime },
+  { 'w', write_file },
+
   { 0, 0 },
 };
 
@@ -96,18 +104,8 @@ main(void)
      eeprom_write_byte( EE_REQBL, 0 ); // clear flag
      start_bootloader();
   }
-  MCUSR &= ~(1 << WDRF);
-  wdt_enable(WDTO_2S); 
 
-  SetSystemClockPrescaler(0);                   // Disable Clock Division
-
-  led_init();
-  //spi_init();
-  SPI_MasterInit(DATA_ORDER_MSB);
-  
-  rb_init(Tx_Buffer, TX_SIZE);
-
-  // Setup the timers
+  // Setup the timers. Are needed for watchdog-reset
   OCR0A  = 249;  // Timer0: 0.008s (1/125sec) = 8MHz/256/250  (?)
   TCCR0B = _BV(CS02);       
   TCCR0A = _BV(WGM01);
@@ -116,10 +114,24 @@ main(void)
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12); // 8MHz/8 -> 1MHz / 1us
 
+  SetSystemClockPrescaler(0);                   // Disable Clock Division
+
+  MCUSR &= ~(1 << WDRF);                        // Enable the watchdog
+  wdt_enable(WDTO_2S); 
+
+  led_init();
+  //spi_init();
+  SPI_MasterInit(DATA_ORDER_MSB);
+  rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
+  rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
   Scheduler_Init();                            
   USB_Init();
+  tty_init();
+  bat_init();
 
-  // LCD
+  df_chip_t df;
+  df_init(&df);
+  fs_init( &fs, df );
 
   // Joystick
   DDRE   = 0;
@@ -127,8 +139,7 @@ main(void)
   PORTE |= (_BV(PE2) | _BV(PE6) | _BV(PE7));
   PORTA |= (_BV(PA0) | _BV(PA1));
 
-  // Battery
-  PORTF |= (_BV(PF1) | _BV(PF2));
+  credit_10ms = MAX_CREDIT/2;
 
   Scheduler_Start();                            // Won't return
 }

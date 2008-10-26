@@ -35,6 +35,12 @@
 #define LCD_CS   PB4
 #define LCD_RST  PE3
 
+#define BAT_PORT                PORTF
+#define BAT_PIN                 PINF
+#define BAT_PIN1                PF1
+#define BAT_PIN2                PF2
+#define BAT_MUX                 3
+
 #define BUSWARE_CUR
 
 

@@ -1,5 +1,4 @@
 #include <avr/eeprom.h>
-#include <avr/wdt.h>
 #include <MyUSB/Drivers/USB/USB.h>
 
 #include "display.h"
@@ -7,6 +6,7 @@
 #include "fncollection.h"
 #include "cc1100.h"
 #include "version.h"
+#include "cdc.h"
 
 uint8_t led_mode = 2;   // Start blinking
 

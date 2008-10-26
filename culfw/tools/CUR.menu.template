@@ -18,8 +18,7 @@ C Dimup F$13
 C Dimdown $14
 
 M Control
-C:Backlight on:L01FFFF
-C:Backlight off:L00FFFF
-C:Contrast +:LFFFEFF
-C:Contrast -:LFFFDFF
-C:New font:LFFDDFE
+C:Backlight on:dFF01FF
+C:Backlight off:LdFF00
+C:Contrast +:dFFFFFE
+C:Contrast -:dFFFFFD

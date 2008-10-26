@@ -7,6 +7,7 @@ typedef struct _fntab {
 } t_fntab;
 extern t_fntab fntab[];
 
-void analyze_ttydata(uint8_t ucCommand);
+void analyze_ttydata(void);
+void tty_init(void);
 
 #endif

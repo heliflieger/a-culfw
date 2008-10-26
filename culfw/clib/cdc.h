@@ -50,7 +50,8 @@ enum CDC_Line_Codeing_Parity_t
 
 TASK(CDC_Task);
 
-#define TX_SIZE 120
-extern rb_t *const Tx_Buffer;
+extern rb_t *const USB_Tx_Buffer;
+extern rb_t *const USB_Rx_Buffer;
+extern void (*usbinfunc)(void);
 
 #endif

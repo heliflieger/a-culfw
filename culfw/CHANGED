@@ -1,3 +1,11 @@
+Version 1.05 (Sun Oct 26 15:22:16 MET 2008)
+- USB output routines more stable now.
+- CUR: display routine (command d), with antialiased fonts, scrolling
+- CUR: battery check (command a)
+- CUR: Filesystem: qfs. Command r/w to read/write files. tools/cur_file.pl
+- CVS tag CUL_VER_105
+
+
 Version 1.04 (Sun Oct 12 11:24:02 MEST 2008)
 - l command added (CUL/CUR)
 - L / s command (CUR). Note, s is experimental and will go away.

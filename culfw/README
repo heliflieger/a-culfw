@@ -112,6 +112,15 @@ Protocol
       register
       Example: C35 -> C35 = 0x0D / 13
 
+    d<hex>data
+      CUR display routine. Choose the sub-function with the first two bytes (hex):
+      - FF: LCD control, the next 4 bytes are:
+        - LCD on (01) / off (00) / don't change (FF)
+        - set contrast (00-FC) / increase (FE) / decrease (FD) / don't change (FF)
+      - 00: Set the title to the string following the 00
+      - 01-08: Set the "body" lines 01-08 the the text
+      - 09/0A: Insert a new line at the bottom/top of the screen, scrolling the rest.
+
     F<hex>
       Send out an FS20 message. <hex> is a hex string of the following form:
       hhhhaacc or hhhhaaccee, where 
@@ -132,6 +141,7 @@ Protocol
       - Byte 1: Contrast setting
       - Byte 2: Font setting
 
+
     R<AA> or R<AAAA>
       Read eeprom (i.e. "saved configuration") byte. Arguments: one or two
       byte hex address <AA> or <AAAA>
@@ -149,31 +159,12 @@ Protocol
         is resetted.
       Example: R01FF -> 00
 
-    r<hex>
-      Send raw data. Parameters (each 1 byte, times are in 10us units):
-      - high_zero  x 10us wait after the rising edge when sending a 0
-      - low_zero   x 10us wait after the falling edge, when sending a 0
-      - high_one   x 10us wait after the rising edge, when sending a 1
-      - low_one    x 10us wait after the falling edge, when sending a 1
-      - pause      x 1000us time between repeats
-      - repeat     number of repetitions
-      - nbyte      number of bytes to interpret
-      - bits       valid (upper) bits in the last byte (0-7)
-      - data       up to 8 bytes
-      E.g. the command F80C20200 looks like this in raw:
-      r28283C3C0A03050580E140A004A8
-      Best to set reception to X05 and calculate/copy data from there.
 
-    s<hex> (CUR only)
-      Set the scoll region / partial display
-      - No arg
-        Display normal mode.
-      - 1 Byte
-        Set scroll offset, enter scroll mode
-      - 2 Bytes
-        Set partial mode, top and bottom offsets
-      - 3 Bytes
-        Scroll mode definition (top/middle/bottom)
+    r<filename>
+      (CUR) output the file name <filename>. First the length of the file,
+      (hex 8 byte+nl) is written to the output, then the body of the file.
+      Use "." as filename to get a listing of the current files with length.
+
 
     T<hex>
       Send out an FHT message. Same as the F command, but with FHT checksum
@@ -197,6 +188,13 @@ Protocol
       Note: Writing the CC1101 register adresses (0x00-0x28) will cause a
             ccInitChip, thus writing the modified data directly to the chip.
             The reception is disabled after initialization.
+
+
+    w<length><filename>
+      (CUR) write the file named <filename>. Length is hex, 8 bytes.
+      The command must be followed by length bytes of data, which will be written
+      to the local file.
+
 
     X<RR>
       Enable data reporting. <RR> is a one-byte hex value, with following bits
@@ -301,3 +299,8 @@ Notes
     RSSI:    : C34 -> 217 (217-256-74 = -113 dBm)
     MARCSTATE: C35 -> 01 (Idle), 13 (RX)
 
+
+TODO/BUGS:
+==========
+
+  - Transmitting data via CC1101 is buggy / does not work.

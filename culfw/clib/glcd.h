@@ -45,7 +45,7 @@
 
 // enable graphical functions (line, circle etc.) 
 // needs a lot more program memory then, enable only if really used
-//#define GRAPH_FUNCTIONS
+#define GRAPH_FUNCTIONS
 
 #include "board.h"
 
@@ -77,10 +77,10 @@
 #define MADCTL_VERT       0x68
 
 // offset to compensate tolerances on pixel area
-#define PIXEL_OFFSET  2
+#define PIXEL_OFFSET  1
 // set window heigth and width in pixel
-#define WINDOW_HEIGTH     128
-#define WINDOW_WIDTH      128
+#define WINDOW_HEIGTH     131
+#define WINDOW_WIDTH      131
 
 #define WINDOW_TOP        PIXEL_OFFSET
 #define WINDOW_LEFT       PIXEL_OFFSET

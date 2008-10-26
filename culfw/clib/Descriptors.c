@@ -158,7 +158,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
 										 
 			EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_OUT | CDC_RX_EPNUM),
 			Attributes:       		EP_TYPE_BULK,
-			EndpointSize:           CDC_TXRX_EPSIZE,
+			EndpointSize:           CDC_TX_EPSIZE,
 			PollingIntervalMS:		0x00
 		},
 		
@@ -168,7 +168,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
 										 
 			EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_IN | CDC_TX_EPNUM),
 			Attributes:       		EP_TYPE_BULK,
-			EndpointSize:           CDC_TXRX_EPSIZE,
+			EndpointSize:           CDC_RX_EPSIZE,
 			PollingIntervalMS:		0x00
 		}
 };
