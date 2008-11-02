@@ -2,6 +2,8 @@
 #include "display.h"
 #include "cdc.h"
 #include <stdlib.h>
+#include "menu.h"
+#include <string.h>
 
 #define BUFSIZE 128
 fs_t fs;
@@ -9,6 +11,7 @@ static fs_size_t filesize, offset;
 static fs_inode_t inode;
 static void (*oldinfunc)(void);
 static void write_filedata(void);
+static uint8_t isMenu;                  // Menu hack
 
 //////////////////////////////////
 // Input: Filename 
@@ -85,6 +88,8 @@ write_file(char *in)
   if(ret != FS_OK || filesize == 0)                       // Create only
     goto DONE;
 
+  isMenu = !strcmp(in+9, "MENU");
+
   inode = fs_get_inode( &fs, in+9 );
   offset = 0;
   oldinfunc = usbinfunc;
@@ -113,6 +118,10 @@ write_filedata(void)
   if(offset+len == filesize) { // Ready
     usbinfunc = oldinfunc;
     fs_sync(&fs);
+    if(isMenu) {
+      menu_init();
+      menu_push(0);
+    }
   } else {
     offset += len;
   }

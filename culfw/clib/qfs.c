@@ -4,14 +4,14 @@
  * Quasi-FS: Very primitive FS designed for the Atmel 2Mbit flash chip.
  *
  * Why: fs.c is too slow (ca 300B/sec write) and buggy (writing more than
- * 512Byte does not work and reading crashes too). Initialization takes
- * between 5 and 17 seconds.
+ * 512Byte does not work and reading crashes too). fs.c initialization 
+ * (not formatting!) is annoyingly slow with between 5 and 17 seconds.
  *
  * In qfs we sacrifice space for simplicity and speed (i.e. for as few as
  * possible flash operations).
  *
  * "Features" of qfs:
- * The FS hs room for up to 32 Files, each up to 64kB on a 2MB flash (up to the
+ * The FS has room for up to 32 Files, each up to 64kB on a 2MB flash (up to the
  * last file which is 512bytes shorter). Filenames are up to 14Bytes.
  * Write speed is 9523B/sec, read 26000B/sec (through USB/fswrapper/32B blocks)
  *

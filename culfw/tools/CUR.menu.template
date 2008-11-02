@@ -1,24 +1,63 @@
-M Main
-S FS20 FS20
+M CUR Menu
+S Rooms Rooms
 S Control Control
 
-M FS20
+M Rooms
 <xmllist>
 
-M FS20-Plain
-C Toggle F$12
-C On F$11
-C Off F$00
+M FS20-Plain <11>
+C Toggle F<13>12
+C On F<13>11
+C Off F<13>00
 
-M FS20-Dim
-C Toggle F$12
-C On F$11
-C Off F$00
-C Dimup F$13
-C Dimdown $14
+M FS20-Dim <11>
+C Toggle F<13>12
+C On F<13>11
+C Off F<13>00
+C Dimup F<13>13
+C Dimdown F<13>14
+
+M FHT <11>
+S Desired-Temp ftemp 41
+S Day-Temp ftemp 82
+S Night-Temp ftemp 84
+
+M:ftemp:<21> <11>
+S:16 C:Sorry:T<23><13>20
+S:17 C:Sorry:T<23><13>22
+S:18 C:Sorry:T<23><13>24
+S:19 C:Sorry:T<23><13>26
+S:20 C:Sorry:T<23><13>28
+S:21 C:Sorry:T<23><13>2A
+S:22 C:Sorry:T<23><13>2C
+S:23 C:Sorry:T<23><13>2E
+S:24 C:Sorry:T<23><13>30
+S:25 C:Sorry:T<23><13>32
+
+M Sorry
+C:Not yet
+C:implemented
 
 M Control
-C:Backlight on:dFF01FF
-C:Backlight off:LdFF00
 C:Contrast +:dFFFFFE
 C:Contrast -:dFFFFFD
+S:Sleep:Sleep
+S:LED:LED
+S:Toggle monitor:Monitor
+
+M Sleep
+C:10 sec:s0a
+C:30 sec:s1e
+C:60 sec:s3c
+C:2 min:s78
+C:4 min:sf0
+C:off:s00
+
+M LED
+C on l01
+C off l00
+C blink l02
+
+M Monitor
+C:CC1101 to LCD:m01
+C:CC1101 off:m00

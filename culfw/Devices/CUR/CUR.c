@@ -30,6 +30,8 @@
 #include "battery.h"
 #include "fswrapper.h"
 #include "ttydata.h"
+#include "joy.h"
+#include "menu.h"
 
 /* Scheduler Task List */
 TASK_LIST
@@ -38,6 +40,7 @@ TASK_LIST
   { Task: CDC_Task     , TaskStatus: TASK_STOP },
   { Task: RfAnalyze_Task,TaskStatus: TASK_RUN },
   { Task: Minute_Task,   TaskStatus: TASK_RUN },
+  { Task: JOY_Task,      TaskStatus: TASK_RUN },
 };
 
 extern void SPI_MasterInit2(void);
@@ -57,6 +60,7 @@ t_fntab fntab[] = {
   { 'b', prepare_b },
   { 'd', lcdfunc },
   { 'l', ledfunc },
+  { 'm', lcdout },
   { 'r', read_file },
   { 't', gettime },
   { 'w', write_file },
@@ -127,17 +131,13 @@ main(void)
   Scheduler_Init();                            
   USB_Init();
   tty_init();
+  joy_init();
   bat_init();
 
   df_chip_t df;
   df_init(&df);
   fs_init( &fs, df );
-
-  // Joystick
-  DDRE   = 0;
-  DDRA   = 0;
-  PORTE |= (_BV(PE2) | _BV(PE6) | _BV(PE7));
-  PORTA |= (_BV(PA0) | _BV(PA1));
+  menu_init();
 
   credit_10ms = MAX_CREDIT/2;
 

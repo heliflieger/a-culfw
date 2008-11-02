@@ -1,12 +1,16 @@
 #include <avr/eeprom.h>
 #include <MyUSB/Drivers/USB/USB.h>
 
+#include "board.h"
 #include "display.h"
 #include "delay.h"
 #include "fncollection.h"
 #include "cc1100.h"
 #include "version.h"
 #include "cdc.h"
+#include "pcf8833.h"
+#include "transceiver.h"
+#include "battery.h"
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -68,18 +72,16 @@ ledfunc(char *in)
 void
 prepare_boot( uint8_t bl )
 {
+  USB_ShutDown();
 
-     USB_ShutDown();
+  // next reboot we like to jump to Bootloader ...
+  if(bl)
+       eeprom_write_byte( EE_REQBL, 1 );
 
-     // next reboot we like to jump to Bootloader ...
-     if(bl)
-	  eeprom_write_byte( EE_REQBL, 1 );
+  TIMSK0 = 0;        // Disable the clock which resets the watchdog
 
-     TIMSK0 = 0;        // Disable the clock which resets the watchdog
-
-     // go to bed, the wathchdog will take us to reset
-     while (1);
-
+  // go to bed, the wathchdog will take us to reset
+  while (1);
 }
 
 void
@@ -105,3 +107,17 @@ version(char *unused)
   DS_P( PSTR(BOARD_ID_STR) );
   DNL();
 }
+
+#ifdef HAS_GLCD
+void
+lcdout(char *in)
+{
+  uint8_t a;
+  fromhex(in+1, &a, 1);
+
+  display_channels = (a ? DISPLAY_GLCD : DISPLAY_USB);
+  set_txreport(a ? "X21" : "X00");
+  if(a)
+    batfunc(0);
+}
+#endif

@@ -4,6 +4,7 @@
 #include "cdc.h"
 #include "led.h"
 #include "delay.h"
+#include "pcf8833.h"
 
 #if defined(USB_OPTIONAL)
 uint8_t display_channels = DISPLAY_USB; // GLCD will be switched on
@@ -56,7 +57,9 @@ display_char(char data)
     rb_put(USB_Tx_Buffer, data);
   }
 #endif
-#if 0
+
+#ifdef HAS_GLCD
+  CHECK(DISPLAY_GLCD)
   {
     static uint8_t buf[20];
     static uint8_t off = 2;
@@ -67,7 +70,7 @@ display_char(char data)
       buf[off] = 0;
       buf[1] = '0';
       buf[2] = '9';
-      lcdfunc(buf);
+      lcdfunc((char *)buf);
       off = 3;
       return;
     } else {

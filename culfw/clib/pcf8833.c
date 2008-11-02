@@ -19,6 +19,8 @@
 #include "delay.h"
 #include "display.h"
 #include "clock.h"
+#include "fncollection.h"          // EEPROM OFFSETS
+#include <avr/eeprom.h>
 
 #include "fonts/courier_10x17.inc" // Antialiased: big
 #define TITLE_FONT                 courier_10x17
@@ -36,7 +38,7 @@
 #define BODY_LINECHARS             (VISIBLE_WIDTH/BODY_FONT_WIDTH)
 
 static uint8_t current_contrast;
-static uint8_t scroll_y; 
+static uint8_t scroll_y = 18;
 
 static void lcd_sendcmd (uint8_t cmd);
 static void lcd_senddata (uint8_t data);
@@ -45,7 +47,6 @@ static void drawtext(char *dataptr, uint8_t datalen, uint8_t *font,
                         uint8_t font_width, uint8_t lcd_y, uint8_t font_y,
                         uint8_t rows);
 static void lcd_init(void);
-static void lcd_cls(void);
 static void lcd_scroll(int8_t offset);
 
 /////////////////////////////////////////////////////////////////////
@@ -63,7 +64,8 @@ lcdfunc(char *in)
   fromhex(in+1, hb, 3);
 
   if(hb[0] == 0xFF) {                              // Control: On/Off, Contrast
-    if(hb[1] != 0xFF) {
+
+    if(hb[1] != 0xFF) {                         
 
       if(hb[1]) {
 
@@ -71,42 +73,58 @@ lcdfunc(char *in)
         LCD_BL_PORT |= _BV(LCD_BL_PIN);
         display_channels |= DISPLAY_GLCD;
         lcd_init();
-        lcd_cls();
 
-      } else  {
+        if(hb[1] == 2) {                          // Clear screen
+          lcd_cls();
+          lcd_line(WINDOW_LEFT,TITLE_HEIGHT-1,
+                   WINDOW_RIGHT,TITLE_HEIGHT-1, 0xf000);
+        }
+      }
+
+      else {
 
         LCD_BL_PORT &= ~_BV(LCD_BL_PIN);           // Switch off the display
         lcd_sendcmd (LCD_CMD_SLEEPIN);   
         display_channels &= ~DISPLAY_GLCD;
 
-        return;
       }
+      return;
     }
 
     if(hb[2] != 0xFF) {                           // Contrast
+
       if(hb[2] == 0xFE) {
-        current_contrast++;
-      } else if (hb[2] == 0xFD) {
         current_contrast--;
+      } else if (hb[2] == 0xFD) {
+        current_contrast++;
+      } else if (hb[2] == 0xFC) {
+        current_contrast = eeprom_read_byte((uint8_t*)EE_CONTRAST);
       } else {
         current_contrast = hb[2];
       }
+      eeprom_write_byte((uint8_t*)EE_CONTRAST, current_contrast);
+
       lcd_sendcmd (LCD_CMD_SETCON);
       lcd_senddata (current_contrast);
     }
     return;
   }
 
-  uint8_t row = hb[0];
+  lcd_putline(hb[0], in+3);
+}
+
+void
+lcd_putline(uint8_t row, char *in)
+{
   if(row == 0) {                                // Title
-    drawtext(in+3, TITLE_LINECHARS,
+    drawtext(in, TITLE_LINECHARS,
                 TITLE_FONT, TITLE_FONT_WIDTH,
                 0, 0, TITLE_FONT_HEIGHT);
 
   } else if(row < 9) {                          // Body, directly adressed
 
     row--;
-    drawtext(in+3, BODY_LINECHARS,
+    drawtext(in, BODY_LINECHARS,
                 BODY_FONT, BODY_FONT_WIDTH,
                 scroll_y+BODY_FONT_HEIGHT*row,
                 0, BODY_FONT_HEIGHT);
@@ -133,7 +151,7 @@ lcdfunc(char *in)
 
       lcd_scroll(row == 0 ? -CHUNK : CHUNK);
 
-      drawtext(in+3, BODY_LINECHARS,
+      drawtext(in, BODY_LINECHARS,
                   BODY_FONT, BODY_FONT_WIDTH,
                   scroll_y+dpyoffset, fontoffset, CHUNK);
 
@@ -142,7 +160,6 @@ lcdfunc(char *in)
     }
 
   }
-
 }
 
 static void
@@ -212,7 +229,7 @@ lcd_window (uint8_t xs,
   lcd_senddata (ye);
 }
 
-static void
+void
 lcd_cls(void)
 {
   lcd_window (0, 0, 131, 131);	// set clearance window
@@ -255,7 +272,6 @@ lcd_init (void)
   lcd_senddata(GBUF_HEIGHT-TITLE_HEIGHT);            // Middle == scroll area
   lcd_senddata(0);              // bottom
 
-  scroll_y = 18;
   lcd_scroll(0);                    // Switch scrolling on
 }
 
@@ -275,7 +291,7 @@ lcd_scroll(int8_t offset)
  
 ////////////////////////////////////////////////////////////////////////
 // Draw a text-row (or some pixel-rows of this text-row) to the display.
-void
+static void
 drawtext(char *dataptr, uint8_t datalen, uint8_t *font, uint8_t font_width,
         uint8_t lcd_y, uint8_t font_y, uint8_t rows)
 {
@@ -333,4 +349,84 @@ drawtext(char *dataptr, uint8_t datalen, uint8_t *font, uint8_t font_width,
 
     font_y++;
   }
+}
+
+///////////////////////////
+// Note: no x can be specified. Used for displaying the row selektor >
+void
+lcd_putchar(uint8_t row, char content)
+{
+  char data[2];
+  data[0] = content, data[1] = 0;
+
+  drawtext(data, 1, BODY_FONT, BODY_FONT_WIDTH,
+                scroll_y+BODY_FONT_HEIGHT*(row-1), 0, BODY_FONT_HEIGHT);
+}
+
+////////////////////////////
+// Description: Draw one pixel on LCD
+void
+lcd_pixel(uint8_t x, uint8_t y, uint16_t col)
+{
+  lcd_window(x, y, x + 1, y + 1);
+  lcd_sendcmd(LCD_CMD_RAMWR);	// write memory
+  lcd_senddata(col>>8);
+  lcd_senddata(col&0xff);
+}
+
+static void
+swap(uint8_t *a, uint8_t *b)
+{
+  uint8_t c;
+  c = *a;
+  *a = *b;
+  *b = c;
+}
+
+////////////////////////////
+// Description: Draw a line using the Bresenham's line algorithm
+void
+lcd_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t col)
+{
+  int16_t d, dx, dy;
+  int16_t ainc, binc, yinc;
+  int16_t x, y;
+
+  if(x1 > x2) {
+    swap(&x1, &x2);
+    swap(&y1, &y2);
+  }
+
+  if(x2 == x1) {
+    if(y1 > y2)
+      swap(&y1, &y2);
+    for(d = y1; d < y2; d++)
+      lcd_pixel (x1, d, col);
+    return;
+  }
+
+  if(y2 > y1)
+    yinc = 1;
+  else
+    yinc = -1;
+
+  dx = x2 - x1;
+  dy = abs (y2 - y1);
+  d = 2 * dy - dx;
+  ainc = 2 * (dy - dx);
+  binc = 2 * dy;
+  x = x1;
+  y = y1;
+  lcd_pixel (x, y, col);
+  x = x1 + 1;
+
+  do {
+    if(d >= 0) {
+      y += yinc;
+      d += ainc;
+    }
+    else
+      d += binc;
+    lcd_pixel (x, y, col);
+  } while (++x < x2);
 }

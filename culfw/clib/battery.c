@@ -62,6 +62,6 @@ batfunc(char *unused)
 void
 bat_init(void)
 {
-  // pull Battery stati
-  BAT_PORT |= (_BV(BAT_PIN1) | _BV(BAT_PIN1));
+  BAT_DDR   = 0;
+  BAT_PORT |= (_BV(BAT_PIN1) | _BV(BAT_PIN1));          // pull Battery stati
 }

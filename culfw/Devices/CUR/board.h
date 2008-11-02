@@ -35,11 +35,30 @@
 #define LCD_CS   PB4
 #define LCD_RST  PE3
 
+#define BAT_DDR                 DDRF
 #define BAT_PORT                PORTF
 #define BAT_PIN                 PINF
 #define BAT_PIN1                PF1
 #define BAT_PIN2                PF2
 #define BAT_MUX                 3
+
+#define JOY_DDR1                DDRE
+#define JOY_DDR2                DDRA
+#define JOY_PORT1               PORTE
+#define JOY_PORT2               PORTA
+#define JOY_PINSET_1            PINE
+#define JOY_PINSET_2            PINA
+#define JOY_PIN1                PE2
+#define JOY_PIN2                PE6
+#define JOY_PIN3                PE7
+#define JOY_PIN4                PA0
+#define JOY_PIN5                PA1
+
+
+#define DF_DDR                  DDRB 
+#define DF_PORT                 PORTB 
+#define DF_CS                   PB6
+
 
 #define BUSWARE_CUR
 

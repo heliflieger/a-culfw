@@ -24,10 +24,7 @@
 #define _DATAFLASH_H
 
 #include <stdint.h>
-
-#define DF_DDR   DDRB 
-#define DF_PORT  PORTB 
-#define DF_CS    PB6
+#include <board.h>
 
 /* for AT45DB161B (older revision, without the low-speed mode,
  * define SUPPORT_AT45DB161B */

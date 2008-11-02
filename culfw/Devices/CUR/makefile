@@ -103,7 +103,9 @@ SRC = $(TARGET).c                                                  \
 		../clib/transceiver.c                              \
 		../clib/ttydata.c                                  \
 		../clib/pcf8833.c                                  \
+		../clib/menu.c                                     \
 		../clib/battery.c                                  \
+		../clib/joy.c                                      \
 		../MyUSB/Scheduler/Scheduler.c                     \
 		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
 		../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \

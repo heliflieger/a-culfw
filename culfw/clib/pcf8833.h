@@ -37,11 +37,18 @@
 #define VISIBLE_WIDTH      130
 #define GBUF_HEIGHT        132
 
+#define LCD_TEXTROWS         8
+
 #define WINDOW_TOP        PIXEL_OFFSET
 #define WINDOW_LEFT       PIXEL_OFFSET
 #define WINDOW_RIGHT      (VISIBLE_WIDTH+PIXEL_OFFSET)
 #define WINDOW_BOTTOM     (VISIBLE_HEIGTH+PIXEL_OFFSET)
 
 void lcdfunc(char *);
+void lcd_putline(uint8_t, char *);
+void lcd_putchar(uint8_t y, char content);
+void lcd_pixel(uint8_t x, uint8_t y, uint16_t col);
+void lcd_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t col);
+void lcd_cls(void);
 
 #endif // GLCD_H

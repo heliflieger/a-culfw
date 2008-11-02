@@ -5,6 +5,8 @@ use warnings;
 
 my (%h, $n, %r);
 
+sub chkprint($);
+
 if(int(@ARGV) != 2) {
   print "Usage: xmllist2curmenu.pl xmllist template > menu\n";
   exit(1);
@@ -17,11 +19,18 @@ while(my $l = <FH>) {
   if($l =~ m+^\t\t<FS20 name="([^"]*)".*sets="([^"]*)"+) {
     $n=$1;
     $h{$n}{sets} = $2;
+    $h{$n}{TYPE} = "FS20";
   }
+  if($l =~ m+^\t\t<FHT name="([^"]*)"+) {
+    $n=$1;
+    $h{$n}{TYPE} = "FHT";
+  }
+
   next if(!$n);
   $h{$n}{def}  = $1 if($l =~ m+^\t\t\t<INT key="DEF" value="([^"]*)"+);
   $h{$n}{room} = $1 if($l =~ m+^\t\t\t<ATTR key="room" value="([^"]*)"+);
   undef($n) if($l =~ m+^\t\t</FS20+);
+  undef($n) if($l =~ m+^\t\t</FHT+);
 }
 close(FH);
 
@@ -41,18 +50,24 @@ while(my $l = <FH>) {
   my $c = substr($l,1,1);
   my @a = split($c, $l);
 
-  $defs{$a[1]} = sprintf("%02x", $n++) if($a[0] eq "M");
+  if($a[0] eq "M") {
+    $defs{$a[1]} = sprintf("%02x", $n++);
+  }
   $n += int(keys %r)  if($l =~ m/^<xmllist>/);
 }
 close(FH);
+
+printf STDERR "WARNING: Too many menu definitions, 32 allowed\n" if($n > 32);
 
 
 ##################
 # Template file, second run
 open(FH, $ARGV[1]) || die("$ARGV[1]: $!\n");
-printf "#MENU %02x\n\n", $n;
+my $line = 0;
+my $nitems = 0;
 $n = 0;
 while(my $l = <FH>) {
+  $line++;
   chomp($l);
   if($l eq "") {
     print "\n";
@@ -63,37 +78,62 @@ while(my $l = <FH>) {
 
   if($a[0] eq "M") {
 
-    printf("M$c$a[1]$c%02d\n", $n++);
+    $nitems = 0;
+    chkprint(sprintf("M$c$a[1]$c%s", ($a[2] ? $a[2] : "")));
+    $n++;
 
   } elsif($a[0] eq "S") {
 
     shift(@a);
     my $t = shift(@a);
     my $m = shift(@a);
-    printf("S$c$t$c%s%s\n", $defs{$m}, join($c, @a));
+    die("Unknown menu $m referenced in line $line ($l)\n") if(!$defs{$m});
+    chkprint(sprintf("S$c$t$c%s$c%s", $defs{$m}, join($c, @a)));
 
   } elsif($l =~ m/^<xmllist>/) {
     my $on = $n;
-    foreach my $rn (sort keys %r) {
-      printf "S $rn %02x\n", $on++;
-    }
 
     foreach my $rn (sort keys %r) {
-      printf "\nM $rn %02x\n", $n++;
+      chkprint(sprintf "S $rn %02x", $on++);
+    }
+    chkprint "";
+
+    foreach my $rn (sort keys %r) {
+      chkprint "M $rn";
+      $n++;
       foreach my $k (sort keys %{$r{$rn}}) {
-        my $f = ($h{$k}{sets} =~ m/dim/) ?
+        my $f;
+        if($h{$k}{TYPE} eq "FS20") {
+          $f = ($h{$k}{sets} =~ m/dim/) ?
                 $defs{"FS20-Dim"} : $defs{"FS20-Plain"};
+        } elsif($h{$k}{TYPE} eq "FHT") {
+          $f = $defs{"FHT"};
+        }
         my $d = $h{$k}{def};
         $d =~ s/ //g;
-        print "S $k $f $d\n";
+        chkprint("S $k $f $d");
       }
+      chkprint "";
     }
 
 
   } else {
 
-    printf("$l\n");
+    chkprint("$l");
 
   }
 
+  $nitems++;
+  printf STDERR "WARNING: Too many subitems in line $line, 32 allowed\n"
+               if($nitems > 32);
+}
+
+sub
+chkprint($)
+{
+  my $str = shift;
+  if(length($str) > 32) {
+    print STDERR "Expression $str is too long\n";
+  }
+  print "$str\n";
 }
