@@ -32,6 +32,10 @@
 #include "ttydata.h"
 #include "joy.h"
 #include "menu.h"
+#include "mysleep.h"
+#include "spi.h"
+
+df_chip_t df;
 
 /* Scheduler Task List */
 TASK_LIST
@@ -43,7 +47,6 @@ TASK_LIST
   { Task: JOY_Task,      TaskStatus: TASK_RUN },
 };
 
-extern void SPI_MasterInit2(void);
 
 t_fntab fntab[] = {
 
@@ -59,9 +62,11 @@ t_fntab fntab[] = {
   { 'a', batfunc },
   { 'b', prepare_b },
   { 'd', lcdfunc },
+  { 'i', timer },
   { 'l', ledfunc },
   { 'm', lcdout },
   { 'r', read_file },
+  { 's', mysleep },
   { 't', gettime },
   { 'w', write_file },
 
@@ -124,8 +129,7 @@ main(void)
   wdt_enable(WDTO_2S); 
 
   led_init();
-  //spi_init();
-  SPI_MasterInit(DATA_ORDER_MSB);
+  spi_init();
   rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
   rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
   Scheduler_Init();                            
@@ -133,10 +137,8 @@ main(void)
   tty_init();
   joy_init();
   bat_init();
-
-  df_chip_t df;
   df_init(&df);
-  fs_init( &fs, df );
+  fs_init(&fs, df);
   menu_init();
 
   credit_10ms = MAX_CREDIT/2;

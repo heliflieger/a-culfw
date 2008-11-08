@@ -6,11 +6,14 @@
 #include "clock.h"
 #include "display.h"
 #include "transceiver.h"
+#include "battery.h"
+#include "joy.h"
+#include "mysleep.h"
 
 uint8_t day,hour,minute,sec,hsec;
 
 //Counted time
-clock_time_t clock_datetime = 0;
+//clock_time_t clock_datetime = 0;
 	
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
@@ -29,7 +32,7 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
     if (credit_10ms < MAX_CREDIT)
       credit_10ms += 1;
 
-    clock_datetime++;
+    //clock_datetime++;
 
     sec++; hsec = 0;
     if(sec == 60) {
@@ -55,25 +58,37 @@ gettime(char *unused)
   DNL();
 }
 
+#if 0
 //Return time
-clock_time_t clock_time(){
-	clock_time_t time;
-
-	cli();
-	time = clock_datetime;
-	sei();
-
-	return time;
+clock_time_t
+clock_time()
+{
+  clock_time_t time;
+  cli();
+  time = clock_datetime;
+  sei();
+  return time;
 }
+#endif
 
 TASK(Minute_Task)
 {
-  static uint8_t lmin;
+  static uint8_t lsec, lmin;
+
+  if(lsec == sec)
+    return;
+  lsec = sec;
+#ifdef JOY_PIN1
+  if(sleep_time && (joy_inactive++ == sleep_time))
+    dosleep();
+#endif
+
   if(lmin == minute)
     return;
   lmin = minute;
-  if(!(lmin&3) || !tx_report)  // every 4.th minute
-    return;
-//  ccStrobe(CC1100_SIDLE);
-//  ccRX();          // Will automatically calibrate, see reg 0x18. Takes 0.8ms
+
+#if defined(HAS_GLCD) && defined(BAT_PIN)
+  bat_drawstate();
+  joy_inactive = 0;
+#endif
 }

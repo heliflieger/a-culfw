@@ -24,30 +24,31 @@
 
 #include "fonts/courier_10x17.inc" // Antialiased: big
 #define TITLE_FONT                 courier_10x17
-#define TITLE_FONT_WIDTH           10
-#define TITLE_FONT_HEIGHT          17
-#define TITLE_HEIGHT               18
 #define TITLE_LINECHARS            (VISIBLE_WIDTH/TITLE_FONT_WIDTH)
 
 #include "fonts/courier_8x14.inc"  // Antialiased: middle
 #define BODY_FONT                  courier_8x14
-#define BODY_FONT_WIDTH            8
-#define BODY_FONT_HEIGHT           14
-#define BODY_HEIGHT                (VISIBLE_HEIGHT-TITLE_HEIGHT)
-#define BODY_LINES                 (BODY_HEIGHT/BODY_FONT_HEIGHT)
-#define BODY_LINECHARS             (VISIBLE_WIDTH/BODY_FONT_WIDTH)
 
-static uint8_t current_contrast;
-static uint8_t scroll_y = 18;
+static uint8_t lcd_current_contrast;
+static uint8_t lcd_scroll_y = 18;
+       uint8_t lcd_on = 0xff;
+static uint8_t lcd_col_bg0, lcd_col_bg1, lcd_col_bg2;
 
-static void lcd_sendcmd (uint8_t cmd);
-static void lcd_senddata (uint8_t data);
 static void lcd_window (uint8_t xp, uint8_t yp, uint8_t xe, uint8_t ye);
 static void drawtext(char *dataptr, uint8_t datalen, uint8_t *font,
                         uint8_t font_width, uint8_t lcd_y, uint8_t font_y,
                         uint8_t rows);
 static void lcd_init(void);
 static void lcd_scroll(int8_t offset);
+
+static void lcd_send(uint8_t fbit, uint8_t cmd);
+static void lcd_sendcmd(uint8_t cmd);
+static void lcd_senddata(uint8_t data);
+
+
+static void lcd_blk_senddata(uint8_t d);
+static void lcd_blk_setup(void);
+static void lcd_blk_teardown(void);
 
 /////////////////////////////////////////////////////////////////////
 // First byte, hex: Row number. Rest: Text to display, up to 16 char.
@@ -71,21 +72,18 @@ lcdfunc(char *in)
 
         LCD_BL_DDR  |= _BV(LCD_BL_PIN);            // Switch on, init
         LCD_BL_PORT |= _BV(LCD_BL_PIN);
-        display_channels |= DISPLAY_GLCD;
         lcd_init();
 
-        if(hb[1] == 2) {                          // Clear screen
+        if(hb[1] == 2)                             // Clear screen
           lcd_cls();
-          lcd_line(WINDOW_LEFT,TITLE_HEIGHT-1,
-                   WINDOW_RIGHT,TITLE_HEIGHT-1, 0xf000);
-        }
+        lcd_on = 1;
       }
 
       else {
 
         LCD_BL_PORT &= ~_BV(LCD_BL_PIN);           // Switch off the display
         lcd_sendcmd (LCD_CMD_SLEEPIN);   
-        display_channels &= ~DISPLAY_GLCD;
+        lcd_on = 0;
 
       }
       return;
@@ -93,19 +91,20 @@ lcdfunc(char *in)
 
     if(hb[2] != 0xFF) {                           // Contrast
 
+      lcd_current_contrast = eeprom_read_byte((uint8_t*)EE_CONTRAST);
       if(hb[2] == 0xFE) {
-        current_contrast--;
+        lcd_current_contrast--;
       } else if (hb[2] == 0xFD) {
-        current_contrast++;
+        lcd_current_contrast++;
       } else if (hb[2] == 0xFC) {
-        current_contrast = eeprom_read_byte((uint8_t*)EE_CONTRAST);
+        //keep the eeprom value
       } else {
-        current_contrast = hb[2];
+        lcd_current_contrast = hb[2];
       }
-      eeprom_write_byte((uint8_t*)EE_CONTRAST, current_contrast);
+      eeprom_write_byte((uint8_t*)EE_CONTRAST, lcd_current_contrast);
 
       lcd_sendcmd (LCD_CMD_SETCON);
-      lcd_senddata (current_contrast);
+      lcd_senddata (lcd_current_contrast);
     }
     return;
   }
@@ -126,7 +125,7 @@ lcd_putline(uint8_t row, char *in)
     row--;
     drawtext(in, BODY_LINECHARS,
                 BODY_FONT, BODY_FONT_WIDTH,
-                scroll_y+BODY_FONT_HEIGHT*row,
+                lcd_scroll_y+BODY_FONT_HEIGHT*row,
                 0, BODY_FONT_HEIGHT);
 
   } else if(row == 9 || row == 10) {            // Scrolling
@@ -153,7 +152,7 @@ lcd_putline(uint8_t row, char *in)
 
       drawtext(in, BODY_LINECHARS,
                   BODY_FONT, BODY_FONT_WIDTH,
-                  scroll_y+dpyoffset, fontoffset, CHUNK);
+                  lcd_scroll_y+dpyoffset, fontoffset, CHUNK);
 
       fontoffset += (row ? CHUNK : -CHUNK);
       counter += CHUNK;
@@ -162,55 +161,80 @@ lcd_putline(uint8_t row, char *in)
   }
 }
 
-static void
-lcd_send( uint16_t data )
+void
+lcd_setbgcol(uint8_t r, uint8_t g, uint8_t b)
 {
+  lcd_col_bg0 = (r>>4)+1;
+  lcd_col_bg1 = (g>>4)+1;
+  lcd_col_bg2 = (b>>4)+1;
+}
+
+static uint8_t lcd_spi_used;
+
+///////////////////
+// "Block" data transfer
+static void
+lcd_blk_setup(void)
+{
+  CLEAR_BIT( LCD1_PORT, LCD1_CS);	// select Display
+  lcd_spi_used = 0;
+}
+
+static void
+lcd_blk_senddata( uint8_t data )
+{
+  // Send one bit "manually"
+  if(lcd_spi_used)
+    spi_wait();
+  lcd_spi_used = 1;
   CLEAR_BIT( SPCR, SPE );		// disable SPI
+  CLEAR_BIT( SPI_PORT, SPI_SCLK);	// SCK Low
+  SET_BIT( SPI_PORT, SPI_MOSI);
+  SET_BIT( SPI_PORT, SPI_SCLK);	        // SCK Hi
+  CLEAR_BIT( SPI_PORT, SPI_SCLK);	        // SCK Low
+  SET_BIT( SPCR, SPE );                 // enable SPI
+  SPDR = data;
+}
 
-  CLEAR_BIT( SPI_PORT, SCK);	        // SCK Low
-  asm volatile ("nop");
+static void
+lcd_blk_teardown(void)
+{
+  if(lcd_spi_used)
+    spi_wait();
+  SET_BIT( LCD1_PORT, LCD1_CS);         // deselect Display
+}
 
-  CLEAR_BIT( LCD_PORT, LCD_CS);	// select Display
-  asm volatile ("nop");
 
-  data = data << 7;
 
-  for (uint8_t i=0; i<9; i++) {
-       
-       if (data & 0x8000) {
-            SET_BIT( SPI_PORT, MOSI);
-       } else {
-            CLEAR_BIT( SPI_PORT, MOSI);
-       }
-
-       asm volatile ("nop");
-       SET_BIT( SPI_PORT, SCK);	        // SCK Hi
-       asm volatile ("nop");
-       CLEAR_BIT( SPI_PORT, SCK);	        // SCK Low
-
-       data = data << 1;
-  }
-
-  asm volatile ("nop");
-  
-  SET_BIT( LCD_PORT, LCD_CS);	// deselect Display
-
-  SET_BIT( SPCR, SPE );		// enable SPI
+static void
+lcd_send(uint8_t fbit, uint8_t data )
+{
+  CLEAR_BIT(LCD1_PORT, LCD1_CS);	// select Display
+  CLEAR_BIT(SPCR, SPE );		// disable SPI
+  CLEAR_BIT(SPI_PORT, SPI_SCLK);	// SCK Low
+  if(fbit)
+    SET_BIT(SPI_PORT, SPI_MOSI);
+  else
+    CLEAR_BIT(SPI_PORT, SPI_MOSI);
+  SET_BIT( SPI_PORT, SPI_SCLK);	        // SCK Hi
+  CLEAR_BIT( SPI_PORT, SPI_SCLK);	        // SCK Low
+  SET_BIT( SPCR, SPE );                 // enable SPI
+  SPDR = data;
+  spi_wait();
+  SET_BIT( LCD1_PORT, LCD1_CS);         // deselect Display
 }
 
 
 static void
 lcd_sendcmd (uint8_t cmd)
 {
-  lcd_send( cmd );
-  return;
+  lcd_send(0, cmd);
 }
 
 static void
-lcd_senddata (uint8_t data)
+lcd_senddata(uint8_t data)
 {
-  lcd_send( data | 0x100);
-  return;
+  lcd_send(1, data);
 }
 
 
@@ -234,26 +258,34 @@ lcd_cls(void)
 {
   lcd_window (0, 0, 131, 131);	// set clearance window
   lcd_sendcmd (LCD_CMD_RAMWR);	// write memory
+
+  //uint8_t h = hsec;
+
+  lcd_blk_setup();
   uint16_t i;
   for(i = 0; i < (132*132/2); i++) {
-    lcd_senddata (0xff);       // r g
-    lcd_senddata (0xff);       // b r
-    lcd_senddata (0xff);       // g b
+    lcd_blk_senddata(0xff);       // r g
+    lcd_blk_senddata(0xff);       // b r
+    lcd_blk_senddata(0xff);       // g b
   }
+  lcd_blk_teardown();
+
+  //h = (h > hsec ?  hsec+125-h : hsec-h);
+  //DU(h,2);
 }
 
 static void
 lcd_init (void)
 {
-  LCD_DIR  |= _BV (LCD_CS);	// config LCD pins
-  LCD_PORT |= _BV (LCD_CS);
+  LCD1_DDR  |= _BV (LCD1_CS);	// config LCD pins
+  LCD1_PORT |= _BV (LCD1_CS);
 
-  DDRE  |= _BV (LCD_RST);
-  PORTE |= _BV (LCD_RST);
+  LCD2_DDR  |= _BV (LCD2_RST);
+  LCD2_PORT |= _BV (LCD2_RST);
 
-  PORTE &= ~_BV (LCD_RST);	// LCD hardware reset
+  LCD2_PORT &= ~_BV (LCD2_RST);	// LCD hardware reset
   my_delay_us (100);
-  PORTE |= _BV (LCD_RST);
+  LCD2_PORT |= _BV (LCD2_RST);
   my_delay_us (100);
 
   lcd_sendcmd (LCD_CMD_SWRESET);	// LCD software reset
@@ -278,14 +310,14 @@ lcd_init (void)
 void
 lcd_scroll(int8_t offset)
 {
-  scroll_y += offset;
-  if(scroll_y < TITLE_HEIGHT)
-    scroll_y += (GBUF_HEIGHT-TITLE_HEIGHT);
-  if(scroll_y > GBUF_HEIGHT)
-    scroll_y -= (GBUF_HEIGHT-TITLE_HEIGHT);
+  lcd_scroll_y += offset;
+  if(lcd_scroll_y < TITLE_HEIGHT)
+    lcd_scroll_y += (GBUF_HEIGHT-TITLE_HEIGHT);
+  if(lcd_scroll_y > GBUF_HEIGHT)
+    lcd_scroll_y -= (GBUF_HEIGHT-TITLE_HEIGHT);
 
   lcd_sendcmd (LCD_CMD_SEP);    // Switch scrolling on
-  lcd_senddata(scroll_y);             // Set first row to the body part
+  lcd_senddata(lcd_scroll_y);             // Set first row to the body part
 }
 
  
@@ -303,6 +335,8 @@ drawtext(char *dataptr, uint8_t datalen, uint8_t *font, uint8_t font_width,
                 PIXEL_OFFSET+datalen*font_width-1, lcd_y);
     lcd_y++;
     lcd_sendcmd(LCD_CMD_RAMWR);	// write memory
+
+    lcd_blk_setup();
 
     uint8_t spacemode = 0;
     for(uint8_t didx = 0; didx < datalen; didx++)  {
@@ -326,26 +360,21 @@ drawtext(char *dataptr, uint8_t datalen, uint8_t *font, uint8_t font_width,
         fp = font+(94*font_width/2*font_y)+data*font_width/2;
       }
 
-      uint8_t in = 0;
-      for (uint8_t x = 0; x < font_width; x++) {
+      uint8_t in = 0, h, l;
+      for (uint8_t x = 0; x < font_width; x+=2) {
 
-        if(x&1) {
+        in = pgm_read_byte_near(fp++);
+        h = (in>>4);
+        l = (in&0xf);
 
-          lcd_senddata(in);
-          uint8_t hb = (in&0xf);
-          lcd_senddata(hb<<4|hb);
-
-        } else {
-          in = pgm_read_byte_near(fp++);
-
-          uint8_t hb = (in>>4);
-          lcd_senddata(hb<<4|hb);
-
-        }
+        lcd_blk_senddata(((h*lcd_col_bg0)&0xf0) | ((h*lcd_col_bg1)>>4));
+        lcd_blk_senddata(((h*lcd_col_bg2)&0xf0) | ((l*lcd_col_bg0)>>4));
+        lcd_blk_senddata(((l*lcd_col_bg1)&0xf0) | ((l*lcd_col_bg2)>>4));
 
       }
 
     }
+    lcd_blk_teardown();
 
     font_y++;
   }
@@ -360,7 +389,7 @@ lcd_putchar(uint8_t row, char content)
   data[0] = content, data[1] = 0;
 
   drawtext(data, 1, BODY_FONT, BODY_FONT_WIDTH,
-                scroll_y+BODY_FONT_HEIGHT*(row-1), 0, BODY_FONT_HEIGHT);
+                lcd_scroll_y+BODY_FONT_HEIGHT*(row-1), 0, BODY_FONT_HEIGHT);
 }
 
 ////////////////////////////
@@ -429,4 +458,30 @@ lcd_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t col)
       d += binc;
     lcd_pixel (x, y, col);
   } while (++x < x2);
+}
+
+#include "fonts/house2.inc"        // Logo
+
+void
+lcd_resetscroll()
+{
+  lcd_sendcmd (LCD_CMD_SEP);    // Switch scrolling on
+  lcd_scroll_y = 18;
+  lcd_senddata(lcd_scroll_y);   // Set first row to the body part
+}
+
+void
+lcd_drawlogo()
+{
+  lcd_window(36, 60, 93, 119);
+  lcd_sendcmd(LCD_CMD_RAMWR);	// write memory
+
+  uint8_t *fp = house2_58x60;
+
+  lcd_blk_setup();
+  for(uint16_t i = 5220; i; i--) {
+    uint8_t data = pgm_read_byte_near(fp++);
+    lcd_blk_senddata(data);
+  }
+  lcd_blk_teardown();
 }

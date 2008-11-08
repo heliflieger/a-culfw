@@ -8,8 +8,10 @@ void
 my_delay_us( uint16_t d )
 {
 #if 1
-  _delay_loop_2(d<<2);  // Assuming 8MHz & 4cycle per loop2
+  d<<=1;      
+  _delay_loop_2(d);    
 #else
+  TIMSK1 = 0;           // No interrupt if counter is reached
   TCNT1 = 0;            // The timer must be set up to run with 1MHz
   while (TCNT1<d) {};
 #endif
@@ -18,8 +20,7 @@ my_delay_us( uint16_t d )
 void
 my_delay_ms( uint16_t d )
 {
-  for(uint16_t i=0;i<d;i++)
+  while(d--) {
     my_delay_us( 1000 );
+  }
 }
-     
-

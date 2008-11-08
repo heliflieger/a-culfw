@@ -11,6 +11,7 @@
 #include "board.h"
 
 #define led_init()   LED_DDR  |= _BV(LED_PIN)
+
 #define LED_TOGGLE() LED_PORT ^= _BV(LED_PIN)
 
 #ifdef LED_INV

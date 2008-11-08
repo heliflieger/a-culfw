@@ -170,7 +170,7 @@ Protocol
       (hex 8 byte+nl) is written to the output, then the body of the file.
       Use "." as filename to get a listing of the current files with length.
       Use the program cur_file from the tools directory to read a file, e.g.:
-        cur_file -r MENU /dev/ttyACM0
+        perl cur_file.pl -r MENU /dev/ttyACM0
       NOTE: CUR should be in the X00 mode, and not fhem/screen should be
       connected to it
 
@@ -209,7 +209,7 @@ Protocol
       The command must be followed by length bytes of data, which will be
       written to the local file. 
       Use the program cur_file from the tools directory to write a file, e.g.:
-        cur_file -w MENU /dev/ttyACM0
+        perl cur_file.pl -w MENU /dev/ttyACM0
       NOTE: CUR should be in the X00 mode, and not fhem/screen should be
       connected to it
 
@@ -282,17 +282,19 @@ Protocol
     - create a fhem xml-list with
       fhem.pl fhemhost:7072 xmllist > fhem.xmllist
     - convert the template and the fhem listing into a CUR MENU file:
-      perl xmllist2curmenu.pl fhem.xmllist CUR.menu.template > MENU
+        perl xmllist2curmenu.pl fhem.xmllist CUR.menu.template > MENU
     - write the MENU file to the CUR:
-        cur_file -w MENU /dev/ttyACM0
-      NOTE: CUR should be in the X00 mode, and not fhem/screen should be
-      connected to it
+        perl cur_file.pl -w MENU /dev/ttyACM0
+      NOTE: The CUR must be in the X00 mode (default after reboot), and no
+      fhem/screen should be connected to it. The CUR monitor must be disabled
+      (default after reboot)
+
     - switch the CUR display on by pressing the joystick.
 
-    NOTE:
-      Right now following does not work:
-      - transmitting _any_ FS20/FHT signals
-      - setting the sleep mode
+    CUR NOTES:
+      - Right now following does not work:
+        - transmitting _any_ FS20/FHT signals
+      - Sleep mode must be enabled "manually" via joystick or USB command.
 
 
 Notes

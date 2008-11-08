@@ -11,6 +11,7 @@
 #include "pcf8833.h"
 #include "transceiver.h"
 #include "battery.h"
+#include "clock.h"
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -107,6 +108,26 @@ version(char *unused)
   DS_P( PSTR(BOARD_ID_STR) );
   DNL();
 }
+
+void
+timer(char *in)
+{
+  uint8_t a[3];
+  uint16_t nr;
+  fromhex(in+1, a, 3);
+  nr = (a[1]<<8 | a[2]);
+DH(nr,4); 
+DC(':');
+DH(sec,2); DH(hsec,2);
+DC('-');
+  if(a[0] == 0)
+    my_delay_us(nr);
+  else
+    my_delay_ms(nr);
+DH(sec,2); DH(hsec,2);
+DNL();
+}
+
 
 #ifdef HAS_GLCD
 void

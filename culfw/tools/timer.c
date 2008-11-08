@@ -20,7 +20,7 @@ main(int ac, char *av[])
   }
   data = 'X' ; write(fd, &data, 1);
   data = '1' ; write(fd, &data, 1);
-  data = '9' ; write(fd, &data, 1);
+  data = '8' ; write(fd, &data, 1);
   data = '\r'; write(fd, &data, 1);
   data = '\n'; write(fd, &data, 1);
 

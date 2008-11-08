@@ -1,51 +1,71 @@
-M CUR Menu
-S Rooms Rooms
-S Control Control
+M:CUR:Cur Menu:9f9afacfc
+S:Rooms:Rooms
+S:Control:Control
 
-M Rooms
-<xmllist>
+M:Rooms::88fddfccf
+<xmllist>:88fddfccf
 
-M FS20-Plain <11>
-C Toggle F<13>12
-C On F<13>11
-C Off F<13>00
+M:FS20-Plain:<11>:88fddfccf
+C:Toggle:F<13>12
+C:On:F<13>11
+C:Off:F<13>00
 
-M FS20-Dim <11>
-C Toggle F<13>12
-C On F<13>11
-C Off F<13>00
-C Dimup F<13>13
-C Dimdown F<13>14
+M:FS20-Dim:<11>:88fddfccf
+C:Toggle:F<13>12
+C:On:F<13>11
+C:Off:F<13>00
+C:Dimup:F<13>13
+C:Dimdown:F<13>14
 
-M FHT <11>
-S Desired-Temp ftemp 41
-S Day-Temp ftemp 82
-S Night-Temp ftemp 84
+M:FHT:<11>:f88fcdfde
+S:Desired:ftemp:41
+S:Day-Temp:ftemp:82
+S:Night-Temp:ftemp:84
 
-M:ftemp:<21> <11>
-S:16 C:Sorry:T<23><13>20
-S:17 C:Sorry:T<23><13>22
-S:18 C:Sorry:T<23><13>24
-S:19 C:Sorry:T<23><13>26
-S:20 C:Sorry:T<23><13>28
-S:21 C:Sorry:T<23><13>2A
-S:22 C:Sorry:T<23><13>2C
-S:23 C:Sorry:T<23><13>2E
-S:24 C:Sorry:T<23><13>30
-S:25 C:Sorry:T<23><13>32
+M:ftemp:<21> <11>:f88fcdfde
+S:12.0 C:Sorry:T<23><13>1A
+S:12.5 C:Sorry:T<23><13>1B
+S:13.0 C:Sorry:T<23><13>1C
+S:13.5 C:Sorry:T<23><13>1B
+S:14.0 C:Sorry:T<23><13>1C
+S:14.5 C:Sorry:T<23><13>1D
+S:15.0 C:Sorry:T<23><13>1E
+S:15.5 C:Sorry:T<23><13>1F
+S:16.0 C:Sorry:T<23><13>20
+S:16.5 C:Sorry:T<23><13>21
+S:17.0 C:Sorry:T<23><13>22
+S:17.5 C:Sorry:T<23><13>23
+S:18.0 C:Sorry:T<23><13>24
+S:18.5 C:Sorry:T<23><13>25
+S:19.0 C:Sorry:T<23><13>26
+S:19.5 C:Sorry:T<23><13>27
+S:20.0 C:Sorry:T<23><13>28
+S:20.5 C:Sorry:T<23><13>29
+S:21.0 C:Sorry:T<23><13>2A
+S:21.5 C:Sorry:T<23><13>2B
+S:22.0 C:Sorry:T<23><13>2C
+S:22.5 C:Sorry:T<23><13>2D
+S:23.0 C:Sorry:T<23><13>2E
+S:23.5 C:Sorry:T<23><13>2F
+S:24.0 C:Sorry:T<23><13>30
+S:24.5 C:Sorry:T<23><13>31
+S:25.0 C:Sorry:T<23><13>32
+S:25.5 C:Sorry:T<23><13>33
 
-M Sorry
+M:Sorry::aaaccceee
 C:Not yet
 C:implemented
 
-M Control
+M:Control::affbffcff
 C:Contrast +:dFFFFFE
 C:Contrast -:dFFFFFD
 S:Sleep:Sleep
 S:LED:LED
 S:Toggle monitor:Monitor
+C:Reboot:b
+C:Bootloader:B
 
-M Sleep
+M:Sleep::affbffcff
 C:10 sec:s0a
 C:30 sec:s1e
 C:60 sec:s3c
@@ -53,11 +73,11 @@ C:2 min:s78
 C:4 min:sf0
 C:off:s00
 
-M LED
-C on l01
-C off l00
-C blink l02
+M:LED::ffaffbffc
+C:on:l01
+C:off:l00
+C:blink:l02
 
-M Monitor
+M:Monitor::affbffcff
 C:CC1101 to LCD:m01
 C:CC1101 off:m00

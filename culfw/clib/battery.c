@@ -2,6 +2,9 @@
 #include "board.h"
 #include "display.h"
 #include "delay.h"
+#ifdef HAS_GLCD
+#include "pcf8833.h"
+#endif
 
 //*****************************************************************************
 // Function: get_adcw
@@ -58,6 +61,26 @@ batfunc(char *unused)
   DU(get_adcw(BAT_MUX),5);    // result, decimal
   DNL();
 }
+
+
+#if defined(HAS_GLCD) && defined(BAT_PIN)
+void
+bat_drawstate(void)
+{
+  if(!lcd_on)
+    return;
+
+  uint16_t v = get_adcw(BAT_MUX);
+  if(v < 750) v = 750;
+  if(v > 950) v = 950;
+
+  v = (v-750)*VISIBLE_WIDTH/200;
+  lcd_line(WINDOW_LEFT,TITLE_HEIGHT-1,                       // the green part
+                   WINDOW_LEFT+v,TITLE_HEIGHT-1, 0x0f00);
+  lcd_line(WINDOW_LEFT+v,TITLE_HEIGHT-1,                     // and the red part
+                   WINDOW_RIGHT,TITLE_HEIGHT-1, 0xf000);
+}
+#endif
 
 void
 bat_init(void)

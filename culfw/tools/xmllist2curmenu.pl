@@ -79,7 +79,9 @@ while(my $l = <FH>) {
   if($a[0] eq "M") {
 
     $nitems = 0;
-    chkprint(sprintf("M$c$a[1]$c%s", ($a[2] ? $a[2] : "")));
+    chkprint(sprintf("M$c$a[1]$c%s$c%s",
+        ($a[2] ? $a[2] : ""),
+        ($a[3] ? $a[3] : "fffffffff")));
     $n++;
 
   } elsif($a[0] eq "S") {
@@ -94,12 +96,15 @@ while(my $l = <FH>) {
     my $on = $n;
 
     foreach my $rn (sort keys %r) {
-      chkprint(sprintf "S $rn %02x", $on++);
+      chkprint(sprintf "S$c$rn$c%02x", $on++);
     }
     chkprint "";
 
+    $c = ":";
+    @a = split($c, $l);
+
     foreach my $rn (sort keys %r) {
-      chkprint "M $rn";
+      chkprint "M$c$rn$c$c$a[1]";
       $n++;
       foreach my $k (sort keys %{$r{$rn}}) {
         my $f;
@@ -111,7 +116,7 @@ while(my $l = <FH>) {
         }
         my $d = $h{$k}{def};
         $d =~ s/ //g;
-        chkprint("S $k $f $d");
+        chkprint("S$c$k$c$f$c$d");
       }
       chkprint "";
     }

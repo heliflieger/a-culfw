@@ -49,6 +49,7 @@ t_fntab fntab[] = {
   { 'b', prepare_b },
   { 'l', ledfunc },
   { 't', gettime },
+  { 'i', timer },
 
   { 0, 0 },
 };

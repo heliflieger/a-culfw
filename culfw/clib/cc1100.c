@@ -9,8 +9,8 @@
 #include "cc1100.h"
 
 PROGMEM prog_uint8_t CC1100_PA[8] =
-//{0x00,0x32,0x38,0x3f,0x3f,0x3f,0x3f,0x3f};    //
-{0x00,0x03,0x0F,0x27,0x50,0xC8,0xC3,0xC2};    // +10dB, PA Ramping
+{0x00,0x32,0x38,0x3f,0x3f,0x3f,0x3f,0x3f};    // Original
+//{0x00,0x03,0x0F,0x27,0x50,0xC8,0xC3,0xC2};    // +10dB, PA Ramping
 //{0x00,0xC2,0x00,0x00,0x00,0x00,0x00,0x00};    // +10dB, no PA Ramping
 
 PROGMEM prog_uint8_t CC1100_CFG[0x29] = {
@@ -69,26 +69,24 @@ PROGMEM prog_uint8_t CC1100_CFG[0x29] = {
 };
 
 static uint8_t
-cc1100_sendbyte(uint8_t data) {
-
-     SPDR = data;		        // send byte
-     
-     while (!(SPSR & _BV (SPIF)));	// wait until transfer finished
-     
-     return SPDR;
+cc1100_sendbyte(uint8_t data)
+{
+  SPDR = data;		        // send byte
+  while (!(SPSR & _BV (SPIF)));	// wait until transfer finished
+  return SPDR;
 }
 
 static uint8_t
-cc1100_read(uint8_t data) {
+cc1100_read(uint8_t data)
+{
+  CC1100_ASSERT;
 
-     CC1100_ASSERT;
-
-     cc1100_sendbyte( data );
-     uint8_t temp = cc1100_sendbyte( 0 );
-     
-     CC1100_DEASSERT;
-     
-     return temp;
+  cc1100_sendbyte( data );
+  uint8_t temp = cc1100_sendbyte( 0 );
+  
+  CC1100_DEASSERT;
+  
+  return temp;
 }
 
 //--------------------------------------------------------------------
@@ -150,19 +148,22 @@ cc_factory_reset(void)
 void
 ccTX(void)
 {
+  uint8_t cnt = 0xff;
   EIMSK  &= ~_BV(CC1100_INT);
-  while ((cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != 19)
-       ccStrobe( CC1100_STX );
+
+  while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != 19) {
+    ccStrobe( CC1100_STX );
+  }
 }
 
 //--------------------------------------------------------------------
 void
 ccRX(void)
 {
-  while ((cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != 13)
+  uint8_t cnt = 0xff;
+  while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != 13)
        ccStrobe( CC1100_SRX );
-
-  EIFR  |= _BV(CC1100_INTF);
+  EIFR  |= _BV(CC1100_INT);
   EIMSK |= _BV(CC1100_INT);
 }
 
@@ -196,12 +197,9 @@ cc1100_readReg(uint8_t addr) {
 
 //--------------------------------------------------------------------
 void
-ccStrobe(uint8_t strobe) {
-
-     CC1100_ASSERT;
-     cc1100_sendbyte( strobe );
-     CC1100_DEASSERT;
-     
+ccStrobe(uint8_t strobe)
+{
+  CC1100_ASSERT;
+  cc1100_sendbyte( strobe );
+  CC1100_DEASSERT;
 }
-
-
