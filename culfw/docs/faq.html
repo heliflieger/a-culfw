@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>CUL FAQ</title>
+</head>
+
+<body style="background-color: white;">
+
+<h2>CUL FAQ</h2>
+
+<a href="#faq1">1. My CUL was initialized with <code>X01</code> or <code>X09</code>
+to receive data  but there is no output at all.
+I am sure that there is traffic on air. CUL responds as expected to other
+commands like <code>l</code> and <code>V</code>. Is my CUL defect?</a><br>
+
+
+<br/>
+<br/>
+
+<a name="faq1"></a>
+<b>1. My CUL was initialized with <code>X01</code> or <code>X09</code> to receive
+data  but there is no output at all. I am sure that there is traffic on air.
+CUL responds as expected to other commands like
+<code>l</code> and <code>V</code>. Is my CUL defect?</b>
+
+<ul>
+Please check the response to command <code>C35</code>. Reception mode is turned on if the
+return value is <code>13</code>. If reception mode is enabled but nothing is
+received, the EEPROM data is probably corrupt. You can reinitialize the EEPROM
+data with the default setting from program code by means of the command
+<code>W01FFFF</code>.
+</ul>
+
+
+
+
+
+</body>
+</html>
