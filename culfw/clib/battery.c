@@ -2,7 +2,7 @@
 #include "board.h"
 #include "display.h"
 #include "delay.h"
-#ifdef HAS_GLCD
+#ifdef HAS_LCD
 #include "pcf8833.h"
 #endif
 
@@ -63,22 +63,29 @@ batfunc(char *unused)
 }
 
 
-#if defined(HAS_GLCD) && defined(BAT_PIN)
+#if defined(HAS_LCD) && defined(BAT_PIN)
 void
 bat_drawstate(void)
 {
   if(!lcd_on)
     return;
 
-  uint16_t v = get_adcw(BAT_MUX);
-  if(v < 750) v = 750;
-  if(v > 950) v = 950;
+  uint16_t v1 = get_adcw(BAT_MUX);
+  if(v1 < 750) v1 = 750;
+  if(v1 > 950) v1 = 950;
 
-  v = (v-750)*VISIBLE_WIDTH/200;
-  lcd_line(WINDOW_LEFT,TITLE_HEIGHT-1,                       // the green part
-                   WINDOW_LEFT+v,TITLE_HEIGHT-1, 0x0f00);
-  lcd_line(WINDOW_LEFT+v,TITLE_HEIGHT-1,                     // and the red part
-                   WINDOW_RIGHT,TITLE_HEIGHT-1, 0xf000);
+  uint8_t s1;
+  s1  = (bit_is_set( BAT_PIN, BAT_PIN1) ? 2 : 0);
+  s1 |= (bit_is_set( BAT_PIN, BAT_PIN2) ? 1 : 0);
+
+  uint16_t v2 = (s1 == 2 ? 0xf000 : 0x00f0);    // Red: battery, blue: charging
+
+  v1 = (v1-750)*VISIBLE_WIDTH/200;
+  lcd_line(WINDOW_LEFT,TITLE_HEIGHT-1,                      // the green part
+                   WINDOW_LEFT+v1,TITLE_HEIGHT-1, 0x0f00);
+
+  lcd_line(WINDOW_LEFT+v1,TITLE_HEIGHT-1,                   // and the red part
+                   WINDOW_RIGHT,TITLE_HEIGHT-1, v2);
 }
 #endif
 

@@ -6,8 +6,8 @@
 #include "delay.h"
 #include "pcf8833.h"
 
-#if defined(USB_OPTIONAL)
-uint8_t display_channels = DISPLAY_USB; // GLCD will be switched on
+#if defined(MULTI_DISPLAY)
+uint8_t display_channels = DISPLAY_USB;
 #endif
 
 /*
@@ -38,7 +38,7 @@ fromhex(const char *in, uint8_t *out, uint8_t buflen)
   return op-out;
 }
 
-#if defined(USB_OPTIONAL)
+#if defined(MULTI_DISPLAY)
 #define CHECK(a) if(display_channels & a)
 #else
 #define CHECK(a)
@@ -58,12 +58,12 @@ display_char(char data)
   }
 #endif
 
-#ifdef HAS_GLCD
-  CHECK(DISPLAY_GLCD)
+
+#ifdef HAS_LCD
+  CHECK(DISPLAY_LCD)
   {
     static uint8_t buf[20];
-    static uint8_t off = 2;
-
+    static uint8_t off = 3;
     if(data == '\r')
       return;
     if(data == '\n') {
@@ -77,6 +77,12 @@ display_char(char data)
       if(off < 19)
         buf[off++] = data;
     }
+  }
+#endif
+
+#ifdef HAS_FS
+  CHECK(DISPLAY_FS)
+  {
   }
 #endif
 }

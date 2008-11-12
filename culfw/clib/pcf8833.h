@@ -11,6 +11,7 @@
 #define LCD_CMD_SLEEPOUT  0x11
 #define LCD_CMD_PTLON     0x12
 #define LCD_CMD_NORON     0x13
+#define LCD_CMD_INVOFF	  0x20
 #define LCD_CMD_INVON	  0x21
 #define LCD_CMD_SETCON    0x25
 #define LCD_CMD_DISPON    0x29
@@ -60,7 +61,9 @@ void lcd_cls(void);
 void lcd_setbgcol(uint8_t r, uint8_t g, uint8_t b);
 void lcd_drawlogo(void);
 void lcd_resetscroll(void);
+void lcd_invoff(void);
+void lcd_invon(void);
 
 extern uint8_t lcd_on;
 
-#endif // GLCD_H
+#endif

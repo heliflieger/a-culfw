@@ -325,7 +325,9 @@ menu_handle_joystick(uint8_t key)
       uint8_t idx;
       for(idx = 0; fntab[idx].name; idx++) {
         if(arg[0] == fntab[idx].name) {
+          lcd_invon();
           fntab[idx].fn((char *)arg);
+          lcd_invoff();
           break;
         }
       }

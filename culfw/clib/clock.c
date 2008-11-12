@@ -11,6 +11,7 @@
 #include "mysleep.h"
 
 uint8_t day,hour,minute,sec,hsec;
+static uint8_t lsec, lmin;
 
 //Counted time
 //clock_time_t clock_datetime = 0;
@@ -22,8 +23,6 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
   hsec++;
 
   if(hsec >= 125) {
-
-    wdt_reset();
 
     if(led_mode & 2)
       LED_TOGGLE();
@@ -73,11 +72,12 @@ clock_time()
 
 TASK(Minute_Task)
 {
-  static uint8_t lsec, lmin;
-
   if(lsec == sec)
     return;
+
+  wdt_reset();
   lsec = sec;
+
 #ifdef JOY_PIN1
   if(sleep_time && (joy_inactive++ == sleep_time))
     dosleep();
@@ -87,7 +87,7 @@ TASK(Minute_Task)
     return;
   lmin = minute;
 
-#if defined(HAS_GLCD) && defined(BAT_PIN)
+#if defined(HAS_LCD) && defined(BAT_PIN)
   bat_drawstate();
   joy_inactive = 0;
 #endif

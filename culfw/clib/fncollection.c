@@ -129,16 +129,20 @@ DNL();
 }
 
 
-#ifdef HAS_GLCD
+#ifdef HAS_LCD
 void
 lcdout(char *in)
 {
   uint8_t a;
   fromhex(in+1, &a, 1);
 
-  display_channels = (a ? DISPLAY_GLCD : DISPLAY_USB);
-  set_txreport(a ? "X21" : "X00");
-  if(a)
+  if(a) {
+    display_channels |= DISPLAY_LCD;
+    set_txreport("X21");
     batfunc(0);
+  } else {
+    display_channels &= ~DISPLAY_LCD;
+    set_txreport("X00");
+  }
 }
 #endif

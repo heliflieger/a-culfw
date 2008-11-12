@@ -270,6 +270,7 @@ lcd_cls(void)
   }
   lcd_blk_teardown();
 
+  //Stopwatch:
   //h = (h > hsec ?  hsec+125-h : hsec-h);
   //DU(h,2);
 }
@@ -301,10 +302,10 @@ lcd_init (void)
 
   lcd_sendcmd(LCD_CMD_VSCRDEF); // Scroll definition: 18 / 124
   lcd_senddata(TITLE_HEIGHT);   // top
-  lcd_senddata(GBUF_HEIGHT-TITLE_HEIGHT);            // Middle == scroll area
+  lcd_senddata(GBUF_HEIGHT-TITLE_HEIGHT);  // Middle == scroll area
   lcd_senddata(0);              // bottom
 
-  lcd_scroll(0);                    // Switch scrolling on
+  lcd_scroll(0);                // Switch scrolling on
 }
 
 void
@@ -484,4 +485,16 @@ lcd_drawlogo()
     lcd_blk_senddata(data);
   }
   lcd_blk_teardown();
+}
+
+void
+lcd_invon(void)
+{
+  lcd_sendcmd(LCD_CMD_INVON);
+}
+
+void
+lcd_invoff(void)
+{
+  lcd_sendcmd(LCD_CMD_INVOFF);
 }

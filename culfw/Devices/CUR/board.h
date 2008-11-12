@@ -22,9 +22,10 @@
 #define LED_PIN                 PC0
 #define LED_INV
 
+#define MULTI_DISPLAY
 #define HAS_USB
-#define HAS_GLCD
-#define USB_OPTIONAL
+#define HAS_LCD
+#define HAS_FS
 
 #define LCD_BL_DDR              DDRC
 #define LCD_BL_PORT             PORTC

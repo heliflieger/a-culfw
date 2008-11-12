@@ -1,3 +1,7 @@
+Version 1.08 (Wed Nov 12 07:42:45 MET 2008)
+- cc1100.c: sending works again (reset to factory!)
+- CUR: command feedback in the menu
+
 Version 1.07 (Sat Nov  8 17:54:58 MET 2008)
 - cc1100.c: abort ccTX / ccRX if 255 tries did not worked.
 - CUR: 5-fold speedup in display data transfer using HW SPI
