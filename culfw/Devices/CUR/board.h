@@ -22,11 +22,6 @@
 #define LED_PIN                 PC0
 #define LED_INV
 
-#define MULTI_DISPLAY
-#define HAS_USB
-#define HAS_LCD
-#define HAS_FS
-
 #define LCD_BL_DDR              DDRC
 #define LCD_BL_PORT             PORTC
 #define LCD_BL_PIN              PC7
@@ -76,7 +71,24 @@
 #define SPI_MOSI		PB2
 #define SPI_SCLK		PB1
 
+#define RTC_ADDR                0xd0
+#define RTC_INT		        INT4
+#define RTC_INTVECT    	        INT4_vect
+#define RTC_INTISC		(_BV(ISC40)|_BV(ISC41))
+#define RTC_INTREG		EICRB
+#define RTC_DDR                 DDRE
+#define RTC_OUT_PORT            PORTE
+#define RTC_PIN                 PE4
+
 #define BUSWARE_CUR
+#define MULTI_DISPLAY
+#define HAS_USB
+#define HAS_LCD
+#define HAS_FS
+#define HAS_SLEEP
+#define HAS_BATTERY
+#define HAS_RTC
+
 
 
 #endif

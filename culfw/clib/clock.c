@@ -8,7 +8,12 @@
 #include "transceiver.h"
 #include "battery.h"
 #include "joy.h"
+#ifdef HAS_SLEEP
 #include "mysleep.h"
+#endif
+#ifdef BUSWARE_CUL
+#include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
+#endif
 
 uint8_t day,hour,minute,sec,hsec;
 static uint8_t lsec, lmin;
@@ -78,7 +83,7 @@ TASK(Minute_Task)
   wdt_reset();
   lsec = sec;
 
-#ifdef JOY_PIN1
+#ifdef HAS_SLEEP
   if(sleep_time && (joy_inactive++ == sleep_time))
     dosleep();
 #endif
@@ -91,4 +96,10 @@ TASK(Minute_Task)
   bat_drawstate();
   joy_inactive = 0;
 #endif
+
+#ifdef BUSWARE_CUL
+  if(!USB_IsConnected)  // kind of a watchdog
+    prepare_boot(0);
+#endif
+
 }

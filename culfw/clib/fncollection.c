@@ -8,10 +8,15 @@
 #include "cc1100.h"
 #include "version.h"
 #include "cdc.h"
-#include "pcf8833.h"
 #include "transceiver.h"
-#include "battery.h"
 #include "clock.h"
+
+#ifdef HAS_LCD
+#include "battery.h"
+#include "pcf8833.h"
+#include "clock.h"
+#include "mysleep.h"
+#endif
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -55,11 +60,52 @@ write_eeprom(char *in)
     addr = (hb[0] << 8) | hb[1];
     
   eeprom_write_byte((uint8_t*)addr, hb[d-1]);
-  if(addr <= 0x28)
-    ccInitChip();
+
+  // If there are still bytes left, then write them too
+  in += (2*d+1);
+  while(in[0]) {
+    addr++;
+    if(!fromhex(in, hb, 1))
+      return;
+    eeprom_write_byte((uint8_t*)addr++, hb[0]);
+    in += 2;
+  }
 }
 
+void
+eeprom_init(void)
+{
+  if(eeprom_read_byte(EE_MAGIC_OFFSET)   != EE_MAGIC ||
+     eeprom_read_byte(EE_VERSION_OFFSET) != EE_VERSION)
+    eeprom_factory_reset(0);
 
+  led_mode = eeprom_read_byte(EE_LED);
+#ifdef HAS_SLEEP
+  sleep_time = eeprom_read_byte(EE_SLEEPTIME);
+#endif
+}
+
+void
+eeprom_factory_reset(char *unused)
+{
+  cc_factory_reset();
+
+  eeprom_write_byte(EE_MAGIC_OFFSET, EE_MAGIC);
+  eeprom_write_byte(EE_VERSION_OFFSET, EE_VERSION);
+
+  eeprom_write_byte(EE_REQBL, 0);
+  eeprom_write_byte(EE_LED, 2);
+#ifdef HAS_LCD
+  eeprom_write_byte(EE_CONTRAST,   0x40);
+  eeprom_write_byte(EE_BRIGHTNESS, 0x80);
+#endif
+#ifdef HAS_SLEEP
+  eeprom_write_byte(EE_SLEEPTIME, 30);
+#endif
+}
+
+//////////////////////////////////////////////////
+// LED
 void
 ledfunc(char *in)
 {
@@ -68,11 +114,18 @@ ledfunc(char *in)
     LED_ON();
   else
     LED_OFF();
+  eeprom_write_byte(EE_LED, led_mode);
 }
 
+//////////////////////////////////////////////////
+// boot
 void
-prepare_boot( uint8_t bl )
+prepare_boot(char *in)
 {
+  uint8_t bl = 0;
+  if(in)
+    fromhex(in+1, &bl, 1);
+
   USB_ShutDown();
 
   // next reboot we like to jump to Bootloader ...
@@ -83,18 +136,6 @@ prepare_boot( uint8_t bl )
 
   // go to bed, the wathchdog will take us to reset
   while (1);
-}
-
-void
-prepare_b(char *unused)
-{
-  prepare_boot(0);
-}
-
-void
-prepare_B(char *unused)
-{
-  prepare_boot(1);
 }
 
 void
@@ -109,29 +150,11 @@ version(char *unused)
   DNL();
 }
 
-void
-timer(char *in)
-{
-  uint8_t a[3];
-  uint16_t nr;
-  fromhex(in+1, a, 3);
-  nr = (a[1]<<8 | a[2]);
-DH(nr,4); 
-DC(':');
-DH(sec,2); DH(hsec,2);
-DC('-');
-  if(a[0] == 0)
-    my_delay_us(nr);
-  else
-    my_delay_ms(nr);
-DH(sec,2); DH(hsec,2);
-DNL();
-}
-
-
+//////////////////////////////////////////////////
+// LCD Monitor
 #ifdef HAS_LCD
 void
-lcdout(char *in)
+monitor(char *in)
 {
   uint8_t a;
   fromhex(in+1, &a, 1);

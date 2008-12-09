@@ -1,6 +1,17 @@
+Version 1.09
+- multiple PA tables: x02
+- reboot command changed (B00/B01 vs. b/B)
+- init cc1101 when sending before receive 
+- factory reset changed. Function call instead of writing a magic eeprom byte
+- eeprom magic and version number: all eeprom adresses changed
+- CUR: set X00 for file operations
+- CUR: battery: display red line if not on USB
+- "Upgrade" to 1.5.3: no files changed -> no difference
+
 Version 1.08 (Wed Nov 12 07:42:45 MET 2008)
 - cc1100.c: sending works again (reset to factory!)
 - CUR: command feedback in the menu
+- CVS tag CUL_VER_108
 
 Version 1.07 (Sat Nov  8 17:54:58 MET 2008)
 - cc1100.c: abort ccTX / ccRX if 255 tries did not worked.
@@ -41,12 +52,3 @@ Version 1.02
 - Recalibrating every 2 minutes (busy for 1ms, less than 0.01%)
 - Factory defaults chenged to measured optimum.
 
-
-TODO
-============
-- BUG: The CUL resets if the USB data is not consumed by the host
-- Receive HMS
-- Send FHT (Sync, FHTBUFFER?)
-- Compute S300TH/KS300 second half of checksum (Nice to have)
-- CUR: IR
-- CUR: Battery

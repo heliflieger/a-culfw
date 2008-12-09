@@ -5,6 +5,8 @@
 #ifdef HAS_LCD
 #include "pcf8833.h"
 #endif
+#include <MyUSB/Drivers/USB/USB.h>     // USB_IsConnected
+
 
 //*****************************************************************************
 // Function: get_adcw
@@ -78,13 +80,14 @@ bat_drawstate(void)
   s1  = (bit_is_set( BAT_PIN, BAT_PIN1) ? 2 : 0);
   s1 |= (bit_is_set( BAT_PIN, BAT_PIN2) ? 1 : 0);
 
-  uint16_t v2 = (s1 == 2 ? 0xf000 : 0x00f0);    // Red: battery, blue: charging
+  uint16_t v2 = ((s1 == 2 && USB_IsConnected) ?
+                0x00f0 : 0xf000);    // blue: charging, Red: else
 
   v1 = (v1-750)*VISIBLE_WIDTH/200;
-  lcd_line(WINDOW_LEFT,TITLE_HEIGHT-1,                      // the green part
+  lcd_line(WINDOW_LEFT,TITLE_HEIGHT-1,          // the green/blue part
                    WINDOW_LEFT+v1,TITLE_HEIGHT-1, 0x0f00);
 
-  lcd_line(WINDOW_LEFT+v1,TITLE_HEIGHT-1,                   // and the red part
+  lcd_line(WINDOW_LEFT+v1,TITLE_HEIGHT-1,       // and the red part
                    WINDOW_RIGHT,TITLE_HEIGHT-1, v2);
 }
 #endif
@@ -92,6 +95,6 @@ bat_drawstate(void)
 void
 bat_init(void)
 {
-  BAT_DDR   = 0;
+  BAT_DDR  &= ~(_BV(BAT_PIN1) | _BV(BAT_PIN1));
   BAT_PORT |= (_BV(BAT_PIN1) | _BV(BAT_PIN1));          // pull Battery stati
 }

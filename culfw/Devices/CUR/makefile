@@ -107,6 +107,8 @@ SRC = $(TARGET).c                                                  \
 		../clib/battery.c                                  \
 		../clib/joy.c                                      \
 		../clib/mysleep.c                                  \
+		../clib/ds1339.c                                   \
+		../clib/twimaster.c                                \
 		../MyUSB/Scheduler/Scheduler.c                     \
 		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
 		../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \

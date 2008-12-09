@@ -1,6 +1,11 @@
 M:CUR:Cur Menu:9f9afacfc
 S:Rooms:Rooms
+S:Macros:Macros
 S:Control:Control
+
+M:Macros::88fddfccf
+m:Lampen an:lampen_macro:11
+m:Lampen aus:lampen_macro:00
 
 M:Rooms::88fddfccf
 <xmllist>:88fddfccf
@@ -62,8 +67,9 @@ C:Contrast -:dFFFFFD
 S:Sleep:Sleep
 S:LED:LED
 S:Toggle monitor:Monitor
-C:Reboot:b
-C:Bootloader:B
+C:Show battery:a
+C:Reboot:B00
+C:Bootloader:B01
 
 M:Sleep::affbffcff
 C:10 sec:s0a
@@ -72,6 +78,7 @@ C:60 sec:s3c
 C:2 min:s78
 C:4 min:sf0
 C:off:s00
+C:display off:dff00
 
 M:LED::ffaffbffc
 C:on:l01
@@ -79,5 +86,11 @@ C:off:l00
 C:blink:l02
 
 M:Monitor::affbffcff
-C:CC1101 to LCD:m01
-C:CC1101 off:m00
+  0123456789012345
+C:Show recvd. data:m01
+C:Don't show:m00
+
+D:lampen_macro
+F80C200<13>
+F80C201<13>
+F80C202<13>

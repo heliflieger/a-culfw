@@ -56,7 +56,7 @@ static uint8_t oby, obuf[10], nibble;    // parity-stripped output
 static uint8_t roby, robuf[10];  // For repeat check: last buffer and time
 static uint8_t rday,rhour,rminute,rsec,rhsec;
 static uint16_t wait_high_zero, wait_low_zero, wait_high_one, wait_low_one;
-
+static uint8_t cc_on;
 
 static void send_bit(uint8_t bit);
 static void sendraw(uint8_t msg[], uint8_t nbyte, uint8_t bitoff,
@@ -78,32 +78,47 @@ tx_init(void)
 
   EICRB |= _BV(CC1100_ISC);                // Any edge of INTx generates an int.
   EIFR  |= _BV(CC1100_INT);
-  EIMSK |= _BV(CC1100_INT);
+  //EIMSK |= _BV(CC1100_INT);                // is done by ccRX()
 
   credit_10ms = MAX_CREDIT/2;
 
   for(int i = 1; i < N_BUCKETS; i += 2) // falling buckets start at 1
     bucket_array[i].state = STATE_INIT;
+  cc_on = 0;
+}
+
+void
+set_txoff(void)
+{
+  ccStrobe(CC1100_SPWD);
+  cc_on = 0;
+}
+
+void
+set_txon(void)
+{
+  ccInitChip();
+  cc_on = 1;
+  ccRX();
+}
+
+void
+set_txrestore(void)
+{
+  if(tx_report)
+    set_txon();
 }
 
 void
 set_txreport(char *in)
 {
   fromhex(in+1, &tx_report, 1);
-
   tx_init();    // Sets up Counter1, needed by my_delay in ccReset
 
   if(tx_report) {
-
-    if(eeprom_read_byte(EE_FACT_RESET) == 0xff) { // Factory reset
-      eeprom_write_byte(EE_FACT_RESET, 0x00);
-      cc_factory_reset();
-    }
-
-    ccInitChip();
-    ccRX();
+    set_txon();
   } else {
-    ccStrobe(CC1100_SIDLE);
+    set_txoff();
   }
 }
 
@@ -126,13 +141,19 @@ sendraw(uint8_t *msg, uint8_t nbyte, uint8_t bitoff,
   // 12*800+1200+nbyte*(8*1000)+(bits*1000)+800+10000 
   // message len is < (nbyte+2)*repeat in 10ms units.
   int8_t i, j, sum = (nbyte+2)*repeat;
+#ifndef BUSWARE_CUR
   if (credit_10ms < sum) {
     DS_P(PSTR("LOVF\r\n"));
     return;
   }
+#endif
   credit_10ms -= sum;
 
   LED_ON();
+  if(!cc_on) {
+    ccInitChip();
+    cc_on = 1;
+  }
   ccTX();                       // Enable TX 
   my_delay_ms(1);
 
@@ -538,7 +559,6 @@ ISR(CC1100_INTVECT)
     if(!(tx_report & ~(REP_MONITOR|REP_BINTIME)) ) // ignore the rest
       return;
   }
-
 
   if(b->state == STATE_RESET) {  // Rise: timer is reset, start timing
 

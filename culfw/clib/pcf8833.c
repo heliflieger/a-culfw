@@ -29,7 +29,6 @@
 #include "fonts/courier_8x14.inc"  // Antialiased: middle
 #define BODY_FONT                  courier_8x14
 
-static uint8_t lcd_current_contrast;
 static uint8_t lcd_scroll_y = 18;
        uint8_t lcd_on = 0xff;
 static uint8_t lcd_col_bg0, lcd_col_bg1, lcd_col_bg2;
@@ -91,7 +90,7 @@ lcdfunc(char *in)
 
     if(hb[2] != 0xFF) {                           // Contrast
 
-      lcd_current_contrast = eeprom_read_byte((uint8_t*)EE_CONTRAST);
+      uint8_t lcd_current_contrast = eeprom_read_byte((uint8_t*)EE_CONTRAST);
       if(hb[2] == 0xFE) {
         lcd_current_contrast--;
       } else if (hb[2] == 0xFD) {

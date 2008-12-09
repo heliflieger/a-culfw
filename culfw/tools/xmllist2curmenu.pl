@@ -8,7 +8,7 @@ my (%h, $n, %r);
 sub chkprint($);
 
 if(int(@ARGV) != 2) {
-  print "Usage: xmllist2curmenu.pl xmllist template > menu\n";
+  print "Usage: xmllist2curmenu.pl fhem.xmllist CUR.menu.template > MENU\n";
   exit(1);
 }
 
@@ -50,14 +50,15 @@ while(my $l = <FH>) {
   my $c = substr($l,1,1);
   my @a = split($c, $l);
 
-  if($a[0] eq "M") {
+  if($a[0] eq "M" || $a[0] eq "D") {
     $defs{$a[1]} = sprintf("%02x", $n++);
   }
   $n += int(keys %r)  if($l =~ m/^<xmllist>/);
 }
 close(FH);
 
-printf STDERR "WARNING: Too many menu definitions, 32 allowed\n" if($n > 32);
+printf STDERR "WARNING: Too many menu/macro definitions, 64 allowed\n"
+        if($n > 64);
 
 
 ##################
@@ -84,19 +85,20 @@ while(my $l = <FH>) {
         ($a[3] ? $a[3] : "fffffffff")));
     $n++;
 
-  } elsif($a[0] eq "S") {
+  } elsif($a[0] eq "S" || $a[0] eq "m") {       # Submenu/Macro-Call
 
-    shift(@a);
-    my $t = shift(@a);
-    my $m = shift(@a);
-    die("Unknown menu $m referenced in line $line ($l)\n") if(!$defs{$m});
-    chkprint(sprintf("S$c$t$c%s$c%s", $defs{$m}, join($c, @a)));
+    my $type = shift(@a);
+    my $name = shift(@a);
+    my $menu = shift(@a);
+    die("Unknown menu/macro $menu referenced in line $line ($l)\n")
+        if(!$defs{$menu});
+    chkprint(sprintf("$type$c$name$c%s$c%s", $defs{$menu}, join($c, @a)));
 
   } elsif($l =~ m/^<xmllist>/) {
     my $on = $n;
 
     foreach my $rn (sort keys %r) {
-      chkprint(sprintf "S$c$rn$c%02x", $on++);
+      chkprint(sprintf "S:$rn:%02x", $on++);
     }
     chkprint "";
 
@@ -121,7 +123,6 @@ while(my $l = <FH>) {
       chkprint "";
     }
 
-
   } else {
 
     chkprint("$l");
@@ -138,7 +139,7 @@ chkprint($)
 {
   my $str = shift;
   if(length($str) > 32) {
-    print STDERR "Expression $str is too long\n";
+    print STDERR "Expression $str is too long, maxlen 32\n";
   }
   print "$str\n";
 }

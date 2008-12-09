@@ -22,6 +22,10 @@ void fs20send(char *in);
 void fhtsend(char *in);
 void rawsend(char *in);
 
+void set_txoff(void);
+void set_txon(void);
+void set_txrestore(void);
+
 extern uint8_t tx_report;
 
 extern int16_t credit_10ms;

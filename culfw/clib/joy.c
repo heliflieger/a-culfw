@@ -13,8 +13,8 @@ uint8_t joy_inactive;
 void
 joy_init(void)
 {
-  JOY_DDR1 = 0;
-  JOY_DDR2 = 0;
+  JOY_DDR1 &= ~(_BV(JOY_PIN1) | _BV(JOY_PIN2) | _BV(JOY_PIN3));
+  JOY_DDR2 &= ~(_BV(JOY_PIN4) | _BV(JOY_PIN5));
 
   JOY_OUT_PORT1 |= (_BV(JOY_PIN1) | _BV(JOY_PIN2) | _BV(JOY_PIN3));
   JOY_OUT_PORT2 |= (_BV(JOY_PIN4) | _BV(JOY_PIN5));
@@ -35,9 +35,6 @@ check_key(void)
 
 TASK(JOY_Task)
 {
-  if(!lcd_on)
-    return;
-
   uint8_t key = check_key();
 
   if(key == KEY_NONE) {

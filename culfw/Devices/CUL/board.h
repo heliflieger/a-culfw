@@ -22,6 +22,13 @@
 #define BOARD_ID_STR            "CUL"
 #define BOARD_ID_USTR           L"CUL"
 
+#define SPI_PORT		PORTB
+#define SPI_DDR			DDRB
+#define SPI_SS			PB0
+#define SPI_MISO		PB3
+#define SPI_MOSI		PB2
+#define SPI_SCLK		PB1
+
 #define HAS_USB                 1
 
 #define BUSWARE_CUL

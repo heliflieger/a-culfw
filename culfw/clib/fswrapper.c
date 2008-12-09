@@ -1,8 +1,9 @@
 #include "fswrapper.h"
 #include "display.h"
 #include "cdc.h"
-#include <stdlib.h>
 #include "menu.h"
+#include "transceiver.h"
+#include <stdlib.h>
 #include <string.h>
 
 #define BUFSIZE 128
@@ -21,7 +22,7 @@ static uint8_t isMenu;                  // Menu hack
 void        
 read_file(char *in)
 {
-  if(in[1] == '.' && in[2] == 0) {              // List directory
+  if(in[1]==0 || (in[1]=='.' && in[2]==0)) {              // List directory
     char buf[FS_FILENAME+1];
     uint8_t i = 0;
     while(fs_list(&fs, 0, buf, i) == FS_OK) {
@@ -52,6 +53,9 @@ read_file(char *in)
 
     uint8_t buf[64];
     offset = 0;
+
+    set_txoff();
+
     while(offset < filesize) {
       uint8_t len = ((filesize-offset) > sizeof(buf) ? sizeof(buf) : filesize-offset);
       fs_read( &fs, inode, buf, offset, len );
@@ -59,6 +63,9 @@ read_file(char *in)
         DC(buf[i]);
       offset += sizeof(buf);
     }
+
+    set_txrestore();
+
   }
 }
 
@@ -98,6 +105,8 @@ write_file(char *in)
 
 DONE:
   if(ret == FS_OK) {
+    if(filesize)
+      set_txoff();
     DH((uint16_t)((filesize>>16) & 0xffff),4);
     DH((uint16_t)(filesize & 0xffff),4);
   } else {
@@ -122,6 +131,8 @@ write_filedata(void)
       menu_init();
       menu_push(0);
     }
+    set_txrestore();
+
   } else {
     offset += len;
   }

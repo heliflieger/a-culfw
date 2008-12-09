@@ -16,10 +16,10 @@
 
 #include <avr/eeprom.h>
 
-#define NMENUS     32   // Total number of menu's
+#define NMENUS     64   // Total number of menu's / macros
 #define NITEMS     32   // Maximum number of subitems in a single menu
 #define MLINESIZE  32   // Length of one menu line (data)
-#define MENUSTACK   8   // Number of recursively called menus
+#define MENUSTACK  12   // Number of recursively called menus
 
 static fs_inode_t minode;
 static uint16_t menu_filelen;
@@ -31,7 +31,6 @@ static uint8_t  menu_stackidx;          // Stack(!)-Index of current menu
 static uint8_t  menu_curitem;           // Current item in current menu
 static uint8_t  menu_topitem;           // Top visible item in current menu
 static uint8_t  menu_nitems;            // Number of items in the current menu
-static uint8_t  menu_nmenus;            // Number of defined menus
 static uint8_t  menu_cols[5];           // 3x3 nibbles = 4.5 bytes
 
 
@@ -54,18 +53,17 @@ menu_init()
   uint16_t nextoffset, offset = 0;
   uint8_t menu_line[8], idx = 0;
 
-  menu_nmenus = 0;
   while((nextoffset = menu_get_line(offset,menu_line,sizeof(menu_line))) != 0){
-    if(menu_line[0] == 'M') {
+    if(menu_line[0] == 'M' || menu_line[0] == 'D') {    // Menu or Macro-def
       menu_offset[idx] = offset;
       if(idx < NMENUS)
         idx++;
     }
     offset = nextoffset;
-    menu_nmenus++;
   }
   menu_stackidx = 0;
   joyfunc = menu_handle_joystick;       // parse input
+  menu_push(0);
 }
 
 static void
@@ -332,6 +330,30 @@ menu_handle_joystick(uint8_t key)
         }
       }
     }
+
+    if(menu_line[0] == 'm') {   // Macro
+      uint8_t idx;
+      uint16_t off;
+
+      lcd_invon();
+      fromhex((char *)arg, &idx, 1);
+      off = menu_get_line(menu_offset[idx], menu_line, sizeof(menu_line));
+      while(off && menu_line[0]) {
+        off = menu_get_line(off, menu_line, sizeof(menu_line));
+        if(off == 0 || !menu_line[0])
+          break;
+        for(idx = 0; fntab[idx].name; idx++) {
+          if(menu_line[0] == fntab[idx].name) {
+            fntab[idx].fn((char *)menu_line);
+            break;
+          }
+        }
+      }
+
+      lcd_invoff();
+
+    }
+
   }
 
   if(key == KEY_LEFT) {         // pop menu stack
@@ -345,7 +367,6 @@ menu_handle_joystick(uint8_t key)
   ////////////////////////////////////////
   // Switch display on / off
   if(key == KEY_ENTER) {
-
     if(lcd_on) {
       if(lcd_on == 0xff) {
         lcdfunc("dff02FC");     // on + clear screen + set last contrast
@@ -354,6 +375,8 @@ menu_handle_joystick(uint8_t key)
       } else {
         dosleep();
       }
+    } else {
+      lcdfunc("dff01FF");     // on + clear screen + set last contrast
     }
     bat_drawstate();
   }
