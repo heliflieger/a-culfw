@@ -36,7 +36,8 @@ rtc_init(void)
 {
   i2c_init();               // init I2C interface
   rtc_write( 0x10, 0xa5 );  // TCS3,TCS1,DS0,ROUT0 (No diode, 250Ohm)
-
+  rtc_write( 0x0e, 0x18 ); 
+#if 0
   uint8_t hb[6];
   rtc_dotime(1, hb);
   rtc_write(0x7, (hb[5]+1)|0x80); 
@@ -55,6 +56,7 @@ rtc_init(void)
   RTC_INTREG |= ISC40;
   EIMSK |= _BV(RTC_INT);
   EIFR  |= _BV(RTC_INT);
+#endif
 }
 
 void
@@ -84,10 +86,12 @@ rtcfunc(char *in)
   if(fromhex(in+1, hb, 6) != 6) {
     uint8_t t = hb[0];
     DH(t,2);
+#if 0
     if(t==4) {
       rtc_init();
       return;
     }
+#endif
     rtc_dotime(1, hb);
     if(t&1) {
       DH(hb[0], 2); DC('-');
@@ -109,8 +113,10 @@ rtcfunc(char *in)
   }
 }
 
+#if 0
 ISR(RTC_INTVECT)
 {
   DC('X');
   DNL();
 }
+#endif

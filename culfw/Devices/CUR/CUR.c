@@ -146,7 +146,7 @@ main(void)
   df_init(&df);
   fs_init(&fs, df);
   menu_init();
-//  rtc_init();
+  rtc_init();
   LED_OFF();
 
   credit_10ms = MAX_CREDIT/2;
