@@ -367,7 +367,7 @@ TODO/BUGS:
   - CU* "clean/good" send
   - CU* FHT send
   - CU* FS20 dim commands do not repeat.
-  - CUR RTC
+  - CUR RTC interrupts
   - CUR logfile + "more". Syslog
   - CU* HMS reception (Manchester code)
   - CUR check for FS20 group commands

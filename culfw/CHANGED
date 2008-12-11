@@ -1,4 +1,7 @@
-Version 1.09
+Version 1.10
+- CUR: RTC
+
+Version 1.09 (Wed Dec 10 00:13:21 MET 2008)
 - multiple PA tables: x02
 - reboot command changed (B00/B01 vs. b/B)
 - init cc1101 when sending before receive 
