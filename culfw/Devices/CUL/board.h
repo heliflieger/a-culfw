@@ -11,7 +11,6 @@
 #define CC1100_OUT_PORT         PORTC
 #define CC1100_OUT_PIN          PC6
 #define CC1100_INT		INT4
-#define CC1100_INTF		INTF4
 #define CC1100_INTVECT          INT4_vect
 #define CC1100_ISC		ISC40
 

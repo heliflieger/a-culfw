@@ -85,14 +85,8 @@ rtcfunc(char *in)
   uint8_t hb[6];
   if(fromhex(in+1, hb, 6) != 6) {
     uint8_t t = hb[0];
-    DH(t,2);
-#if 0
-    if(t==4) {
-      rtc_init();
-      return;
-    }
-#endif
     rtc_dotime(1, hb);
+
     if(t&1) {
       DH(hb[0], 2); DC('-');
       DH(hb[1], 2); DC('-');

@@ -10,6 +10,15 @@ if(@ARGV != 3 || ($ARGV[0] ne "-r" && $ARGV[0] ne "-w")) {
 open(DEV, "+<$ARGV[2]") || die("Can't open $ARGV[2]: $!\n");
 
 my $buf;
+for(;;) {                       # Drain input
+  my $rin = "";
+  vec($rin, fileno(DEV), 1) = 1;
+  my $nfound = select($rin, undef, undef, 0.3);
+  last if($nfound <= 0);
+  sysread(DEV, $buf, 1);
+}
+   
+
 if($ARGV[0] eq "-r") {
 
   open(FH, ">$ARGV[1]") || die("Can't open $ARGV[1]: $!\n");

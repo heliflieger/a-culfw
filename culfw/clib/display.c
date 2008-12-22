@@ -6,10 +6,6 @@
 #include "delay.h"
 #include "pcf8833.h"
 
-#if defined(MULTI_DISPLAY)
-uint8_t display_channels = DISPLAY_USB;
-#endif
-
 /*
  * Converts a hex string to a buffer. Not hex characters will be skipped
  * Returns the hex bytes found. Single-Nibbles wont be converted.
@@ -38,20 +34,13 @@ fromhex(const char *in, uint8_t *out, uint8_t buflen)
   return op-out;
 }
 
-#if defined(MULTI_DISPLAY)
-#define CHECK(a) if(display_channels & a)
-#else
-#define CHECK(a)
-#endif
-
 //////////////////////////////////////////////////
 // Display routines
 void
 display_char(char data)
 {
 #ifdef HAS_USB
-  CHECK(DISPLAY_USB)
-  {
+  if(USB_IsConnected) {
     if(USB_Tx_Buffer->nbytes >= USB_Tx_Buffer->size)
       CDC_Task();
     rb_put(USB_Tx_Buffer, data);
@@ -60,30 +49,23 @@ display_char(char data)
 
 
 #ifdef HAS_LCD
-  CHECK(DISPLAY_LCD)
   {
-    static uint8_t buf[20];
-    static uint8_t off = 3;
+    static uint8_t buf[TITLE_LINECHARS+1];
+    static uint8_t off = 0;
     if(data == '\r')
       return;
     if(data == '\n') {
       buf[off] = 0;
-      buf[1] = '0';
-      buf[2] = '9';
-      lcdfunc((char *)buf);
-      off = 3;
-      return;
+      off = 0;
+      lcd_putline(0, (char*)buf);
     } else {
-      if(off < 19)
+      if(off < TITLE_LINECHARS)
         buf[off++] = data;
     }
   }
 #endif
 
 #ifdef HAS_FS
-  CHECK(DISPLAY_FS)
-  {
-  }
 #endif
 }
 

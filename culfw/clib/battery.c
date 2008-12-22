@@ -55,12 +55,12 @@ batfunc(char *unused)
   s1  = (bit_is_set( BAT_PIN, BAT_PIN1) ? 2 : 0);
   s1 |= (bit_is_set( BAT_PIN, BAT_PIN2) ? 1 : 0);
 
-  if(s1==0) DS_P( PSTR("battery mode"));
+  if(s1==0) DS_P( PSTR("discharge"));
   if(s1==1) DS_P( PSTR("charged"));
   if(s1==2) DS_P( PSTR("charging"));
   if(s1==3) DS_P( PSTR("error"));
 
-  DU(get_adcw(BAT_MUX),5);    // result, decimal
+  DU(get_adcw(BAT_MUX),4);    // result, decimal
   DNL();
 }
 

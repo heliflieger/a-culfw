@@ -144,11 +144,6 @@ Protocol
       - Bit 0: Set LED on/off
       - Bit 1: The LED will blink once a second if the bit is set
 
-    m<hex>
-      (CUR only)
-      01: enable CC1101 receiver (X21) and redirect the USB output to the LCD
-      00: X00 + output to USB.
-
     R<AA> or R<AAAA>
       Read eeprom (i.e. "saved configuration") byte. Arguments: one or two
       byte hex address <AA> or <AAAA>
@@ -239,8 +234,9 @@ Protocol
       Example: X01
 
     x<pp> Change PA tables.
-      <pp> is a one-byte hex value, valid values are 00 to 04, with following
-      values: -10/-5/0/5/10 dBm. If the value is outside this spec, then the
+      <pp> is a one-byte hex value, valid values are 00 to 09, with following
+      values: the first 5 is -10/-5/0/5/10 dBm with PA ramping, the next 5 is
+      the same without PA ramping. If the value is outside this spec, then the
       0dBm variant (02) will be used.
       Example: x03
 
@@ -304,8 +300,7 @@ Protocol
     - write the MENU file to the CUR:
         perl cur_file.pl -w MENU /dev/ttyACM0
       NOTE: The CUR must be in the X00 mode (default after reboot), and no
-      fhem/screen should be connected to it. The CUR monitor must be disabled
-      (default after reboot)
+      fhem/screen should be connected to it.
 
     - switch the CUR display on by pressing the joystick.
 

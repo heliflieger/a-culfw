@@ -46,6 +46,8 @@
 #define TITLE_FONT_WIDTH           10
 #define TITLE_FONT_HEIGHT          17
 #define TITLE_HEIGHT               18
+#define TITLE_LINECHARS            (VISIBLE_WIDTH/TITLE_FONT_WIDTH)
+
 #define BODY_FONT_WIDTH            8
 #define BODY_FONT_HEIGHT           14
 #define BODY_HEIGHT                (VISIBLE_HEIGHT-TITLE_HEIGHT)
@@ -63,6 +65,8 @@ void lcd_drawlogo(void);
 void lcd_resetscroll(void);
 void lcd_invoff(void);
 void lcd_invon(void);
+void lcd_contrast(uint8_t hb);
+void lcd_switch(uint8_t hb);
 
 extern uint8_t lcd_on;
 

@@ -11,9 +11,10 @@
 #ifdef HAS_SLEEP
 #include "mysleep.h"
 #endif
-#ifdef BUSWARE_CUL
-#include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
+#ifdef HAS_LCD
+#include "pcf8833.h"
 #endif
+#include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
 
 uint8_t day,hour,minute,sec,hsec;
 static uint8_t lsec, lmin;
@@ -83,9 +84,16 @@ TASK(Minute_Task)
   wdt_reset();
   lsec = sec;
 
-#ifdef HAS_SLEEP
-  if(sleep_time && (joy_inactive++ == sleep_time))
-    dosleep();
+#if defined(HAS_SLEEP) && defined(JOY_PIN1)
+  if(joy_inactive < 255)
+    joy_inactive++;
+
+  if(sleep_time && joy_inactive == sleep_time) {
+    if(USB_IsConnected && lcd_on == 1)
+      lcd_switch(0);
+    else
+      dosleep();
+  }
 #endif
 
   if(lmin == minute)
@@ -94,7 +102,6 @@ TASK(Minute_Task)
 
 #if defined(HAS_LCD) && defined(BAT_PIN)
   bat_drawstate();
-  joy_inactive = 0;
 #endif
 
 #ifdef BUSWARE_CUL

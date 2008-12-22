@@ -57,8 +57,7 @@ while(my $l = <FH>) {
 }
 close(FH);
 
-printf STDERR "WARNING: Too many menu/macro definitions, 64 allowed\n"
-        if($n > 64);
+printf STDERR "Total menu/macro definitions: $n (max 64)\n";
 
 
 ##################
@@ -66,7 +65,9 @@ printf STDERR "WARNING: Too many menu/macro definitions, 64 allowed\n"
 open(FH, $ARGV[1]) || die("$ARGV[1]: $!\n");
 my $line = 0;
 my $nitems = 0;
+my $maxnitems = 0;
 $n = 0;
+
 while(my $l = <FH>) {
   $line++;
   chomp($l);
@@ -130,9 +131,12 @@ while(my $l = <FH>) {
   }
 
   $nitems++;
+  $maxnitems = $nitems if($maxnitems < $nitems);
   printf STDERR "WARNING: Too many subitems in line $line, 32 allowed\n"
                if($nitems > 32);
 }
+
+printf STDERR "Maximum number of subitems $maxnitems (max 32)\n";
 
 sub
 chkprint($)

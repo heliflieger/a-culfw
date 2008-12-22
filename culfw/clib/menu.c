@@ -369,14 +369,23 @@ menu_handle_joystick(uint8_t key)
   if(key == KEY_ENTER) {
     if(lcd_on) {
       if(lcd_on == 0xff) {
-        lcdfunc("dff02FC");     // on + clear screen + set last contrast
+
+        lcd_switch(1);
+        lcd_cls();
+        lcd_contrast(0xfc);
         menu_stackidx = 0;
         menu_push(0);
+
       } else {
+
         dosleep();
+
       }
+
     } else {
-      lcdfunc("dff01FF");     // on + clear screen + set last contrast
+
+      lcd_switch(1);
+
     }
     bat_drawstate();
   }

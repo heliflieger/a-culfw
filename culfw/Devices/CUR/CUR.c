@@ -65,7 +65,6 @@ t_fntab fntab[] = {
   { 'e', eeprom_factory_reset },
   { 'd', lcdfunc },
   { 'l', ledfunc },
-  { 'm', monitor },
   { 'r', read_file },
   { 's', mysleep },
   { 't', gettime },

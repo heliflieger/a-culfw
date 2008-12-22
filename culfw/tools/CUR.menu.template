@@ -1,11 +1,6 @@
 M:CUR:Cur Menu:9f9afacfc
 S:Rooms:Rooms
-S:Macros:Macros
 S:Control:Control
-
-M:Macros::88fddfccf
-m:Lampen an:lampen_macro:11
-m:Lampen aus:lampen_macro:00
 
 M:Rooms::88fddfccf
 <xmllist>:88fddfccf
@@ -62,14 +57,13 @@ C:Not yet
 C:implemented
 
 M:Control::affbffcff
-C:Contrast +:dFFFFFE
-C:Contrast -:dFFFFFD
+C:FW Version:V
+C:Battery:a
 S:Sleep:Sleep
-S:LED:LED
-S:Toggle monitor:Monitor
-C:Show battery:a
-C:Reboot:B00
-C:Bootloader:B01
+S:Display:Display
+S:Radio:Radio
+S:Time:Time
+S:Initialize:Initialize
 
 M:Sleep::affbffcff
 C:10 sec:s0a
@@ -80,15 +74,53 @@ C:4 min:sf0
 C:off:s00
 C:display off:dff00
 
+M:Display::affbffcff
+S:LED:LED
+C:Contrast +:dFFFFFE
+C:Contrast -:dFFFFFD
+S:Brightness +:Sorry
+S:Brightness -:Sorry
+
 M:LED::ffaffbffc
-C:on:l01
 C:off:l00
+C:on:l01
 C:blink:l02
 
-M:Monitor::affbffcff
-  0123456789012345
-C:Show recvd. data:m01
-C:Don't show:m00
+M:Radio::affbffcff
+S:Reception:Reception
+S:Xmit power +R:PARAMP
+S:Xmit power -R:PANORAMP
+C:CC1100 status:C35
+
+M:Reception::affbffcff
+C:Off:X00
+C:On:X01
+C:On+Debug:X05
+C:On+SignalStr:X21
+
+M:PARAMP:With ramping:affbffcff
+C:-10 dBm:x00
+C: -5 dBm:x01
+C:  0 dBm:x02
+C:  5 dBm:x03
+C: 10 dBm:x04
+
+M:PANORAMP:W/O ramping:affbffcff
+C:-10 dBm:x05
+C: -5 dBm:x06
+C:  0 dBm:x07
+C:  5 dBm:x08
+C: 10 dBm:x09
+
+M:Time:<11>:affbffcff
+C:Uptime:t
+C:RTC date:c01
+C:RTC time:c02
+
+M:Initialize::affbffcff
+C:Factory reset:e
+C:Reboot:B00
+C:Bootloader:B01
 
 D:lampen_macro
 F80C200<13>

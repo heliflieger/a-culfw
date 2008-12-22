@@ -19,9 +19,10 @@ void
 mysleep(char *in)
 {
   fromhex(in, &sleep_time, 1);
-  if(sleep_time == 0xFF)
-    lcdfunc("dff00");
   eeprom_write_byte(EE_SLEEPTIME, sleep_time);
+  DS_P( PSTR("Sleep: ") );
+  DU(sleep_time, 2);
+  DNL();
 }
 
 void

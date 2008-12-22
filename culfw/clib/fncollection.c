@@ -38,7 +38,7 @@ read_eeprom(char *in)
   d = eeprom_read_byte((uint8_t *)addr);
   DC('R');                    // prefix
   DH(addr,4);                 // register number
-  DS_P( PSTR(" = 0x") );
+  DS_P( PSTR(" = ") );
   DH(d,2);                    // result, hex
   DS_P( PSTR(" / ") );
   DU(d,2);                    // result, decimal
@@ -114,6 +114,7 @@ ledfunc(char *in)
     LED_ON();
   else
     LED_OFF();
+
   eeprom_write_byte(EE_LED, led_mode);
 }
 
@@ -141,31 +142,8 @@ prepare_boot(char *in)
 void
 version(char *unused)
 {
-  DS_P( PSTR("V " VERSION " * HW: ") );
-  DH( cc1100_readReg( CC1100_PARTNUM ), 2 );
-  DC( '.' );
-  DH( cc1100_readReg( CC1100_VERSION ), 2 );
-  DC( ' ' );
-  DS_P( PSTR(BOARD_ID_STR) );
+  DS_P( PSTR("V " VERSION " " BOARD_ID_STR " ") );
+  DH( cc1100_readReg( CC1100_PARTNUM ) & 0x0f, 1 );
+  DH( cc1100_readReg( CC1100_VERSION ) & 0x0f, 1 );
   DNL();
 }
-
-//////////////////////////////////////////////////
-// LCD Monitor
-#ifdef HAS_LCD
-void
-monitor(char *in)
-{
-  uint8_t a;
-  fromhex(in+1, &a, 1);
-
-  if(a) {
-    display_channels |= DISPLAY_LCD;
-    set_txreport("X21");
-    batfunc(0);
-  } else {
-    display_channels &= ~DISPLAY_LCD;
-    set_txreport("X00");
-  }
-}
-#endif

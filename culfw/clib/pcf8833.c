@@ -24,7 +24,6 @@
 
 #include "fonts/courier_10x17.inc" // Antialiased: big
 #define TITLE_FONT                 courier_10x17
-#define TITLE_LINECHARS            (VISIBLE_WIDTH/TITLE_FONT_WIDTH)
 
 #include "fonts/courier_8x14.inc"  // Antialiased: middle
 #define BODY_FONT                  courier_8x14
@@ -49,6 +48,52 @@ static void lcd_blk_senddata(uint8_t d);
 static void lcd_blk_setup(void);
 static void lcd_blk_teardown(void);
 
+void
+lcd_switch(uint8_t hb)
+{
+  if(hb) {
+
+    LCD_BL_DDR  |= _BV(LCD_BL_PIN);            // Switch on, init
+    LCD_BL_PORT |= _BV(LCD_BL_PIN);
+    lcd_init();
+    lcd_on = 1;
+  }
+
+  else {
+
+    LCD_BL_PORT &= ~_BV(LCD_BL_PIN);           // Switch off the display
+    lcd_sendcmd (LCD_CMD_SLEEPIN);   
+    lcd_on = 0;
+
+  }
+}
+
+void
+lcd_contrast(uint8_t hb)
+{
+  uint8_t lcd_current_contrast = eeprom_read_byte((uint8_t*)EE_CONTRAST);
+
+  if(lcd_current_contrast < 40 || lcd_current_contrast > 80)
+    lcd_current_contrast = 60;
+    
+  if(hb == 0xFE) {
+    lcd_current_contrast--;
+  } else if (hb == 0xFD) {
+    lcd_current_contrast++;
+  } else if (hb == 0xFC) {
+    //keep the eeprom value
+  } else {
+    lcd_current_contrast = hb;
+  }
+  eeprom_write_byte((uint8_t*)EE_CONTRAST, lcd_current_contrast);
+  lcd_sendcmd (LCD_CMD_SETCON);
+  lcd_senddata (lcd_current_contrast);
+
+  DS_P( PSTR("Contrast: ") );
+  DU(lcd_current_contrast, 2);
+  DNL();
+}
+
 /////////////////////////////////////////////////////////////////////
 // First byte, hex: Row number. Rest: Text to display, up to 16 char.
 // 00:title (big font).
@@ -63,48 +108,11 @@ lcdfunc(char *in)
   uint8_t hb[3];
   fromhex(in+1, hb, 3);
 
-  if(hb[0] == 0xFF) {                              // Control: On/Off, Contrast
+  if(hb[0] == 0xFF) {
 
-    if(hb[1] != 0xFF) {                         
+    if(hb[1] != 0xFF) lcd_switch(hb[1]);
+    if(hb[2] != 0xFF) lcd_contrast(hb[2]);
 
-      if(hb[1]) {
-
-        LCD_BL_DDR  |= _BV(LCD_BL_PIN);            // Switch on, init
-        LCD_BL_PORT |= _BV(LCD_BL_PIN);
-        lcd_init();
-
-        if(hb[1] == 2)                             // Clear screen
-          lcd_cls();
-        lcd_on = 1;
-      }
-
-      else {
-
-        LCD_BL_PORT &= ~_BV(LCD_BL_PIN);           // Switch off the display
-        lcd_sendcmd (LCD_CMD_SLEEPIN);   
-        lcd_on = 0;
-
-      }
-      return;
-    }
-
-    if(hb[2] != 0xFF) {                           // Contrast
-
-      uint8_t lcd_current_contrast = eeprom_read_byte((uint8_t*)EE_CONTRAST);
-      if(hb[2] == 0xFE) {
-        lcd_current_contrast--;
-      } else if (hb[2] == 0xFD) {
-        lcd_current_contrast++;
-      } else if (hb[2] == 0xFC) {
-        //keep the eeprom value
-      } else {
-        lcd_current_contrast = hb[2];
-      }
-      eeprom_write_byte((uint8_t*)EE_CONTRAST, lcd_current_contrast);
-
-      lcd_sendcmd (LCD_CMD_SETCON);
-      lcd_senddata (lcd_current_contrast);
-    }
     return;
   }
 

@@ -73,12 +73,8 @@ tx_init(void)
 {
   CC1100_OUT_DDR  |=  _BV(CC1100_OUT_PIN);
   CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);
-
   CC1100_IN_DDR  &=  ~_BV(CC1100_IN_PIN);
-
   EICRB |= _BV(CC1100_ISC);                // Any edge of INTx generates an int.
-  EIFR  |= _BV(CC1100_INT);
-  //EIMSK |= _BV(CC1100_INT);                // is done by ccRX()
 
   credit_10ms = MAX_CREDIT/2;
 
@@ -151,6 +147,7 @@ sendraw(uint8_t *msg, uint8_t nbyte, uint8_t bitoff,
 
   LED_ON();
   if(!cc_on) {
+    tx_init();
     ccInitChip();
     cc_on = 1;
   }
