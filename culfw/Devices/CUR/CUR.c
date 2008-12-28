@@ -35,6 +35,7 @@
 #include "mysleep.h"
 #include "spi.h"
 #include "ds1339.h"
+#include "fht.h"
 
 df_chip_t df;
 
@@ -146,6 +147,8 @@ main(void)
   fs_init(&fs, df);
   menu_init();
   rtc_init();
+  ccInitChip();
+  fht_init();
   LED_OFF();
 
   credit_10ms = MAX_CREDIT/2;

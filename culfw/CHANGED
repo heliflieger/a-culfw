@@ -1,4 +1,8 @@
 Version 1.11
+- sending should work now
+- first fht experiments
+
+Version 1.11
 - CUR: Control menu reorganized
 - CUR: Display "stdout" on the title
 - CUR: dpy off if connected to usb (real sleep else)

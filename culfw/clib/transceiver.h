@@ -19,8 +19,10 @@
 /* public prototypes */
 void set_txreport(char *in);
 void fs20send(char *in);
-void fhtsend(char *in);
 void rawsend(char *in);
+void addParityAndSend(char *in, uint8_t startcs, uint8_t repeat);
+void addParityAndSendData(uint8_t *hb, uint8_t hblen,
+                        uint8_t startcs, uint8_t repeat);
 
 void set_txoff(void);
 void set_txon(void);

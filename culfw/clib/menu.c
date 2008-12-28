@@ -122,7 +122,7 @@ menu_push(uint8_t idx)
   // Now display the data.
   // Load the last offset
   uint8_t *addr = EE_START_MENU+menu_stack[menu_stackidx-1];
-  menu_curitem = eeprom_read_byte((uint8_t *)addr);
+  menu_curitem = erb((uint8_t *)addr);
 
   // Compute the top line
   if(menu_curitem >= menu_nitems) {     // Invalid/not yet entered menu
@@ -216,7 +216,7 @@ menu_getlineword(uint8_t wordnr, uint8_t *frombuf, uint8_t *tobuf, uint8_t max)
 
     if(frombuf[0] == '<' && frombuf[3] == '>') {
       uint8_t mnu = menu_stack[menu_stackidx - 1 - (frombuf[1]-'0')];
-      uint8_t lnr = eeprom_read_byte((uint8_t *)(EE_START_MENU+mnu))+1;
+      uint8_t lnr = erb((uint8_t *)(EE_START_MENU+mnu))+1;
       uint8_t line[MLINESIZE+1];
 
       // Read the menu line
@@ -305,7 +305,7 @@ menu_handle_joystick(uint8_t key)
 
     // Save the current position
     uint8_t *addr = EE_START_MENU+menu_stack[menu_stackidx-1];
-    eeprom_write_byte(addr, menu_curitem);
+    ewb(addr, menu_curitem);
 
     menu_get_line(menu_item_offset[menu_curitem],
                         menu_line, sizeof(menu_line));
@@ -359,7 +359,7 @@ menu_handle_joystick(uint8_t key)
   if(key == KEY_LEFT) {         // pop menu stack
     // Save the current position
     uint8_t *addr = EE_START_MENU+menu_stack[menu_stackidx-1];
-    eeprom_write_byte(addr, menu_curitem);
+    ewb(addr, menu_curitem);
     menu_pop();
   }
 

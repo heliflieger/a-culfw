@@ -56,8 +56,8 @@ display_char(char data)
       return;
     if(data == '\n') {
       buf[off] = 0;
-      off = 0;
       lcd_putline(0, (char*)buf);
+      off = 0;
     } else {
       if(off < TITLE_LINECHARS)
         buf[off++] = data;

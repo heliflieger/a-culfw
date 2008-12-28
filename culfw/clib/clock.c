@@ -8,6 +8,7 @@
 #include "transceiver.h"
 #include "battery.h"
 #include "joy.h"
+#include "fht.h"
 #ifdef HAS_SLEEP
 #include "mysleep.h"
 #endif
@@ -30,13 +31,6 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 
   if(hsec >= 125) {
 
-    if(led_mode & 2)
-      LED_TOGGLE();
-
-    // one second, 1% duty cycle, 10ms resolution => this is simple ;-)
-    if (credit_10ms < MAX_CREDIT)
-      credit_10ms += 1;
-
     //clock_datetime++;
 
     sec++; hsec = 0;
@@ -58,8 +52,7 @@ gettime(char *unused)
   display_udec(day,3,'0');     DC(' ');
   display_udec(hour, 2,'0');   DC(':');
   display_udec(minute, 2,'0'); DC(':');
-  display_udec(sec, 2,'0');    DC('.');
-  display_udec(hsec*8, 3,'0');       // convert it to msec
+  display_udec(sec, 2,'0');
   DNL();
 }
 
@@ -81,8 +74,19 @@ TASK(Minute_Task)
   if(lsec == sec)
     return;
 
-  wdt_reset();
   lsec = sec;
+
+  wdt_reset();
+
+  if(led_mode & 2)
+    LED_TOGGLE();
+
+  // one second, 1% duty cycle, 10ms resolution => this is simple ;-)
+  if (credit_10ms < MAX_CREDIT)
+    credit_10ms += 1;
+
+  if(fht8v_timeout != 0xff && --fht8v_timeout == 0)
+    fht_timer();
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)
   if(joy_inactive < 255)

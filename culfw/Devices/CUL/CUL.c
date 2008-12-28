@@ -24,6 +24,7 @@
 #include "ringbuffer.h"
 #include "transceiver.h"
 #include "ttydata.h"
+#include "fht.h"
 
 
 /* Scheduler Task List */
@@ -115,6 +116,8 @@ main(void)
   Scheduler_Init();                        
   USB_Init();
   tty_init();
+  ccInitChip();
+  fht_init();
   LED_OFF();
 
   credit_10ms = MAX_CREDIT/2;

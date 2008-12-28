@@ -71,7 +71,7 @@ lcd_switch(uint8_t hb)
 void
 lcd_contrast(uint8_t hb)
 {
-  uint8_t lcd_current_contrast = eeprom_read_byte((uint8_t*)EE_CONTRAST);
+  uint8_t lcd_current_contrast = erb((uint8_t*)EE_CONTRAST);
 
   if(lcd_current_contrast < 40 || lcd_current_contrast > 80)
     lcd_current_contrast = 60;
@@ -85,7 +85,7 @@ lcd_contrast(uint8_t hb)
   } else {
     lcd_current_contrast = hb;
   }
-  eeprom_write_byte((uint8_t*)EE_CONTRAST, lcd_current_contrast);
+  ewb((uint8_t*)EE_CONTRAST, lcd_current_contrast);
   lcd_sendcmd (LCD_CMD_SETCON);
   lcd_senddata (lcd_current_contrast);
 

@@ -101,6 +101,7 @@ SRC = $(TARGET).c                                                  \
 		../clib/qfs.c                                      \
 		../clib/fswrapper.c                                \
 		../clib/transceiver.c                              \
+		../clib/fht.c                                      \
 		../clib/ttydata.c                                  \
 		../clib/pcf8833.c                                  \
 		../clib/menu.c                                     \

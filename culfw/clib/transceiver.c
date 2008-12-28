@@ -18,6 +18,7 @@
 #include "display.h"
 #include "clock.h"
 #include "fncollection.h"
+#include "fht.h"
 
 
 // For FS20 we time the complete message, for KS300 the rise-fall distance
@@ -178,14 +179,20 @@ sendraw(uint8_t *msg, uint8_t nbyte, uint8_t bitoff,
   LED_OFF();
 }
 
-
-static void
+void
 addParityAndSend(char *in, uint8_t startcs, uint8_t repeat)
 {
-  uint8_t hb[7], hblen, iby;
-  int8_t ibi, obi;
-
+  uint8_t hb[6], hblen;
   hblen = fromhex(in+1, hb, 5);
+  addParityAndSendData(hb, hblen, startcs, repeat);
+}
+
+void
+addParityAndSendData(uint8_t *hb, uint8_t hblen,
+                uint8_t startcs, uint8_t repeat)
+{
+  uint8_t iby;
+  int8_t ibi, obi;
 
   hb[hblen] = cksum1(startcs, hb, hblen);
   hblen++;
@@ -226,12 +233,6 @@ void
 fs20send(char *in)
 {
   addParityAndSend(in, 6, 3);
-}
-
-void
-fhtsend(char *in)
-{
-  addParityAndSend(in, 12, 1);
 }
 
 void
@@ -488,6 +489,9 @@ TASK(RfAnalyze_Task)
     bucket_out = 0;
 
   LED_OFF();
+
+  if(datatype == TYPE_FHT)
+    fht_hook(obuf, oby);
 }
 
 static void
@@ -515,7 +519,7 @@ ISR(TIMER1_COMPA_vect)
   if(bucket_nrused+2 == N_BUCKETS) {     // each bucket is full: reuse the last
 
     if(tx_report & REP_BITS)
-      DS_P(PSTR("BOVF\r\n"));
+      DS_P(PSTR("BOVF\r\n"));            // Bucket overflow
 
     reset_both_in_buckets();
 

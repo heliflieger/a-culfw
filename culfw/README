@@ -151,20 +151,14 @@ Protocol
       - 0x00 - 0x01
         Eeprom magic bytes
       - 0x02 - 0x2A
-        Configuration registers of the CC1101 chip as described in the "Table
-        35: Configuration Registers Overview" of the CC1101 datasheet.
+        Configuration registers as described in the "Table 37: "SPI Address
+        space" of the CC1101 datasheet (Version SWRS061C).  Note: all EEPROM
+        Values have an offset of 2.
       - 0x2B - 0x32
         CC1101 PA Table (8 bytes).
-      - 0x33 - Request-Bootloader flag
-        If it is set, and the MCU is resetted, jump to the bootloader.
-        Used by the B command.
-      - 0x34 - 0x73
-        Last selected entry in menu
-      - 0x74, 0x75, 0x76
-        Contrast, Brightness, LED blink
-      - 0x77
-        Sleeptime
-      Example: R76 -> 00
+      See fncollection.h for more details.
+
+      Example: R00 -> 63
 
 
     r<filename>
@@ -181,11 +175,34 @@ Protocol
       00 disables sleep.
 
     T<hex>
-      Send out an FHT message. Same as the F command, but with FHT checksum
-      instead of FS20 checksum. NOTE: FHT messages must be initiated by the
-      FHT80b, so this won't work if you cannot react within 1ms.
-      Example: T123400A600
+      Send out an FHT message. The CUL can work in 2 different modes. The first
+      one is to communicate with a number of FHT80b's. This is called the
+      FHT80b mode. The second one is to act itself as a FHT80b and control up
+      to 8 FHT8v actuators. This is called the FHT8v mode.
+      Note: the CUL can work in both modes at the same time.
 
+      Special control commands:
+      - TFFFF01<CCCC>
+        Set the "own" housecode to CCCC. The first byte will be used as the FHZ
+        code in in FHT80b mode. This command will also clear all buffers.
+      - TFFFF02
+        Return the own housecode (hex)
+      - TFFFF03
+        Return the actuator buffer (used only in the FHT80v mode). The CUL will
+        send out actuator commands every 116 second, if one of the actuator
+        values are not ff. Set the actuator values with the "normal" FHT
+        command T<CCCC>0vA6YY, where CCCC is the housecode of the CUL, v is the
+        actuator number (use v=0 for all actuators), and YY is the value to be
+        sent to the actuator. Example: T123400A610
+      - TFFFF04
+        Return the FHT80b buffer. All FHT commands which are for other FHT's
+        (not matching our own housecode) are placed in the FHT80b buffer, which
+        has 50 slots. If an FHT80b is sending an actuator message, then the
+        buffer will be searched for matching housecodes, and all found messages
+        will be sent to this FHT80b.
+      - TFFFF05
+        Return the seconds (decimal) until the next actuator message for the
+        own actuators. It is 0xff when no actuator messages are queued.
 
     t
       Output the time since boot. The output has the following form: 
@@ -195,7 +212,7 @@ Protocol
 
     V
       Print the firmware version.
-      Example: V -> V 1.0
+      Example: V -> V 1.11 CUL 04
 
 
     W<AA><DD> or W<AAAA><DD>

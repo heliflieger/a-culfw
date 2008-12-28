@@ -22,6 +22,21 @@ uint8_t led_mode = 2;   // Start blinking
 
 //////////////////////////////////////////////////
 // EEprom
+
+// eeprom_write_byte is inlined and it is too big
+__attribute__((__noinline__)) void
+ewb(uint8_t *p, uint8_t v)
+{
+  eeprom_write_byte(p, v);
+}
+
+// eeprom_read_byte is inlined and it is too big
+__attribute__((__noinline__)) uint8_t
+erb(uint8_t *p)
+{
+  return eeprom_read_byte(p);
+}
+
 void
 read_eeprom(char *in)
 {
@@ -35,7 +50,7 @@ read_eeprom(char *in)
   else
     addr = hb[0];
 
-  d = eeprom_read_byte((uint8_t *)addr);
+  d = erb((uint8_t *)addr);
   DC('R');                    // prefix
   DH(addr,4);                 // register number
   DS_P( PSTR(" = ") );
@@ -59,7 +74,7 @@ write_eeprom(char *in)
   else
     addr = (hb[0] << 8) | hb[1];
     
-  eeprom_write_byte((uint8_t*)addr, hb[d-1]);
+  ewb((uint8_t*)addr, hb[d-1]);
 
   // If there are still bytes left, then write them too
   in += (2*d+1);
@@ -67,7 +82,7 @@ write_eeprom(char *in)
     addr++;
     if(!fromhex(in, hb, 1))
       return;
-    eeprom_write_byte((uint8_t*)addr++, hb[0]);
+    ewb((uint8_t*)addr++, hb[0]);
     in += 2;
   }
 }
@@ -75,33 +90,34 @@ write_eeprom(char *in)
 void
 eeprom_init(void)
 {
-  if(eeprom_read_byte(EE_MAGIC_OFFSET)   != EE_MAGIC ||
-     eeprom_read_byte(EE_VERSION_OFFSET) != EE_VERSION)
+  if(erb(EE_MAGIC_OFFSET)   != EE_MAGIC ||
+     erb(EE_VERSION_OFFSET) != EE_VERSION)
     eeprom_factory_reset(0);
 
-  led_mode = eeprom_read_byte(EE_LED);
+  led_mode = erb(EE_LED);
 #ifdef HAS_SLEEP
-  sleep_time = eeprom_read_byte(EE_SLEEPTIME);
+  sleep_time = erb(EE_SLEEPTIME);
 #endif
 }
 
 void
-eeprom_factory_reset(char *unused)
+eeprom_factory_reset(char *in)
 {
   cc_factory_reset();
 
-  eeprom_write_byte(EE_MAGIC_OFFSET, EE_MAGIC);
-  eeprom_write_byte(EE_VERSION_OFFSET, EE_VERSION);
+  ewb(EE_MAGIC_OFFSET, EE_MAGIC);
+  ewb(EE_VERSION_OFFSET, EE_VERSION);
 
-  eeprom_write_byte(EE_REQBL, 0);
-  eeprom_write_byte(EE_LED, 2);
+  ewb(EE_REQBL, 0);
+  ewb(EE_LED, 2);
 #ifdef HAS_LCD
-  eeprom_write_byte(EE_CONTRAST,   0x40);
-  eeprom_write_byte(EE_BRIGHTNESS, 0x80);
+  ewb(EE_CONTRAST,   0x40);
+  ewb(EE_BRIGHTNESS, 0x80);
 #endif
 #ifdef HAS_SLEEP
-  eeprom_write_byte(EE_SLEEPTIME, 30);
+  ewb(EE_SLEEPTIME, 30);
 #endif
+  prepare_boot(in);
 }
 
 //////////////////////////////////////////////////
@@ -115,7 +131,7 @@ ledfunc(char *in)
   else
     LED_OFF();
 
-  eeprom_write_byte(EE_LED, led_mode);
+  ewb(EE_LED, led_mode);
 }
 
 //////////////////////////////////////////////////
@@ -131,7 +147,7 @@ prepare_boot(char *in)
 
   // next reboot we like to jump to Bootloader ...
   if(bl)
-       eeprom_write_byte( EE_REQBL, 1 );
+       ewb( EE_REQBL, 1 );
 
   TIMSK0 = 0;        // Disable the clock which resets the watchdog
 
