@@ -9,5 +9,6 @@ extern t_fntab fntab[];
 
 void analyze_ttydata(void);
 void tty_init(void);
+uint8_t callfn(char *buf);
 
 #endif

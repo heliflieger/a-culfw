@@ -2,6 +2,18 @@
 #include "ttydata.h"
 #include "cdc.h"
 
+uint8_t
+callfn(char *buf)
+{
+  for(uint8_t idx = 0; fntab[idx].name; idx++) {
+    if(buf[0] == fntab[idx].name) {
+      fntab[idx].fn(buf);
+      return 1;
+    }
+  }
+  return 0;
+}
+
 void
 analyze_ttydata()
 {
@@ -20,14 +32,7 @@ analyze_ttydata()
         continue;
 
       cmdbuf[cmdlen] = 0;
-
-      for(idx = 0; fntab[idx].name; idx++) {
-        if(cmdbuf[0] == fntab[idx].name) {
-          fntab[idx].fn(cmdbuf);
-          break;
-        }
-      }
-      if(!fntab[idx].name) {
+      if(!callfn(cmdbuf)) {
         DC('?');
         for(idx = 0; fntab[idx].name; idx++) {
           DC(' ');

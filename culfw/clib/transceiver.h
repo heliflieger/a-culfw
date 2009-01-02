@@ -30,17 +30,9 @@ void set_txrestore(void);
 
 extern uint8_t tx_report;
 
-extern int16_t credit_10ms;
+extern uint16_t credit_10ms;
 #define MAX_CREDIT 500          // five second burst
 
 TASK(RfAnalyze_Task);
-
-// One bucket to collect the "raw" bits
-typedef struct {
-     uint8_t state, sync, byteidx, bitidx;
-     uint8_t data[12];          // contains parity and checksum, but no sync
-     uint16_t zero;             // measured zero duration
-     uint16_t avg;              // (zero+one/2), used to decide 0 or 1
-} bucket_t;
 
 #endif

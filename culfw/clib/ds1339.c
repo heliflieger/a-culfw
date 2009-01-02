@@ -60,9 +60,9 @@ rtc_init(void)
 }
 
 void
-rtc_dotime(uint8_t in, uint8_t data[6])
+rtc_dotime(uint8_t len, uint8_t data[6])
 {
-  if(in) {
+  if(len == 0) {
     data[0] = rtc_read(6);         // year
     data[1] = rtc_read(5);         // month
     data[2] = rtc_read(4);         // mday
@@ -70,22 +70,27 @@ rtc_dotime(uint8_t in, uint8_t data[6])
     data[4] = rtc_read(1);         // min
     data[5] = rtc_read(0);         // sec
   } else {
-    rtc_write(6, data[0]);
-    rtc_write(5, data[1]);
-    rtc_write(4, data[2]);
-    rtc_write(2, data[3]);
-    rtc_write(1, data[4]);
-    rtc_write(0, data[5]);
+    uint8_t p = 0;
+    if(len == 6) {
+      rtc_write(6, data[p++]);
+      rtc_write(5, data[p++]);
+      rtc_write(4, data[p++]);
+    }
+    rtc_write(2, data[p++]);
+    rtc_write(1, data[p++]);
+    rtc_write(0, data[p++]);
   }
 }
 
 void
 rtcfunc(char *in)
 {
-  uint8_t hb[6];
-  if(fromhex(in+1, hb, 6) != 6) {
-    uint8_t t = hb[0];
-    rtc_dotime(1, hb);
+  uint8_t hb[6], t;
+
+  t = fromhex(in+1, hb, 6);
+  if(t == 1) {
+    t = hb[0];
+    rtc_dotime(0, hb);
 
     if(t&1) {
       DH(hb[0], 2); DC('-');
@@ -102,9 +107,12 @@ rtcfunc(char *in)
       DH(hb[5], 2);
     }
     DNL();
-  } else {
-    rtc_dotime(0, hb);
   }
+
+  else  {       // 3: time only, 6: date & time
+    rtc_dotime(t, hb);
+  }
+
 }
 
 #if 0

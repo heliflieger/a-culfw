@@ -11,16 +11,17 @@
 #define TYPE_FS20    'F'
 #define TYPE_KS300   'K'
 
+#define MAXMSG  17
 typedef struct pxx {
      uint8_t state, sync, byteidx, bitidx;
-     uint8_t data[12];          // contains parity and checksum, but no sync
+     uint8_t data[MAXMSG];          // contains parity and checksum, but no sync
      uint16_t zero;             // measured zero duration
      uint16_t avg;              // (zero+one/2), used to decide 0 or 1
 } bucket_t;
 
 static bucket_t px1;  // px1: rise-rise, px2: rise-fall
 static uint8_t oby, obuf[10];   // Parity-stripped output
-static uint8_t nibble;
+static uint8_t nibble = 0;
 
 static uint8_t
 parity_even_bit(uint8_t d)
@@ -68,7 +69,7 @@ cksum3(uint8_t *buf, uint8_t len)               // KS300
 static uint8_t
 analyze(bucket_t *b, uint8_t t)
 {
-  uint8_t cnt=0, isok = 1, max, iby = 0;
+  uint8_t cnt=0, iserr = 0, max, iby = 0;
   int8_t ibi=7, obi=7;
 
   nibble = 0;
@@ -76,6 +77,7 @@ analyze(bucket_t *b, uint8_t t)
   max = b->byteidx*8+(7-b->bitidx);
   obuf[0] = 0;
   while(cnt++ < max) {
+
     uint8_t bit = (b->data[iby] & _BV(ibi)) ? 1 : 0;     // Input bit
     if(ibi-- == 0) {
       iby++;
@@ -85,7 +87,7 @@ analyze(bucket_t *b, uint8_t t)
     if(t == TYPE_KS300 && obi == 3) {                           // nibble check
       if(!nibble) {
         if(!bit) {
-          isok = 0;
+          iserr = 1;
           break;
         }
         nibble = !nibble;
@@ -96,14 +98,15 @@ analyze(bucket_t *b, uint8_t t)
 
     if(obi == -1) {                                    // next byte
       if(t == TYPE_FS20) {
+printf(" P%d (%d/%d)\n", bit, cnt, max);
         if(parity_even_bit(obuf[oby]) != bit) {
-          isok = 0;
+          iserr = 2;
           break;
         }
       }
       if(t == TYPE_EM || t == TYPE_KS300) {
         if(!bit) {
-          isok = 0;
+          iserr = 3;
           break;
         }
       }
@@ -111,6 +114,7 @@ analyze(bucket_t *b, uint8_t t)
       obi = 7;
 
     } else {                                           // Normal bits
+printf("%d", bit);
       if(bit) {
         if(t == TYPE_FS20)
           obuf[oby] |= _BV(obi);
@@ -120,16 +124,17 @@ analyze(bucket_t *b, uint8_t t)
       obi--;
     }
   }
-  if(cnt <= max)
-    isok = 0;
-  else if(isok && t == TYPE_EM && obi == -1)          // missing last stopbit
+  if(cnt <= max && !iserr)
+    iserr = 4;
+  else if(iserr && t == TYPE_EM && obi == -1)          // missing last stopbit
     oby++;
   else if(nibble) {                                   // half byte msg 
     oby++;
   }
-  if(oby == 0)
-    isok = 0;
-  return isok;
+  if(oby == 0 && !iserr)
+    iserr = 5;
+printf("\nCNT: %d, ISERR: %d\n", cnt, iserr);
+  return !iserr;
 }
 /////////////////
 
@@ -176,40 +181,48 @@ char *data[] = {
 };
 
 int
-tohex(char a)
+fromhex(const char *in, uint8_t *out, uint8_t buflen)
 {
-  if(a >= '0' && a <= '9')
-    return a-'0';
-  else
-    return a-'A'+10;
+  uint8_t *op = out, c, h = 0, fnd, step = 0;
+  while((c = *in++)) {
+    fnd = 0;
+    if(c >= '0' && c <= '9') { h |= c-'0';    fnd = 1; }
+    if(c >= 'A' && c <= 'F') { h |= c-'A'+10; fnd = 1; }
+    if(c >= 'a' && c <= 'f') { h |= c-'a'+10; fnd = 1; }
+    if(!fnd)
+      continue;
+    if(step++) {
+      *op++ = h;
+      if(--buflen <= 0)
+        return (op-out);
+      step = 0;
+      h = 0;
+    } else {
+      h <<= 4;
+    }
+  }
+  return op-out;
 }
+
 
 int
 main(int ac, char *av[])
 {
-  int datatype = 0, i, j, cs;
+  int datatype = 0, i, j, l, cs;
   int bucket_type = 0;
   if(*av[1] != 'F')
     bucket_type = 1;
 
+  px1.byteidx = strtol(av[2], 0, 0);
+  px1.bitidx = strtol(av[3], 0, 0);
+  printf("%d / %d\n", px1.byteidx, px1.bitidx);
 
-  for(j = 2; j < ac; j++) {
+  for(j = 4; j < ac; j++) {
     char *s = av[j];
-    for(i = 0; s[i]; i+=2)
-      px1.data[i/2] = (tohex(s[i])<<4) | tohex(s[i+1]);
-    if(i==14) {
-      px1.byteidx = 6;
-      px1.bitidx = 1;
-    } else if(i==20) {
-      px1.byteidx = 10;
-      px1.bitidx = 7;
-    } else if(i==10) {
-      px1.byteidx = 4;
-      px1.bitidx = 4;
-    } else {
-      px1.byteidx = 11;
-      px1.bitidx = 6;
-    }
+    l = fromhex(s, px1.data, sizeof(px1.data));
+    for(i = 0; i < l; i++)
+      printf("%02x", px1.data[i]);
+    printf("\n");
 
     if(bucket_type == 0) {
       if(analyze(&px1, TYPE_FS20))
@@ -221,7 +234,7 @@ main(int ac, char *av[])
         datatype = TYPE_KS300;
     }
 
-    printf("%s (%c, Nibble: %d)\n", s, datatype, nibble);
+    printf("%s (%c, Nibble: %d, OBY: %d)\n", s, datatype, nibble, oby);
     if(datatype) {
       printf("  Brutto: ");
       for(i=0; i < oby; i++) {
@@ -233,7 +246,7 @@ main(int ac, char *av[])
       printf("\n");
 
       oby--;
-      printf("  Net data (w/o checksum): ");
+      printf("  W/o CS: ");
       for(i=0; i < oby; i++) {
         if(i == oby-1 && nibble)
           printf("%x",  obuf[i]>>4);

@@ -11,6 +11,7 @@
 #include <util/parity.h>
 #include <string.h>
 
+#include "board.h"
 #include "delay.h"
 #include "transceiver.h"
 #include "led.h"
@@ -47,14 +48,26 @@
 #define STATE_SYNC    2
 #define STATE_COLLECT 3
 
+// For CUR request we need 
+#define MAXMSG 17               // inclusive parity (Netto 15)
+                               
+
+// One bucket to collect the "raw" bits
+typedef struct {
+     uint8_t state, sync, byteidx, bitidx;
+     uint8_t data[MAXMSG];      // contains parity and checksum, but no sync
+     uint16_t zero;             // measured zero duration
+     uint16_t avg;              // (zero+one/2), used to decide 0 or 1
+} bucket_t;
+
 
 #define N_BUCKETS 4              // Must be even: a "rise" and a "fall" bucket
-int16_t credit_10ms;
+uint16_t credit_10ms;
 uint8_t tx_report;              // global verbose / output-filter
 static bucket_t bucket_array[N_BUCKETS];
 static uint8_t bucket_in, bucket_out, bucket_nrused;
-static uint8_t oby, obuf[10], nibble;    // parity-stripped output
-static uint8_t roby, robuf[10];  // For repeat check: last buffer and time
+static uint8_t oby, obuf[MAXMSG], nibble;    // parity-stripped output
+static uint8_t roby, robuf[MAXMSG];  // For repeat check: last buffer and time
 static uint8_t rday,rhour,rminute,rsec,rhsec;
 static uint16_t wait_high_zero, wait_low_zero, wait_high_one, wait_low_one;
 static uint8_t cc_on;
@@ -182,9 +195,22 @@ sendraw(uint8_t *msg, uint8_t nbyte, uint8_t bitoff,
 void
 addParityAndSend(char *in, uint8_t startcs, uint8_t repeat)
 {
-  uint8_t hb[6], hblen;
-  hblen = fromhex(in+1, hb, 5);
+  uint8_t hb[MAXMSG], hblen;
+  hblen = fromhex(in+1, hb, MAXMSG-1);
   addParityAndSendData(hb, hblen, startcs, repeat);
+}
+
+static int
+abit(uint8_t b, uint8_t obi)
+{
+  if(b)
+    obuf[oby] |= _BV(obi);
+  if(obi-- == 0) {
+    if(oby < MAXMSG-1)
+      oby++;
+    obi = 7; obuf[oby] = 0;
+  }
+  return obi;
 }
 
 void
@@ -203,25 +229,14 @@ addParityAndSendData(uint8_t *hb, uint8_t hblen,
   obuf[oby] = 0;
 
   while(iby<hblen) {
-    if(hb[iby] & _BV(ibi))
-      obuf[oby] |= _BV(obi);
-
-    if(obi-- == 0) {
-      obi = 7; obuf[++oby] = 0;
-    }
-
+    obi = abit(hb[iby] & _BV(ibi), obi);
     if(ibi-- == 0) {
-      ibi = 7;
-      if(parity_even_bit(hb[iby]))
-        obuf[oby] |= _BV(obi);
-      if(obi-- == 0) {
-        obi = 7; obuf[++oby] = 0;
-      }
-      iby++;
+      obi = abit(parity_even_bit(hb[iby]), obi);
+      ibi = 7; iby++;
     }
   }
-  if(obi-- == 0) {              // Trailing 0 bit
-    obi = 7; ++oby;
+  if(obi-- == 0) {                   // Trailing 0 bit: no need for a check
+    oby++; obi = 7;
   }
 
   wait_high_zero = wait_low_zero = FS20_ZERO;
@@ -283,17 +298,18 @@ cksum3(uint8_t *buf, uint8_t len)               // KS300
   return x;
 }
 
-
 static uint8_t
 analyze(bucket_t *b, uint8_t t)
 {
-  uint8_t cnt=0, isok = 1, max, iby = 0;
+  uint8_t cnt=0, iserr = 0, max, iby = 0;
   int8_t ibi=7, obi=7;
 
+  nibble = 0;
   oby = 0;
   max = b->byteidx*8+(7-b->bitidx);
   obuf[0] = 0;
   while(cnt++ < max) {
+
     uint8_t bit = (b->data[iby] & _BV(ibi)) ? 1 : 0;     // Input bit
     if(ibi-- == 0) {
       iby++;
@@ -303,7 +319,7 @@ analyze(bucket_t *b, uint8_t t)
     if(t == TYPE_KS300 && obi == 3) {                           // nibble check
       if(!nibble) {
         if(!bit) {
-          isok = 0;
+          iserr = 1;
           break;
         }
         nibble = !nibble;
@@ -315,13 +331,13 @@ analyze(bucket_t *b, uint8_t t)
     if(obi == -1) {                                    // next byte
       if(t == TYPE_FS20) {
         if(parity_even_bit(obuf[oby]) != bit) {
-          isok = 0;
+          iserr = 2;
           break;
         }
       }
       if(t == TYPE_EM || t == TYPE_KS300) {
         if(!bit) {
-          isok = 0;
+          iserr = 3;
           break;
         }
       }
@@ -338,15 +354,16 @@ analyze(bucket_t *b, uint8_t t)
       obi--;
     }
   }
-  if(cnt <= max)
-    isok = 0;
-  else if(isok && t == TYPE_EM && obi == -1)           // missing last stopbit
+  if(cnt <= max && !iserr)
+    iserr = 4;
+  else if(!iserr && t == TYPE_EM && obi == -1)        // missing last stopbit
     oby++;
-  else if(nibble)                                      // Nibble data
+  else if(nibble) {                                   // half byte msg 
     oby++;
-  if(oby == 0)
-    isok = 0;
-  return isok;
+  }
+  if(oby == 0 && !iserr)
+    iserr = 5;
+  return !iserr;
 }
 
 

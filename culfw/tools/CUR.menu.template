@@ -9,6 +9,7 @@ M:FS20-Plain:<11>:88fddfccf
 C:Toggle:F<13>12
 C:On:F<13>11
 C:Off:F<13>00
+C:Request Status:F$0000[11]
 
 M:FS20-Dim:<11>:88fddfccf
 C:Toggle:F<13>12
@@ -16,45 +17,47 @@ C:On:F<13>11
 C:Off:F<13>00
 C:Dimup:F<13>13
 C:Dimdown:F<13>14
+C:Request Status:F$0000[11]
+
+M:CUL_EM:<11>:f88fcdfde
+C:Request Status:F$0000[11]
+
+M:CUL_WS:<11>:f88fcdfde
+C:Request Status:F$0000[11]
 
 M:FHT:<11>:f88fcdfde
-S:Desired:ftemp:41
-S:Day-Temp:ftemp:82
-S:Night-Temp:ftemp:84
+S:Desired:ftemp:02
+C:Request Status:F$0000[11]
 
 M:ftemp:<21> <11>:f88fcdfde
-S:12.0 C:Sorry:T<23><13>1A
-S:12.5 C:Sorry:T<23><13>1B
-S:13.0 C:Sorry:T<23><13>1C
-S:13.5 C:Sorry:T<23><13>1B
-S:14.0 C:Sorry:T<23><13>1C
-S:14.5 C:Sorry:T<23><13>1D
-S:15.0 C:Sorry:T<23><13>1E
-S:15.5 C:Sorry:T<23><13>1F
-S:16.0 C:Sorry:T<23><13>20
-S:16.5 C:Sorry:T<23><13>21
-S:17.0 C:Sorry:T<23><13>22
-S:17.5 C:Sorry:T<23><13>23
-S:18.0 C:Sorry:T<23><13>24
-S:18.5 C:Sorry:T<23><13>25
-S:19.0 C:Sorry:T<23><13>26
-S:19.5 C:Sorry:T<23><13>27
-S:20.0 C:Sorry:T<23><13>28
-S:20.5 C:Sorry:T<23><13>29
-S:21.0 C:Sorry:T<23><13>2A
-S:21.5 C:Sorry:T<23><13>2B
-S:22.0 C:Sorry:T<23><13>2C
-S:22.5 C:Sorry:T<23><13>2D
-S:23.0 C:Sorry:T<23><13>2E
-S:23.5 C:Sorry:T<23><13>2F
-S:24.0 C:Sorry:T<23><13>30
-S:24.5 C:Sorry:T<23><13>31
-S:25.0 C:Sorry:T<23><13>32
-S:25.5 C:Sorry:T<23><13>33
-
-M:Sorry::aaaccceee
-C:Not yet
-C:implemented
+C:12.0 C:F$<13>1A[21]
+C:12.5 C:F$<13>1B[21]
+C:13.0 C:F$<13>1C[21]
+C:13.5 C:F$<13>1B[21]
+C:14.0 C:F$<13>1C[21]
+C:14.5 C:F$<13>1D[21]
+C:15.0 C:F$<13>1E[21]
+C:15.5 C:F$<13>1F[21]
+C:16.0 C:F$<13>20[21]
+C:16.5 C:F$<13>21[21]
+C:17.0 C:F$<13>22[21]
+C:17.5 C:F$<13>23[21]
+C:18.0 C:F$<13>24[21]
+C:18.5 C:F$<13>25[21]
+C:19.0 C:F$<13>26[21]
+C:19.5 C:F$<13>27[21]
+C:20.0 C:F$<13>28[21]
+C:20.5 C:F$<13>29[21]
+C:21.0 C:F$<13>2A[21]
+C:21.5 C:F$<13>2B[21]
+C:22.0 C:F$<13>2C[21]
+C:22.5 C:F$<13>2D[21]
+C:23.0 C:F$<13>2E[21]
+C:23.5 C:F$<13>2F[21]
+C:24.0 C:F$<13>30[21]
+C:24.5 C:F$<13>31[21]
+C:25.0 C:F$<13>32[21]
+C:25.5 C:F$<13>33[21]
 
 M:Control::affbffcff
 C:FW Version:V
@@ -116,6 +119,7 @@ M:Time:<11>:affbffcff
 C:Uptime:t
 C:RTC date:c01
 C:RTC time:c02
+C:Request&Set:F$0100
 
 M:Initialize::affbffcff
 C:Factory reset:e
@@ -126,3 +130,7 @@ D:lampen_macro
 F80C200<13>
 F80C201<13>
 F80C202<13>
+
+M:Sorry::aaaccceee
+C:Not yet
+C:implemented

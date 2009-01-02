@@ -1,3 +1,10 @@
+Version 1.13
+- Fixed sending longer FS20 messages (for CUR/CUL communication)
+- CUR: Status request from fhem:00_CUL.pm for FS20/FHT/EM/S300 devices
+
+Version 1.12
+- further fht experiments
+
 Version 1.11
 - sending should work now
 - first fht experiments

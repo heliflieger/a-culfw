@@ -114,6 +114,13 @@ Protocol
       register
       Example: C35 -> C35 = 0x0D / 13
 
+    c<hex>
+      (CUR only)
+      Read/set the RTC. If hex is 01, then display the date, if it is 02 the
+      time, if it is 03, then both date and time. If the length of hex is 6,
+      then the RTC will be set to YYMMDDHHmmSS. Data is written BCD, i.e
+      December is written as 12 and not as 0C.
+
     d<hex>data
       (CUR only)
       Choose the sub-function with the first two bytes (hex):
@@ -157,12 +164,11 @@ Protocol
       - 0x2B - 0x32
         CC1101 PA Table (8 bytes).
       See fncollection.h for more details.
-
       Example: R00 -> 63
 
-
     r<filename>
-      (CUR) output the file name <filename>. First the length of the file,
+      (CUR only)
+      output the file name <filename>. First the length of the file,
       (hex 8 byte+nl) is written to the output, then the body of the file.
       Use "." as filename to get a listing of the current files with length.
       Use the program cur_file from the tools directory to read a file, e.g.:
@@ -170,9 +176,12 @@ Protocol
       NOTE: No fhem/screen must be connected to the CUR while reading/writing
 
     s<hex>
-      (CUR) sleeptime. Switch everything off after <hex> seconds of joystick
+      (CUR only)
+      sleeptime. Switch everything off after <hex> seconds of joystick
       inactivity. An instant sleep is achieved by pressing the joystick.
       00 disables sleep.
+      If the CUR is connected via USB then only the display will be switched
+      off.
 
     T<hex>
       Send out an FHT message. The CUL can work in 2 different modes. The first
@@ -256,12 +265,6 @@ Protocol
       the same without PA ramping. If the value is outside this spec, then the
       0dBm variant (02) will be used.
       Example: x03
-
-    Unknown commands
-      Prints the "help", the list of supported commands
-      Example:
-        ? -> ?? B C F R V W X
-
 
     Unknown commands
       Prints the "help", the list of supported commands
@@ -364,9 +367,9 @@ Notes
   - Change channel bandwidth 
     MDMCFG4 (10). CHANBW_E (bits 7:6), CHANBW_M (bits 5:4)
     BWchannel =  Fosc/(8 * (4+CHANBW_M) * 2 ^ CHANBW_E)
-    Example: W1255 (325MHz, default)
-             W1245 (406MHz)
-             W1235 (464MHz)
+    Example: W1255 (325KHz, default)
+             W1245 (406KHz)
+             W1235 (464KHz)
     Note: R/W address = C+2
 
   - Read-Only-Registers:
@@ -383,7 +386,6 @@ TODO/BUGS:
   - CUR logfile + "more". Syslog
   - CU* HMS reception (Manchester code)
   - CUR check for FS20 group commands
-  - CUR device status request from CUL/fhem
   - CUR logo from file
   - CUR umlauts
   - CUR fhem MENU/files creation support

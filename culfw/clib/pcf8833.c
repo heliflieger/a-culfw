@@ -116,7 +116,12 @@ lcdfunc(char *in)
     return;
   }
 
-  lcd_putline(hb[0], in+3);
+  if(hb[0] >= 0x20) {   // Strange lines will be displayed in the title.
+    hb[0] = 0; in++;
+  } else {
+    in += 3;
+  }
+  lcd_putline(hb[0], in);
 }
 
 void

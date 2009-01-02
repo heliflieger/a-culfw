@@ -16,10 +16,20 @@ if(int(@ARGV) != 2) {
 # xml file first
 open(FH, $ARGV[0]) || die("$ARGV[0]: $!\n");
 while(my $l = <FH>) {
+
   if($l =~ m+^\t\t<FS20 name="([^"]*)".*sets="([^"]*)"+) {
     $n=$1;
     $h{$n}{sets} = $2;
     $h{$n}{TYPE} = "FS20";
+  }
+  if($l =~ m+^\t\t<(.*) name="([^"]*)"+) {
+    my $type=$1;
+    next if(!($type eq "FHT" ||
+              $type eq "CUL_WS" ||
+              $type eq "CUL_EM"));
+
+    $n=$2;
+    $h{$n}{TYPE} = $type;
   }
   if($l =~ m+^\t\t<FHT name="([^"]*)"+) {
     $n=$1;
@@ -29,8 +39,7 @@ while(my $l = <FH>) {
   next if(!$n);
   $h{$n}{def}  = $1 if($l =~ m+^\t\t\t<INT key="DEF" value="([^"]*)"+);
   $h{$n}{room} = $1 if($l =~ m+^\t\t\t<ATTR key="room" value="([^"]*)"+);
-  undef($n) if($l =~ m+^\t\t</FS20+);
-  undef($n) if($l =~ m+^\t\t</FHT+);
+  undef($n) if($l =~ m+^\t\t</+);
 }
 close(FH);
 
@@ -110,15 +119,18 @@ while(my $l = <FH>) {
       chkprint "M$c$rn$c$c$a[1]";
       $n++;
       foreach my $k (sort keys %{$r{$rn}}) {
-        my $f;
-        if($h{$k}{TYPE} eq "FS20") {
+        my ($f,$d,$t) = ("","",$h{$k}{TYPE});
+        if($t eq "FS20") {
           $f = ($h{$k}{sets} =~ m/dim/) ?
                 $defs{"FS20-Dim"} : $defs{"FS20-Plain"};
-        } elsif($h{$k}{TYPE} eq "FHT") {
-          $f = $defs{"FHT"};
+          $d = $h{$k}{def};
+        } else {
+          $f = $defs{$t};
         }
-        my $d = $h{$k}{def};
+        $d = $h{$k}{def} if($t eq "FS20" || $t eq "FHT");
         $d =~ s/ //g;
+        $d = substr($d,0,6);  # Cut off group definitions
+
         chkprint("S$c$k$c$f$c$d");
       }
       chkprint "";

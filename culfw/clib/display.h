@@ -5,6 +5,8 @@
 #include <avr/pgmspace.h>
 
 int fromhex(const char *in, uint8_t *out, uint8_t fromlen);
+void tohex(uint8_t in, uint8_t *out);
+
 void display_char(char s);
 void display_string(char *s);
 void display_string_P(prog_char *s);

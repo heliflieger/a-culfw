@@ -93,7 +93,7 @@ TASK(Minute_Task)
     joy_inactive++;
 
   if(sleep_time && joy_inactive == sleep_time) {
-    if(USB_IsConnected && lcd_on == 1)
+    if(USB_IsConnected)
       lcd_switch(0);
     else
       dosleep();

@@ -13,6 +13,7 @@
 #include "ttydata.h"            // fntab
 #include "battery.h"            // bat_drawstate
 #include "mysleep.h"            // dosleep
+#include "fht.h"                // fht_hc
 
 #include <avr/eeprom.h>
 
@@ -196,7 +197,6 @@ menu_get_line(uint16_t offset, uint8_t *buf, uint8_t len)
   return 0;
 }
 
-
 /////////////////////////////////
 // Extract the word "wordnr" from the buffer from, and copy it into the
 // buffer to, repllacing expressions like <XY> with the Y word from the
@@ -214,12 +214,13 @@ menu_getlineword(uint8_t wordnr, uint8_t *frombuf, uint8_t *tobuf, uint8_t max)
   // Parse data
   while(*frombuf && *frombuf != sep) {
 
-    if(frombuf[0] == '<' && frombuf[3] == '>') {
+    if((frombuf[0] == '<' && frombuf[3] == '>') ||
+       (frombuf[0] == '[' && frombuf[3] == ']')) {
       uint8_t mnu = menu_stack[menu_stackidx - 1 - (frombuf[1]-'0')];
       uint8_t lnr = erb((uint8_t *)(EE_START_MENU+mnu))+1;
       uint8_t line[MLINESIZE+1];
 
-      // Read the menu line
+      // Read the menu line from the file
       uint16_t off = menu_get_line(menu_offset[mnu], line, sizeof(line));
       while(lnr-- > 0)
         off = menu_get_line(off, line, sizeof(line));
@@ -235,23 +236,41 @@ menu_getlineword(uint8_t wordnr, uint8_t *frombuf, uint8_t *tobuf, uint8_t max)
 
       // Copy the word
       while(*p && *p != sep2) {
-        if(max > 1) {
-          max--;
-          *tobuf++ = *p;
+        if(frombuf[0] == '<') { // plain copy
+          if(max > 1) {
+            max--;
+            *tobuf++ = *p;
+          }
+        } else {                // convert it to hex
+          if(max > 2) {
+            tohex(*p, tobuf);
+            max -=2; tobuf += 2;
+          }
         }
         p++;
       }
 
-      frombuf += 4;
-    } 
+      frombuf += 3;     // +1 at the end
+    }
+
+    else if(*frombuf == '$') {
+
+      if(max > 4) {
+        tohex(fht_hc[0], tobuf);
+        tohex(fht_hc[1], tobuf+2);
+        tobuf += 4; max -= 4;
+      }
+
+    }
 
     else {    // Plain data: copy it
       if(max > 1) {
         max--;
         *tobuf++ = *frombuf;
       }
-      frombuf++;
     }
+
+    frombuf++;
   }
   *tobuf = 0;
   return;
@@ -310,7 +329,7 @@ menu_handle_joystick(uint8_t key)
     menu_get_line(menu_item_offset[menu_curitem],
                         menu_line, sizeof(menu_line));
 
-    uint8_t arg[16];
+    uint8_t arg[MLINESIZE];
     menu_getlineword(2, menu_line, arg, sizeof(arg));
 
     if(menu_line[0] == 'S') {   // submenu
@@ -320,15 +339,9 @@ menu_handle_joystick(uint8_t key)
     }
 
     if(menu_line[0] == 'C') {   // Command
-      uint8_t idx;
-      for(idx = 0; fntab[idx].name; idx++) {
-        if(arg[0] == fntab[idx].name) {
-          lcd_invon();
-          fntab[idx].fn((char *)arg);
-          lcd_invoff();
-          break;
-        }
-      }
+      lcd_invon();
+      callfn((char *)arg);
+      lcd_invoff();
     }
 
     if(menu_line[0] == 'm') {   // Macro

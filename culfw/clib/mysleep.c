@@ -31,7 +31,7 @@ dosleep(void)
   LED_OFF();
   wdt_disable(); 
   joy_enable_interrupts();
-  lcdfunc("dff00");
+  lcd_switch(0);
   set_txoff();
 
 
@@ -47,7 +47,7 @@ dosleep(void)
   joy_disable_interrupts();
   sei();
   wdt_enable(WDTO_2S); 
-  lcdfunc("dff01ff");
+  lcd_switch(1);
   bat_drawstate();
   set_txrestore();
 }

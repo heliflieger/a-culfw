@@ -5,6 +5,8 @@
 #include "led.h"
 #include "delay.h"
 #include "pcf8833.h"
+#include "ttydata.h"            // fntab
+#include "fht.h"                // fht_hc
 
 /*
  * Converts a hex string to a buffer. Not hex characters will be skipped
@@ -34,6 +36,17 @@ fromhex(const char *in, uint8_t *out, uint8_t buflen)
   return op-out;
 }
 
+// Just one byte
+void
+tohex(uint8_t f, uint8_t *t)
+{
+  uint8_t m = (f>>4)&0xf;
+  t[0] = (m < 10 ? '0'+m : 'A'+m-10);
+  m = f & 0xf;
+  t[1] = (m < 10 ? '0'+m : 'A'+m-10);
+}
+
+
 //////////////////////////////////////////////////
 // Display routines
 void
@@ -51,16 +64,40 @@ display_char(char data)
 #ifdef HAS_LCD
   {
     static uint8_t buf[TITLE_LINECHARS+1];
-    static uint8_t off = 0;
+    static uint8_t off = 0, cmdmode = 0;
+
     if(data == '\r')
       return;
+
     if(data == '\n') {
       buf[off] = 0;
-      lcd_putline(0, (char*)buf);
       off = 0;
+      if(cmdmode) {
+        callfn((char *)buf);
+      } else 
+        lcd_putline(0, (char*)buf);
+      cmdmode = 0;
     } else {
-      if(off < TITLE_LINECHARS)
+      // 
+      if(off < TITLE_LINECHARS)   // or cmd: up to 12Byte: F12346448616c6c6f
         buf[off++] = data;
+
+      if(cmdmode && cmdmode++ == 2) {
+        off -= 2;
+        fromhex((char *)buf+off, buf+off, 1);   // replace the hexnumber
+        off++;
+        cmdmode = 1;
+      }
+    }
+
+    // Check if its a message for us: F<HC>..., and set cmdmode
+    if(!cmdmode && off == 5 && buf[0] == 'F') {
+      uint8_t hb[2];
+      fromhex((char*)buf+1, hb, 2);
+      if(hb[0] == fht_hc[0] && hb[1] == fht_hc[1]) {
+        cmdmode = 1;
+        off = 0;
+      }
     }
   }
 #endif
