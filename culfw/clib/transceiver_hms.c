@@ -1,4 +1,4 @@
-/* vim:fdm=marker ts=4 ai
+/* vim:fdm=marker ts=2 ai
  *
  * Copyright by R.Koenig, D.Tostmann, M.Mueller
  * License: GPL v2
@@ -55,13 +55,13 @@ typedef struct {
 
 typedef struct {
 	uint8_t	bits, sync, state;
-	uint8_t	data[20];
+	uint8_t	data[MAXMSG];
 	bit_t	bit[2];
 	bit_t	sum[2];
 } airdata_t;
 
 typedef struct {
-	uint8_t dec[10];
+	uint8_t dec[MAXMSG];
 	uint8_t bytes, type;
 } airmsg_t;
 
@@ -78,18 +78,49 @@ AD_SET_BIT( volatile airdata_t *d, uint8_t b )
   d->data[b>>3] |= _BV(b&7);
 }
 
+#if 1
+
 void
 AD_PUSH_1( volatile airdata_t *d)
 {
   AD_SET_BIT( d, d->bits );
+  if ( d->bits < ( MAXMSG << 3 ))
   d->bits++;
+  else {
+  	DS_P(PSTR("EOVF\r\n"));
+		memset((void *)d , 0, sizeof(airdata_t));
+		bl = 0;
+		bh = 0;
+  }
 }
 
 void
 AD_PUSH_0(volatile airdata_t *d)
 {
+  if ( d->bits < ( MAXMSG << 3 ))
+  d->bits++;
+  else {
+  	DS_P(PSTR("EOVF\r\n"));
+		memset((void *)d , 0, sizeof(airdata_t));
+		bl = 0;
+		bh = 0;
+  }
+}
+
+#else
+
+void
+AD_PUSH( volatile airdata_t *d, uint8_t b)
+{
+  if(b)
+    AD_SET_BIT( d, d->bits );
   d->bits++;
 }
+
+#define AD_PUSH_0(a) AD_PUSH(a, 0)
+#define AD_PUSH_1(a) AD_PUSH(a, 1)
+
+#endif
 
 uint8_t
 AD_BIT_IS_SET( airdata_t *d, uint8_t b )
