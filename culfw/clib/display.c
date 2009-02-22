@@ -57,6 +57,8 @@ display_char(char data)
     if(USB_Tx_Buffer->nbytes >= USB_Tx_Buffer->size)
       CDC_Task();
     rb_put(USB_Tx_Buffer, data);
+    if(data == '\n')
+      CDC_Task();
   }
 #endif
 
@@ -65,9 +67,9 @@ display_char(char data)
   {
     static uint8_t buf[TITLE_LINECHARS+1];
     static uint8_t off = 0, cmdmode = 0;
-
     if(data == '\r')
       return;
+
 
     if(data == '\n') {
       buf[off] = 0;

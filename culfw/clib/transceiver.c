@@ -100,6 +100,7 @@ tx_init(void)
 void
 set_txoff(void)
 {
+  ccStrobe(CC1100_SIDLE);
   ccStrobe(CC1100_SPWD);
   cc_on = 0;
 }
@@ -507,8 +508,13 @@ TASK(RfAnalyze_Task)
 
   LED_OFF();
 
-  if(datatype == TYPE_FHT)
+#ifdef HAS_FHT_80b
+  if(datatype == TYPE_FHT) {
+    ccTX();
     fht_hook(obuf, oby);
+    ccRX();
+  }
+#endif
 }
 
 static void
@@ -605,7 +611,7 @@ ISR(CC1100_INTVECT)
     } else if (b->sync>=6 && ((rf==RISING_EDGE  && d>TIMEDIFF_RISE) ||
                               (rf==FALLING_EDGE && d<TIMEDIFF_FALL))) {
                    
-      b->avg = (b->zero+c)/2;           // avarage between 0 and 1
+      b->avg = (b->zero+c)/2;           // average between 0 and 1
       b->byteidx = 0;
       b->bitidx  = 7;
       b->data[0] = 0;

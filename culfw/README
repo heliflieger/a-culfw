@@ -353,7 +353,7 @@ Notes
       0:4dB, 1:8dB, 2:12dB, 3:16dB
       Default value: C1D -> 91 (8db)
 
-    Example: W1F06
+    Example: W1D06
     Note: R/W address = C+2
 
   - Change frequency 

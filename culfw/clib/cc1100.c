@@ -55,7 +55,7 @@ PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_SIZE1] = {
   0x18, // 18 MCSM0       18  18  18
   0x14, // 19 FOCCFG      14  14  14
   0x6C, // 1A BSCFG       6C  6C  6C
-  0x05, //*1B AGCCTRL2    07  05 *03 // 42 dB instead of 33dB
+  0x07, //*1B AGCCTRL2    07  05 *03 // 42 dB instead of 33dB
   0x00, // 1C AGCCTRL1    40 *00  40
   0x90, //*1D AGCCTRL0    91 *90 *92 // 16 samples instead of 32
   0x87, // 1E WOREVT1     87  87  87
@@ -168,7 +168,7 @@ cc_factory_reset(void)
 
   for(uint8_t i = 0;i<0x29;i++)
     ewb(t++, __LPM(CC1100_CFG+i));
-  cc_set_pa(2);
+  cc_set_pa(8);
 }
 
 //--------------------------------------------------------------------

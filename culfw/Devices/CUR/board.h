@@ -89,6 +89,7 @@
 #define HAS_BATTERY
 #define HAS_RTC
 
-
+#undef  HAS_FHT_8v
+#define HAS_FHT_80b
 
 #endif

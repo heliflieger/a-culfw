@@ -85,8 +85,10 @@ TASK(Minute_Task)
   if (credit_10ms < MAX_CREDIT)
     credit_10ms += 1;
 
+#ifdef HAS_FHT_8v
   if(fht8v_timeout != 0xff && --fht8v_timeout == 0)
     fht_timer();
+#endif
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)
   if(joy_inactive < 255)

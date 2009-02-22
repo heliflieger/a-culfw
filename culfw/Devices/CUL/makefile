@@ -96,7 +96,7 @@ SRC = $(TARGET).c                                                  \
 		../clib/display.c                                  \
 		../clib/fncollection.c                             \
 		../clib/ringbuffer.c                               \
-		../clib/transceiver.c                              \
+		../clib/transceiver_hms.c                              \
 		../clib/fht.c                                      \
 		../clib/ttydata.c                                  \
 		../clib/spi.c                                      \

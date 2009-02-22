@@ -10,6 +10,7 @@
 #include "cdc.h"
 #include "transceiver.h"
 #include "clock.h"
+#include "fht.h"                // fht_eeprom_reset
 
 #ifdef HAS_LCD
 #include "battery.h"
@@ -90,8 +91,8 @@ write_eeprom(char *in)
 void
 eeprom_init(void)
 {
-  if(erb(EE_MAGIC_OFFSET)   != EE_MAGIC ||
-     erb(EE_VERSION_OFFSET) != EE_VERSION)
+  if(erb(EE_MAGIC_OFFSET)   != VERSION_1 ||
+     erb(EE_MAGIC_OFFSET+1) != VERSION_2)
     eeprom_factory_reset(0);
 
   led_mode = erb(EE_LED);
@@ -105,8 +106,8 @@ eeprom_factory_reset(char *in)
 {
   cc_factory_reset();
 
-  ewb(EE_MAGIC_OFFSET, EE_MAGIC);
-  ewb(EE_VERSION_OFFSET, EE_VERSION);
+  ewb(EE_MAGIC_OFFSET  , VERSION_1);
+  ewb(EE_MAGIC_OFFSET+1, VERSION_2);
 
   ewb(EE_REQBL, 0);
   ewb(EE_LED, 2);
@@ -117,6 +118,7 @@ eeprom_factory_reset(char *in)
 #ifdef HAS_SLEEP
   ewb(EE_SLEEPTIME, 30);
 #endif
+  fht_eeprom_reset();
   prepare_boot(in);
 }
 

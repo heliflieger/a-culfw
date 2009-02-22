@@ -14,11 +14,7 @@ void version(char *);
 
 // Already used magics: c1,c2
 
-#define EE_MAGIC             'c'
-#define EE_VERSION           '3'
-
-#define EE_MAGIC_OFFSET      (uint8_t *)0
-#define EE_VERSION_OFFSET    (uint8_t *)1
+#define EE_MAGIC_OFFSET      (uint8_t *)0       // 2 bytes
 
 #define EE_START_CC1100      (uint8_t *)2
 #define EE_CC1100_SIZE1      0x29       // 41
