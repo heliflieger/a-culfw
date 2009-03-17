@@ -151,6 +151,13 @@ Protocol
       - Bit 0: Set LED on/off
       - Bit 1: The LED will blink once a second if the bit is set
 
+    P<hex><filename>
+      (CUR only)
+      Display a picture. The hex part consists of 4 bytes (x,y,w,h), and the
+      file contains the data in a 12bit per pixel format. Use
+      fonts/pgm2fourbit.pl with the raw option to convert raw PPM files into
+      the needed format.
+
     R<AA> or R<AAAA>
       Read eeprom (i.e. "saved configuration") byte. Arguments: one or two
       byte hex address <AA> or <AAAA>
@@ -314,7 +321,7 @@ Protocol
   --------
     To define a menu on the CUR, follow this HOWTO:
     - create a fhem xml-list with
-      fhem.pl fhemhost:7072 xmllist > fhem.xmllist
+        fhem.pl fhemhost:7072 xmllist > fhem.xmllist
     - convert the template and the fhem listing into a CUR MENU file:
         perl xmllist2curmenu.pl fhem.xmllist CUR.menu.template > MENU
     - write the MENU file to the CUR:
@@ -323,12 +330,9 @@ Protocol
       fhem/screen should be connected to it.
 
     - switch the CUR display on by pressing the joystick.
-
-    CUR NOTES:
-      - Right now following does not work:
-        - transmitting _any_ FS20/FHT signals
-      - Sleep mode must be enabled "manually" via joystick or USB command.
-
+    - To have a nice logo on the first screen, upload it to the CUR:
+        cd fonts
+        perl ../tools/cur_file.pl -w house2_58x60  /dev/ttyACM0
 
 Notes
 =====
@@ -382,19 +386,15 @@ TODO/BUGS:
   - CU* "clean/good" send
   - CU* FHT send
   - CU* FS20 dim commands do not repeat.
-  - CUR RTC interrupts
-  - CUR logfile + "more". Syslog
   - CU* HMS reception (Manchester code)
-  - CUR check for FS20 group commands
-  - CUR logo from file
-  - CUR umlauts
   - CUR fhem MENU/files creation support
+  - CUR RTC interrupts
+  - CUR check for FS20 group commands
+  - CUR umlauts
   - CUR sleep problems: FS20 1%-management
   - CUR Infrared send/learn
   - CUR Radio/Ir bridging
-  - CUR battery state (fix) / better min/max limits
   - CU* Fast data transfer using the cc1101
   - CUR Xfer&Display plots from fhem
-  - CU* BUG: The CUL resets if the USB data is not consumed by the host
   - CU* Compute S300TH/KS300 second half of checksum (Nice to have)
-  - CU* MyUSB upgrade (repeat every month)
+  - CU* MyUSB upgrade

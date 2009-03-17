@@ -3,12 +3,15 @@
 use strict;
 use warnings;
 
+my $debug = 0;
+
 if(@ARGV != 3 || ($ARGV[0] ne "-r" && $ARGV[0] ne "-w")) {
   die("Usage: cur_file.pl {-r|-w} filename <dur-device>\n");
 }
 
 open(DEV, "+<$ARGV[2]") || die("Can't open $ARGV[2]: $!\n");
 
+###################################################
 my $buf;
 for(;;) {                       # Drain input
   my $rin = "";
@@ -19,6 +22,9 @@ for(;;) {                       # Drain input
 }
    
 
+printf STDERR "Drained input\n" if($debug);
+
+###################################################
 if($ARGV[0] eq "-r") {
 
   open(FH, ">$ARGV[1]") || die("Can't open $ARGV[1]: $!\n");
@@ -35,12 +41,23 @@ if($ARGV[0] eq "-r") {
   $buf =~ s/[\r\n]//g;
   my $len = hex($buf);
   $buf = ""; $off = 0;
-  while(length($buf) != $len) {
-    $off += sysread(DEV, $buf, $len-$off, $off); # Read data
+
+  printf STDERR "Got length: $len\n" if($debug);
+
+  while($off < $len) {
+    my $chunklen += sysread(DEV, $buf, $len-$off); # Read data
+    last if(!$chunklen);
+    syswrite(FH, $buf);
+    printf STDERR "Got: $chunklen\n" if($debug);
+    $off += $chunklen;
   }
-  print FH $buf;
+
+  printf STDERR "Finished: got $off out of $len\n" if($debug);
+
 
 } else {
+
+###################################################
 
   open(FH, "<$ARGV[1]") || die("Can't open $ARGV[1]: $!\n");
   my $buf = join("", <FH>);

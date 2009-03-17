@@ -1,3 +1,15 @@
+Version 1.16
+- CUR: syslog (with logrotate)
+- qfs: fs_rename, fs_read bugfix
+- CUR: "more" (file viewing)
+- CUR: display internally selectable (log/USB/LCD)
+- CUR: reading files longer than 2 sec does not triggers the watchdog
+- CUR: menu "last selected item" is kept in the RAM instead of EEPROM
+- fromhex() fixed: it now only ignores ' ' instead of all non-hex characters
+- CUR: added picture loading from file (P)
+- CUR: builtin logo replaced with a loadable one (each menu can have one)
+- CUR: battery calibrated (get the original values with a01)
+
 Version 1.13
 - Fixed sending longer FS20 messages (for CUR/CUL communication)
 - CUR: Status request from fhem:00_CUL.pm for FS20/FHT/EM/S300 devices

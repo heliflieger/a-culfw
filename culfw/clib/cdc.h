@@ -53,5 +53,6 @@ TASK(CDC_Task);
 extern rb_t *const USB_Tx_Buffer;
 extern rb_t *const USB_Rx_Buffer;
 extern void (*usbinfunc)(void);
+void cdc_flush(void);
 
 #endif

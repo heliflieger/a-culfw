@@ -135,3 +135,10 @@ TASK(CDC_Task)
 
   }
 }
+
+void
+cdc_flush()
+{
+  Endpoint_SelectEndpoint(CDC_TX_EPNUM);
+  Endpoint_ClearCurrentBank();
+}

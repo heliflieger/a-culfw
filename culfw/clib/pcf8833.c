@@ -22,6 +22,9 @@
 #include "fncollection.h"          // EEPROM OFFSETS
 #include <avr/eeprom.h>
 
+#include "board.h"
+#include "fswrapper.h"             // Drawing picture from file
+
 #include "fonts/courier_10x17.inc" // Antialiased: big
 #define TITLE_FONT                 courier_10x17
 
@@ -95,7 +98,8 @@ lcd_contrast(uint8_t hb)
 }
 
 /////////////////////////////////////////////////////////////////////
-// First byte, hex: Row number. Rest: Text to display, up to 16 char.
+// First byte, hex: Row number if less then 32, Display text in title else
+// Rest: Text to display, up to 16 char.
 // 00:title (big font).
 // 01-08:body
 // 09:scroll up, add row at bottom
@@ -106,9 +110,9 @@ void
 lcdfunc(char *in)
 {
   uint8_t hb[3];
-  fromhex(in+1, hb, 3);
+  uint8_t narg = fromhex(in+1, hb, 3);
 
-  if(hb[0] == 0xFF) {
+  if(narg > 0 && hb[0] == 0xFF) {
 
     if(hb[1] != 0xFF) lcd_switch(hb[1]);
     if(hb[2] != 0xFF) lcd_contrast(hb[2]);
@@ -116,8 +120,9 @@ lcdfunc(char *in)
     return;
   }
 
-  if(hb[0] >= 0x20) {   // Strange lines will be displayed in the title.
-    hb[0] = 0; in++;
+  if(narg == 0 || hb[0] >=  0x20) {   // Strange lines go to the title
+    hb[0] = 0;
+    in += 1;
   } else {
     in += 3;
   }
@@ -473,8 +478,6 @@ lcd_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint16_t col)
   } while (++x < x2);
 }
 
-#include "fonts/house2.inc"        // Logo
-
 void
 lcd_resetscroll()
 {
@@ -483,6 +486,8 @@ lcd_resetscroll()
   lcd_senddata(lcd_scroll_y);   // Set first row to the body part
 }
 
+#if 0
+#include "fonts/house2.inc"        // Logo
 void
 lcd_drawlogo()
 {
@@ -497,6 +502,43 @@ lcd_drawlogo()
     lcd_blk_senddata(data);
   }
   lcd_blk_teardown();
+}
+#endif
+
+//P243c3a3chouse2_58x60
+void
+lcd_drawpic(char *in)
+{
+  uint8_t hb[4], buf[128], idx;
+  uint16_t offset = 0;
+
+  if(fromhex(in+1, hb, 4) != 4) // x, y, w, h
+    return;
+
+  uint16_t fd = fs_get_inode(&fs, in+9);
+  if(fd == 0xffff)
+    return;
+    
+  idx = sizeof(buf);
+  uint8_t to = hb[2]+hb[2]/2;
+
+  for(uint8_t y = 0; y < hb[3]; y++) {
+
+    lcd_window(hb[0], hb[1]+y, hb[0]+hb[2]-1, hb[1]+y);
+    lcd_sendcmd(LCD_CMD_RAMWR);	// write memory
+    lcd_blk_setup();
+
+    for(uint8_t x = 0; x < to; x++) {
+      if(idx == sizeof(buf)) {
+        lcd_blk_teardown();
+        offset += fs_read(&fs, fd, buf, offset, sizeof(buf));
+        lcd_blk_setup();
+        idx = 0;
+      }
+      lcd_blk_senddata(buf[idx++]);
+    }
+    lcd_blk_teardown();
+  }
 }
 
 void

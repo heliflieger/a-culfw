@@ -49,18 +49,43 @@ get_adcw(uint8_t mux)
 
 
 void
-batfunc(char *unused)
+batfunc(char *mode)
 {
-  uint8_t s1;
+  uint8_t s1, b;
+  uint16_t bv;
+
+  bv  = get_adcw(BAT_MUX);
   s1  = (bit_is_set( BAT_PIN, BAT_PIN1) ? 2 : 0);
   s1 |= (bit_is_set( BAT_PIN, BAT_PIN2) ? 1 : 0);
-
   if(s1==0) DS_P( PSTR("discharge"));
   if(s1==1) DS_P( PSTR("charged"));
   if(s1==2) DS_P( PSTR("charging"));
   if(s1==3) DS_P( PSTR("error"));
 
-  DU(get_adcw(BAT_MUX),4);    // result, decimal
+  if(fromhex(mode+1,&b,1) && b == 1) {
+
+    DU(bv,4);    // result, decimal
+
+  } else {
+    
+   static uint8_t bat[] = { 0,109,136,141,143,152,164,179,196,214,240 };
+
+    if(bv < 761) bv = 761;
+    bv -= 760;
+    if(bv > 240) bv = 240;
+    b = (uint8_t)bv;
+
+    for(s1 = 1; s1 < sizeof(bat); s1++)
+      if(b <= bat[s1])
+        break;
+    
+    uint8_t s2 = s1-1;
+    b = 10*s2+(10*(uint16_t)(b-bat[s2]))/(uint16_t)(bat[s1]-bat[s2]);
+
+    DU(b,3);
+    DC('%');
+
+  }
   DNL();
 }
 

@@ -3,6 +3,7 @@
 
 void rtc_init(void);
 void rtcfunc(char *);
-void rtc_dotime(uint8_t in, uint8_t data[6]);
+void rtcget(uint8_t *);
+void rtcset(uint8_t len, uint8_t data[6]);
 
 #endif

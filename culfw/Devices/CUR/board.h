@@ -81,14 +81,13 @@
 #define RTC_PIN                 PE4
 
 #define BUSWARE_CUR
-#define MULTI_DISPLAY
+
 #define HAS_USB
 #define HAS_LCD
 #define HAS_FS
 #define HAS_SLEEP
 #define HAS_BATTERY
 #define HAS_RTC
-
 #undef  HAS_FHT_8v
 #define HAS_FHT_80b
 

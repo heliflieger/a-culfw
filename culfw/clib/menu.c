@@ -14,6 +14,7 @@
 #include "battery.h"            // bat_drawstate
 #include "mysleep.h"            // dosleep
 #include "fht.h"                // fht_hc
+#include <string.h>
 
 #include <avr/eeprom.h>
 
@@ -33,10 +34,10 @@ static uint8_t  menu_curitem;           // Current item in current menu
 static uint8_t  menu_topitem;           // Top visible item in current menu
 static uint8_t  menu_nitems;            // Number of items in the current menu
 static uint8_t  menu_cols[5];           // 3x3 nibbles = 4.5 bytes
+static uint8_t  menu_lastsel[NMENUS];   // Last menu item selected per menu
 
 
 static uint16_t menu_get_line(uint16_t offset, uint8_t *buf, uint8_t len);
-static void menu_handle_joystick(uint8_t key);
 static void menu_pop(void);
 static void menu_getlineword(uint8_t, uint8_t *, uint8_t *, uint8_t);
 
@@ -76,13 +77,18 @@ menu_setbg(uint8_t row)
     lcd_setbgcol(menu_cols[3]&0xf0, menu_cols[3]<<4, menu_cols[4]&0xf0);
 }
 
+void
+menu_redisplay()
+{
+  menu_push(menu_stack[--menu_stackidx]);
+}
 
 ///////////////////////////////////////////////
 // Display a menu
 void
 menu_push(uint8_t idx)
 {
-  uint8_t menu_line[MLINESIZE+1], dpybuf[20];
+  uint8_t menu_line[MLINESIZE+1], dpybuf[20], picbuf[24];
   uint16_t off;
 
   menu_stack[menu_stackidx] = idx;
@@ -111,8 +117,13 @@ menu_push(uint8_t idx)
   lcd_putline(0, (char *)dpybuf);
 
   menu_item_offset[0] = off;
+  picbuf[0] = 0;
   for(menu_nitems = 1; menu_nitems <= NITEMS; menu_nitems++) {
     off = menu_get_line(off, menu_line, sizeof(menu_line));
+    if(menu_line[0] == 'P') {
+      strncpy((char*)picbuf, (char*)menu_line, sizeof(picbuf));
+      break;
+    }
     if(off == 0 || !menu_line[0])
       break;
     if(menu_nitems < NITEMS)
@@ -122,8 +133,7 @@ menu_push(uint8_t idx)
 
   // Now display the data.
   // Load the last offset
-  uint8_t *addr = EE_START_MENU+menu_stack[menu_stackidx-1];
-  menu_curitem = erb((uint8_t *)addr);
+  menu_curitem = menu_lastsel[menu_stack[menu_stackidx-1]];
 
   // Compute the top line
   if(menu_curitem >= menu_nitems) {     // Invalid/not yet entered menu
@@ -152,8 +162,14 @@ menu_push(uint8_t idx)
     menu_setbg(i);
     lcd_putline(i+1, (char *)dpybuf);
   }
+
+  if(picbuf[0])
+    lcd_drawpic((char *)picbuf);
+
+#if 0
   if(idx == 0)
     lcd_drawlogo();
+#endif
 }
 
 ///////////////////////////////////////////////
@@ -217,7 +233,7 @@ menu_getlineword(uint8_t wordnr, uint8_t *frombuf, uint8_t *tobuf, uint8_t max)
     if((frombuf[0] == '<' && frombuf[3] == '>') ||
        (frombuf[0] == '[' && frombuf[3] == ']')) {
       uint8_t mnu = menu_stack[menu_stackidx - 1 - (frombuf[1]-'0')];
-      uint8_t lnr = erb((uint8_t *)(EE_START_MENU+mnu))+1;
+      uint8_t lnr = menu_lastsel[mnu]+1;
       uint8_t line[MLINESIZE+1];
 
       // Read the menu line from the file
@@ -276,7 +292,7 @@ menu_getlineword(uint8_t wordnr, uint8_t *frombuf, uint8_t *tobuf, uint8_t max)
   return;
 }
 
-static void
+void
 menu_handle_joystick(uint8_t key)
 {
   uint8_t menu_line[MLINESIZE+1];
@@ -323,8 +339,7 @@ menu_handle_joystick(uint8_t key)
   if(key == KEY_RIGHT) { 
 
     // Save the current position
-    uint8_t *addr = EE_START_MENU+menu_stack[menu_stackidx-1];
-    ewb(addr, menu_curitem);
+    menu_lastsel[menu_stack[menu_stackidx-1]] = menu_curitem;
 
     menu_get_line(menu_item_offset[menu_curitem],
                         menu_line, sizeof(menu_line));
@@ -371,8 +386,7 @@ menu_handle_joystick(uint8_t key)
 
   if(key == KEY_LEFT) {         // pop menu stack
     // Save the current position
-    uint8_t *addr = EE_START_MENU+menu_stack[menu_stackidx-1];
-    ewb(addr, menu_curitem);
+    menu_lastsel[menu_stack[menu_stackidx-1]] = menu_curitem;
     menu_pop();
   }
 

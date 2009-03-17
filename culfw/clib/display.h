@@ -3,9 +3,7 @@
 
 #include <stdint.h>
 #include <avr/pgmspace.h>
-
-int fromhex(const char *in, uint8_t *out, uint8_t fromlen);
-void tohex(uint8_t in, uint8_t *out);
+#include "stringfunc.h"
 
 void display_char(char s);
 void display_string(char *s);
@@ -20,5 +18,11 @@ void display_nl(void);
 #define DU(a,b) display_udec(a,b,' ')
 #define DH(a,b) display_hex(a,b,'0')
 #define DNL display_nl
+
+extern uint8_t output_enabled;
+
+#define OUTPUT_USB (1<<0)
+#define OUTPUT_LCD (1<<1)
+#define OUTPUT_LOG (1<<2)
 
 #endif

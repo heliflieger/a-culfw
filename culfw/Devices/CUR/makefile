@@ -100,6 +100,7 @@ SRC = $(TARGET).c                                                  \
 		../clib/df.c                                       \
 		../clib/qfs.c                                      \
 		../clib/fswrapper.c                                \
+		../clib/stringfunc.c                               \
 		../clib/transceiver.c                              \
 		../clib/fht.c                                      \
 		../clib/ttydata.c                                  \
@@ -109,6 +110,8 @@ SRC = $(TARGET).c                                                  \
 		../clib/joy.c                                      \
 		../clib/mysleep.c                                  \
 		../clib/ds1339.c                                   \
+		../clib/log.c                                      \
+		../clib/more.c                                     \
 		../clib/twimaster.c                                \
 		../MyUSB/Scheduler/Scheduler.c                     \
 		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \

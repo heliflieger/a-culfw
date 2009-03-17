@@ -47,6 +47,7 @@ typedef enum {
 
 fs_status_t fs_init(fs_t *fs, df_chip_t chip);
 fs_status_t fs_create(fs_t *fs, char *name);
+fs_status_t fs_rename(fs_t *fs, char *from, char *to);
 fs_status_t fs_remove(fs_t *fs, char *name);
 fs_status_t fs_list(fs_t *fs, char *dir, char *buf, fs_index_t index);
 fs_inode_t  fs_get_inode(fs_t *fs, char *file);

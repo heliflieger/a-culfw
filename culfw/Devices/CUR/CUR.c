@@ -36,6 +36,8 @@
 #include "spi.h"
 #include "ds1339.h"
 #include "fht.h"
+#include "log.h"
+#include "more.h"
 
 df_chip_t df;
 
@@ -45,8 +47,8 @@ TASK_LIST
   { Task: USB_USBTask  , TaskStatus: TASK_STOP },
   { Task: CDC_Task     , TaskStatus: TASK_STOP },
   { Task: RfAnalyze_Task,TaskStatus: TASK_RUN },
-  { Task: Minute_Task,   TaskStatus: TASK_RUN },
   { Task: JOY_Task,      TaskStatus: TASK_RUN },
+  { Task: Minute_Task,   TaskStatus: TASK_RUN },
 };
 
 
@@ -55,6 +57,8 @@ t_fntab fntab[] = {
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
+  { 'M', more },
+  { 'P', lcd_drawpic },
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'V', version },
@@ -145,8 +149,9 @@ main(void)
   bat_init();
   df_init(&df);
   fs_init(&fs, df);
-  menu_init();
   rtc_init();
+  log_init();
+  menu_init();
   ccInitChip();
   fht_init();
   LED_OFF();

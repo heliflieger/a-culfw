@@ -3,10 +3,11 @@
 use strict;
 use warnings;
 
-if(@ARGV != 1) {
-  die("Usage: pgm2fourbit.pl file.ppm/file.pgm > bin\n");
+if(@ARGV != 2 || !($ARGV[0] eq "raw" || $ARGV[0] eq "hex") ) {
+  die("Usage: pgm2fourbit.pl [raw|hex] file.ppm/file.pgm > bin\n");
 }
-open(FH, $ARGV[0]) || die("$ARGV[0]: $!\n");
+my $raw = ($ARGV[0] eq "raw");
+open(FH, $ARGV[1]) || die("$ARGV[1]: $!\n");
 
 my $mode = <FH>;
 chomp($mode);
@@ -44,10 +45,14 @@ if($mode eq "P5") {
   foreach my $b (split("", $buf)) {
 
     if($p) {
-      printf("0x%02x, ", ($d<<4)|(ord($b)>>4));
-      if(++$cnt == 470) {
-        printf("\n");
-        $cnt = 0;
+      if($raw) {
+        printf("%c", ($d<<4)|(ord($b)>>4));
+      } else {
+        printf("0x%02x, ", ($d<<4)|(ord($b)>>4));
+        if(++$cnt == 20) {
+          printf("\n");
+          $cnt = 0;
+        }
       }
       $p = 0;
     } else {
@@ -56,7 +61,7 @@ if($mode eq "P5") {
     }
     
   }
-  printf("\n");
+  printf("\n") if(!$raw);
 
 } else {
 
@@ -72,16 +77,21 @@ if($mode eq "P5") {
 
     $d[$p++] = ord($b)>>4;
     if($p == 6) {
-      printf("0x%02x, 0x%02x, 0x%02x, ",
-        ($d[0]<<4)|$d[1], ($d[2]<<4)|$d[3], ($d[4]<<4)|$d[5]);
-      if(++$cnt == 3) {
-        printf("\n");
-        $cnt = 0;
+      if($raw) {
+        printf("%c%c%c",
+          ($d[0]<<4)|$d[1], ($d[2]<<4)|$d[3], ($d[4]<<4)|$d[5]);
+      } else {
+        printf("0x%02x, 0x%02x, 0x%02x, ",
+          ($d[0]<<4)|$d[1], ($d[2]<<4)|$d[3], ($d[4]<<4)|$d[5]);
+        if(++$cnt == 3) {
+          printf("\n");
+          $cnt = 0;
+        }
       }
       $p = 0;
     }
     
   }
-  printf("\n");
+  printf("\n") if(!$raw);
 
 }

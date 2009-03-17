@@ -5,6 +5,7 @@
 #include "transceiver.h"
 #include <stdlib.h>
 #include <string.h>
+#include <avr/wdt.h>
 
 #define BUFSIZE 128
 fs_t fs;
@@ -22,6 +23,9 @@ static uint8_t isMenu;                  // Menu hack
 void        
 read_file(char *in)
 {
+  uint8_t old_oe = output_enabled;
+  output_enabled = OUTPUT_USB;
+
   if(in[1]==0 || (in[1]=='.' && in[2]==0)) {              // List directory
     char buf[FS_FILENAME+1];
     uint8_t i = 0;
@@ -36,37 +40,44 @@ read_file(char *in)
       i++;
     }
     DNL();
-    return;
-  }
-
-  inode = fs_get_inode( &fs, in+1 );
-  if(inode == 0xffff) {         // Not found
-    DC('X');
-    DNL();
-    return;
 
   } else {
-    filesize = fs_size(&fs, inode);
-    DH((uint16_t)((filesize>>16) & 0xffff),4);
-    DH((uint16_t)(filesize & 0xffff),4);
-    DNL();
 
-    uint8_t buf[64];
-    offset = 0;
+    inode = fs_get_inode( &fs, in+1 );
+    if(inode == 0xffff) {         // Not found
+      DC('X');
+      DNL();
 
-    set_txoff();
+    } else {
 
-    while(offset < filesize) {
-      uint8_t len = ((filesize-offset) > sizeof(buf) ? sizeof(buf) : filesize-offset);
-      fs_read( &fs, inode, buf, offset, len );
-      for(int i = 0; i < len; i++)
-        DC(buf[i]);
-      offset += sizeof(buf);
+      filesize = fs_size(&fs, inode);
+      DH((uint16_t)((filesize>>16) & 0xffff),4);
+      DH((uint16_t)(filesize & 0xffff),4);
+      DNL();
+      CDC_Task();       // flush as we reuse the buffer
+
+      offset = 0;
+
+      set_txoff();
+
+      while(offset < filesize) {
+
+        USB_Tx_Buffer->nbytes = ((filesize-offset) > USB_Tx_Buffer->size ?
+                        USB_Tx_Buffer->size : filesize-offset);
+
+        USB_Tx_Buffer->getoff = 0;
+        fs_read( &fs, inode, USB_Tx_Buffer->buf, offset, USB_Tx_Buffer->nbytes);
+        offset += USB_Tx_Buffer->nbytes;
+        CDC_Task();
+        wdt_reset();
+      }
+      cdc_flush();
+      rb_reset(USB_Tx_Buffer);
+
+      set_txrestore();
     }
-
-    set_txrestore();
-
   }
+  output_enabled = old_oe;
 }
 
 //////////////////////////////////
@@ -78,12 +89,16 @@ void
 write_file(char *in)
 {
   uint8_t hb[4];
+  uint8_t old_oe = output_enabled;
   fs_status_t ret = 8;
 
   if(fromhex(in+1, hb, 4) != 4)
     goto DONE;
 
-  filesize = ((uint32_t)hb[0]<<24)|((uint32_t)hb[1]<<16)|((uint16_t)hb[2]<<8)|(hb[3]);
+  filesize = ((uint32_t)hb[0]<<24)|
+             ((uint32_t)hb[1]<<16)|
+             ((uint16_t)hb[2]<< 8)|
+                       (hb[3]);
 
   ret = fs_remove(&fs, in+9);
   if(filesize == 0xffffffff) {                            // Delete only
@@ -104,6 +119,8 @@ write_file(char *in)
   rb_reset(USB_Rx_Buffer);
 
 DONE:
+  output_enabled = OUTPUT_USB;
+
   if(ret == FS_OK) {
     if(filesize)
       set_txoff();
@@ -115,6 +132,7 @@ DONE:
   }
   DNL();
 
+  output_enabled = old_oe;
   return;
 }
 

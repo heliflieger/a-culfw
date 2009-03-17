@@ -94,9 +94,10 @@ SRC = $(TARGET).c                                                  \
 		../clib/clock.c                                    \
 		../clib/delay.c                                    \
 		../clib/display.c                                  \
+		../clib/stringfunc.c                               \
 		../clib/fncollection.c                             \
 		../clib/ringbuffer.c                               \
-		../clib/transceiver_hms.c                              \
+		../clib/transceiver.c                              \
 		../clib/fht.c                                      \
 		../clib/ttydata.c                                  \
 		../clib/spi.c                                      \

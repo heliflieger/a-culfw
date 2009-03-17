@@ -9,6 +9,7 @@
 #include "battery.h"
 #include "joy.h"
 #include "fht.h"
+#include "fswrapper.h"                 // fs_sync();
 #ifdef HAS_SLEEP
 #include "mysleep.h"
 #endif

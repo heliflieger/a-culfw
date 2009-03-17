@@ -67,6 +67,7 @@ void lcd_invoff(void);
 void lcd_invon(void);
 void lcd_contrast(uint8_t hb);
 void lcd_switch(uint8_t hb);
+void lcd_drawpic(char *in);
 
 extern uint8_t lcd_on;
 

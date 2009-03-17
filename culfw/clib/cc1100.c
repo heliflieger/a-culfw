@@ -28,54 +28,54 @@ PROGMEM prog_uint8_t CC1100_PA[] = {
 
 PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_SIZE1] = {
 //Active                  Our FT  SmartRF Studio
-  0x0D, //*00 IOCFG2      0D  0D *0B // GDO2 as serial output
-  0x2E, // 01 IOCFG1      2E  2E  2E
-  0x2D, //*02 IOCFG0      2D  2D *0C // GDO0 for input
-  0x07, // 03 FIFOTHR     47 *07  47
-  0xD3, // 04 SYNC1       D3  D3  D3
-  0x91, // 05 SYNC0       91  91  91
-  0x3D, // 06 PKTLEN      ff *3D *3D
-  0x04, // 07 PKTCTRL1    04  04  04
-  0x32, // 08 PKTCTRL0    32  32  32
-  0x00, // 09 ADDR        00  00  00
-  0x00, // 0A CHANNR      00  00  00
-  0x06, // 0B FSCTRL1     06  06  06
-  0x00, // 0C FSCTRL0     00  00  00
-  0x21, // 0D FREQ2       21  21  21
-  0x65, // 0E FREQ1       65  65  65
-  0xe8, // 0F FREQ0       E8  e8  e8
-  0x55, // 10 MDMCFG4     55  55  55
-  0xe4, // 11 MDMCFG3     43 *e4  43
-  0x30, //*12 MDMCFG2     30 *30 *B0  // DEM_DCFILT_OFF
-  0x23, // 13 MDMCFG1     23  23  23
-  0xb9, // 14 MDMCFG0     B9  b9  b9
-  0x00, // 15 DEVIATN     00  00  00
-  0x07, // 16 MCSM2       07  07  07
-  0x30, // 17 MCSM1       30  30  30 
-  0x18, // 18 MCSM0       18  18  18
-  0x14, // 19 FOCCFG      14  14  14
-  0x6C, // 1A BSCFG       6C  6C  6C
-  0x07, //*1B AGCCTRL2    07  05 *03 // 42 dB instead of 33dB
-  0x00, // 1C AGCCTRL1    40 *00  40
-  0x90, //*1D AGCCTRL0    91 *90 *92 // 16 samples instead of 32
-  0x87, // 1E WOREVT1     87  87  87
-  0x6B, // 1F WOREVT0     6B  6B  6B
-  0xF8, // 20 WORCTRL     F8  F8  F8
-  0x56, // 21 FREND1      56  56  56
-  0x17, // 22 FREND0      17  17  17 // 0x11 for no PA ramping
-  0xE9, // 23 FSCAL3      E9  E9  E9   EF
-  0x2A, // 24 FSCAL2      2A  2A  2A   2F
-  0x00, // 25 FSCAL1      00  00  00   18
-  0x1F, // 26 FSCAL0      1F  1F  1F
-  0x41, // 27 RCCTRL1     41  41  41
-  0x00, // 28 RCCTRL0     00  00  00
-
-/*
-Conf1: SmartRF Studio:
-  Xtal: 26Mhz, RF out: 0dB, PA ramping, Dev:5kHz, Data:1kHz, Modul: ASK/OOK,
-  RF: 868.35MHz, Chan:350kHz, RX Filter: 325kHz
-  SimpleRX: Async, SimpleTX: Async+Unmodulated
-*/
+   0x0D, //*00 IOCFG2      0D  0D *0B // GDO2 as serial output
+   0x2E, // 01 IOCFG1      2E  2E  2E
+   0x2D, //*02 IOCFG0      2D  2D *0C // GDO0 for input
+   0x07, // 03 FIFOTHR     47 *07  47
+   0xD3, // 04 SYNC1       D3  D3  D3
+   0x91, // 05 SYNC0       91  91  91
+   0x3D, // 06 PKTLEN      ff *3D *3D
+   0x04, // 07 PKTCTRL1    04  04  04
+   0x32, // 08 PKTCTRL0    32  32  32
+   0x00, // 09 ADDR        00  00  00
+   0x00, // 0A CHANNR      00  00  00
+   0x06, // 0B FSCTRL1     06  06  06
+   0x00, // 0C FSCTRL0     00  00  00
+   0x21, // 0D FREQ2       21  21  21
+   0x65, // 0E FREQ1       65  65  65
+   0xe8, // 0F FREQ0       E8  e8  e8
+   0x55, // 10 MDMCFG4     55  55  55
+   0xe4, // 11 MDMCFG3     43 *e4  43
+   0x30, //*12 MDMCFG2     30 *30 *B0  // DEM_DCFILT_OFF
+   0x23, // 13 MDMCFG1     23  23  23
+   0xb9, // 14 MDMCFG0     B9  b9  b9
+   0x00, // 15 DEVIATN     00  00  00
+   0x07, // 16 MCSM2       07  07  07
+   0x30, // 17 MCSM1       30  30  30 
+   0x18, // 18 MCSM0       18  18  18
+   0x14, // 19 FOCCFG      14  14  14
+   0x6C, // 1A BSCFG       6C  6C  6C
+   0x07, //*1B AGCCTRL2    07  05 *03 // 42 dB instead of 33dB
+   0x00, // 1C AGCCTRL1    40 *00  40
+   0x90, //*1D AGCCTRL0    91 *90 *92 // 16 samples instead of 32
+   0x87, // 1E WOREVT1     87  87  87
+   0x6B, // 1F WOREVT0     6B  6B  6B
+   0xF8, // 20 WORCTRL     F8  F8  F8
+   0x56, // 21 FREND1      56  56  56
+   0x17, // 22 FREND0      17  17  17 // 0x11 for no PA ramping
+   0xE9, // 23 FSCAL3      E9  E9  E9   EF
+   0x2A, // 24 FSCAL2      2A  2A  2A   2F
+   0x00, // 25 FSCAL1      00  00  00   18
+   0x1F, // 26 FSCAL0      1F  1F  1F
+   0x41, // 27 RCCTRL1     41  41  41
+   0x00, // 28 RCCTRL0     00  00  00
+ 
+ /*
+ Conf1: SmartRF Studio:
+   Xtal: 26Mhz, RF out: 0dB, PA ramping, Dev:5kHz, Data:1kHz, Modul: ASK/OOK,
+   RF: 868.35MHz, Chan:350kHz, RX Filter: 325kHz
+   SimpleRX: Async, SimpleTX: Async+Unmodulated
+ */
 
 
 };

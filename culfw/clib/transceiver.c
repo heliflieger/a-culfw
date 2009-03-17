@@ -509,10 +509,8 @@ TASK(RfAnalyze_Task)
   LED_OFF();
 
 #ifdef HAS_FHT_80b
-  if(datatype == TYPE_FHT) {
-    ccTX();
-    fht_hook(obuf, oby);
-    ccRX();
+  if(datatype == TYPE_FHT && oby == 5) {
+    fht_hook(obuf);
   }
 #endif
 }

@@ -1,6 +1,8 @@
 M:CUR:Cur Menu:9f9afacfc
 S:Rooms:Rooms
 S:Control:Control
+S:Files:Files
+P243c3a3chouse2_58x60
 
 M:Rooms::88fddfccf
 <xmllist>:88fddfccf
@@ -134,3 +136,23 @@ F80C202<13>
 M:Sorry::aaaccceee
 C:Not yet
 C:implemented
+
+M:Files::affbffcff
+C:MENU:MMENU
+C:Syslog.0:MSyslog.0
+C:Syslog.1:MSyslog.1
+C:Syslog.2:MSyslog.2
+C:Syslog.3:MSyslog.3
+S:Pic1:Pic1
+S:Pic2:Pic2
+S:Pic3:Pic3
+
+M:Pic1::
+P00008482Pic1
+
+M:Pic2::
+P00008482Pic2
+
+M:Pic3::
+P00008482Pic3
+

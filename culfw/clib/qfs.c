@@ -18,6 +18,10 @@
  * The interface is compatible with the more advanced fs.c up to the following
  * exception: to ensure that data is written to the flash you have to use
  * fs_sync.
+ *
+ * It uses extensively the feature of the dataflash chip, with its two buffers:
+ * DF_BUF1 is used for data caching, DF_BUF2 for caching the superblock, which
+ * holds all the inodes.
  */
 
 #include <avr/io.h>
@@ -39,7 +43,8 @@ fs_init(fs_t *fs, df_chip_t chip)
 
   df_buf_load(fs->chip, DF_BUF2, QFS_ROOT_PAGE);
   df_wait(fs->chip);
-  df_buf_read(fs->chip, DF_BUF2, &fs->last_inode, QFS_MAGIC_OFFSET,sizeof(inode_t));
+  df_buf_read(fs->chip, DF_BUF2,
+                        &fs->last_inode, QFS_MAGIC_OFFSET, sizeof(inode_t));
 
   // Initialize FS
   if(fs->last_inode.len != QFS_MAGIC_LEN ||
@@ -84,6 +89,17 @@ fs_create(fs_t *fs, char *name)
 
   }
   return FS_EOF;
+}
+
+fs_status_t
+fs_rename(fs_t *fs, char *from, char *to)
+{
+  fs_remove(fs, to);
+  if(fs_get_inode(fs, from) == 0xffff)
+    return FS_NOSUCHFILE;
+  strncpy(fs->last_inode.name, to, QFS_FILENAMESIZE);
+  fs->flags |= QFS_ROOTPAGE_MODIFIED;
+  return FS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -173,7 +189,11 @@ cache_page(fs_t *fs, uint16_t page, uint8_t doload)
   }
 }
 
-
+static uint16_t
+offset2page(uint16_t inode, uint16_t offset)
+{
+  return 1 + inode*128 + offset/QFS_BLOCKSIZE; // root_page, 128 pages/file
+}
 
 ////////////////////////////////////////////////////////////////////////
 fs_size_t
@@ -186,11 +206,11 @@ fs_read(fs_t *fs, fs_inode_t inode, void *buf, fs_size_t offset, fs_size_t lengt
 
   cache_last_inode(fs, inode);
   if(poffset > fs->last_inode.len) 
-    return FS_EOF;
+    return 0;
   if(poffset+len > fs->last_inode.len)
     tlen = len = fs->last_inode.len-poffset;
 
-  uint16_t page = 1 + inode*128 + poffset/QFS_BLOCKSIZE;
+  uint16_t page = offset2page(inode, poffset);
   poffset = poffset % QFS_BLOCKSIZE;
 
   while(len) {
@@ -233,11 +253,11 @@ fs_write(fs_t *fs, fs_inode_t inode, void *buf, fs_size_t offset, fs_size_t leng
     fs->flags |= QFS_ROOTPAGE_MODIFIED;
   }
   
-  uint16_t page = 1 + inode*128 + poffset/QFS_BLOCKSIZE;
+  uint16_t page = offset2page(inode, poffset);
   poffset = poffset % QFS_BLOCKSIZE;
 
-  uint16_t lastoldpage = (oldsize/QFS_BLOCKSIZE);
-  if(oldsize > lastoldpage*QFS_BLOCKSIZE)
+  uint16_t lastoldpage = offset2page(inode, oldsize);
+  if(oldsize % QFS_BLOCKSIZE)
     lastoldpage++;
 
   while(len) {

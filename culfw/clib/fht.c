@@ -5,6 +5,7 @@
 #include "display.h"
 #include "fht.h"
 #include "delay.h"
+#include "clock.h"
 #include "cc1100.h"
 
 
@@ -27,15 +28,15 @@ uint8_t fht80b_state; // 80b state machine
 uint8_t fht8v_timeout = 0xff;      
 
 
+uint8_t fht_d1 = 116,  // seconds
+        fht_d2 = 0xa5, // Delay before
+        fht_d3 = 1,    // repetitions
+        fht_d4 = 0x40; // delay after
 
 #ifdef HAS_FHT_8v
 
 static void set_fht8v_timer(void);
 
-uint8_t fht_d1 = 116, // seconds
-        fht_d2 = 0, // Delay before
-        fht_d3 = 2, // repetitions
-        fht_d4 = 0; // delay after
 #endif
 
 void
@@ -129,7 +130,6 @@ fhtsend(char *in)
       DNL();
     }
 
-#ifdef HAS_FHT_8v
     if(hb[2] == 7) {                          // Parameters
       fht_d1 = hb[3];
       fht_d3 = hb[4];
@@ -144,7 +144,6 @@ fhtsend(char *in)
       DH(fht_d4, 2);
       DNL();
     }
-#endif
 
   } else if(hb[0]==fht_hc[0] && hb[1]==fht_hc[1]) {  // FHT8v mode commands
 
@@ -229,19 +228,32 @@ fht_timer(void)
 
 
 #ifdef HAS_FHT_80b
+#ifdef COMMENT
 
-// 4.747 FHT fl actuator: 0%            T510200B600 -66.5     .140
-// 4.887 FHT fl FHZ:can-xmit: 97        T5102537761 -72       .131 
-// 5.018 FHT fl can-xmit: 97            T5102536761 -66.5     .114
-// 5.132 FHT fl can-rcv: 97             T5102546761 -66.5     .284
-// missed    fl FHZ:start-xmit: 97  
-// 5.416 FHT fl start-xmit: 97          T51027D6761 -66.5     .155
-// 5.571 FHT fl FHZ:desired-temp: 19.5  T5102417927 -73.5     .125
-// 5.696 FHT fl desired-temp: 19.5      T5102416927 -66.5     .156
-// 5.852 FHT fl FHZ:ack: 39             T51024B7727 -71       .127
-// 5.979 FHT fl ack: 39                 T51024B6727 -66.5     .159
-// 6.138 FHT fl FHZ:end-xmit: 39        T51027E7727 -72       .126
-// 6.264 FHT fl end-xmit: 39            T51027E6727 -66
+missed    fl actuator: 0%            T510200B600           .140
+4.747 FHT fl actuator: 0%            T510200B600 -66.5     .140
+4.887 FHT fl FHZ:can-xmit: 97        T5102537761 -72       .131
+5.018 FHT fl can-xmit: 97            T5102536761 -66.5     .114
+5.132 FHT fl can-rcv: 97             T5102546761 -66.5     .140
+missed    fl FHZ:start-xmit: 97      T51027D7761           .140
+5.416 FHT fl start-xmit: 97          T51027D6761 -66.5     .155
+5.571 FHT fl FHZ:desired-temp: 19.5  T5102417927 -73.5     .125
+5.696 FHT fl desired-temp: 19.5      T5102416927 -66.5     .156
+5.852 FHT fl FHZ:ack: 39             T51024B7727 -71       .127
+5.979 FHT fl ack: 39                 T51024B6727 -66.5     .159
+6.138 FHT fl FHZ:end-xmit: 39        T51027E7727 -72       .126
+6.264 FHT fl end-xmit: 39            T51027E6727 -66           
+
+T1234002F00
+TFFFF070102
+TFFFF08001e
+TFFFF011234
+TFFFF016161
+TFFFF02
+T5102417927
+TFFFF04
+
+#endif
 
 #define FHT_ACTUATOR   0x00
 #define FHT_CAN_XMIT   0x53
@@ -283,19 +295,26 @@ get_fhtbuf(uint8_t *fht)
 
 //////////////////////////////////////////////////////////////
 static void
-fht_sendpacket(uint8_t *mbuf, uint8_t sleep)
+fht_sendpacket(uint8_t *mbuf)
 {
-  my_delay_ms(sleep);             // Sleep for the second msg
+  my_delay_ms(fht_d4);
   DC(':'); for(int i = 0; i < 5; i++) DH(mbuf[i],2); DNL();
-  addParityAndSendData(mbuf, 5, FHT_CSUM_START, 1);
+  addParityAndSendData(mbuf, 5, FHT_CSUM_START, fht_d3);
 }
 
 
 void
-fht_hook(uint8_t *fht, uint8_t len)
+fht_hook(uint8_t *fht)
 {
-  if(fht_hc[0] == 0 && fht_hc[1] == 0)  // FHT processing is off
+  static uint8_t in_hook = 0;
+
+  if(in_hook)
     return;
+
+  in_hook = 1;
+
+  if(fht_hc[0] == 0 && fht_hc[1] == 0)  // FHT processing is off
+    goto DONE;
 
   if(fht_last[0] != fht[0] || fht_last[1] != fht[1]) {
     fht80b_state = 0;
@@ -305,7 +324,7 @@ fht_hook(uint8_t *fht, uint8_t len)
   fht_last[0] = fht[0];
   fht_last[1] = fht[1];
   if(fht_foreign)
-    return;
+    goto DONE;
 
   uint8_t fhtb[6];
   for(int i = 0; i < 5; i++)
@@ -317,17 +336,15 @@ fht_hook(uint8_t *fht, uint8_t len)
   // FHT->CUL part: ack everything.
   if(fht[2] && fht80b_state == 0) {            
 
-    if(fht[2] == FHT_START_XMIT) {
-      if(fht[4] == 100) {              // Cent: N/A, capture it!
-        fhtb[4] = fht_hc[0];
-      } else if(fht[4] != fht_hc[0]) { // Foreign FHT, forget it
-        fht_foreign = 1;
-        return;
-      }
+    // unassigned FHT's have 100 as housecode but answering to this won't help,
+    // and the FHZ does not answer it either
+    if(fht[2]==FHT_START_XMIT && fht[4]!=fht_hc[0]) { // Foreign FHT, forget it
+      fht_foreign = 1;
+      goto DONE;
     }
     fhtb[3] |= 0x70;    // Answer
-    fht_sendpacket(fhtb, 65);
-    return;
+    fht_sendpacket(fhtb);
+    goto DONE;
 
   }
 
@@ -335,15 +352,16 @@ fht_hook(uint8_t *fht, uint8_t len)
   //////////////////////////////
   // CUL->FHT part
   if(!(data = get_fhtbuf(fht)) && fht80b_state == 0)
-    return;
+    goto DONE;
   DC('f'+fht80b_state);
-  DNL();
+  DH(sec,2);
+  DH(hsec,2);
 
   // Ack-Check: correct ack from the FHT?
   if(fht_state_sequence[fht80b_state] != fht[2]) {
     DC('a'); DNL();
     fht80b_state = 0;
-    return;
+    goto DONE;
   }
 
   if(fht80b_state == FHT_DATA) {
@@ -364,24 +382,29 @@ fht_hook(uint8_t *fht, uint8_t len)
     fhtb[2] = erb(data+2);        
     fhtb[3] = erb(data+3);
     fhtb[4] = erb(data+4);
-    fht_sendpacket(fhtb, 65);
+    fht_sendpacket(fhtb);
     fht_state_sequence[FHT_DATA] = fhtb[2]; // for Ack-Check
 
   } else {
 
     if(fht80b_state == FHT_MAXSTATE) {          // EOM
+      DC('E'); DNL();
       fht80b_state = 0;
-      return;
+      goto DONE;
     }
       
     if((1<<fht80b_state) & FHT_ANSWER) {
       fhtb[2] = fht_state_sequence[fht80b_state];
-      fhtb[3] = 0x67;
+      fhtb[3] = 0x77;
       fhtb[4] = fht_hc[0];
-      fht_sendpacket(fhtb, 65);
+      fht_sendpacket(fhtb);
     }
 
   }
+  DH(sec,2);
+  DH(hsec,2);
+  DC('x'); DNL();
+DONE:
+  in_hook = 0;
 }
-
 #endif

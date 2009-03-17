@@ -30,16 +30,14 @@ void version(char *);
 
 // EEprom: CUL: 322 bytes of 512 used
 
-#define EE_START_MENU        (uint8_t *)0x200
-#define EE_MENU_SIZE         0x40          // Last position for 64 menu entries
-#define EE_CONTRAST          (uint8_t *)(EE_START_MENU+EE_MENU_SIZE)
+#define EE_CONTRAST          (uint8_t *)0x200
 #define EE_BRIGHTNESS        (uint8_t *)(EE_CONTRAST+1)
 #define EE_LED               (uint8_t *)(EE_BRIGHTNESS+1)
 #define EE_SLEEPTIME         (uint8_t *)(EE_LED+1)
 
 #define EE_START_UNUSED      (uint8_t *)0x078
 
-// EEprom: CUR: 580 bytes of 4096 used, minus the hole at the CUL
+// EEprom: CUR: 516 bytes of 4096 used, minus the hole at the CUL
 
 extern uint8_t led_mode;
 
