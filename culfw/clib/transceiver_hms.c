@@ -220,9 +220,9 @@ check_fs(airdata_t *d, airmsg_t *am)
     // DS_P( PSTR("cPE\r\n") );
     return 0;
   }
-  if (CRC-crc == 6) {
+  if (0xFF&(CRC-crc) == 6) {
     am->type = 'F';
-  } else if (CRC-crc == 12) {
+  } else if (0xFF&(CRC-crc) == 12) {
     am->type = 'T';
   } else {
     // DS_P( PSTR("crc") ); DH(CRC-crc,2); DNL();
