@@ -47,6 +47,24 @@ get_adcw(uint8_t mux)
   return result;
 }
 
+uint8_t
+raw2percent(uint16_t bv)
+{
+  static uint8_t bat[] = { 0,109,136,141,143,152,164,179,196,214,240 };
+  uint8_t s1, s2;
+
+  if(bv < 761) bv = 761;
+  bv -= 760;
+  if(bv > 240) bv = 240;
+  uint8_t b = (uint8_t)bv;
+
+  for(s1 = 1; s1 < sizeof(bat); s1++)
+    if(b <= bat[s1])
+      break;
+  
+  s2 = s1-1;
+  return 10*s2+(10*(uint16_t)(b-bat[s2]))/(uint16_t)(bat[s1]-bat[s2]);
+}
 
 void
 batfunc(char *mode)
@@ -68,21 +86,7 @@ batfunc(char *mode)
 
   } else {
     
-   static uint8_t bat[] = { 0,109,136,141,143,152,164,179,196,214,240 };
-
-    if(bv < 761) bv = 761;
-    bv -= 760;
-    if(bv > 240) bv = 240;
-    b = (uint8_t)bv;
-
-    for(s1 = 1; s1 < sizeof(bat); s1++)
-      if(b <= bat[s1])
-        break;
-    
-    uint8_t s2 = s1-1;
-    b = 10*s2+(10*(uint16_t)(b-bat[s2]))/(uint16_t)(bat[s1]-bat[s2]);
-
-    DU(b,3);
+    DU(raw2percent(bv),3);
     DC('%');
 
   }
@@ -94,26 +98,20 @@ batfunc(char *mode)
 void
 bat_drawstate(void)
 {
+  uint8_t s1;
   if(!lcd_on)
     return;
 
-  uint16_t v1 = get_adcw(BAT_MUX);
-  if(v1 < 750) v1 = 750;
-  if(v1 > 950) v1 = 950;
-
-  uint8_t s1;
+  uint16_t v1 = raw2percent(get_adcw(BAT_MUX))*VISIBLE_WIDTH/100;
   s1  = (bit_is_set( BAT_PIN, BAT_PIN1) ? 2 : 0);
   s1 |= (bit_is_set( BAT_PIN, BAT_PIN2) ? 1 : 0);
 
-  uint16_t v2 = ((s1 == 2 && USB_IsConnected) ?
-                0x00f0 : 0xf000);    // blue: charging, Red: else
-
-  v1 = (v1-750)*VISIBLE_WIDTH/200;
   lcd_line(WINDOW_LEFT,TITLE_HEIGHT-1,          // the green/blue part
                    WINDOW_LEFT+v1,TITLE_HEIGHT-1, 0x0f00);
 
   lcd_line(WINDOW_LEFT+v1,TITLE_HEIGHT-1,       // and the red part
-                   WINDOW_RIGHT,TITLE_HEIGHT-1, v2);
+           WINDOW_RIGHT,TITLE_HEIGHT-1,
+           (s1==2 && USB_IsConnected) ? 0xf0 : 0xf000);// charging:blue else red
 }
 #endif
 

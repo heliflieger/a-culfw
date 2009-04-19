@@ -23,12 +23,15 @@ log_init(void)
   } else {
     logoffset = fs_size(&fs, logfd);
   }
+  Log("Boot");
 }
 
 void
 log_rotate(void)
 {
-  char oldlog[] = "Syslog.0";
+  char oldlog[sizeof(syslog)];
+  strcpy(oldlog, syslog);
+
   for(int8_t i = LOG_NRFILES-2; i >= 0; i--) {
     syslog[7] = (i+0)+'0';
     oldlog[7] = (i+1)+'0';
@@ -50,7 +53,7 @@ Log(char *data)
 {
   uint8_t now[6], fmtnow[LOG_TIMELEN+1];
 
-  if(logoffset >= (65536-LOG_LINELEN))
+  if(logoffset >= 65000)
     log_rotate();
   rtcget(now);
 

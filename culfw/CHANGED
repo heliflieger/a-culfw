@@ -1,3 +1,8 @@
+Version 1.17
+- CUR: battery "line" calibrated
+- CUR: enable radio correctly after wakeup
+- CUL: bugfix: EE_LED wrapped on CUL to 0x2, overwriting CC1100 config
+
 Version 1.16
 - CUR: syslog (with logrotate)
 - qfs: fs_rename, fs_read bugfix

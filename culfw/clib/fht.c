@@ -75,10 +75,9 @@ fhtsend(char *in)
 
       fht_hc[0] = hb[3];
       fht_hc[1] = hb[4];
+      fht_eeprom_reset();
       ewb(EE_FHTID  , fht_hc[0]);
       ewb(EE_FHTID+1, fht_hc[1]);
-
-      fht_eeprom_reset();
 
       fht8v_timeout = 0xff;
       fht80b_state = 0;

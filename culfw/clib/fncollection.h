@@ -24,8 +24,8 @@ void version(char *);
 
 #define EE_FHTID             (uint8_t *)(EE_REQBL+1)
 #define EE_FHT_ACTUATORS     (uint8_t *)(EE_FHTID+2)
-#define EE_START_FHTBUF      (uint8_t *)(EE_FHT_ACTUATORS+18)
-#define EE_FHTSLOTS          50
+#define EE_START_FHTBUF      (uint8_t *)(EE_FHT_ACTUATORS+18) // (1+8)*2: FHT8v
+#define EE_FHTSLOTS          50                               // FHT80b
 #define EE_FHTBUF_SIZE       (5*EE_FHTSLOTS)     // 5 byte each, must be <= 255
 
 // EEprom: CUL: 322 bytes of 512 used

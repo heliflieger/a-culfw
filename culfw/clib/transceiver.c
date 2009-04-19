@@ -114,10 +114,21 @@ set_txon(void)
 }
 
 void
-set_txrestore(void)
+set_txrestore()
 {
-  if(tx_report)
+  tx_init();    // Sets up Counter1, needed by my_delay in ccReset
+  if(tx_report) {
     set_txon();
+  } else {
+    set_txoff();
+  }
+}
+
+void
+set_txreport_int(char *in)
+{
+  fromhex(in+1, &tx_report, 1);
+  set_txrestore();
 }
 
 void
