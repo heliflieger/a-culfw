@@ -21,8 +21,9 @@ void version(char *);
 #define EE_CC1100_SIZE       (EE_CC1100_SIZE1+8)
 
 #define EE_REQBL             (uint8_t *)(EE_START_CC1100+EE_CC1100_SIZE)
+#define EE_LED               (uint8_t *)(EE_REQBL+1)
 
-#define EE_FHTID             (uint8_t *)(EE_REQBL+1)
+#define EE_FHTID             (uint8_t *)(EE_LED+1)
 #define EE_FHT_ACTUATORS     (uint8_t *)(EE_FHTID+2)
 #define EE_START_FHTBUF      (uint8_t *)(EE_FHT_ACTUATORS+18) // (1+8)*2: FHT8v
 #define EE_FHTSLOTS          50                               // FHT80b
@@ -32,8 +33,7 @@ void version(char *);
 
 #define EE_CONTRAST          (uint8_t *)0x200
 #define EE_BRIGHTNESS        (uint8_t *)(EE_CONTRAST+1)
-#define EE_LED               (uint8_t *)(EE_BRIGHTNESS+1)
-#define EE_SLEEPTIME         (uint8_t *)(EE_LED+1)
+#define EE_SLEEPTIME         (uint8_t *)(EE_BRIGHTNESS+1)
 
 #define EE_START_UNUSED      (uint8_t *)0x078
 

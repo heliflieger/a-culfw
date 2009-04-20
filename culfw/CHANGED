@@ -1,3 +1,6 @@
+Version 1.18
+- CUL: former bugfix got lost in Check-In procedure
+
 Version 1.17
 - CUR: battery "line" calibrated
 - CUR: enable radio correctly after wakeup
