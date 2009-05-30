@@ -188,8 +188,9 @@ ccTX(void)
   uint8_t cnt = 0xff;
   EIMSK  &= ~_BV(CC1100_INT);
 
-  while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != 19) {
+  while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != MARCSTATE_TX) {
     ccStrobe( CC1100_STX );
+    my_delay_us(10);
   }
 }
 
@@ -198,8 +199,9 @@ void
 ccRX(void)
 {
   uint8_t cnt = 0xff;
-  while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != 13)
-       ccStrobe( CC1100_SRX );
+
+  while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != MARCSTATE_RX)
+    ccStrobe( CC1100_SRX );
   EIFR  |= _BV(CC1100_INT);
   EIMSK |= _BV(CC1100_INT);
 }

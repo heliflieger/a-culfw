@@ -144,6 +144,30 @@ uint8_t cc1100_readReg(uint8_t addr);
 #define CC1100_LQI_CRC_OK_BM                   0x80
 #define CC1100_LQI_EST_BM                      0x7F
 
+#define MARCSTATE_SLEEP            0x00
+#define MARCSTATE_IDLE             0x01
+#define MARCSTATE_XOFF             0x02
+#define MARCSTATE_VCOON_MC         0x03
+#define MARCSTATE_REGON_MC         0x04
+#define MARCSTATE_MANCAL           0x05
+#define MARCSTATE_VCOON            0x06
+#define MARCSTATE_REGON            0x07
+#define MARCSTATE_STARTCAL         0x08
+#define MARCSTATE_BWBOOST          0x09
+#define MARCSTATE_FS_LOCK          0x0A
+#define MARCSTATE_IFADCON          0x0B
+#define MARCSTATE_ENDCAL           0x0C
+#define MARCSTATE_RX               0x0D
+#define MARCSTATE_RX_END           0x0E
+#define MARCSTATE_RX_RST           0x0F
+#define MARCSTATE_TXRX_SWITCH      0x10
+#define MARCSTATE_RXFIFO_OVERFLOW  0x11
+#define MARCSTATE_FSTXON           0x12
+#define MARCSTATE_TX               0x13
+#define MARCSTATE_TX_END           0x14
+#define MARCSTATE_RXTX_SWITCH      0x15
+#define MARCSTATE_TXFIFO_UNDERFLOW 0x16
+
 #include "board.h"
 
 #define CC1100_DEASSERT  SET_BIT( CC1100_CS_PORT, CC1100_CS_PIN )

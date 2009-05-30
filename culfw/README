@@ -194,29 +194,29 @@ Protocol
       Send out an FHT message. The CUL can work in 2 different modes. The first
       one is to communicate with a number of FHT80b's. This is called the
       FHT80b mode. The second one is to act itself as a FHT80b and control up
-      to 8 FHT8v actuators. This is called the FHT8v mode.
+      to 8 FHT8v actuators. This is called the FHT8v mode (not yet implemented).
       Note: the CUL can work in both modes at the same time.
 
       Special control commands:
-      - TFFFF01<CCCC>
+      - T01<CCCC>
         Set the "own" housecode to CCCC. The first byte will be used as the FHZ
         code in in FHT80b mode. This command will also clear all buffers.
-      - TFFFF02
+      - T01
         Return the own housecode (hex)
-      - TFFFF03
+      - T02
+        Return the FHT80b buffer. All FHT commands which are for other FHT's
+        (not matching our own housecode) are placed in the FHT80b buffer, which
+        has 50 slots. If an FHT80b is sending an actuator message, then the
+        buffer will be searched for matching housecodes, and all found messages
+        will be sent to this FHT80b.
+      - T03
         Return the actuator buffer (used only in the FHT80v mode). The CUL will
         send out actuator commands every 116 second, if one of the actuator
         values are not ff. Set the actuator values with the "normal" FHT
         command T<CCCC>0vA6YY, where CCCC is the housecode of the CUL, v is the
         actuator number (use v=0 for all actuators), and YY is the value to be
         sent to the actuator. Example: T123400A610
-      - TFFFF04
-        Return the FHT80b buffer. All FHT commands which are for other FHT's
-        (not matching our own housecode) are placed in the FHT80b buffer, which
-        has 50 slots. If an FHT80b is sending an actuator message, then the
-        buffer will be searched for matching housecodes, and all found messages
-        will be sent to this FHT80b.
-      - TFFFF05
+      - T04
         Return the seconds (decimal) until the next actuator message for the
         own actuators. It is 0xff when no actuator messages are queued.
 
@@ -265,6 +265,8 @@ Protocol
       chip and enable reception.
       Default is 00: do not report anything, radio chip uninitialized.
       Example: X01
+
+      If <RR> is not specified, report the current value.
 
     x<pp> Change PA tables.
       <pp> is a one-byte hex value, valid values are 00 to 09, with following

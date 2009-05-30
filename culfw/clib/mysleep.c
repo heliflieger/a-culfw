@@ -49,5 +49,6 @@ dosleep(void)
   wdt_enable(WDTO_2S); 
   lcd_switch(1);
   bat_drawstate();
+  set_txrestore();      // One is somehow not enough.
   set_txrestore();
 }

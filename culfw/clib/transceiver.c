@@ -125,23 +125,14 @@ set_txrestore()
 }
 
 void
-set_txreport_int(char *in)
-{
-  fromhex(in+1, &tx_report, 1);
-  set_txrestore();
-}
-
-void
 set_txreport(char *in)
 {
-  fromhex(in+1, &tx_report, 1);
-  tx_init();    // Sets up Counter1, needed by my_delay in ccReset
-
-  if(tx_report) {
-    set_txon();
-  } else {
-    set_txoff();
+  if(in[1] == 0) {              // Report Value
+    DH(tx_report, 2); DNL();
+    return;
   }
+  fromhex(in+1, &tx_report, 1);
+  set_txrestore();
 }
 
 static void
@@ -177,8 +168,9 @@ sendraw(uint8_t *msg, uint8_t nbyte, uint8_t bitoff,
     ccInitChip();
     cc_on = 1;
   }
-  ccTX();                       // Enable TX 
+  ccStrobe( CC1100_SIDLE );
   my_delay_ms(1);
+  ccTX();                       // Enable TX 
 
   do {
     for(i = 0; i < 12; i++)                     // sync
@@ -576,7 +568,8 @@ ISR(CC1100_INTVECT)
 
   if(bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
     TCNT1 = 0;                          // restart timer
-    TIFR1 |= _BV(OCF1A);                // clear Timers flags (?, important!)
+    // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
+    TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
     rf = RISING_EDGE;
   } else {
     rf = FALLING_EDGE;

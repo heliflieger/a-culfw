@@ -3,11 +3,13 @@
 
 void fhtsend(char *in);
 void fht_init(void);
-void fht_timer(void);
 void fht_hook(uint8_t *in);
-void fht_eeprom_reset(void);
+void fht_eeprom_reset(uint8_t all);
+void fht8v_timer(void);
+void fht80b_timer(void);
 
 extern uint8_t fht8v_timeout;
+extern uint8_t fht80b_timeout;
 extern uint8_t fht_hc[2];
 
 

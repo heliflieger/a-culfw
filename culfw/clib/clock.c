@@ -19,7 +19,7 @@
 #include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
 
 uint8_t day,hour,minute,sec,hsec;
-static uint8_t lsec, lmin;
+static uint8_t lhsec, lsec, lmin;
 
 //Counted time
 //clock_time_t clock_datetime = 0;
@@ -72,9 +72,15 @@ clock_time()
 
 TASK(Minute_Task)
 {
+  if(lhsec == hsec)
+    return;
+
+  // 1/125 Tick from now on
+
   if(lsec == sec)
     return;
 
+  // Second tick from now on
   lsec = sec;
 
   wdt_reset();
@@ -88,7 +94,7 @@ TASK(Minute_Task)
 
 #ifdef HAS_FHT_8v
   if(fht8v_timeout != 0xff && --fht8v_timeout == 0)
-    fht_timer();
+    fht8v_timer();
 #endif
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)

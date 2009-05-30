@@ -1,3 +1,8 @@
+Version 1.19 (Sat May 16 13:19:12 MEST 2009)
+- CUR: menu wraparound
+- CU*: FHT80b communication (no resend yet)
+- CUL: bugfix: jumping to bootloader works now.
+
 Version 1.18
 - CUL: former bugfix got lost in Check-In procedure
 

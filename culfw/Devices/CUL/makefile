@@ -196,6 +196,7 @@ CFLAGS += -Wunreachable-code
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
+CFLAGS += -mcall-prologues
 
 
 #---------------- Compiler Options C++ ----------------

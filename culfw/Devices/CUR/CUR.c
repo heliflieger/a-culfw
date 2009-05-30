@@ -83,7 +83,7 @@ t_fntab fntab[] = {
 #if defined(__AVR_AT90USB1286__)
 #define jump_to_bootloader ((void(*)(void))0xf000)
 #else
-#define jump_to_bootloader ((void(*)(void))0x3000)
+#define jump_to_bootloader ((void(*)(void))0x1800)
 #endif
 
 void

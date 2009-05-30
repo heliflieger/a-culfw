@@ -305,16 +305,26 @@ menu_handle_joystick(uint8_t key)
 
     uint8_t insert_line = 0;
 
-    if(key == KEY_DOWN && menu_curitem < menu_nitems-1) {
-      menu_curitem++;
+    if(key == KEY_DOWN) { 
+
+      if(menu_curitem == menu_nitems-1)
+        menu_curitem = 0;
+      else
+        menu_curitem++;
+
       if(menu_curitem - menu_topitem >= BODY_LINES) {
         menu_topitem++;
         insert_line = 9;
       }
     }
 
-    if(key == KEY_UP && menu_curitem > 0) {
-      menu_curitem--;
+    if(key == KEY_UP) {
+
+      if(menu_curitem == 0)
+        menu_curitem = menu_nitems-1;
+      else
+        menu_curitem--;
+
       if(menu_topitem > menu_curitem) {
         menu_topitem--;
         insert_line = 10;

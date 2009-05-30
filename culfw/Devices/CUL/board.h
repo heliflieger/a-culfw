@@ -29,6 +29,8 @@
 #define SPI_SCLK		PB1
 
 #define HAS_USB                 1
+#undef  HAS_FHT_8v
+#define HAS_FHT_80b
 
 #define BUSWARE_CUL
 

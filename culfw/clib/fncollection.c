@@ -118,7 +118,7 @@ eeprom_factory_reset(char *in)
 #ifdef HAS_SLEEP
   ewb(EE_SLEEPTIME, 30);
 #endif
-  fht_eeprom_reset();
+  fht_eeprom_reset(1);
   prepare_boot(in);
 }
 
