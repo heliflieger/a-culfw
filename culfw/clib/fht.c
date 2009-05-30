@@ -29,10 +29,11 @@ uint8_t fht80b_last[2];
 uint8_t fht80b_foreign;  // Not our fht
 uint8_t fht80b_state;    // 80b state machine
 uint8_t fht80b_ldata;    // last data waiting for ack
+uint8_t fht80b_timeout = 0;
 #endif 
 
 #ifdef HAS_FHT_8v
-uint8_t fht8v_timeout = 0xff;      
+uint8_t fht8v_timeout = 0;      
 static void set_fht8v_timer(void);
 #endif
 
@@ -176,8 +177,8 @@ set_fht8v_timer(void)
     if(erb(EE_FHT_ACTUATORS+2*i) != 0xff)
       break;
   if(i == 9)
-    fht8v_timeout = 0xff;
-  else if(fht8v_timeout == 0xff)
+    fht8v_timeout = 0;
+  else if(fht8v_timeout == 0)
     fht8v_timeout = 116;
 }
 
@@ -217,28 +218,9 @@ fht8v_timer(void)
 #define FHT_ACK2       0x69
 #define FHT_DATA       0xff
 
-/*
-48.711      actuator: 0%
-48.780 .069 actuator: 0%
-48.921 .141 FHZ:can-xmit: 97
-49.052 .131 can-xmit: 97
-49.166 .114 can-rcv: 97
-49.324 .158 FHZ:start-xmit: 97
-49.430 .106 can-rcv: 97
-49.665 .235 FHZ:start-xmit: 97
-49.794 .129 start-xmit: 97
-49.950 .156 FHZ:desired-temp: 18.0
-50.075 .125 desired-temp: 18.0
-50.231 .156 FHZ:ack: 36
-50.357 .126 ack: 36
-50.514 .157 FHZ:end-xmit: 36
-50.640 .126 end-xmit: 36
-*/
-
-
 PROGMEM prog_uint8_t fht80b_state_tbl[] = {
   //FHT80b          //CUL, 0 for no answer
-  FHT_ACTUATOR,     FHT_CAN_XMIT,
+  FHT_ACTUATOR,     FHT_CAN_XMIT,       // We are deaf for the second ACTUATOR
   FHT_CAN_XMIT,     0,
   FHT_CAN_RCV,      FHT_START_XMIT,
   FHT_START_XMIT,   FHT_DATA,
@@ -274,6 +256,11 @@ fht_sendpacket(uint8_t *mbuf)
   DC('T'); for(int i = 0; i < 5; i++) DH(mbuf[i],2); DH(0,2); DNL();
 }
 
+void
+fht80b_timer(void)
+{
+  fht80b_state = 0;
+}
 
 void
 fht_hook(uint8_t *fht)
@@ -341,6 +328,7 @@ FHT_CONVERSATION:
                                 __LPM(fht80b_state_tbl+fht80b_state));
 
   // We frequently loose the FHT_CAN_XMIT msg from the FHT
+  // so skip this state if the next msg comes in.
   if(inb == FHT_CAN_XMIT && fht[2] == FHT_CAN_RCV) {
     inb = FHT_CAN_RCV;
     fht80b_state += 2;
@@ -385,8 +373,10 @@ FHT_CONVERSATION:
 
   }
 
-  if(outb)
+  if(outb) {
     fht_sendpacket(fhtb);
+    fht80b_timeout = 125;       // reset the state if there is no msg for 1 sec
+  }
 
 DONE:
   ;

@@ -74,14 +74,17 @@ TASK(Minute_Task)
 {
   if(lhsec == hsec)
     return;
+  lhsec = hsec;                         // 1/125 Tick from now on
 
-  // 1/125 Tick from now on
+#ifdef HAS_FHT_80b
+  if(fht80b_timeout)
+    if(--fht80b_timeout == 0)
+      fht80b_timer();
+#endif
 
   if(lsec == sec)
     return;
-
-  // Second tick from now on
-  lsec = sec;
+  lsec = sec;                           // Second tick from now on
 
   wdt_reset();
 
@@ -93,8 +96,9 @@ TASK(Minute_Task)
     credit_10ms += 1;
 
 #ifdef HAS_FHT_8v
-  if(fht8v_timeout != 0xff && --fht8v_timeout == 0)
-    fht8v_timer();
+  if(fht8v_timeout)
+    if(--fht8v_timeout == 0)
+      fht8v_timer();
 #endif
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)
