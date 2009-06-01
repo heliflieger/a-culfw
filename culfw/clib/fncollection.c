@@ -10,7 +10,6 @@
 #include "cdc.h"
 #include "transceiver.h"
 #include "clock.h"
-#include "fht.h"                // fht_eeprom_reset
 
 #ifdef HAS_LCD
 #include "battery.h"
@@ -118,7 +117,6 @@ eeprom_factory_reset(char *in)
 #ifdef HAS_SLEEP
   ewb(EE_SLEEPTIME, 30);
 #endif
-  fht_eeprom_reset(1);
   prepare_boot(in);
 }
 

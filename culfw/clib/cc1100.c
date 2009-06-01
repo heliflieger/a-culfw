@@ -8,6 +8,7 @@
 #include "fncollection.h"
 #include "cc1100.h"
 
+#ifdef FULL_CC1100_PA
 PROGMEM prog_uint8_t CC1100_PA[] = {
 
   0x00,0x03,0x0F,0x1E,0x26,0x27,0x00,0x00,      //-10 dBm
@@ -24,6 +25,16 @@ PROGMEM prog_uint8_t CC1100_PA[] = {
 
   0x00,0x32,0x38,0x3f,0x3f,0x3f,0x3f,0x3f
 };
+#else
+PROGMEM prog_uint8_t CC1100_PA[] = {
+
+  0x27,   //-10 dBm
+  0x67,   // -5 dBm (checked 3 times!)
+  0x50,   //  0 dBm
+  0x81,   //  5 dBm
+  0xC2,   // 10 dBm
+};
+#endif
 
 
 PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_SIZE1] = {
@@ -145,20 +156,38 @@ ccInitChip(void)
 }
 
 //--------------------------------------------------------------------
+#ifdef FULL_CC1100_PA
+
 void
 cc_set_pa(uint8_t idx)
 {
   uint8_t *t = EE_START_CC1100+sizeof(CC1100_CFG);
   if(idx > 10)
-    idx = 7;
+    idx = 8;
   uint8_t *f = CC1100_PA+idx*8;
 
-  for (uint8_t i = 0;i<8;i++)
+  for (uint8_t i = 0; i < 8; i++)
     ewb(t++, __LPM(f+i));
 
   // Correct the FREND0
   ewb(EE_START_CC1100+0x22, (idx > 4 && idx < 10) ? 0x11 : 0x17);
 }
+
+#else
+
+void
+cc_set_pa(uint8_t idx)
+{
+  uint8_t *t = EE_START_CC1100+sizeof(CC1100_CFG);
+  if(idx > 10) idx  = 8;
+  if(idx >  5) idx -= 5;
+
+  for (uint8_t i = 0; i < 8; i++)
+    ewb(t++, i == 1 ? __LPM(CC1100_PA+idx) : 0);
+
+  ewb(EE_START_CC1100+0x22, 0x11);       // Correct the FREND0
+}
+#endif
 
 //--------------------------------------------------------------------
 void

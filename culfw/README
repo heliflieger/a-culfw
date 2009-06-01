@@ -45,7 +45,7 @@ Compile (optional)
 ==================
   Change into your device directory (e.g. CUL)
   Type "make", which will output text like:
-    Compiling C: FW_CUL.c
+    Compiling C: CUL.c
     [...]
 
 
@@ -60,12 +60,12 @@ Install / Flash the firmware
   A USB device "03eb:2ffa Atmel Corp." should appear.
   Now execute "make usbprogram", which will output text like:
     dfu-programmer at90usb162 erase
-    dfu-programmer at90usb162 flash FW_CUL.hex
+    dfu-programmer at90usb162 flash CUL.hex
     Validating...
     6312 bytes used (51.37%)
     dfu-programmer at90usb162 start
   The last command will reset the device, a new USB device should appear:
-  "03eb:204b Atmel Corp.", if it does try to reinsert the CUL without pressing
+  "03eb:204b Atmel Corp.". If not try to reinsert the CUL without pressing
   the micro-switch.
 
 Quick Test:

@@ -1,3 +1,8 @@
+Version 1.19 (Sun May 31 13:26:31 MEST 2009)
+- CU*: FHT buffers moved from EEPROM to RAM, with better buffer usage
+       There are 2 memory models, the default is more RAM efficient but needs
+       ca 200bytes more of program memory.
+
 Version 1.19 (Sat May 16 13:19:12 MEST 2009)
 - CUR: menu wraparound
 - CU*: FHT80b communication (no resend yet). TODO: FHT time sync
