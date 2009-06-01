@@ -191,35 +191,31 @@ Protocol
       off.
 
     T<hex>
-      Send out an FHT message. The CUL can work in 2 different modes. The first
-      one is to communicate with a number of FHT80b's. This is called the
-      FHT80b mode. The second one is to act itself as a FHT80b and control up
-      to 8 FHT8v actuators. This is called the FHT8v mode (not yet implemented).
-      Note: the CUL can work in both modes at the same time.
-
-      Special control commands:
+      Send out an FHT message.  Special control commands:
       - T01<CCCC>
         Set the "own" housecode to CCCC. The first byte will be used as the FHZ
         code in in FHT80b mode. This command will also clear all buffers.
       - T01
         Return the own housecode (hex)
       - T02
-        Return the FHT80b buffer. All FHT commands which are for other FHT's
-        (not matching our own housecode) are placed in the FHT80b buffer, which
-        has 50 slots. If an FHT80b is sending an actuator message, then the
-        buffer will be searched for matching housecodes, and all found messages
-        will be sent to this FHT80b.
-      - T03
-        Return the actuator buffer (used only in the FHT80v mode). The CUL will
-        send out actuator commands every 116 second, if one of the actuator
-        values are not ff. Set the actuator values with the "normal" FHT
-        command T<CCCC>0vA6YY, where CCCC is the housecode of the CUL, v is the
-        actuator number (use v=0 for all actuators), and YY is the value to be
-        sent to the actuator. Example: T123400A610
-      - T04
-        Return the seconds (decimal) until the next actuator message for the
-        own actuators. It is 0xff when no actuator messages are queued.
+        Return the FHT80b buffer. FHT80b commands are queued in an internal
+        buffer, which has place for about 20 messages. If an FHT80b is sending
+        an actuator message, then the buffer will be searched for matching
+        housecodes, and all found messages will be sent to this FHT80b.
 
+      - T03
+        Return the size of the remaining fht buffer (in bytes). There are two
+        (compile time option) models for the buffer.
+        - Model1 needs 3 byte per diffrent FHT + 2 byte per message. So the
+          default 48 bytes are enough for 1 FHT with 22 messages or 9 FHT's
+          with one message each or something inbetween.
+        - Model 2 uses 4 bytes per message, the 48 bytes can store 122 messages.
+
+      - T04<sec>
+        Set the internal second counter to <second>. Used by fhem to
+        synchronize the culfw seconds with the PC before sending the
+        hour/minute command to the fht.
+        
     t
       Output the time since boot. The output has the following form: 
       DDD HH:MM:SS:mmm. Note: the mmm msec has an 8msec resolution.
