@@ -19,9 +19,6 @@
 //    our own housecode.
 
 
-#define FHT_CSUM_START   12
-#define FHT_NMSG          2
-
 uint8_t fht_hc[2];    // Our housecode. The first byte for 80b communication
 
 #ifdef HAS_FHT_80b
@@ -147,7 +144,6 @@ fhtsend(char *in)
 #ifdef HAS_FHT_80b
     {                                  // FHT80b mode: Queue everything
 
-#define FHT_MINUTE     0x64
       // Look for an empty slot. Note: it should be a distinct ringbuffer for
       // each controlled fht
       if(!fht_addbuf(hb))
@@ -209,17 +205,6 @@ fht8v_timer(void)
 
 #ifdef HAS_FHT_80b
 
-#define FHT_ACTUATOR   0x00
-#define FHT_ACK        0x4B
-#define FHT_CAN_XMIT   0x53
-#define FHT_CAN_RCV    0x54
-#define FHT_ACK2       0x69
-#define FHT_START_XMIT 0x7D
-#define FHT_END_XMIT   0x7E
-
-#define FHT_DATA       0xff
-#define FHT_FOREIGN    0xff
-
 PROGMEM prog_uint8_t fht80b_state_tbl[] = {
   //FHT80b          //CUL, 0 for no answer
   FHT_ACTUATOR,     FHT_CAN_XMIT,       // We are deaf for the second ACTUATOR
@@ -243,7 +228,9 @@ fht_sendpacket(uint8_t *mbuf)
     my_delay_ms(80);           // Make us deaf for the second ACTUATOR packet.
   addParityAndSendData(mbuf, 5, FHT_CSUM_START, FHT_NMSG);
   ccRX();                      // reception might be lost due to LOVF
-  DC('T'); for(uint8_t i = 0; i < 5; i++) DH(mbuf[i],2); DH(0,2); DNL();
+  if(tx_report & REP_FHTPROTO) {
+    DC('T'); for(uint8_t i = 0; i < 5; i++) DH(mbuf[i],2); DH(0,2); DNL();
+  }
 }
 
 void
@@ -490,8 +477,9 @@ fht80b_print()
   if(!p[0])
     DS_P( PSTR("N/A") );
   while(p[0]) {
-    DH(p[1], 2);
-    DH(p[2], 2);
+    if(p != fht80b_buf)
+      DC(' ');
+    DH(p[1], 2); DH(p[2], 2);
     DC(':');
     for(i = 3; i < p[0]; i+= 2) {
       if(i > 3)
