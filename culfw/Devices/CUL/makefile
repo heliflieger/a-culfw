@@ -498,7 +498,7 @@ program: $(TARGET).hex $(TARGET).eep
 
 # Program the device by usb using dfu-program.  
 usbprogram: $(TARGET).hex
-	dfu-programmer $(MCU) erase
+	dfu-programmer $(MCU) erase || true
 	dfu-programmer $(MCU) flash $(TARGET).hex
 	dfu-programmer $(MCU) start
 

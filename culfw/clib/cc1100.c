@@ -197,6 +197,18 @@ cc_factory_reset(void)
 
   for(uint8_t i = 0;i<0x29;i++)
     ewb(t++, __LPM(CC1100_CFG+i));
+
+#ifdef BUSWARE_CUL
+  // check 433MHz version marker and patch default frequency
+  if (!bit_is_set(PINB, PB6)) {
+       t = EE_START_CC1100 + 0x0d;
+       ewb(t++, 0x10);
+       ewb(t++, 0xb0);
+       ewb(t++, 0x71);
+  }
+#endif   
+   
+
   cc_set_pa(8);
 }
 

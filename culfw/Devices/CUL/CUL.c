@@ -62,7 +62,7 @@ void
 start_bootloader(void)
 {
   cli();
-  
+
   /* move interrupt vectors to bootloader section and jump to bootloader */
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
@@ -86,6 +86,9 @@ EVENT_HANDLER(USB_Disconnect)
 int
 main(void)
 {
+
+  PORTB |= _BV( PB6 ); // Pull 433MHz marker
+
   spi_init();
   eeprom_init();
 
