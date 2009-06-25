@@ -13,18 +13,35 @@ uint8_t joy_inactive;
 void
 joy_init(void)
 {
+
+#ifdef CURV3
+
+  JOY_DDR1 &= ~(_BV(JOY_PIN2) | _BV(JOY_PIN3));
+  JOY_DDR2 &= ~(_BV(JOY_PIN1) | _BV(JOY_PIN4) | _BV(JOY_PIN5));
+
+  JOY_OUT_PORT1 |= (_BV(JOY_PIN2) | _BV(JOY_PIN3));
+  JOY_OUT_PORT2 |= (_BV(JOY_PIN1) | _BV(JOY_PIN4) | _BV(JOY_PIN5));
+
+#else
+
   JOY_DDR1 &= ~(_BV(JOY_PIN1) | _BV(JOY_PIN2) | _BV(JOY_PIN3));
   JOY_DDR2 &= ~(_BV(JOY_PIN4) | _BV(JOY_PIN5));
 
   JOY_OUT_PORT1 |= (_BV(JOY_PIN1) | _BV(JOY_PIN2) | _BV(JOY_PIN3));
   JOY_OUT_PORT2 |= (_BV(JOY_PIN4) | _BV(JOY_PIN5));
+
+#endif
 }
 
 static int
 check_key(void)
 {
   uint8_t key = KEY_NONE;
+#ifdef CURV3
+       if(!bit_is_set( JOY_IN_PORT2, JOY_PIN1)) key = KEY_ENTER;
+#else
        if(!bit_is_set( JOY_IN_PORT1, JOY_PIN1)) key = KEY_ENTER;
+#endif
   else if(!bit_is_set( JOY_IN_PORT1, JOY_PIN2)) key = KEY_RIGHT;
   else if(!bit_is_set( JOY_IN_PORT1, JOY_PIN3)) key = KEY_LEFT;
   else if(!bit_is_set( JOY_IN_PORT2, JOY_PIN4)) key = KEY_UP;

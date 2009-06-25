@@ -1,30 +1,3 @@
-#ifndef _BOARD_H
-#define _BOARD_H
-
-#define CURV3
-
-#define BOARD_ID_STR            "CUR"
-#define BOARD_ID_USTR           L"CUR"
-#define BUSWARE_CUR
-
-#define HAS_USB
-#define HAS_LCD
-#define HAS_FS
-#define HAS_SLEEP
-#define HAS_BATTERY
-#define HAS_RTC
-
-#undef  HAS_FHT_8v              // PROGMEM:  434b, MEM: 19b
-#define HAS_FHT_80b             // PROGMEM: 1158b, MEM:  5b+FHTBUF_SIZE
-#define FHTBUF_SIZE             128
-#define FULL_CC1100_PA          //  100 byte PROGMEM
-#define FHTBUF_MODEL1           // see fht.c for details
-
-#ifdef CURV3
-
-#include "board_v3.h"
-
-#else
 
 #define CC1100_CS_PORT  	PORTE
 #define CC1100_CS_DDR		DDRE
@@ -46,7 +19,7 @@
 
 #define LCD_BL_DDR              DDRC
 #define LCD_BL_PORT             PORTC
-#define LCD_BL_PIN              PC7
+#define LCD_BL_PIN              PC6
 #define LCD1_DDR                DDRB
 #define LCD1_PORT               PORTB
 #define LCD1_CS                 PB4
@@ -54,7 +27,7 @@
 #define LCD2_PORT               PORTE
 #define LCD2_RST                PE3
 
-#define BAT_DDR                 DDRF
+#define BAT_DDR                 DDRF    // todo
 #define BAT_PORT                PORTF
 #define BAT_PIN                 PINF
 #define BAT_PIN1                PF1
@@ -62,16 +35,16 @@
 #define BAT_MUX                 3
 
 #define JOY_DDR1                DDRE
-#define JOY_DDR2                DDRA
+#define JOY_DDR2                DDRB
 #define JOY_OUT_PORT1           PORTE
-#define JOY_OUT_PORT2           PORTA
+#define JOY_OUT_PORT2           PORTB
 #define JOY_IN_PORT1            PINE
-#define JOY_IN_PORT2            PINA
-#define JOY_PIN1                PE2     // Enter
+#define JOY_IN_PORT2            PINB
+#define JOY_PIN1                PB7     // Enter (moved from Port E)
 #define JOY_PIN2                PE6     // right
 #define JOY_PIN3                PE7     // left
-#define JOY_PIN4                PA0     // up
-#define JOY_PIN5                PA1     // down
+#define JOY_PIN4                PB6     // up
+#define JOY_PIN5                PB5     // down
 
 #define JOY_INT1		INT6
 #define JOY_INT1VECT    	INT6_vect
@@ -82,9 +55,9 @@
 #define JOY_INTREG		EICRB
 
 
-#define DF_DDR                  DDRB 
-#define DF_PORT                 PORTB 
-#define DF_CS                   PB6
+#define DF_DDR                  DDRD 
+#define DF_PORT                 PORTD 
+#define DF_CS                   PD7
 
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
@@ -102,6 +75,3 @@
 #define RTC_OUT_PORT            PORTE
 #define RTC_PIN                 PE4
 
-#endif
-
-#endif

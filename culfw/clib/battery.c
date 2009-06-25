@@ -73,12 +73,20 @@ batfunc(char *mode)
   uint16_t bv;
 
   bv  = get_adcw(BAT_MUX);
+#ifdef CURV3
+  if( !bit_is_set( PINA, PA5) ) DS_P( PSTR("DC powered "));   // not wired ;)
+  if( !bit_is_set( PINA, PA6) ) DS_P( PSTR("USB powered "));
+  if( !bit_is_set( PINA, PA4) ) DS_P( PSTR("charging"));
+  if( !bit_is_set( PINA, PA0) ) DS_P( PSTR("charged"));
+  if( !bit_is_set( PINA, PA7) ) DS_P( PSTR("error"));
+#else
   s1  = (bit_is_set( BAT_PIN, BAT_PIN1) ? 2 : 0);
   s1 |= (bit_is_set( BAT_PIN, BAT_PIN2) ? 1 : 0);
   if(s1==0) DS_P( PSTR("discharge"));
   if(s1==1) DS_P( PSTR("charged"));
   if(s1==2) DS_P( PSTR("charging"));
   if(s1==3) DS_P( PSTR("error"));
+#endif
 
   if(fromhex(mode+1,&b,1) && b == 1) {
 
@@ -111,13 +119,22 @@ bat_drawstate(void)
 
   lcd_line(WINDOW_LEFT+v1,TITLE_HEIGHT-1,       // and the red part
            WINDOW_RIGHT,TITLE_HEIGHT-1,
+#ifdef CURV3
+           bit_is_set( PINA, PA4 ) ? 0xf000 : 0xf0);  // charging:blue else red
+#else
            (s1==2 && USB_IsConnected) ? 0xf0 : 0xf000);// charging:blue else red
+#endif
 }
 #endif
 
 void
 bat_init(void)
 {
-  BAT_DDR  &= ~(_BV(BAT_PIN1) | _BV(BAT_PIN1));
-  BAT_PORT |= (_BV(BAT_PIN1) | _BV(BAT_PIN1));          // pull Battery stati
+#ifdef CURV3
+     DDRA  = 7;
+     PORTA = 0xf1 | _BV( PA2 ); // Pull and charge 500mA
+#else
+     BAT_DDR  &= ~(_BV(BAT_PIN1) | _BV(BAT_PIN1));
+     BAT_PORT |= (_BV(BAT_PIN1) | _BV(BAT_PIN1));          // pull Battery stati
+#endif
 }

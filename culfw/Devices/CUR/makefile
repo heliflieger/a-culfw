@@ -43,7 +43,7 @@
 #----------------------------------------------------------------------------
 
 # MCU name
-MCU = at90usb1286
+MCU = at90usb646
 
 # Target board (USBKEY, STK525, STK526, RZUSBSTICK, USER or blank for projects not requiring
 # MyUSB board drivers). If USER is selected, put custom board drivers in a directory called 
