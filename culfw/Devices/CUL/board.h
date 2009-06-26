@@ -34,6 +34,7 @@
 #define FHTBUF_SIZE             48
 #define FHTBUF_MODEL1           // see fht.c for details
 #undef  FULL_CC1100_PA          //  100 byte PROGMEM
+#define RCV_BUCKETS             2       // 25byte per bucket
 
 #define BUSWARE_CUL
 

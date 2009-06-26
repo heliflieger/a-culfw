@@ -28,59 +28,60 @@
 // KS300 NULL  854us high, 366us low
 // KS300 ONE:  366us high, 854us low
 
-#define FS20_ZERO      400    //   400uS
-#define FS20_ONE       600    //   600uS
-#define FS20_PAUSE      10    // 10000mS
+#define FS20_ZERO      400     //   400uS
+#define FS20_ONE       600     //   600uS
+#define FS20_PAUSE      10     // 10000mS
 
-#define TIMEDIFF       166    // tolerated diff to previous null value
-#define TIMEDIFF_RISE  266    // FS20: min diff between one and null (1200-800)
-#define TIMEDIFF_FALL -325    // KS300: min diff between one and null (366-854)
-#define MINTIME_RISE   533    // 2/3 of minimum rise-rise: FS20 NULL
-#define MAXTIME_RISE  1830    // 3/2 of maximum rise-rise: KS300 complete msg
-#define MINTIME_FALL   100    // We have a problem timing falling edges
-#define MAXTIME_FALL  1280    // 3/2 of maximum rise-fall: KS300 NULL
-#define SILENCE  (4*MAXTIME_RISE)  // End of message
+#define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
+#define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
+#define SILENCE    4000        // End of message
 
-#define RISING_EDGE 0
-#define FALLING_EDGE 1
+
 #define STATE_RESET   0
 #define STATE_INIT    1
 #define STATE_SYNC    2
 #define STATE_COLLECT 3
+#define STATE_HMS     4
 
 // For CUR request we need 
 #define MAXMSG 17               // inclusive parity (Netto 15)
-                               
+
+typedef struct {
+  uint8_t hightime, lowtime;
+} wave_t;
 
 // One bucket to collect the "raw" bits
 typedef struct {
-     uint8_t state, sync, byteidx, bitidx;
-     uint8_t data[MAXMSG];      // contains parity and checksum, but no sync
-     uint16_t zero;             // measured zero duration
-     uint16_t avg;              // (zero+one/2), used to decide 0 or 1
+  uint8_t state, byteidx, sync, bitidx; 
+  uint8_t data[MAXMSG];         // contains parity and checksum, but no sync
+  wave_t zero, one; 
 } bucket_t;
 
 
-#define N_BUCKETS 4              // Must be even: a "rise" and a "fall" bucket
 uint16_t credit_10ms;
 uint8_t tx_report;              // global verbose / output-filter
-static bucket_t bucket_array[N_BUCKETS];
-static uint8_t bucket_in, bucket_out, bucket_nrused;
-static uint8_t oby, obuf[MAXMSG], nibble;    // parity-stripped output
-static uint8_t roby, robuf[MAXMSG];  // For repeat check: last buffer and time
-static uint8_t rday,rhour,rminute,rsec,rhsec;
-static uint16_t wait_high_zero, wait_low_zero, wait_high_one, wait_low_one;
+
+
+static bucket_t bucket_array[RCV_BUCKETS];
+static uint8_t bucket_in;                 // Pointer to the in(terrupt) queue
+static uint8_t bucket_out;                // Pointer to the out (analyze) queue
+static uint8_t bucket_nrused;             // Number of unprocessed buckets
+static uint8_t oby, obuf[MAXMSG], nibble; // parity-stripped output
+static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
+static uint32_t reptime;
 static uint8_t cc_on;
+static uint8_t hightime;
 
 static void send_bit(uint8_t bit);
 static void sendraw(uint8_t msg[], uint8_t nbyte, uint8_t bitoff,
                     uint8_t repeat, uint8_t pause);
-
-
 static uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
 static uint8_t cksum2(uint8_t *buf, uint8_t len);
 static uint8_t cksum3(uint8_t *buf, uint8_t len);
-static void reset_both_in_buckets(void);
+static void reset_input(void);
+static void addbit(bucket_t *b, uint8_t bit);
+static void delbit(bucket_t *b);
+static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime);
 
 void
 tx_init(void)
@@ -92,8 +93,8 @@ tx_init(void)
 
   credit_10ms = MAX_CREDIT/2;
 
-  for(int i = 1; i < N_BUCKETS; i += 2) // falling buckets start at 1
-    bucket_array[i].state = STATE_INIT;
+  for(int i = 1; i < RCV_BUCKETS; i ++)
+    bucket_array[i].state = STATE_RESET;
   cc_on = 0;
 }
 
@@ -135,14 +136,16 @@ set_txreport(char *in)
   set_txrestore();
 }
 
+////////////////////////////////////////////////////
+// Sender
 static void
 send_bit(uint8_t bit)
 {
   CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  my_delay_us(bit ? wait_high_one : wait_high_zero);
+  my_delay_us(bit ? FS20_ONE : FS20_ZERO);
 
   CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-  my_delay_us(bit ? wait_low_one : wait_low_zero);
+  my_delay_us(bit ? FS20_ONE : FS20_ZERO);
 }
 
 
@@ -243,8 +246,6 @@ addParityAndSendData(uint8_t *hb, uint8_t hblen,
     oby++; obi = 7;
   }
 
-  wait_high_zero = wait_low_zero = FS20_ZERO;
-  wait_high_one  = wait_low_one  = FS20_ONE;
   sendraw(obuf, oby, obi, repeat, FS20_PAUSE);
 }
 
@@ -252,19 +253,6 @@ void
 fs20send(char *in)
 {
   addParityAndSend(in, 6, 3);
-}
-
-void
-rawsend(char *in)
-{
-  uint8_t hb[16];
-
-  fromhex(in+1, hb, 16);
-  wait_high_zero = hb[0]*10;
-  wait_low_zero  = hb[1]*10;
-  wait_high_one  = hb[2]*10;
-  wait_low_one   = hb[3]*10;
-  sendraw(hb+8, hb[6], 7-hb[7], hb[5], hb[4]);
 }
 
 
@@ -305,7 +293,7 @@ cksum3(uint8_t *buf, uint8_t len)               // KS300
 static uint8_t
 analyze(bucket_t *b, uint8_t t)
 {
-  uint8_t cnt=0, iserr = 0, max, iby = 0;
+  uint8_t cnt=0, max, iby = 0;
   int8_t ibi=7, obi=7;
 
   nibble = 0;
@@ -320,12 +308,10 @@ analyze(bucket_t *b, uint8_t t)
       ibi=7;
     }
 
-    if(t == TYPE_KS300 && obi == 3) {                           // nibble check
+    if(t == TYPE_KS300 && obi == 3) {                   // nibble check
       if(!nibble) {
-        if(!bit) {
-          iserr = 1;
-          break;
-        }
+        if(!bit)
+          return 0;
         nibble = !nibble;
         continue;
       }
@@ -334,16 +320,12 @@ analyze(bucket_t *b, uint8_t t)
 
     if(obi == -1) {                                    // next byte
       if(t == TYPE_FS20) {
-        if(parity_even_bit(obuf[oby]) != bit) {
-          iserr = 2;
-          break;
-        }
+        if(parity_even_bit(obuf[oby]) != bit)
+          return 0;
       }
       if(t == TYPE_EM || t == TYPE_KS300) {
-        if(!bit) {
-          iserr = 3;
-          break;
-        }
+        if(!bit)
+          return 0;
       }
       obuf[++oby] = 0;
       obi = 7;
@@ -358,16 +340,73 @@ analyze(bucket_t *b, uint8_t t)
       obi--;
     }
   }
-  if(cnt <= max && !iserr)
-    iserr = 4;
-  else if(!iserr && t == TYPE_EM && obi == -1)        // missing last stopbit
+  if(cnt <= max)
+    return 0;
+  else if(t == TYPE_EM && obi == -1)                  // missing last stopbit
     oby++;
-  else if(nibble) {                                   // half byte msg 
+  else if(nibble)                                     // half byte msg 
     oby++;
+  if(oby == 0)
+    return 0;
+  return 1;
+}
+
+typedef struct  {
+  uint8_t *data;
+  uint8_t byte, bit;
+} input_t;
+
+uint8_t
+getbit(input_t *in)
+{
+  uint8_t bit = (in->data[in->byte] & _BV(in->bit)) ? 1 : 0;
+  if(in->bit-- == 0) {
+    in->byte++;
+    in->bit=7;
   }
-  if(oby == 0 && !iserr)
-    iserr = 5;
-  return !iserr;
+  return bit;
+}
+
+uint8_t
+getbits(input_t* in, uint8_t nbits, uint8_t msb)
+{
+  uint8_t ret = 0, i;
+  for (i = 0; i < nbits; i++) {
+    if (getbit(in) )
+      ret = ret | _BV( msb ? nbits-i-1 : i );
+  }
+  return ret;
+}
+
+uint8_t
+analyze_hms(bucket_t *b)
+{
+  input_t in;
+  in.byte = 0;
+  in.bit = 7;
+  in.data = b->data;
+
+  oby = 0;
+  if(b->byteidx*8 + (7-b->bitidx) < 69) 
+    return 0;
+
+  uint8_t crc = 0;
+  for(oby = 0; oby < 6; oby++) {
+    obuf[oby] = getbits(&in, 8, 0);
+    if(parity_even_bit(obuf[oby]) != getbit( &in ))
+      return 0;
+    if(getbit(&in))
+      return 0;
+    crc = crc ^ obuf[oby];
+  }
+
+  // Read crc
+  uint8_t CRC = getbits(&in, 8, 0);
+  if(parity_even_bit(CRC) != getbit(&in))
+    return 0;
+  if(crc!=CRC)
+    return 0;
+  return 1;
 }
 
 
@@ -377,55 +416,59 @@ analyze(bucket_t *b, uint8_t t)
 TASK(RfAnalyze_Task)
 {
   uint8_t datatype = 0;
-  bucket_t *rb, *fb;            // Rising and falling bucket pointer
+  bucket_t *b;
 
   if(bucket_nrused == 0)
     return;
 
   LED_ON();
 
-  rb = bucket_array + bucket_out;
-  fb = rb + 1;
+  b = bucket_array + bucket_out;
 
-  if(rb->state == STATE_COLLECT) {
-
-    if(analyze(rb, TYPE_FS20)) {
-      oby--;                                  // Separate the checksum byte
-      if(cksum1(6, obuf, oby) == obuf[oby]) {
-        datatype = TYPE_FS20;
-      } else if(cksum1(12, obuf, oby) == obuf[oby]) {
-        datatype = TYPE_FHT;
-      } else {
-        datatype = 0;
-      }
+  if(analyze(b, TYPE_FS20)) {
+    oby--;                                  // Separate the checksum byte
+    if(cksum1(6, obuf, oby) == obuf[oby]) {
+      datatype = TYPE_FS20;
+    } else if(cksum1(12, obuf, oby) == obuf[oby]) {
+      datatype = TYPE_FHT;
+    } else {
+      datatype = 0;
     }
-
-    if(!datatype && analyze(rb, TYPE_EM)) {
-      oby--;                                 
-      if(oby == 9 && cksum2(obuf, oby) == obuf[oby])
-        datatype = TYPE_EM;
-    }
-
   }
 
+  if(!datatype && analyze(b, TYPE_EM)) {
+    oby--;                                 
+    if(oby == 9 && cksum2(obuf, oby) == obuf[oby])
+      datatype = TYPE_EM;
+  }
 
-  if(!datatype && fb->state == STATE_COLLECT) {
-    if(analyze(fb, TYPE_KS300)) {
+  if(!datatype && analyze_hms(b))
+    datatype = TYPE_HMS;
+
+  if(!datatype) {
+    // As there is no last rise, we have to add the last bit by hand
+    addbit(b, wave_equals(&b->one, hightime, b->one.lowtime));
+    if(analyze(b, TYPE_KS300)) {
       oby--;                                 
       if(cksum3(obuf, oby) == (obuf[oby-nibble]&0xf))
         datatype = TYPE_KS300;
     }
+    if(!datatype)
+      delbit(b);
+  }
 
-    // This protocol is not yet understood
-    if(!datatype && fb->byteidx == 4 && fb->bitidx == 4) {
-      oby = 0;
-      obuf[oby] = fb->data[oby]; oby++;
-      obuf[oby] = fb->data[oby]; oby++;
-      obuf[oby] = fb->data[oby]; oby++;
-      obuf[oby] = fb->data[oby]; oby++;
-      obuf[oby] = fb->data[oby]; oby++;
-      datatype = TYPE_HRM;
-    }
+  // This protocol is not yet understood. It should be last in the row!
+  if(!datatype && b->byteidx == 4 && b->bitidx == 4 &&
+     wave_equals(&b->zero, TSCALE(960), TSCALE(480))) {
+
+    addbit(b, wave_equals(&b->one, hightime, TSCALE(480)));
+    oby = 0;
+    obuf[oby] = b->data[oby]; oby++;
+    obuf[oby] = b->data[oby]; oby++;
+    obuf[oby] = b->data[oby]; oby++;
+    obuf[oby] = b->data[oby]; oby++;
+    obuf[oby] = b->data[oby]; oby++;
+    datatype = TYPE_HRM;
   }
 
 
@@ -435,29 +478,22 @@ TASK(RfAnalyze_Task)
     if(!(tx_report & REP_REPEATED)) {      // Filter repeated messages
       
       // compare the data
+
+      uint32_t ctime = (((24*day + hour)*60 + minute)*60 + sec)*125+ hsec;
+
       if(roby == oby) {
         for(roby = 0; roby < oby; roby++)
           if(robuf[roby] != obuf[roby])
             break;
 
-        if(roby == oby) {       // data is equal, substract time
-          uint16_t diff;
-          diff = (day-rday)*24+(hour-rhour);
-          if(diff <= 1) {
-            diff = diff*3600+(minute-rminute)*60+(sec-rsec);
-            if(diff <= 1) {
-              diff = diff*125+(hsec-rhsec);
-              if(diff <= 38)    // 38/125 = 0.3 sec
-                isrep = 1;
-            }
-          }
-        }
+        if(roby == oby && ctime - reptime < 38) // 38/125 = 0.3 sec
+          isrep = 1;
       }
 
       // save the data
       for(roby = 0; roby < oby; roby++)
         robuf[roby] = obuf[roby];
-      rday=day; rhour=hour; rminute=minute; rsec=sec; rhsec=hsec;
+      reptime = ctime;
 
     }
 
@@ -465,7 +501,7 @@ TASK(RfAnalyze_Task)
        (obuf[2] == FHT_ACK        || obuf[2] == FHT_ACK2    ||
         obuf[2] == FHT_CAN_XMIT   || obuf[2] == FHT_CAN_RCV ||
         obuf[2] == FHT_START_XMIT || obuf[2] == FHT_END_XMIT))
-      isrep = 0;
+      isrep = 1;
 
     if(!isrep) {
       DC(datatype);
@@ -485,15 +521,15 @@ TASK(RfAnalyze_Task)
 
   if(tx_report & REP_BITS) {
 
-    bucket_t *b = (rb->state == STATE_COLLECT ? rb : fb);
-
     DC('p');
-    display_hex((rb->state<<4)|fb->state, 3, ' ');
-    DU(b->zero, 5);
-    DU(b->avg,  5);
-    DU(b->sync, 3);
-    DU(b->byteidx, 3);
-    DU(7-b->bitidx, 2);
+    DU(b->state,        2);
+    DU(b->zero.hightime,4);
+    DU(b->zero.lowtime, 4);
+    DU(b->one.hightime, 4);
+    DU(b->one.lowtime,  4);
+    DU(b->sync,         3);
+    DU(b->byteidx,      3);
+    DU(7-b->bitidx,     2);
     DC(' ');
     if(tx_report & REP_RSSI) {
       DH(cc1100_readReg(CC1100_RSSI),2);
@@ -505,14 +541,13 @@ TASK(RfAnalyze_Task)
     for(uint8_t i=0; i < b->byteidx; i++)
        DH(b->data[i],2);
     DNL();
+
   }
 
-  rb->state = STATE_RESET;
-  fb->state = STATE_INIT;
-
-  bucket_nrused -= 2;
-  bucket_out += 2;
-  if(bucket_out == N_BUCKETS)
+  b->state = STATE_RESET;
+  bucket_nrused--;
+  bucket_out++;
+  if(bucket_out == RCV_BUCKETS)
     bucket_out = 0;
 
   LED_OFF();
@@ -525,11 +560,10 @@ TASK(RfAnalyze_Task)
 }
 
 static void
-reset_both_in_buckets(void)
+reset_input(void)
 {
   TIMSK1 = 0;
-  bucket_array[bucket_in  ].state = STATE_RESET;
-  bucket_array[bucket_in+1].state = STATE_INIT;
+  bucket_array[bucket_in].state = STATE_RESET;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -539,122 +573,184 @@ ISR(TIMER1_COMPA_vect)
 {
   TIMSK1 = 0;                           // Disable "us"
 
-  if(bucket_array[bucket_in  ].state != STATE_COLLECT &&    // false alarm
-     bucket_array[bucket_in+1].state != STATE_COLLECT) {
-    reset_both_in_buckets();
+  if(bucket_array[bucket_in].state < STATE_COLLECT ||
+     bucket_array[bucket_in].byteidx < 2) {    // false alarm
+    reset_input();
     return;
 
   }
 
-  if(bucket_nrused+2 == N_BUCKETS) {     // each bucket is full: reuse the last
+  if(bucket_nrused+1 == RCV_BUCKETS) {   // each bucket is full: reuse the last
 
     if(tx_report & REP_BITS)
       DS_P(PSTR("BOVF\r\n"));            // Bucket overflow
 
-    reset_both_in_buckets();
+    reset_input();
 
   } else {
 
-    bucket_nrused += 2;
-    bucket_in += 2;
-    if(bucket_in == N_BUCKETS)
+    bucket_nrused++;
+    bucket_in++;
+    if(bucket_in == RCV_BUCKETS)
       bucket_in = 0;
 
   }
 
 }
 
+static uint8_t
+wave_equals(wave_t *a, uint8_t htime, uint8_t ltime)
+{
+  int16_t dlow = a->lowtime-ltime;
+  int16_t dhigh = a->hightime-htime;
+  int16_t dcomplete  = (a->lowtime+a->hightime) - (ltime+htime);
+  if(dlow      < TDIFF && dlow      > -TDIFF &&
+     dhigh     < TDIFF && dhigh     > -TDIFF &&
+     dcomplete < TDIFF && dcomplete > -TDIFF)
+    return 1;
+  return 0;
+}
+
+uint8_t
+makeavg(uint8_t i, uint8_t j)
+{
+  return (i+i+i+j)/4;
+}
+
+static void
+addbit(bucket_t *b, uint8_t bit)
+{
+  if(b->byteidx>=sizeof(b->data)){
+    reset_input();
+    return;
+  }
+  if(bit)
+    b->data[b->byteidx] |= _BV(b->bitidx);
+
+  if(b->bitidx-- == 0) {           // next byte
+    b->bitidx = 7;
+    b->data[++b->byteidx] = 0;
+  }
+}
+
+static void
+delbit(bucket_t *b)
+{
+  if(b->bitidx++ == 7) {           // prev byte
+    b->bitidx = 0;
+    b->byteidx--;
+  }
+}
+
 //////////////////////////////////////////////////////////////////////
 // "Edge-Detected" Interrupt Handler
 ISR(CC1100_INTVECT)
 {
-  uint8_t  rf;                          // 0: rise, 1: fall
-  bucket_t *b;                          // where to fill in the bit
-  uint16_t c = TCNT1;                   // catch the time!
+  uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
+  bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
+  uint8_t lowtime;
 
-  if(bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
-    TCNT1 = 0;                          // restart timer
-    // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
-    TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
-    rf = RISING_EDGE;
-  } else {
-    rf = FALLING_EDGE;
+  if (b->state == STATE_HMS) {
+    if(c <  TSCALE(750))
+      return;
+    if(c > TSCALE(1250)) {
+      reset_input();
+      return;
+    }
   }
-  b = bucket_array+bucket_in+rf;        // HACK: falling / rising bucket
+
+  //////////////////
+  // Falling edge
+  if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
+    if(b->state == STATE_HMS) {
+      addbit(b, 1);
+      TCNT1 = 0;
+    } else {
+      hightime = c;
+    }
+    return;
+
+  }
+
+  lowtime = c-hightime;
+  TCNT1 = 0;                          // restart timer
+  if(b->state == STATE_HMS) {
+    addbit(b, 0);
+    return;
+  }
+
+  ///////////////////////
+  // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
+  TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
+
 
   if(tx_report & REP_MONITOR) {
-    DC((rf==RISING_EDGE ? 'r' : 'f') + b->state);
     if(tx_report & REP_BINTIME) {
-      DC((c>>8) & 0xff);
-      DC( c     & 0xff);
+      DC('r' + b->state); DH(hightime,2); DH(lowtime,2);
     }
     if(!(tx_report & ~(REP_MONITOR|REP_BINTIME)) ) // ignore the rest
       return;
   }
 
-  if(b->state == STATE_RESET) {  // Rise: timer is reset, start timing
 
-    b->state = STATE_INIT;
 
-  } else if((rf==RISING_EDGE  && (c<MINTIME_RISE||c>MAXTIME_RISE)) ||
-            (rf==FALLING_EDGE && (c<MINTIME_FALL||c>MAXTIME_FALL))) {
+  if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
 
-    reset_both_in_buckets();
-
-  } else if(b->state == STATE_INIT) {   // first sync bit, cannot compare yet
-
-    b->zero  = c;
+    b->zero.hightime = hightime;
+    b->zero.lowtime = lowtime;
     b->sync  = 1;
     b->state = STATE_SYNC;
 
   } else if(b->state == STATE_SYNC) {   // sync: lots of zeroes
 
-    int16_t d = c - b->zero;
+    if(wave_equals(&b->zero, hightime, lowtime)) {
 
-    if (-TIMEDIFF < d && d < TIMEDIFF) {// looks like an additional zero
+      b->zero.hightime = makeavg(b->zero.hightime, hightime);
+      b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+      b->sync++;
 
-      b->sync++;                        // (3*z+c)/4 is cheaper then sum/sync
-      b->zero = (b->zero+b->zero+b->zero+c)/4;
+    } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
 
-    } else if (b->sync>=6 && ((rf==RISING_EDGE  && d>TIMEDIFF_RISE) ||
-                              (rf==FALLING_EDGE && d<TIMEDIFF_FALL))) {
-                   
-      b->avg = (b->zero+c)/2;           // average between 0 and 1
+      if (b->sync >= 12 &&
+          (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
+        b->state = STATE_HMS;
+
+      } else {
+        b->state = STATE_COLLECT;
+
+      }
+
+      b->one.hightime = hightime;
+      b->one.lowtime  = lowtime;
       b->byteidx = 0;
       b->bitidx  = 7;
       b->data[0] = 0;
-      b->state = STATE_COLLECT;
+
       OCR1A = SILENCE;
       TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
 
-    } else {
+    } else {                            // too few sync bits
 
-      // We are here if abs(diff) > 166 and:
-      // RISING_EDGE:  d < 266.  Ideal FS20: 400, KS300: 0
-      // FALLING_EDGE: d >-325.  Ideal FS20: 200, KS300: -488
-      if(rf == RISING_EDGE)
-        reset_both_in_buckets();
-      else
-        b->state = STATE_INIT;
+      reset_input();
 
     }
 
   } else {                              // STATE_COLLECT
 
-    if(b->byteidx>=sizeof(b->data)) {
-
-      reset_both_in_buckets();
-
-    } else {
-
-      if((rf==RISING_EDGE && c > b->avg) || (rf==FALLING_EDGE && c < b->avg))
-        b->data[b->byteidx] |= _BV(b->bitidx);
-
-      if(b->bitidx-- == 0) {           // next byte
-        b->bitidx = 7;
-        b->data[++b->byteidx] = 0;
+    if(wave_equals(&b->one, hightime, lowtime)) {
+      addbit(b, 1);
+      if(b->byteidx == 0) {
+        b->one.hightime = makeavg(b->one.hightime, hightime);
+        b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
       }
 
+    } else if(wave_equals(&b->zero, hightime, lowtime)) {
+      addbit(b, 0);
+
+    } else {
+      reset_input();
+
     }
+
   }
 }

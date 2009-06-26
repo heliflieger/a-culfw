@@ -19,6 +19,7 @@
 #define FHTBUF_SIZE             128
 #define FULL_CC1100_PA          //  100 byte PROGMEM
 #define FHTBUF_MODEL1           // see fht.c for details
+#define RCV_BUCKETS             4  // 25b. Syslog is slow -> need more then CUL
 
 #ifdef CURV3
 

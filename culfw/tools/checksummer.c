@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #define uint8_t unsigned char
 #define int8_t char
@@ -6,10 +7,11 @@
 #define _BV(a) (1<<(a))
 
 #define TYPE_EM      'E'
-#define TYPE_HRM     'H'        // Hoermann
+#define TYPE_HRM     'R'        // Hoermann
 #define TYPE_FHT     'T'
 #define TYPE_FS20    'F'
 #define TYPE_KS300   'K'
+#define TYPE_HMS     'H'
 
 #define MAXMSG  17
 typedef struct pxx {
@@ -72,6 +74,7 @@ analyze(bucket_t *b, uint8_t t)
   uint8_t cnt=0, iserr = 0, max, iby = 0;
   int8_t ibi=7, obi=7;
 
+printf("======== Checking: %c\n", t);
   nibble = 0;
   oby = 0;
   max = b->byteidx*8+(7-b->bitidx);
@@ -138,9 +141,86 @@ printf("\nCNT: %d, ISERR: %d\n", cnt, iserr);
 }
 /////////////////
 
+typedef struct  {
+  uint8_t *data;
+  uint8_t byte, bit;
+} input_t;
+
+uint8_t
+getbit(input_t *in)
+{
+  uint8_t bit = (in->data[in->byte] & _BV(in->bit)) ? 1 : 0;
+  if(in->bit-- == 0) {
+    in->byte++;
+    in->bit=7;
+  }
+  return bit;
+}
+
+uint8_t
+getbits(input_t* in, uint8_t nbits, uint8_t msb)
+{
+  uint8_t ret = 0, i;
+  for (i = 0; i < nbits; i++) {
+    if (getbit(in) )
+      ret = ret | _BV( msb ? nbits-i-1 : i );
+  }
+  return ret;
+}
+
+uint8_t
+analyze_hms(bucket_t *b)
+{
+printf("======== Checking: HMS\n");
+  input_t in;
+  in.byte = 0;
+  in.bit = 7;
+  in.data = b->data;
+
+  oby = 0;
+  if(b->byteidx*8 + (7-b->bitidx) < 69) 
+{
+printf("Not enough bits\n");
+          return 0;
+}
+
+  uint8_t crc = 0;
+  for(oby = 0; oby < 6; oby++) {
+    obuf[oby] = getbits(&in, 8, 0);
+printf("got byte %d at %d/%d\n", obuf[oby], in.byte, in.bit);
+    if(parity_even_bit(obuf[oby]) != getbit( &in ))
+{
+printf("Wrong parity at %d/%d\n", in.byte, in.bit);
+      return 0;
+}
+    if(getbit(&in))
+{
+printf("Wrong top bit at %d/%d\n", in.byte, in.bit);
+      return 0;
+    }
+    crc = crc ^ obuf[oby];
+  }
+
+  // Read crc
+  uint8_t CRC = getbits(&in, 8, 0);
+  if(parity_even_bit(CRC) != getbit(&in))
+{
+printf("Wrong parity at %d/%d\n", in.byte, in.bit);
+          return 0;
+}
+  if(crc!=CRC)
+{
+printf("BAD CRC: %d vs. %d\n", crc, CRC);
+          return 0;
+}
+  return 1;
+}
 
 
-char *data[] = {
+
+
+
+#if 0
     // FS20
     "32994004D215B8",
 
@@ -177,8 +257,15 @@ char *data[] = {
     //"40D077A7344F4403A500BC80",
     //"80C054B7B6DF04033F00FE80",
     //"80C044A6B6D88402B580C000",
-  0
-};
+
+    //HMS: 
+    // 8 5 3F09C8426240800444   810e04130551a001fce4000021190200
+    // 8 5 3F09C841A400000F54   810e048e0551a001fce4000021960000
+    // 8 5 3F09C8432800000564   810e044b0551a001fce4000021530000
+
+
+
+#endif
 
 int
 fromhex(const char *in, uint8_t *out, uint8_t buflen)
@@ -209,30 +296,26 @@ int
 main(int ac, char *av[])
 {
   int datatype = 0, i, j, l, cs;
-  int bucket_type = 0;
-  if(*av[1] != 'F')
-    bucket_type = 1;
 
-  px1.byteidx = strtol(av[2], 0, 0);
-  px1.bitidx = strtol(av[3], 0, 0);
+  px1.byteidx = strtol(av[1], 0, 0);
+  px1.bitidx = strtol(av[2], 0, 0);
   printf("%d / %d\n", px1.byteidx, px1.bitidx);
 
-  for(j = 4; j < ac; j++) {
+  for(j = 3; j < ac; j++) {
     char *s = av[j];
     l = fromhex(s, px1.data, sizeof(px1.data));
     for(i = 0; i < l; i++)
       printf("%02x", px1.data[i]);
     printf("\n");
 
-    if(bucket_type == 0) {
-      if(analyze(&px1, TYPE_FS20))
-        datatype = TYPE_FS20;
-      else if(analyze(&px1, TYPE_EM))
-        datatype = TYPE_EM;
-    } else {
-      if(analyze(&px1, TYPE_KS300))
-        datatype = TYPE_KS300;
-    }
+    if(analyze(&px1, TYPE_FS20))
+      datatype = TYPE_FS20;
+    else if(analyze(&px1, TYPE_EM))
+      datatype = TYPE_EM;
+    else if(analyze(&px1, TYPE_KS300))
+      datatype = TYPE_KS300;
+    else if(analyze_hms(&px1))
+      datatype = TYPE_HMS;
 
     printf("%s (%c, Nibble: %d, OBY: %d)\n", s, datatype, nibble, oby);
     if(datatype) {
@@ -276,6 +359,8 @@ main(int ac, char *av[])
       printf("  E: Comp: %x Sent: %x\n\n", cksum2(obuf, oby), cs);
     } else if(datatype == TYPE_KS300) {
       printf("  K: Comp: %x Sent: %x\n\n", cksum3(obuf, oby), cs);
+    } else if(datatype == TYPE_FS20) {
+      printf("  H: Comp: %x Sent: %x\n\n", cksum3(obuf, oby), cs);
     } else {
       printf("Unknown.\n");
     }

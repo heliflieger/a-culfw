@@ -256,6 +256,7 @@ Protocol
                low byte) of the internal microsecond timer. This is binary!
       - Bit 5: RSSI: report RSSI value as an additional HEX byte after digested
                data or as a separate byte if Bit 3 is set too.
+      - Bit 6: Report FHT protocol messages (ack, etc)
 
       Note: 00 disables radio reception, any other value initialize the radio
       chip and enable reception.
@@ -299,8 +300,10 @@ Protocol
     For S300TH:
       KaaTTHTHH
         Data must be read backwards
+    For HMS:
+      Hxxxxxxxxxxxx
     For Hoermann Garage door openers:
-      Hxxxxx
+      Rxxxxx
         Note: this protocol is not really understood.
 
     If bit 3 in the X command is set, then report raw data, even if it has a

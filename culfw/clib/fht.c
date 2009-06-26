@@ -70,7 +70,7 @@ fhtsend(char *in)
   l = fromhex(in+1, hb, 6);
 
   if(l == 3 && hb[0] == 1) {                // Set housecode, clear buffers
-    if(fht_hc[0] != hb[1] && fht_hc[1] != hb[2]) {
+    if(fht_hc[0] != hb[1] || fht_hc[1] != hb[2]) {
       ewb(EE_FHTID  , hb[1]);               // 1.st byte: 80b relevant
       ewb(EE_FHTID+1, hb[2]);               // 1.st+2.nd byte: 8v relevant
     }

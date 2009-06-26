@@ -1,4 +1,12 @@
-Version 1.19 (Sun May 31 13:26:31 MEST 2009)
+Version 1.22 (Tue Jun 26 2009)
+- CU*: HMS support
+- CUR: V3 board support
+
+Version 1.21 (Tue Jun 02 2009)
+- CU*: FHT protocol filtering flag (X64)
+- CUL: CUL 433 initialization
+
+Version 1.20 (Sun May 31 13:26:31 MEST 2009)
 - CU*: FHT buffers moved from EEPROM to RAM, with better buffer usage
        There are 2 memory models, the default is more RAM efficient but needs
        ca 200bytes more of program memory.

@@ -56,8 +56,8 @@ raw2percent(uint16_t bv)
   if(bv < 761) bv = 761;
   bv -= 760;
   if(bv > 240) bv = 240;
-  uint8_t b = (uint8_t)bv;
 
+  uint8_t b = (uint8_t)bv;
   for(s1 = 1; s1 < sizeof(bat); s1++)
     if(b <= bat[s1])
       break;
@@ -69,17 +69,19 @@ raw2percent(uint16_t bv)
 void
 batfunc(char *mode)
 {
-  uint8_t s1, b;
+  uint8_t b;
   uint16_t bv;
 
-  bv  = get_adcw(BAT_MUX);
 #ifdef CURV3
+  bv  = get_adcw(BAT_MUX);
   if( !bit_is_set( PINA, PA5) ) DS_P( PSTR("DC powered "));   // not wired ;)
   if( !bit_is_set( PINA, PA6) ) DS_P( PSTR("USB powered "));
   if( !bit_is_set( PINA, PA4) ) DS_P( PSTR("charging"));
   if( !bit_is_set( PINA, PA0) ) DS_P( PSTR("charged"));
   if( !bit_is_set( PINA, PA7) ) DS_P( PSTR("error"));
 #else
+  uint8_t s1;
+  bv  = get_adcw(BAT_MUX);
   s1  = (bit_is_set( BAT_PIN, BAT_PIN1) ? 2 : 0);
   s1 |= (bit_is_set( BAT_PIN, BAT_PIN2) ? 1 : 0);
   if(s1==0) DS_P( PSTR("discharge"));

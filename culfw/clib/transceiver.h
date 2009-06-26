@@ -4,10 +4,11 @@
 #include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
 
 #define TYPE_EM      'E'
-#define TYPE_HRM     'H'        // Hoermann
+#define TYPE_HMS     'H'
 #define TYPE_FHT     'T'
 #define TYPE_FS20    'F'
 #define TYPE_KS300   'K'
+#define TYPE_HRM     'R'        // Hoermann
 
 #define REP_KNOWN    _BV(0)
 #define REP_REPEATED _BV(1)
