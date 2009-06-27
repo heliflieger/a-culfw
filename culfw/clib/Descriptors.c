@@ -198,6 +198,16 @@ USB_Descriptor_String_t ProductString PROGMEM =
   UnicodeString:    BOARD_ID_USTR
 };
 
+#ifdef BUSWARE_CUL
+USB_Descriptor_String_t ProductString433 PROGMEM =
+{
+  Header:           {Size: USB_STRING_LEN(20),
+                     Type: DTYPE_String},
+  UnicodeString:    BOARD_ID_USTR
+};
+#endif
+
+
 bool USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex,
                        void** const DescriptorAddress, uint16_t* const DescriptorSize)
 {
@@ -224,6 +234,11 @@ bool USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex,
           Size    = pgm_read_byte(&ManufacturerString.Header.Size);
           break;
         case 0x02:
+#ifdef BUSWARE_CUL
+          if (!bit_is_set(PINB, PB6))
+            Address = DESCRIPTOR_ADDRESS(ProductString433);
+          else
+#endif
           Address = DESCRIPTOR_ADDRESS(ProductString);
           Size    = pgm_read_byte(&ProductString.Header.Size);
           break;

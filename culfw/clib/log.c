@@ -53,7 +53,7 @@ Log(char *data)
 {
   uint8_t now[6], fmtnow[LOG_TIMELEN+1];
 
-  if(logoffset >= 65000)
+  if(logoffset >= 1024)
     log_rotate();
   rtcget(now);
 

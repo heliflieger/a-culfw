@@ -158,8 +158,11 @@ prepare_boot(char *in)
 void
 version(char *unused)
 {
-  DS_P( PSTR("V " VERSION " " BOARD_ID_STR " ") );
-  DH( cc1100_readReg( CC1100_PARTNUM ) & 0x0f, 1 );
-  DH( cc1100_readReg( CC1100_VERSION ) & 0x0f, 1 );
+#ifdef BUSWARE_CUL // check 433MHz version marker
+  if (!bit_is_set(PINB, PB6))
+    DS_P( PSTR("V " VERSION " " BOARD_ID_STR433) );
+  else
+#endif
+  DS_P( PSTR("V " VERSION " " BOARD_ID_STR) );
   DNL();
 }

@@ -18,8 +18,10 @@
 #define LED_PORT                PORTC
 #define LED_PIN                 PC4
 
-#define BOARD_ID_STR            "CUL"
-#define BOARD_ID_USTR           L"CUL"
+#define BOARD_ID_STR            "CUL868"
+#define BOARD_ID_STR433         "CUL433"
+#define BOARD_ID_USTR           L"CUL868"
+#define BOARD_ID_USTR433        L"CUL433"
 
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB

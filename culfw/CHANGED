@@ -1,4 +1,7 @@
-Version 1.22 (Tue Jun 26 2009)
+Version 1.23 (Sat Jun 27 2009)
+- CU*: Version string (USB & V) changed for the CUL433
+
+Version 1.22 (Fri Jun 26 2009)
 - CU*: HMS support
 - CUR: V3 board support
 
