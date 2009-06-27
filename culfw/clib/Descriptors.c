@@ -203,7 +203,7 @@ USB_Descriptor_String_t ProductString433 PROGMEM =
 {
   Header:           {Size: USB_STRING_LEN(20),
                      Type: DTYPE_String},
-  UnicodeString:    BOARD_ID_USTR
+  UnicodeString:    BOARD_ID_USTR433
 };
 #endif
 
