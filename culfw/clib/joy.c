@@ -38,9 +38,9 @@ check_key(void)
 {
   uint8_t key = KEY_NONE;
 #ifdef CURV3
-       if(!bit_is_set( JOY_IN_PORT2, JOY_PIN1)) key = KEY_ENTER;
+  if(!bit_is_set( JOY_IN_PORT2, JOY_PIN1)) key = KEY_ENTER;
 #else
-       if(!bit_is_set( JOY_IN_PORT1, JOY_PIN1)) key = KEY_ENTER;
+  if(!bit_is_set( JOY_IN_PORT1, JOY_PIN1)) key = KEY_ENTER;
 #endif
   else if(!bit_is_set( JOY_IN_PORT1, JOY_PIN2)) key = KEY_RIGHT;
   else if(!bit_is_set( JOY_IN_PORT1, JOY_PIN3)) key = KEY_LEFT;
@@ -87,21 +87,32 @@ TASK(JOY_Task)
 }
 
 
+#undef PC_INT   // does not work :-/
+
 void
 joy_enable_interrupts(void)
 {
   JOY_INTREG &= ~(JOY_INT1ISC|JOY_INT2ISC);       // Low level
   EIMSK |= (_BV(JOY_INT1)|_BV(JOY_INT2));
   EIFR  |= (_BV(JOY_INT1)|_BV(JOY_INT2));
+
+#ifdef PC_INT
+  my_delay_ms(200);     // else the same interrupt will wake us again
+  PCICR |= PCIE0;
+#endif
 }
+
 void
 joy_disable_interrupts(void)
 {
   EIMSK &= ~(_BV(JOY_INT1)|_BV(JOY_INT2));
+  PCICR &= ~PCIE0;
 }
 
 
 // Only used to wake up from sleep.
 ISR(JOY_INT1VECT) { }
 ISR(JOY_INT2VECT) { }
-
+#ifdef PC_INT
+ISR(PCINT0_vect) { }
+#endif

@@ -9,7 +9,7 @@
 #include "fht.h"                // fht_hc
 #include "log.h"
 
-uint8_t output_enabled = 0xff;
+uint8_t output_enabled;
 
 //////////////////////////////////////////////////
 // Display routines

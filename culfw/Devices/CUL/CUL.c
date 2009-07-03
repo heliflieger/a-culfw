@@ -124,6 +124,7 @@ main(void)
   LED_OFF();
 
   credit_10ms = MAX_CREDIT/2;
+  output_enabled = OUTPUT_USB;
 
   Scheduler_Start();                       // Won't return
 }

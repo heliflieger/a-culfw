@@ -5,8 +5,9 @@
 #include "qfs.h"
 #include "fswrapper.h"
 #include "string.h"
+#include "display.h"
 
-static fs_inode_t logfd;
+static fs_inode_t logfd = 0xffff;
 static uint16_t logoffset;
 static char syslog[] = "Syslog.0";
 
@@ -23,7 +24,6 @@ log_init(void)
   } else {
     logoffset = fs_size(&fs, logfd);
   }
-  Log("Boot");
 }
 
 void
@@ -52,6 +52,9 @@ void
 Log(char *data)
 {
   uint8_t now[6], fmtnow[LOG_TIMELEN+1];
+
+  if(logfd == 0xffff)
+    return;
 
   if(logoffset >= 1024)
     log_rotate();

@@ -141,6 +141,7 @@ main(void)
   wdt_enable(WDTO_2S); 
 
   led_init();
+  LED_ON();
   rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
   rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
   Scheduler_Init();                            
@@ -150,15 +151,18 @@ main(void)
   joy_init();
   bat_init();
   df_init(&df);
-  fs_init(&fs, df);
-  rtc_init();
-  log_init();
-  menu_init();
+  fs_init(&fs, df);             // needs df_init
+  rtc_init();                   // does i2c_init too
+  menu_init();                  // needs fs_init
   ccInitChip();
   fht_init();
-  LED_OFF();
+  log_init();                   // needs fs_init & rtc_init
 
   credit_10ms = MAX_CREDIT/2;
+  output_enabled = OUTPUT_USB|OUTPUT_LCD|OUTPUT_LOG;
+  //Log("Boot");
+
+  LED_OFF();
 
   Scheduler_Start();                            // Won't return
 }

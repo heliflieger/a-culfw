@@ -19,7 +19,7 @@
 
 #define LCD_BL_DDR              DDRC
 #define LCD_BL_PORT             PORTC
-#define LCD_BL_PIN              PC6
+#define LCD_BL_PIN              PC7
 #define LCD1_DDR                DDRB
 #define LCD1_PORT               PORTB
 #define LCD1_CS                 PB4
@@ -27,7 +27,7 @@
 #define LCD2_PORT               PORTE
 #define LCD2_RST                PE3
 
-#define BAT_DDR                 DDRF    // todo
+#define BAT_DDR                 DDRF
 #define BAT_PORT                PORTF
 #define BAT_PIN                 PINF
 #define BAT_PIN1                PF1
@@ -35,16 +35,16 @@
 #define BAT_MUX                 3
 
 #define JOY_DDR1                DDRE
-#define JOY_DDR2                DDRB
+#define JOY_DDR2                DDRA
 #define JOY_OUT_PORT1           PORTE
-#define JOY_OUT_PORT2           PORTB
+#define JOY_OUT_PORT2           PORTA
 #define JOY_IN_PORT1            PINE
-#define JOY_IN_PORT2            PINB
-#define JOY_PIN1                PB7     // Enter (moved from Port E)
+#define JOY_IN_PORT2            PINA
+#define JOY_PIN1                PE2     // Enter
 #define JOY_PIN2                PE6     // right
 #define JOY_PIN3                PE7     // left
-#define JOY_PIN4                PB6     // up
-#define JOY_PIN5                PB5     // down
+#define JOY_PIN4                PA0     // up
+#define JOY_PIN5                PA1     // down
 
 #define JOY_INT1		INT6
 #define JOY_INT1VECT    	INT6_vect
@@ -52,13 +52,12 @@
 #define JOY_INT2		INT7
 #define JOY_INT2VECT     	INT7_vect
 #define JOY_INT2ISC		(_BV(ISC70)|_BV(ISC71))
-
 #define JOY_INTREG		EICRB
 
 
-#define DF_DDR                  DDRD 
-#define DF_PORT                 PORTD 
-#define DF_CS                   PD7
+#define DF_DDR                  DDRB 
+#define DF_PORT                 PORTB 
+#define DF_CS                   PB6
 
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB

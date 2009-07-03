@@ -72,10 +72,11 @@ batfunc(char *mode)
   uint8_t b;
   uint16_t bv;
 
+  // This will displayed on the 13char title row on the CUR
 #ifdef CURV3
   bv  = get_adcw(BAT_MUX);
-  if( !bit_is_set( PINA, PA5) ) DS_P( PSTR("DC powered "));   // not wired ;)
-  if( !bit_is_set( PINA, PA6) ) DS_P( PSTR("USB powered "));
+  if( !bit_is_set( PINA, PA5) ) DS_P( PSTR("DC pwr "));   // not wired ;)
+  if( !bit_is_set( PINA, PA6) ) DS_P( PSTR("USB pwr "));
   if( !bit_is_set( PINA, PA4) ) DS_P( PSTR("charging"));
   if( !bit_is_set( PINA, PA0) ) DS_P( PSTR("charged"));
   if( !bit_is_set( PINA, PA7) ) DS_P( PSTR("error"));

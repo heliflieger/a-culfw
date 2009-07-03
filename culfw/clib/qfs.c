@@ -50,8 +50,6 @@ fs_init(fs_t *fs, df_chip_t chip)
   if(fs->last_inode.len != QFS_MAGIC_LEN ||
      strncmp(fs->last_inode.name, QFS_MAGIC, QFS_MAGIC_LEN)) {
 
-    DC('I');
-    DNL();
     // First the magic
     fs->last_inode.len = QFS_MAGIC_LEN;
     strncpy(fs->last_inode.name, QFS_MAGIC, QFS_FILENAMESIZE);

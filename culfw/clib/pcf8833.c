@@ -55,15 +55,12 @@ void
 lcd_switch(uint8_t hb)
 {
   if(hb) {
-
     LCD_BL_DDR  |= _BV(LCD_BL_PIN);            // Switch on, init
     LCD_BL_PORT |= _BV(LCD_BL_PIN);
     lcd_init();
     lcd_on = 1;
-  }
 
-  else {
-
+  } else {
     LCD_BL_PORT &= ~_BV(LCD_BL_PIN);           // Switch off the display
     lcd_sendcmd (LCD_CMD_SLEEPIN);   
     lcd_on = 0;

@@ -346,7 +346,7 @@ menu_handle_joystick(uint8_t key)
 
   ////////////////////////////////////////
   // Exec current command
-  if(key == KEY_RIGHT) { 
+  if(key == KEY_RIGHT) {
 
     // Save the current position
     menu_lastsel[menu_stack[menu_stackidx-1]] = menu_curitem;
