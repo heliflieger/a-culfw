@@ -20,6 +20,8 @@
 #define LCD_BL_DDR              DDRC
 #define LCD_BL_PORT             PORTC
 #define LCD_BL_PIN              PC6
+#define LCD_BL_PWM              OCR3A
+
 #define LCD1_DDR                DDRB
 #define LCD1_PORT               PORTB
 #define LCD1_CS                 PB4
@@ -45,15 +47,14 @@
 #define JOY_PIN3                PE7     // left
 #define JOY_PIN4                PB6     // up
 #define JOY_PIN5                PB5     // down
-
 #define JOY_INT1		INT6
 #define JOY_INT1VECT    	INT6_vect
 #define JOY_INT1ISC		(_BV(ISC60)|_BV(ISC61))
 #define JOY_INT2		INT7
 #define JOY_INT2VECT     	INT7_vect
 #define JOY_INT2ISC		(_BV(ISC70)|_BV(ISC71))
-
 #define JOY_INTREG		EICRB
+#define JOY_PCINTMSK		0xe0
 
 
 #define DF_DDR                  DDRD 

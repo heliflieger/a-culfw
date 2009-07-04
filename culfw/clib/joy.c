@@ -96,9 +96,9 @@ joy_enable_interrupts(void)
   EIMSK |= (_BV(JOY_INT1)|_BV(JOY_INT2));
   EIFR  |= (_BV(JOY_INT1)|_BV(JOY_INT2));
 
-#ifdef PC_INT
-  my_delay_ms(200);     // else the same interrupt will wake us again
+#ifdef JOY_PCINTMSK
   PCICR |= PCIE0;
+  PCMSK0 |= JOY_PCINTMSK;
 #endif
 }
 
@@ -106,13 +106,13 @@ void
 joy_disable_interrupts(void)
 {
   EIMSK &= ~(_BV(JOY_INT1)|_BV(JOY_INT2));
-  PCICR &= ~PCIE0;
+  PCMSK0 &= ~JOY_PCINTMSK;
 }
 
 
 // Only used to wake up from sleep.
 ISR(JOY_INT1VECT) { }
 ISR(JOY_INT2VECT) { }
-#ifdef PC_INT
+#ifdef JOY_PCINTMSK
 ISR(PCINT0_vect) { }
 #endif

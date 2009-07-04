@@ -56,41 +56,80 @@ lcd_switch(uint8_t hb)
 {
   if(hb) {
     LCD_BL_DDR  |= _BV(LCD_BL_PIN);            // Switch on, init
+#ifdef LCD_BL_PWM
+    LCD_BL_PWM = erb((uint8_t*)EE_BRIGHTNESS);
+#else
     LCD_BL_PORT |= _BV(LCD_BL_PIN);
+#endif
     lcd_init();
     lcd_on = 1;
 
   } else {
+#ifdef LCD_BL_PWM
+    LCD_BL_PWM = 0;
+    my_delay_ms(1);                            // else the dpy is still on.
+#endif
     LCD_BL_PORT &= ~_BV(LCD_BL_PIN);           // Switch off the display
+
     lcd_sendcmd (LCD_CMD_SLEEPIN);   
     lcd_on = 0;
 
   }
 }
 
+#ifdef LCD_BL_PWM
 void
-lcd_contrast(uint8_t hb)
+lcd_brightness(uint8_t hb)
 {
-  uint8_t lcd_current_contrast = erb((uint8_t*)EE_CONTRAST);
+  int16_t brightness = erb((uint8_t*)EE_BRIGHTNESS);
 
-  if(lcd_current_contrast < 40 || lcd_current_contrast > 80)
-    lcd_current_contrast = 60;
-    
   if(hb == 0xFE) {
-    lcd_current_contrast--;
+    brightness += 0x20;
   } else if (hb == 0xFD) {
-    lcd_current_contrast++;
+    brightness -= 0x20;
   } else if (hb == 0xFC) {
     //keep the eeprom value
   } else {
-    lcd_current_contrast = hb;
+    brightness = hb;
   }
-  ewb((uint8_t*)EE_CONTRAST, lcd_current_contrast);
-  lcd_sendcmd (LCD_CMD_SETCON);
-  lcd_senddata (lcd_current_contrast);
+  if(brightness < 0)   brightness = 0;
+  if(brightness > 255) brightness = 255;
 
-  DS_P( PSTR("Contrast: ") );
-  DU(lcd_current_contrast, 2);
+  ewb((uint8_t*)EE_BRIGHTNESS, brightness);
+  LCD_BL_PWM = brightness;
+
+  DS_P( PSTR("Brightns:") );
+  DU(brightness*100/255, 3);
+  DC('%');
+  DNL();
+}
+#endif
+
+void
+lcd_contrast(uint8_t hb)
+{
+  uint8_t contrast = erb((uint8_t*)EE_CONTRAST);
+
+    
+  if(hb == 0xFE) {
+    contrast--;
+  } else if (hb == 0xFD) {
+    contrast++;
+  } else if (hb == 0xFC) {
+    //keep the eeprom value
+  } else {
+    contrast = hb;
+  }
+  if(contrast < 40) contrast = 40;
+  if(contrast > 80) contrast = 80;
+
+  ewb((uint8_t*)EE_CONTRAST, contrast);
+  lcd_sendcmd (LCD_CMD_SETCON);
+  lcd_senddata (contrast);
+
+  DS_P( PSTR("Contrast:") );
+  DU(100-(contrast-40)*100/40, 3);
+  DC('%');
   DNL();
 }
 
@@ -106,13 +145,16 @@ lcd_contrast(uint8_t hb)
 void
 lcdfunc(char *in)
 {
-  uint8_t hb[3];
-  uint8_t narg = fromhex(in+1, hb, 3);
+  uint8_t hb[4];
+  uint8_t narg = fromhex(in+1, hb, 4);
 
   if(narg > 0 && hb[0] == 0xFF) {
 
     if(hb[1] != 0xFF) lcd_switch(hb[1]);
     if(hb[2] != 0xFF) lcd_contrast(hb[2]);
+#ifdef LCD_BL_PWM
+    if(hb[3] != 0xFF) lcd_brightness(hb[3]);
+#endif
 
     return;
   }

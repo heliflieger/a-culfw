@@ -81,10 +81,10 @@ C:display off:dff00
 
 M:Display::affbffcff
 S:LED:LED
-C:Contrast +:dFFFFFE
-C:Contrast -:dFFFFFD
-S:Brightness +:Sorry
-S:Brightness -:Sorry
+C:Contrast +:dFFFFFEFF
+C:Contrast -:dFFFFFDFF
+C:Brightness +:dFFFFFFFE
+C:Brightness -:dFFFFFFFD
 
 M:LED::ffaffbffc
 C:off:l00

@@ -51,7 +51,6 @@ TASK_LIST
   { Task: Minute_Task,   TaskStatus: TASK_RUN },
 };
 
-
 t_fntab fntab[] = {
 
   { 'B', prepare_boot },
@@ -87,6 +86,16 @@ t_fntab fntab[] = {
 #else
 #define jump_to_bootloader ((void(*)(void))0x1800)
 #endif
+
+void
+dpy(char *in)
+{
+  uint8_t bl = 0;
+  fromhex(in+1, &bl, 1);
+
+}
+
+
 
 void
 start_bootloader(void)
@@ -126,14 +135,23 @@ main(void)
   }
 
 
-  // Setup the timers. Are needed for watchdog-reset
+  // Setup the timers. 
+
+  // Timer0 is used by the main clock
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250
   TCCR0B = _BV(CS02);       
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);
 
+  // Timer1 is used by my_delay and by the transceiver analyzer
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
+
+#ifdef CURV3
+  // Timer3 is used by the LCD backlight (PWM)
+  TCCR3A =  _BV(COM3A1)| _BV(WGM30);       // Fast PWM, 8-bit, clear on match
+  TCCR3B =  _BV(WGM32) | _BV(CS31);        // Prescaler 8MHz/8: 3.9KHz 
+#endif
 
   SetSystemClockPrescaler(0);              // Disable Clock Division
 
@@ -148,6 +166,7 @@ main(void)
   USB_Init();
   tty_init();
 
+                                // lcd init is done manually from menu_init
   joy_init();
   bat_init();
   df_init(&df);
