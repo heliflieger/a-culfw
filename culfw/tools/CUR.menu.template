@@ -63,7 +63,7 @@ C:25.5 C:F$<13>33[21]
 
 M:Control::affbffcff
 C:FW Version:V
-C:Battery:a
+S:Battery:Battery
 S:Sleep:Sleep
 S:Display:Display
 S:Radio:Radio
@@ -156,3 +156,10 @@ P00008482Pic2
 M:Pic3::
 P00008482Pic3
 
+M:Battery::affbffcff
+C:Status:a00
+C:Status raw:a01
+C:Charge 500ma:a0001
+C:Charge 100ma:a0000
+C:USB Disable:a0101
+C:USB Enable:a0100

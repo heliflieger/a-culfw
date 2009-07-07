@@ -29,12 +29,19 @@
 #define LCD2_PORT               PORTE
 #define LCD2_RST                PE3
 
-#define BAT_DDR                 DDRF    // todo
-#define BAT_PORT                PORTF
-#define BAT_PIN                 PINF
-#define BAT_PIN1                PF1
-#define BAT_PIN2                PF2
+// Max8677
 #define BAT_MUX                 3
+#define BAT_DDR                 DDRA
+#define BAT_PORT                PORTA
+#define BAT_PIN                 PINA
+#define BAT_DONE                PA0
+#define BAT_CEN                 PA1
+#define BAT_PEN2                PA2
+#define BAT_USUS                PA3
+#define BAT_CHG                 PA4
+#define BAT_DOK                 PA5
+#define BAT_UOK                 PA6
+#define BAT_FLT                 PA7
 
 #define JOY_DDR1                DDRE
 #define JOY_DDR2                DDRB
