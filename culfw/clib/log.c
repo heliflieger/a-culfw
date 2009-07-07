@@ -6,6 +6,9 @@
 #include "fswrapper.h"
 #include "string.h"
 #include "display.h"
+#ifdef HAS_BATTERY
+#include "battery.h"            // do not log on battery low
+#endif
 
 static fs_inode_t logfd = 0xffff;
 static uint16_t logoffset;
@@ -52,6 +55,21 @@ void
 Log(char *data)
 {
   uint8_t now[6], fmtnow[LOG_TIMELEN+1];
+  static uint8_t synced = 0;
+
+#ifdef HAS_BATTERY
+  if(battery_state < 10) { // If battery goes below 10%, sync and stop logging
+
+    if(!synced) {
+      fs_sync(&fs);
+      synced = 1;
+    }
+    return;
+
+  } else {
+    synced = 0;
+  }
+#endif
 
   if(logfd == 0xffff)
     return;

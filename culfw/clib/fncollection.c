@@ -10,13 +10,8 @@
 #include "cdc.h"
 #include "transceiver.h"
 #include "clock.h"
-
-#ifdef HAS_LCD
-#include "battery.h"
-#include "pcf8833.h"
-#include "clock.h"
 #include "mysleep.h"
-#endif
+#include "fswrapper.h"
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -144,6 +139,9 @@ prepare_boot(char *in)
     fromhex(in+1, &bl, 1);
 
   USB_ShutDown();
+#ifdef HAS_FS
+  fs_sync(&fs);
+#endif
 
   // next reboot we like to jump to Bootloader ...
   if(bl)

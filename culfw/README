@@ -106,7 +106,7 @@ Protocol
      - Display the battery state:
        XX = 01  raw reading
        XX = 00  reading transformed into %, taking nonlinearity into account
-     If both XX and Y is specified:
+     If both XX and Y is specified (CURV3 only):
        XX = 00  Charge with 500mA (YY=01) or 100mA (YY=00)
        XX = 01  Disable USB charging (YY=01) or enable it (YY=00)
 

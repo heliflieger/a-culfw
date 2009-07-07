@@ -87,7 +87,6 @@ TASK(JOY_Task)
 }
 
 
-#undef PC_INT   // does not work :-/
 
 void
 joy_enable_interrupts(void)
@@ -106,7 +105,9 @@ void
 joy_disable_interrupts(void)
 {
   EIMSK &= ~(_BV(JOY_INT1)|_BV(JOY_INT2));
+#ifdef JOY_PCINTMSK
   PCMSK0 &= ~JOY_PCINTMSK;
+#endif
 }
 
 
