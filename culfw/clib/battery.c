@@ -86,8 +86,6 @@ batfunc(char *in)
     } else {
       BAT_PORT &= ~_BV(pin);
     }
-DH(pin,2);
-DNL();
 
   } else
 #endif
