@@ -129,9 +129,11 @@ Protocol
     d<hex>data
       (CUR only)
       Choose the sub-function with the first two bytes (hex):
-      - FF: LCD control, the next 4 bytes are:
+      - FF: LCD control, the next 3 bytes (6 chars) are:
         - LCD on (01) / on+cls (02) / off (00) / don't change (FF)
         - contrast: set directly (00-FE) / read from eeprom (FC) /
+                    increase (FE) / decrease (FD) / don't change (FF)
+        - brightness: set directly (00-FE) / read from eeprom (FC) /
                     increase (FE) / decrease (FD) / don't change (FF)
       - 00: Set the title to the string following the 00
       - 01-08: Set the "body" lines 01-08 the the text

@@ -100,7 +100,7 @@ C:CC1100 status:C35
 M:Reception::affbffcff
 C:Off:X00
 C:On:X01
-C:On+Debug:X05
+C:On+Debug:XA1
 C:On+SignalStr:X21
 
 M:PARAMP:With ramping:affbffcff

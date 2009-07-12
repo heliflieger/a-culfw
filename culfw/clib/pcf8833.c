@@ -646,13 +646,18 @@ lcd_txmon(uint8_t trise, uint8_t tfall)
   tfall = h-tfall;
   trise = h-trise;
 
-  uint8_t rssi = cc1100_readReg(CC1100_RSSI)>>3;
-  if(rssi >= 16)
-    rssi -= 16;
+  uint8_t rssi = cc1100_readReg(CC1100_RSSI);    //  0..256
+  rssi = (rssi >= 128 ? rssi-128 : rssi+128);    // Swap
+  if(rssi < 64)                                  // Drop low and high 25%
+    rssi = 0;
+  else if(rssi >= 192)
+    rssi = 15;
+  else 
+    rssi = (rssi-80)/8;
 
   lcd_drcol(xoff, yoff,       yoff+tfall, 0xfff);   // Empty
   lcd_drcol(xoff, yoff+tfall, yoff+trise, lc);      // falltime
-  lcd_drcol(xoff, yoff+trise, yoff+h-1,   rssi<<4);    // risetime
+  lcd_drcol(xoff, yoff+trise, yoff+h-1,   rssi<<4); // risetime, shades of green
 
   if(++xoff >= WINDOW_RIGHT) {
     xoff = WINDOW_LEFT;

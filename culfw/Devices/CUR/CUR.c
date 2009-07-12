@@ -170,7 +170,7 @@ main(void)
   joy_init();
   bat_init();
   df_init(&df);
-  fs_init(&fs, df);             // needs df_init
+  fs_init(&fs, df, 0);          // needs df_init
   rtc_init();                   // does i2c_init too
   menu_init();                  // needs fs_init
   ccInitChip();
