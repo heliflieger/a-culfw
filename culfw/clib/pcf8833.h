@@ -68,6 +68,7 @@ void lcd_invon(void);
 void lcd_contrast(uint8_t hb);
 void lcd_switch(uint8_t hb);
 void lcd_drawpic(char *in);
+void lcd_txmon(uint8_t risetime, uint8_t falltime);
 
 extern uint8_t lcd_on;
 

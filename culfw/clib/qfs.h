@@ -45,7 +45,7 @@ typedef enum {
     FS_BADSEEK = 7,
 } fs_status_t;
 
-fs_status_t fs_init(fs_t *fs, df_chip_t chip);
+fs_status_t fs_init(fs_t *fs, df_chip_t chip, uint8_t force);
 fs_status_t fs_create(fs_t *fs, char *name);
 fs_status_t fs_rename(fs_t *fs, char *from, char *to);
 fs_status_t fs_remove(fs_t *fs, char *name);

@@ -75,9 +75,7 @@ batfunc(char *in)
   uint8_t l = fromhex(in+1,hb,2);
 
 #ifdef CURV3
-  // 20 CEN
-  // 40 PEN2
-  // 80 USUS
+
   if(l == 2) {
     uint8_t pin = BAT_PEN2;
     if(hb[0] == 1) pin = BAT_USUS;
@@ -92,7 +90,7 @@ batfunc(char *in)
   {
     // This will displayed on the 13char title row on the CUR
     bv = get_adcw(BAT_MUX);
-    if(hb[0]) {
+    if(l >= 1 && hb[0]) {
       DU(bv, 4);
 
     } else {

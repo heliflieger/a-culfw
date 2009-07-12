@@ -20,6 +20,9 @@
 #include "clock.h"
 #include "fncollection.h"
 #include "fht.h"
+#ifdef HAS_LCD
+#include "pcf8833.h"
+#endif
 
 
 // For FS20 we time the complete message, for KS300 the rise-fall distance
@@ -70,7 +73,7 @@ static uint8_t oby, obuf[MAXMSG], nibble; // parity-stripped output
 static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime;
 static uint8_t cc_on;
-static uint8_t hightime;
+static uint8_t hightime, lowtime;
 
 static void send_bit(uint8_t bit);
 static void sendraw(uint8_t msg[], uint8_t nbyte, uint8_t bitoff,
@@ -418,6 +421,20 @@ TASK(RfAnalyze_Task)
   uint8_t datatype = 0;
   bucket_t *b;
 
+
+  if(lowtime) {
+#ifdef HAS_LCD
+    if(tx_report & REP_LCDMON)
+      lcd_txmon(hightime, lowtime);
+#endif
+    if(tx_report & REP_MONITOR) {
+      DC('r'); if(tx_report & REP_BINTIME) DH(hightime,2);
+      DC('f'); if(tx_report & REP_BINTIME) DH(lowtime, 2);
+    }
+    lowtime = 0;
+  }
+
+
   if(bucket_nrused == 0)
     return;
 
@@ -648,10 +665,9 @@ ISR(CC1100_INTVECT)
 {
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
-  uint8_t lowtime;
 
   if (b->state == STATE_HMS) {
-    if(c <  TSCALE(750))
+    if(c < TSCALE(750))
       return;
     if(c > TSCALE(1250)) {
       reset_input();
@@ -665,9 +681,8 @@ ISR(CC1100_INTVECT)
     if(b->state == STATE_HMS) {
       addbit(b, 1);
       TCNT1 = 0;
-    } else {
-      hightime = c;
     }
+    hightime = c;
     return;
 
   }
@@ -682,16 +697,6 @@ ISR(CC1100_INTVECT)
   ///////////////////////
   // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
   TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
-
-
-  if(tx_report & REP_MONITOR) {
-    if(tx_report & REP_BINTIME) {
-      DC('r' + b->state); DH(hightime,2); DH(lowtime,2);
-    }
-    if(!(tx_report & ~(REP_MONITOR|REP_BINTIME)) ) // ignore the rest
-      return;
-  }
-
 
 
   if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet

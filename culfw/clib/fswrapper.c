@@ -92,6 +92,13 @@ write_file(char *in)
   uint8_t old_oe = output_enabled;
   fs_status_t ret = 8;
 
+  if(!strcmp(in+1, "format")) {
+    fs_init(&fs, fs.chip, 1);
+    ret = 0;
+    goto DONE;
+    
+  }
+
   if(fromhex(in+1, hb, 4) != 4)
     goto DONE;
 

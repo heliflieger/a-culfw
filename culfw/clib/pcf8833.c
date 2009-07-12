@@ -247,7 +247,7 @@ lcd_blk_senddata( uint8_t data )
   CLEAR_BIT( SPI_PORT, SPI_SCLK);	// SCK Low
   SET_BIT( SPI_PORT, SPI_MOSI);
   SET_BIT( SPI_PORT, SPI_SCLK);	        // SCK Hi
-  CLEAR_BIT( SPI_PORT, SPI_SCLK);	        // SCK Low
+  CLEAR_BIT( SPI_PORT, SPI_SCLK);	// SCK Low
   SET_BIT( SPCR, SPE );                 // enable SPI
   SPDR = data;
 }
@@ -590,4 +590,76 @@ void
 lcd_invoff(void)
 {
   lcd_sendcmd(LCD_CMD_INVOFF);
+}
+
+////////////////////////////////////////////////
+// Used to dispay Real-Time data, so it should be fast
+void
+lcd_drcol(uint8_t x, uint8_t ytop, uint8_t ybottom, uint16_t col)
+{
+  uint8_t c[3];
+  
+  c[0] = (col>>4) & 0xff;
+  c[1] = ((col<<4)&0xf0) | ((col>>8) & 0x0f);
+  c[2] = col&0xff;
+
+  if(ybottom < ytop)
+    return;
+  lcd_window(x, ytop, x, ybottom);
+  lcd_sendcmd(LCD_CMD_RAMWR);	// write memory
+  lcd_blk_setup();
+  int i = 0;
+  while(ytop++ <= ybottom) {
+    lcd_blk_senddata(c[i++]);
+    if(i > 2) i = 0;
+
+    if(ytop & 1) {
+      lcd_blk_senddata(c[i++]);
+      if(i > 2) i = 0;
+    }
+  }
+  if(ytop & 1)
+    lcd_blk_senddata(c[i]);
+  lcd_blk_teardown();
+}
+
+#include "cc1100.h"
+
+void
+lcd_txmon(uint8_t trise, uint8_t tfall)
+{
+  static uint8_t xoff = WINDOW_LEFT;
+  static uint8_t yoff = TITLE_HEIGHT;
+  static uint16_t lc = 0xf00;
+
+  // timing is in 16us units
+  // we plan to display max 1600us rise+fall intervals
+  uint8_t h = BODY_HEIGHT/8;
+
+
+  trise = h*trise/(100);
+  if(trise >= h) trise = h;
+
+  tfall = h*tfall/(100);
+  tfall += trise;
+  if(tfall >= h) tfall = h-trise;
+  tfall = h-tfall;
+  trise = h-trise;
+
+  uint8_t rssi = cc1100_readReg(CC1100_RSSI)>>3;
+  if(rssi >= 16)
+    rssi -= 16;
+
+  lcd_drcol(xoff, yoff,       yoff+tfall, 0xfff);   // Empty
+  lcd_drcol(xoff, yoff+tfall, yoff+trise, lc);      // falltime
+  lcd_drcol(xoff, yoff+trise, yoff+h-1,   rssi<<4);    // risetime
+
+  if(++xoff >= WINDOW_RIGHT) {
+    xoff = WINDOW_LEFT;
+    yoff += h;
+    if(yoff >= VISIBLE_HEIGHT) {
+      yoff = TITLE_HEIGHT;
+      lc = (lc == 0xf00 ? 0x00f : 0xf00);
+    }
+  }
 }

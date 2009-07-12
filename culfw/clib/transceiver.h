@@ -17,6 +17,7 @@
 #define REP_BINTIME  _BV(4)
 #define REP_RSSI     _BV(5)
 #define REP_FHTPROTO _BV(6)
+#define REP_LCDMON   _BV(7)
 
 /* public prototypes */
 void set_txreport(char *in);

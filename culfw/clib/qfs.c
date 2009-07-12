@@ -34,7 +34,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 fs_status_t
-fs_init(fs_t *fs, df_chip_t chip)
+fs_init(fs_t *fs, df_chip_t chip, uint8_t force)
 {
   fs->chip = chip;
   fs->lastpage = 0xffff;
@@ -48,7 +48,8 @@ fs_init(fs_t *fs, df_chip_t chip)
 
   // Initialize FS
   if(fs->last_inode.len != QFS_MAGIC_LEN ||
-     strncmp(fs->last_inode.name, QFS_MAGIC, QFS_MAGIC_LEN)) {
+     strncmp(fs->last_inode.name, QFS_MAGIC, QFS_MAGIC_LEN) ||
+     force) {
 
     // First the magic
     fs->last_inode.len = QFS_MAGIC_LEN;
