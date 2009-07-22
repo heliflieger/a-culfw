@@ -33,7 +33,10 @@ analyze_ttydata()
 
       cmdbuf[cmdlen] = 0;
       if(!callfn(cmdbuf)) {
-        DC('?');
+        DS_P(PSTR("? (Unknown "));
+        DC(cmdbuf[0]);
+        DS_P(PSTR(") Use one of"));
+
         for(idx = 0; fntab[idx].name; idx++) {
           DC(' ');
           DC(fntab[idx].name);

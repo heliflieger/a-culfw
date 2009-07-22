@@ -16,7 +16,7 @@ if($mode !~ m/^P[56]/) {
 }
 
 
-my ($w, $h);
+my ($w, $h, $depth);
 while(my $l = <FH>) {
   chomp($l);
   next if($l =~ m/^#/);
@@ -25,13 +25,14 @@ while(my $l = <FH>) {
     $w = $1; $h = $2;
     next;
   }
-  if($l !~ m/^255$/) {
-    die("Unknown format: need 255 color values, got $l\n");
-  } else {
-    last;
-  }
+  die("Unknown format: need 256 or 16 color values, got $l\n")
+        if($l != 255 && $l != 15);
+  $depth = $l;
+  last;
 }
 
+
+my $shift = ($depth == 255 ? 4 : 0);
 
 if($mode eq "P5") {
 
@@ -46,9 +47,9 @@ if($mode eq "P5") {
 
     if($p) {
       if($raw) {
-        printf("%c", ($d<<4)|(ord($b)>>4));
+        printf("%c", ($d<<4)|(ord($b)>>$shift));
       } else {
-        printf("0x%02x, ", ($d<<4)|(ord($b)>>4));
+        printf("0x%02x, ", ($d<<4)|(ord($b)>>$shift));
         if(++$cnt == 20) {
           printf("\n");
           $cnt = 0;
@@ -56,7 +57,7 @@ if($mode eq "P5") {
       }
       $p = 0;
     } else {
-      $d = (ord($b)>>4);
+      $d = (ord($b)>>$shift);
       $p = 1;
     }
     
@@ -75,7 +76,7 @@ if($mode eq "P5") {
 
   foreach my $b (split("", $buf)) {
 
-    $d[$p++] = ord($b)>>4;
+    $d[$p++] = ord($b)>>$shift;
     if($p == 6) {
       if($raw) {
         printf("%c%c%c",
