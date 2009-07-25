@@ -101,7 +101,8 @@ Protocol
     spaces for aesthetic.  Commands are _not_ echoed.
     Following commands are supported:
 
-    aXX[YY]
+    a<XX>[<YY>]
+     (CUR only)
      If no YY is specified:
      - Display the battery state:
        XX = 01  raw reading

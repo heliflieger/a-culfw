@@ -105,13 +105,19 @@ void
 set_txoff(void)
 {
   ccStrobe(CC1100_SIDLE);
+#ifdef BUSWARE_CUR
   ccStrobe(CC1100_SPWD);
+#endif
   cc_on = 0;
 }
 
 void
 set_txon(void)
 {
+#ifdef BUSWARE_CUR
+  ccStrobe( CC1100_SIDLE );
+  my_delay_ms(1);
+#endif
   ccInitChip();
   cc_on = 1;
   ccRX();
