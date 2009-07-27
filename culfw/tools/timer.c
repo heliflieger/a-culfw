@@ -1,16 +1,20 @@
 #include <stdio.h>
 #include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <fcntl.h>
 
 int
 main(int ac, char *av[])
 {
-  int fd;
-  unsigned char data;
-  struct timeval tv;
+  int fd, limit;
+  unsigned char odata, data, state, otype;
+
+  if(ac != 3) {
+    printf("Usage: timer /dev/ttyACM0 limit\n");
+    exit(1);
+  }
+  limit = atoi(av[2]);
 
 
   fd = open(av[1], O_RDWR);
@@ -24,40 +28,32 @@ main(int ac, char *av[])
   data = '\r'; write(fd, &data, 1);
   data = '\n'; write(fd, &data, 1);
 
+  state = 0;
   while(read(fd, &data, 1) == 1) {
 
-    if((data>='f'&&data<='i') ||
-       (data>='r'&&data<='u')) {
-
-      int t;
-      unsigned char t1, t2;
-      gettimeofday(&tv, 0);
-      read(fd, &t1, 1);
-      read(fd, &t2, 1);
-      t = ((t1<<8) | t2);
-      printf("%u.%06d %c %c %5d\n", tv.tv_sec, tv.tv_usec, 
-        data >= 'r' ? '.' : ' ', data, t);
+    if(state == 0) {
+      if(data == 'r' || data == 'f') {
+        odata = data;
+        state++;
+      } else if(data == '.') {
+        otype = 0;
+        printf("------\n");
+      } else {
+        printf("%x (%d)..\n", data, data<<4);
+      }
 
     } else {
-
-      if(data=='\r' ||
-         data=='\n' ||
-         data==' '  ||
-         data=='p' ||
-         (data>='0' && data<='9') ||
-         (data>='A' && data<='Z')) {
-
-        putchar(data);
-
-      } else {
-
-        printf("? %x\n", data);
-
-      }
+      struct timeval tv;
+      gettimeofday(&tv, 0);
+      printf("%u.%06d %c %s %5d  %d\n",
+        (int)tv.tv_sec, (int)tv.tv_usec, odata,
+          otype == odata ? "?" : " ", data << 4, (data<<4) < limit ? 0 : 1);
+      otype = odata;
+      fflush(stdout);
+      state = 0;
 
     }
 
-    fflush(stdout);
   }
   return 0;
 }
