@@ -8,7 +8,6 @@
 #include "cc1100.h"
 #include "version.h"
 #include "cdc.h"
-#include "transceiver.h"
 #include "clock.h"
 #include "mysleep.h"
 #include "fswrapper.h"

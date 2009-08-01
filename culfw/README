@@ -145,6 +145,11 @@ Protocol
       - resets all eeprom values. A reboot is required to activate the
         changes.
 
+    f<type>[<data>] (experimental rf txmit via cc1101 packet handling)
+      Send data: fs<data>, e.g. fsHallo
+      Receive data: fr (fHallo will be displayed on reception)
+      Reset: fx, followed by an X21
+
     F<hex>
       Send out an FS20 message. <hex> is a hex string of the following form:
       hhhhaacc or hhhhaaccee, where 

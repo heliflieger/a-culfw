@@ -5,11 +5,11 @@
 #include "fncollection.h"
 #include "clock.h"
 #include "display.h"
-#include "transceiver.h"
 #include "battery.h"
 #include "joy.h"
 #include "fht.h"
 #include "fswrapper.h"                 // fs_sync();
+#include "rf_send.h"                   // credit_10ms
 #ifdef HAS_SLEEP
 #include "mysleep.h"
 #endif

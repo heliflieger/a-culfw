@@ -20,7 +20,7 @@
 
 #define NMENUS     64   // Total number of menu's / macros
 #define NITEMS     32   // Maximum number of subitems in a single menu
-#define MLINESIZE  32   // Length of one menu line (data)
+#define MLINESIZE  48   // Length of one menu line. 32-48 for a Gxxx command
 #define MENUSTACK  12   // Number of recursively called menus
 
 static fs_inode_t minode;

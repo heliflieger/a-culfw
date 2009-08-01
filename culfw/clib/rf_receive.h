@@ -1,9 +1,9 @@
-#ifndef _TRANSCEIVER_H
-#define _TRANSCEIVER_H
+#ifndef _RF_RECEIVE_H
+#define _RF_RECEIVE_H
 
-#include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
 
 #define TYPE_EM      'E'
+
 #define TYPE_HMS     'H'
 #define TYPE_FHT     'T'
 #define TYPE_FS20    'F'
@@ -20,22 +20,20 @@
 #define REP_LCDMON   _BV(7)
 
 /* public prototypes */
-void set_txreport(char *in);
-void fs20send(char *in);
-void rawsend(char *in);
-void addParityAndSend(char *in, uint8_t startcs, uint8_t repeat);
-void addParityAndSendData(uint8_t *hb, uint8_t hblen,
-                        uint8_t startcs, uint8_t repeat);
+// For CUR request we need 
+#define MAXMSG 17               // inclusive parity (Netto 15)
 
+void set_txreport(char *in);
 void set_txoff(void);
-void set_txon(void);
+void set_txon(uint8_t withrx);
 void set_txrestore(void);
+void tx_init(void);
+uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
 
 extern uint8_t tx_report;
+extern uint8_t cc_on;
 
-extern uint16_t credit_10ms;
-#define MAX_CREDIT 500          // five second burst
-
+#include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
 TASK(RfAnalyze_Task);
 
 #endif

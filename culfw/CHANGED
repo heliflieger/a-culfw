@@ -1,3 +1,8 @@
+Version 1.26 
+- CU*: FHT80b resend (not yet tested)
+- CU*: split transceiver.c in rf_send.c and rf_receive.c
+- CU*: experimenting with fast CC1101 based packet transmission
+
 Version 1.25 
 - CUR: Brightness added for V3
 - CUR: fs_sync on reboot

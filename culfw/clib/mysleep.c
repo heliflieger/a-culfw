@@ -9,7 +9,7 @@
 #include "joy.h"
 #include "led.h"
 #include "battery.h"
-#include "transceiver.h"
+#include "rf_receive.h"
 #include "fncollection.h"
 
 
@@ -49,6 +49,5 @@ dosleep(void)
   wdt_enable(WDTO_2S); 
   lcd_switch(1);
   bat_drawstate();
-  set_txrestore();      // One is somehow not enough.
   set_txrestore();
 }

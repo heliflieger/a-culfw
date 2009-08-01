@@ -19,6 +19,9 @@
 #define FHTBUF_MODEL1           // see fht.c for details
 #define RCV_BUCKETS             4  // *25b. Syslog is slow, needs more than CUL
 
+#define HAS_RAWSEND
+#define HAS_FASTRF
+
 #ifdef CURV3
 #  include "board_v3.h"
 #else

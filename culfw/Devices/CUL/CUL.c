@@ -22,9 +22,11 @@
 #include "fncollection.h"
 #include "led.h"
 #include "ringbuffer.h"
-#include "transceiver.h"
+#include "rf_receive.h"
+#include "rf_send.h"
 #include "ttydata.h"
 #include "fht.h"
+#include "fastrf.h"
 
 
 /* Scheduler Task List */
@@ -34,6 +36,7 @@ TASK_LIST
   { Task: CDC_Task     , TaskStatus: TASK_STOP },
   { Task: RfAnalyze_Task,TaskStatus: TASK_RUN },
   { Task: Minute_Task,   TaskStatus: TASK_RUN },
+  { Task: FastRF_Task,   TaskStatus: TASK_STOP },
 };
 
 t_fntab fntab[] = {
@@ -41,6 +44,9 @@ t_fntab fntab[] = {
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
+#ifdef HAS_RAWSEND
+  { 'G', rawsend },
+#endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'V', version },
@@ -48,6 +54,9 @@ t_fntab fntab[] = {
   { 'X', set_txreport },
 
   { 'e', eeprom_factory_reset },
+#ifdef HAS_FASTRF
+  { 'f', fastrf },
+#endif
   { 'l', ledfunc },
   { 't', gettime },
   { 'x', ccsetpa },
@@ -121,10 +130,10 @@ main(void)
   tty_init();
   ccInitChip();
   fht_init();
-  LED_OFF();
-
-  credit_10ms = MAX_CREDIT/2;
+  tx_init();
   output_enabled = OUTPUT_USB;
+
+  LED_OFF();
 
   Scheduler_Start();                       // Won't return
 }

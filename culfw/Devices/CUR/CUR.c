@@ -23,7 +23,8 @@
 #include "fncollection.h"
 #include "led.h"
 #include "ringbuffer.h"
-#include "transceiver.h"
+#include "rf_send.h"
+#include "rf_receive.h"
 #include "ttydata.h"
 #include "pcf8833.h"
 #include "spi.h"
@@ -38,6 +39,7 @@
 #include "fht.h"
 #include "log.h"
 #include "more.h"
+#include "fastrf.h"
 
 df_chip_t df;
 
@@ -49,6 +51,7 @@ TASK_LIST
   { Task: RfAnalyze_Task,TaskStatus: TASK_RUN },
   { Task: JOY_Task,      TaskStatus: TASK_RUN },
   { Task: Minute_Task,   TaskStatus: TASK_RUN },
+  { Task: FastRF_Task,   TaskStatus: TASK_STOP },
 };
 
 t_fntab fntab[] = {
@@ -56,6 +59,9 @@ t_fntab fntab[] = {
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
+#ifdef HAS_RAWSEND
+  { 'G', rawsend },
+#endif
   { 'M', more },
   { 'P', lcd_drawpic },
   { 'R', read_eeprom },
@@ -67,6 +73,9 @@ t_fntab fntab[] = {
   { 'a', batfunc },
   { 'c', rtcfunc },
   { 'e', eeprom_factory_reset },
+#ifdef HAS_FASTRF
+  { 'f', fastrf },
+#endif
   { 'd', lcdfunc },
   { 'l', ledfunc },
   { 'r', read_file },
@@ -176,8 +185,7 @@ main(void)
   ccInitChip();
   fht_init();
   log_init();                   // needs fs_init & rtc_init
-
-  credit_10ms = MAX_CREDIT/2;
+  tx_init();
   output_enabled = OUTPUT_USB|OUTPUT_LCD|OUTPUT_LOG;
   //Log("Boot");
 

@@ -1,6 +1,7 @@
 #include <avr/eeprom.h>
 #include "board.h"
-#include "transceiver.h"
+#include "rf_send.h"
+#include "rf_receive.h"
 #include "fncollection.h"
 #include "display.h"
 #include "fht.h"
@@ -22,19 +23,21 @@
 uint8_t fht_hc[2];    // Our housecode. The first byte for 80b communication
 
 #ifdef HAS_FHT_80b
-uint8_t fht80b_last[2]; 
-uint8_t fht80b_state;    // 80b state machine
-uint8_t fht80b_ldata;    // last data waiting for ack
 uint8_t fht80b_timeout;
- int8_t fht80b_minoffset;
-uint8_t fht80b_buf[FHTBUF_SIZE];
 
-static void     fht80b_print(void);
-static void     fht80b_initbuf(void);
-static uint8_t  fht_free(void);
-static void fht_delbuf(uint8_t *buf);
-static uint8_t  fht_addbuf(uint8_t *buf);
-static uint8_t  fht_getbuf(uint8_t *buf);
+static uint8_t fht80b_state;    // 80b state machine
+static uint8_t fht80b_ldata;    // last data waiting for ack
+static uint8_t fht80b_out[6];   // Last sent packet. Reserve 1 byte for checksum
+static uint8_t fht80b_repeatcnt;
+static  int8_t fht80b_minoffset;
+static uint8_t fht80b_buf[FHTBUF_SIZE];
+
+static void    fht80b_print(void);
+static void    fht80b_initbuf(void);
+static uint8_t fht_free(void);
+static void    fht_delbuf(uint8_t *buf);
+static uint8_t fht_addbuf(uint8_t *buf);
+static uint8_t fht_getbuf(uint8_t *buf);
 
 #endif 
 
@@ -223,7 +226,7 @@ PROGMEM prog_uint8_t fht80b_state_tbl[] = {
 static void
 fht_sendpacket(uint8_t *mbuf)
 {
-  ccStrobe( CC1100_SIDLE );    // Don't let the CC1101 to disturb us
+  ccStrobe(CC1100_SIDLE);      // Don't let the CC1101 to disturb us
   if(mbuf[2]==FHT_CAN_XMIT)    // avg. FHT packet is 76ms 
     my_delay_ms(80);           // Make us deaf for the second ACTUATOR packet.
   addParityAndSendData(mbuf, 5, FHT_CSUM_START, FHT_NMSG);
@@ -236,29 +239,36 @@ fht_sendpacket(uint8_t *mbuf)
 void
 fht80b_timer(void)
 {
-  fht80b_state = 0;
+  if(fht80b_repeatcnt) {
+    fht_sendpacket(fht80b_out);
+    fht80b_timeout = 62;               // repeat if there is no msg for 0.5sec
+    fht80b_repeatcnt--;
+  } else {
+    fht80b_state = 0;
+  }
 }
 
 void
 fht_hook(uint8_t *fht_in)
 {
-  if(fht_hc[0] == 0 && fht_hc[1] == 0)  // FHT processing is off
+  fht80b_timeout = 0;                  // no resend if there is an answer
+  if(fht_hc[0] == 0 && fht_hc[1] == 0) // FHT processing is off
     goto DONE;
 
-  if(fht80b_last[0] != fht_in[0] ||     // A different FHT is sending data
-     fht80b_last[1] != fht_in[1]) {
+  if(fht80b_out[0] != fht_in[0] ||     // A different FHT is sending data
+     fht80b_out[1] != fht_in[1]) {
     fht80b_state = 0;
     fht80b_ldata = 0;
-    fht80b_last[0] = fht_in[0];
-    fht80b_last[1] = fht_in[1];
+    fht80b_out[0] = fht_in[0];
+    fht80b_out[1] = fht_in[1];
   }
 
   if(fht80b_state == FHT_FOREIGN)       // This is not our FHT, forget it
     goto DONE;
 
-  uint8_t fht_out[6], inb, outb;        // Reserve 1 byte for checksum
-  for(uint8_t i = 0; i < 5; i++)            // Copy the input, as it
-    fht_out[i] = fht_in[i];             // cannot be reused for sending
+  uint8_t inb, outb;
+  for(uint8_t i = 2; i < 5; i++)        // Copy the input, as it
+    fht80b_out[i] = fht_in[i];          // cannot be reused for sending
 
   //////////////////////////////
   // FHT->CUL part: ack everything.
@@ -273,19 +283,19 @@ fht_hook(uint8_t *fht_in)
       goto DONE;
     }
 
-    // Setting fht_out[4] to our hosecode for FHT_CAN_RCV & FHT_START_XMIT
+    // Setting fht80b_out[4] to our hosecode for FHT_CAN_RCV & FHT_START_XMIT
     // won't change the FHT pairing
     if(fht_in[2] == FHT_CAN_RCV) {
-      if(fht_getbuf(fht_out)) {
+      if(fht_getbuf(fht80b_out)) {
         fht80b_state = RCV_OFFSET;
         goto FHT_CONVERSATION;
       }
-      fht_out[2] = FHT_END_XMIT;        // Send "Shut up" message
+      fht80b_out[2] = FHT_END_XMIT;     // Send "Shut up" message
     }
 
     if((fht_in[3]&0xf0) == 0x60) {      // Answer only 0x6. packets, else we get
-      fht_out[3] |= 0x70;               // strange "endless" loops when other
-      fht_sendpacket(fht_out);          // CUL's / FHT's are involved
+      fht80b_out[3] |= 0x70;            // strange "endless" loops when other
+      fht_sendpacket(fht80b_out);       // CUL's / FHT's are involved
     }
     goto DONE;
 
@@ -293,7 +303,7 @@ fht_hook(uint8_t *fht_in)
 
   //////////////////////////////
   // CUL->FHT part
-  if(!fht_getbuf(fht_out) && fht80b_state == 0)
+  if(!fht_getbuf(fht80b_out) && fht80b_state == 0)
     goto DONE;
 
 FHT_CONVERSATION:
@@ -318,8 +328,8 @@ FHT_CONVERSATION:
   outb = 0;
 
   if(fht80b_ldata) {
-    fht_delbuf(fht_out);
-    if(fht_getbuf(fht_out))       // Search for next
+    fht_delbuf(fht80b_out);
+    if(fht_getbuf(fht80b_out))       // Search for next
       outb = FHT_DATA;
     else
       fht80b_state+=2;
@@ -330,18 +340,18 @@ FHT_CONVERSATION:
 
   if(outb == FHT_DATA) {            
 
-    fht80b_ldata = fht_out[2];
+    fht80b_ldata = fht80b_out[2];
     if(fht80b_ldata == FHT_MINUTE) {
-      fht_out[4] = (minute + 60 - fht80b_minoffset);
-      if(fht_out[4] > 60)
-        fht_out[4] -= 60;
+      fht80b_out[4] = (minute + 60 - fht80b_minoffset);
+      if(fht80b_out[4] > 60)
+        fht80b_out[4] -= 60;
     }
 
   } else {                            // Follow the protocol table
 
-    fht_out[2] = outb;
-    fht_out[3] = 0x77;
-    fht_out[4] = fht_hc[0];
+    fht80b_out[2] = outb;
+    fht80b_out[3] = 0x77;
+    fht80b_out[4] = fht_hc[0];
     fht80b_ldata = 0;
     fht80b_state += 2;
     if(fht80b_state == sizeof(fht80b_state_tbl))
@@ -350,8 +360,9 @@ FHT_CONVERSATION:
   }
 
   if(outb) {
-    fht_sendpacket(fht_out);
-    fht80b_timeout = 125;       // reset the state if there is no msg for 1 sec
+    fht_sendpacket(fht80b_out);
+    fht80b_timeout = 62;       // repeat if there is no msg for 0.5sec
+    fht80b_repeatcnt = 2;
   }
 
 DONE:

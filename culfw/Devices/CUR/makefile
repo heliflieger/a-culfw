@@ -20,7 +20,8 @@ SRC = $(TARGET).c                                                  \
 		../clib/qfs.c                                      \
 		../clib/fswrapper.c                                \
 		../clib/stringfunc.c                               \
-		../clib/transceiver.c                              \
+		../clib/rf_send.c                                  \
+		../clib/rf_receive.c                               \
 		../clib/fht.c                                      \
 		../clib/ttydata.c                                  \
 		../clib/pcf8833.c                                  \
@@ -31,6 +32,7 @@ SRC = $(TARGET).c                                                  \
 		../clib/ds1339.c                                   \
 		../clib/log.c                                      \
 		../clib/more.c                                     \
+		../clib/fastrf.c                                   \
 		../clib/twimaster.c                                \
 		../MyUSB/Scheduler/Scheduler.c                     \
 		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \

@@ -2,7 +2,7 @@
 #include "display.h"
 #include "cdc.h"
 #include "menu.h"
-#include "transceiver.h"
+#include "rf_receive.h"
 #include <stdlib.h>
 #include <string.h>
 #include <avr/wdt.h>

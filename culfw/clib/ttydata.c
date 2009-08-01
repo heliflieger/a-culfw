@@ -33,9 +33,9 @@ analyze_ttydata()
 
       cmdbuf[cmdlen] = 0;
       if(!callfn(cmdbuf)) {
-        DS_P(PSTR("? (Unknown "));
+        DS_P(PSTR("? ("));
         DC(cmdbuf[0]);
-        DS_P(PSTR(") Use one of"));
+        DS_P(PSTR(" is unknown) Use one of"));
 
         for(idx = 0; fntab[idx].name; idx++) {
           DC(' ');

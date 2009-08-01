@@ -97,8 +97,10 @@ SRC = $(TARGET).c                                                  \
 		../clib/stringfunc.c                               \
 		../clib/fncollection.c                             \
 		../clib/ringbuffer.c                               \
-		../clib/transceiver.c                              \
+		../clib/rf_send.c                                  \
+		../clib/rf_receive.c                               \
 		../clib/fht.c                                      \
+		../clib/fastrf.c                                   \
 		../clib/ttydata.c                                  \
 		../clib/spi.c                                      \
 		../MyUSB/Scheduler/Scheduler.c                     \

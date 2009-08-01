@@ -38,6 +38,10 @@
 #undef  FULL_CC1100_PA          //  100 byte PROGMEM
 #define RCV_BUCKETS             2       // 25byte per bucket
 
+#undef HAS_RAWSEND
+#define HAS_FASTRF
+
+
 #define BUSWARE_CUL
 
 #endif

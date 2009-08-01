@@ -1,19 +1,19 @@
 /* 
  * Copyright by R.Koenig
- * Inspired by code from Alexander Neumann <alexander@bumpern.de>
+ * Inspired by code from Dirk Tostmann
  * License: GPL v2
  */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
-#include <avr/eeprom.h>
 #include <util/parity.h>
 #include <string.h>
 
 #include "board.h"
 #include "delay.h"
-#include "transceiver.h"
+#include "rf_send.h"
+#include "rf_receive.h"
 #include "led.h"
 #include "cc1100.h"
 #include "display.h"
@@ -23,22 +23,12 @@
 #ifdef HAS_LCD
 #include "pcf8833.h"
 #endif
+#include "fastrf.h"
 
-
-// For FS20 we time the complete message, for KS300 the rise-fall distance
-// FS20  NULL: 400us high, 400us low
-// FS20  ONE:  600us high, 600us low
-// KS300 NULL  854us high, 366us low
-// KS300 ONE:  366us high, 854us low
-
-#define FS20_ZERO      400     //   400uS
-#define FS20_ONE       600     //   600uS
-#define FS20_PAUSE      10     // 10000mS
 
 #define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
 #define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
 #define SILENCE    4000        // End of message
-
 
 #define STATE_RESET   0
 #define STATE_INIT    1
@@ -46,8 +36,8 @@
 #define STATE_COLLECT 3
 #define STATE_HMS     4
 
-// For CUR request we need 
-#define MAXMSG 17               // inclusive parity (Netto 15)
+uint8_t tx_report;              // global verbose / output-filter
+uint8_t cc_on;
 
 typedef struct {
   uint8_t hightime, lowtime;
@@ -60,11 +50,6 @@ typedef struct {
   wave_t zero, one; 
 } bucket_t;
 
-
-uint16_t credit_10ms;
-uint8_t tx_report;              // global verbose / output-filter
-
-
 static bucket_t bucket_array[RCV_BUCKETS];
 static uint8_t bucket_in;                 // Pointer to the in(terrupt) queue
 static uint8_t bucket_out;                // Pointer to the out (analyze) queue
@@ -72,13 +57,8 @@ static uint8_t bucket_nrused;             // Number of unprocessed buckets
 static uint8_t oby, obuf[MAXMSG], nibble; // parity-stripped output
 static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime;
-static uint8_t cc_on;
 static uint8_t hightime, lowtime;
 
-static void send_bit(uint8_t bit);
-static void sendraw(uint8_t msg[], uint8_t nbyte, uint8_t bitoff,
-                    uint8_t repeat, uint8_t pause);
-static uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
 static uint8_t cksum2(uint8_t *buf, uint8_t len);
 static uint8_t cksum3(uint8_t *buf, uint8_t len);
 static void reset_input(void);
@@ -105,6 +85,7 @@ void
 set_txoff(void)
 {
   ccStrobe(CC1100_SIDLE);
+  my_delay_ms(1);
 #ifdef BUSWARE_CUR
   ccStrobe(CC1100_SPWD);
 #endif
@@ -112,23 +93,23 @@ set_txoff(void)
 }
 
 void
-set_txon(void)
+set_txon(uint8_t withrx)
 {
 #ifdef BUSWARE_CUR
-  ccStrobe( CC1100_SIDLE );
+  ccStrobe(CC1100_SIDLE);
   my_delay_ms(1);
 #endif
   ccInitChip();
   cc_on = 1;
-  ccRX();
+  if(withrx)
+    ccRX();
 }
 
 void
 set_txrestore()
 {
-  tx_init();    // Sets up Counter1, needed by my_delay in ccReset
   if(tx_report) {
-    set_txon();
+    set_txon(tx_report);
   } else {
     set_txoff();
   }
@@ -138,7 +119,9 @@ void
 set_txreport(char *in)
 {
   if(in[1] == 0) {              // Report Value
-    DH(tx_report, 2); DNL();
+    DH(tx_report, 2);
+    DU(credit_10ms, 4);
+    DNL();
     return;
   }
   fromhex(in+1, &tx_report, 1);
@@ -146,129 +129,9 @@ set_txreport(char *in)
 }
 
 ////////////////////////////////////////////////////
-// Sender
-static void
-send_bit(uint8_t bit)
-{
-  CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  my_delay_us(bit ? FS20_ONE : FS20_ZERO);
-
-  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-  my_delay_us(bit ? FS20_ONE : FS20_ZERO);
-}
-
-
-// msg is with parity/checksum already added
-static void
-sendraw(uint8_t *msg, uint8_t nbyte, uint8_t bitoff,
-                uint8_t repeat, uint8_t pause)
-{
-  // 12*800+1200+nbyte*(8*1000)+(bits*1000)+800+10000 
-  // message len is < (nbyte+2)*repeat in 10ms units.
-  int8_t i, j, sum = (nbyte+2)*repeat;
-#ifndef BUSWARE_CUR
-  if (credit_10ms < sum) {
-    DS_P(PSTR("LOVF\r\n"));
-    return;
-  }
-#endif
-  credit_10ms -= sum;
-
-  LED_ON();
-  if(!cc_on) {
-    tx_init();
-    ccInitChip();
-    cc_on = 1;
-  }
-  ccStrobe( CC1100_SIDLE );
-  my_delay_ms(1);
-  ccTX();                       // Enable TX 
-
-  do {
-    for(i = 0; i < 12; i++)                     // sync
-      send_bit(0);
-    send_bit(1);
-    
-    for(j = 0; j < nbyte; j++) {                // whole bytes
-      for(i = 7; i >= 0; i--)
-        send_bit(msg[j] & _BV(i));
-    }
-    for(i = 7; i > bitoff; i--)                 // broken bytes
-      send_bit(msg[j] & _BV(i));
-
-    my_delay_ms(pause);                         // pause
-
-  } while(--repeat > 0);
-
-  if(tx_report) {               // Enable RX
-    ccRX();
-  } else {
-    ccStrobe(CC1100_SIDLE);
-  }
-  LED_OFF();
-}
-
-void
-addParityAndSend(char *in, uint8_t startcs, uint8_t repeat)
-{
-  uint8_t hb[MAXMSG], hblen;
-  hblen = fromhex(in+1, hb, MAXMSG-1);
-  addParityAndSendData(hb, hblen, startcs, repeat);
-}
-
-static int
-abit(uint8_t b, uint8_t obi)
-{
-  if(b)
-    obuf[oby] |= _BV(obi);
-  if(obi-- == 0) {
-    if(oby < MAXMSG-1)
-      oby++;
-    obi = 7; obuf[oby] = 0;
-  }
-  return obi;
-}
-
-void
-addParityAndSendData(uint8_t *hb, uint8_t hblen,
-                uint8_t startcs, uint8_t repeat)
-{
-  uint8_t iby;
-  int8_t ibi, obi;
-
-  hb[hblen] = cksum1(startcs, hb, hblen);
-  hblen++;
-
-  // Copy the message and add parity-bits
-  iby=oby=0;
-  ibi=obi=7;
-  obuf[oby] = 0;
-
-  while(iby<hblen) {
-    obi = abit(hb[iby] & _BV(ibi), obi);
-    if(ibi-- == 0) {
-      obi = abit(parity_even_bit(hb[iby]), obi);
-      ibi = 7; iby++;
-    }
-  }
-  if(obi-- == 0) {                   // Trailing 0 bit: no need for a check
-    oby++; obi = 7;
-  }
-
-  sendraw(obuf, oby, obi, repeat, FS20_PAUSE);
-}
-
-void
-fs20send(char *in)
-{
-  addParityAndSend(in, 6, 3);
-}
-
-
-////////////////////////////////////////////////////
 // Receiver
 
-static uint8_t
+uint8_t
 cksum1(uint8_t s, uint8_t *buf, uint8_t len)    // FS20 / FHT
 {
   while(len)
@@ -420,8 +283,6 @@ analyze_hms(bucket_t *b)
 
 
 //////////////////////////////////////////////////////////////////////
-// Timer Compare Interrupt Handler. If we are called, then there was no
-// data for SILENCE time, and we can analyze the data in the buffers
 TASK(RfAnalyze_Task)
 {
   uint8_t datatype = 0;
@@ -434,8 +295,8 @@ TASK(RfAnalyze_Task)
       lcd_txmon(hightime, lowtime);
 #endif
     if(tx_report & REP_MONITOR) {
-      DC('r'); if(tx_report & REP_BINTIME) DH(hightime,2);
-      DC('f'); if(tx_report & REP_BINTIME) DH(lowtime, 2);
+      DC('r'); if(tx_report & REP_BINTIME) DC(hightime);
+      DC('f'); if(tx_report & REP_BINTIME) DC(lowtime);
     }
     lowtime = 0;
   }
@@ -596,6 +457,9 @@ ISR(TIMER1_COMPA_vect)
 {
   TIMSK1 = 0;                           // Disable "us"
 
+  if(tx_report & REP_MONITOR)
+    DC('.');
+
   if(bucket_array[bucket_in].state < STATE_COLLECT ||
      bucket_array[bucket_in].byteidx < 2) {    // false alarm
     reset_input();
@@ -669,6 +533,12 @@ delbit(bucket_t *b)
 // "Edge-Detected" Interrupt Handler
 ISR(CC1100_INTVECT)
 {
+#ifdef HAS_FASTRF
+  if(fastrf_on) {
+    fastrf_on = 2;
+    return;
+  }
+#endif
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 

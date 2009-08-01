@@ -18,6 +18,8 @@ void ccRX(void);
 void ccStrobe(uint8_t);
 void ccreg(char*);
 void ccsetpa(char*);
+uint8_t cc1100_sendbyte(uint8_t data);
+uint8_t cc1100_read(uint8_t data);
 uint8_t cc1100_readReg(uint8_t addr);
 
 // Configuration Registers
