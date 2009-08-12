@@ -95,18 +95,18 @@ rtcfunc(char *in)
     rtcget(hb);
 
     if(t&1) {
-      DH(hb[0], 2); DC('-');
-      DH(hb[1], 2); DC('-');
-      DH(hb[2], 2);
+      DH2(hb[0]); DC('-');
+      DH2(hb[1]); DC('-');
+      DH2(hb[2]);
     }
 
     if((t&3) == 3)
       DC(' ');
 
     if(t&2) {
-      DH(hb[3], 2); DC(':');
-      DH(hb[4], 2); DC(':');
-      DH(hb[5], 2);
+      DH2(hb[3]); DC(':');
+      DH2(hb[4]); DC(':');
+      DH2(hb[5]);
     }
     DNL();
   }

@@ -212,18 +212,9 @@ Protocol
         Return the own housecode (hex)
       - T02
         Return the FHT80b buffer. FHT80b commands are queued in an internal
-        buffer, which has place for about 20 messages. If an FHT80b is sending
-        an actuator message, then the buffer will be searched for matching
-        housecodes, and all found messages will be sent to this FHT80b.
-
+        buffer, which has place for 14 to 31 messages.
       - T03
-        Return the size of the remaining fht buffer (in bytes). There are two
-        (compile time option) models for the buffer.
-        - Model1 needs 3 byte per diffrent FHT + 2 byte per message. So the
-          default 48 bytes are enough for 1 FHT with 22 messages or 9 FHT's
-          with one message each or something inbetween.
-        - Model 2 uses 4 bytes per message, the 48 bytes can store 122 messages.
-
+        Return the size of the remaining fht buffer (in bytes).
       - T04<sec>
         Set the internal second counter to <second>. Used by fhem to
         synchronize the culfw seconds with the PC before sending the

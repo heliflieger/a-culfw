@@ -1,3 +1,4 @@
+#include <string.h>
 #include <avr/eeprom.h>
 #include "board.h"
 #include "rf_send.h"
@@ -20,38 +21,40 @@
 //    our own housecode.
 
 
-uint8_t fht_hc[2];    // Our housecode. The first byte for 80b communication
+uint8_t fht_hc0, fht_hc1; // Our housecode. The first byte for 80b communication
 
 #ifdef HAS_FHT_80b
-uint8_t fht80b_timeout;
-
+ 
+       uint8_t fht80b_timeout;
 static uint8_t fht80b_state;    // 80b state machine
 static uint8_t fht80b_ldata;    // last data waiting for ack
 static uint8_t fht80b_out[6];   // Last sent packet. Reserve 1 byte for checksum
 static uint8_t fht80b_repeatcnt;
-static  int8_t fht80b_minoffset;
+static  int8_t fht80b_minoffset, fht80b_hroffset;
 static uint8_t fht80b_buf[FHTBUF_SIZE];
+static uint8_t fht80b_bufoff;   // offset in the current fht80b_buf
 
 static void    fht80b_print(void);
 static void    fht80b_initbuf(void);
-static uint8_t fht_free(void);
+static uint8_t fht_bufspace(void);
 static void    fht_delbuf(uint8_t *buf);
-static uint8_t fht_addbuf(uint8_t *buf);
+static uint8_t fht_addbuf(char *in);
 static uint8_t fht_getbuf(uint8_t *buf);
+static void    fht80b_reset_state(void);
 
 #endif 
 
 #ifdef HAS_FHT_8v
-uint8_t fht8v_timeout = 0;      
+       uint8_t fht8v_timeout = 0;      
+       uint8_t fht8v_buf[18];
 static void set_fht8v_timer(void);
-uint8_t fht8v_buf[18];
 #endif
 
 void
 fht_init(void)
 {
-  fht_hc[0] = erb(EE_FHTID);
-  fht_hc[1] = erb(EE_FHTID+1);
+  fht_hc0 = erb(EE_FHTID);
+  fht_hc1 = erb(EE_FHTID+1);
 #ifdef HAS_FHT_8v
   set_fht8v_timer();
   for(uint8_t i = 0; i < 18; i+=2)
@@ -59,8 +62,7 @@ fht_init(void)
 #endif
 
 #ifdef HAS_FHT_80b
-  fht80b_state = 0;
-  fht80b_ldata = 0;
+  fht80b_reset_state();
   fht80b_initbuf();
 #endif
 }
@@ -68,106 +70,95 @@ fht_init(void)
 void
 fhtsend(char *in)
 {
-  uint8_t hb[5], l;
+  uint8_t hb[6], l;                    // Last byte needed for 8v checksum
+  l = fromhex(in+1, hb, 5);
 
-  l = fromhex(in+1, hb, 6);
+  if(l < 4) {
 
-  if(l == 3 && hb[0] == 1) {                // Set housecode, clear buffers
-    if(fht_hc[0] != hb[1] || fht_hc[1] != hb[2]) {
-      ewb(EE_FHTID  , hb[1]);               // 1.st byte: 80b relevant
-      ewb(EE_FHTID+1, hb[2]);               // 1.st+2.nd byte: 8v relevant
-    }
-    fht_init();
-
-  } else if(l == 1 && hb[0] == 1) {         // Report own housecode: 
-    DH(fht_hc[0], 2);
-    DH(fht_hc[1], 2);
-    DNL();
+    if(hb[0] == 1) {                   // Set housecode, clear buffers
+      if(l == 3) {
+        ewb(EE_FHTID  , hb[1]);        // 1.st byte: 80b relevant
+        ewb(EE_FHTID+1, hb[2]);        // 1.st+2.nd byte: 8v relevant
+        fht_init();
+      } else {
+        DH2(fht_hc0);
+        DH2(fht_hc1);
+        DNL();
+      }
 
 #ifdef HAS_FHT_80b
-  } else if(l == 1 && hb[0] == 2) {         // Return the 80b buffer
-    fht80b_print();
+    } else if(hb[0] == 2) {            // Return the 80b buffer
+      fht80b_print();
 
-  } else if(l == 1 && hb[0] == 3) {         // Return the remaining fht buffer
-    DH(fht_free(), 2);
-    DNL();
+    } else if(hb[0] == 3) {            // Return the remaining fht buffer
+      DH2(fht_bufspace());
+      DNL();
 
-  } else if(l == 2 && hb[0] == 4) {         // Needed by FHT_MINUTE below
-    sec = hb[1];
+    } else if(hb[0] == 4) {            // Needed by FHT_MINUTE below
+      sec = hb[1];
+
 #endif
 
 #ifdef HAS_FHT_8v
-  } else  if(l == 1 && hb[0] == 10) {        // Return the 8v buffer
+    } else if(hb[0] == 10) {           // Return the 8v buffer
 
-    uint8_t na=0, v, i = 8;
-    do {
-      if((v = fht8v_buf[2*i]) == 0xff)
-        continue;
-      if(na)
-        DC(' ');
-      DH(i, 2); DC(':');
-      DH(v,2);
-      DH(fht8v_buf[2*i+1],2);
-      na++;
-    } while(i--);
+      uint8_t na=0, v, i = 8;
+      do {
+        if((v = fht8v_buf[2*i]) == 0xff)
+          continue;
+        if(na)
+          DC(' ');
+        DH2(i); DC(':');
+        DH2(v);
+        DH2(fht8v_buf[2*i+1]);
+        na++;
+      } while(i--);
 
-    if(na==0)
-      DS_P( PSTR("N/A") );
-    DNL();
+      if(na==0)
+        DS_P( PSTR("N/A") );
+      DNL();
 
-  } else if(l == 1 && hb[0] == 11) {         // Return the next 8v timeout
-    DU(fht8v_timeout, 2);
-    DNL();
+    } else if(hb[0] == 11) {           // Return the next 8v timeout
+      DU(fht8v_timeout, 2);
+      DNL();
 #endif
+    }
 
-  } else if(l == 5) {
+  } else {
 
 #ifdef HAS_FHT_8v
-    if(hb[0]==fht_hc[0] &&
-       hb[1]==fht_hc[1]) {             // FHT8v mode commands
+    if(hb[0]==fht_hc0 &&
+       hb[1]==fht_hc1) {             // FHT8v mode commands
 
-      if(hb[3] == 0x2f ||                     // Pair: Send immediately
-         hb[3] == 0x20 ||                     // Syncnow: Send immediately
-         hb[3] == 0x2c) {                     // Sync: Send immediately
+      if(hb[3] == 0x2f ||              // Pair: Send immediately
+         hb[3] == 0x20 ||              // Syncnow: Send immediately
+         hb[3] == 0x2c) {              // Sync: Send immediately
 
         addParityAndSend(in, FHT_CSUM_START, 2);
 
-      } else {                                // Store the rest
+      } else {                         // Store the rest
 
         uint8_t a = (hb[2] < 9 ? hb[2] : 0);
-        fht8v_buf[a*2  ] = hb[3];    // Command or 0xff for disable
-        fht8v_buf[a*2+1] = hb[4];    // value
+        fht8v_buf[a*2  ] = hb[3];      // Command or 0xff for disable
+        fht8v_buf[a*2+1] = hb[4];      // value
         set_fht8v_timer();
 
       }
-
-    } else
+      return;
+    }
 #endif
 
 #ifdef HAS_FHT_80b
-    {                                  // FHT80b mode: Queue everything
-
-      // Look for an empty slot. Note: it should be a distinct ringbuffer for
-      // each controlled fht
-      if(!fht_addbuf(hb))
-        DS_P( PSTR("EOB") );
-      if(hb[2] == FHT_MINUTE)
-        fht80b_minoffset = minute-hb[4];
-
-    }
-#else
-      ;
+    if(!fht_addbuf(in))                // FHT80b mode: Queue everything
+      DS_P( PSTR("EOB") );
 #endif
-
-  } else {
-  
-    DC('?'); DNL();
 
   }
 
 }
 
 #ifdef HAS_FHT_8v
+
 static void
 set_fht8v_timer(void)
 {
@@ -186,8 +177,8 @@ fht8v_timer(void)
 {
   uint8_t hb[6], i = 8;
 
-  hb[0] = fht_hc[0];
-  hb[1] = fht_hc[1];
+  hb[0] = fht_hc0;
+  hb[1] = fht_hc1;
 
   do {
     if((hb[3] = fht8v_buf[2*i]) == 0xff)
@@ -203,9 +194,13 @@ fht8v_timer(void)
   fht8v_timeout = 116;
 
 }
+
 #endif
 
 
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
 #ifdef HAS_FHT_80b
 
 PROGMEM prog_uint8_t fht80b_state_tbl[] = {
@@ -220,119 +215,144 @@ PROGMEM prog_uint8_t fht80b_state_tbl[] = {
 };
 #define RCV_OFFSET 6
 
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
 static void
-fht_sendpacket(uint8_t *mbuf)
+fht80b_sendpacket(void)
 {
-  ccStrobe(CC1100_SIDLE);      // Don't let the CC1101 to disturb us
-  if(mbuf[2]==FHT_CAN_XMIT)    // avg. FHT packet is 76ms 
-    my_delay_ms(80);           // Make us deaf for the second ACTUATOR packet.
-  addParityAndSendData(mbuf, 5, FHT_CSUM_START, FHT_NMSG);
-  ccRX();                      // reception might be lost due to LOVF
+  ccStrobe(CC1100_SIDLE);               // Don't let the CC1101 to disturb us
+                                        // avg. FHT packet is 75ms 
+  my_delay_ms(fht80b_out[2]==FHT_CAN_XMIT ? 155 : 75);
+  addParityAndSendData(fht80b_out, 5, FHT_CSUM_START, 1);
+  ccRX();                               // reception might be lost due to LOVF
+
   if(tx_report & REP_FHTPROTO) {
-    DC('T'); for(uint8_t i = 0; i < 5; i++) DH(mbuf[i],2); DH(0,2); DNL();
+    DC('T');
+    for(uint8_t i = 0; i < 5; i++)
+      DH2(fht80b_out[i]);
+    if(tx_report & REP_RSSI)
+      DH2(250);
+    DNL();
   }
+}
+
+static void
+fht80b_reset_state(void)
+{
+  fht80b_state = 0;
+  fht80b_ldata = 0;
+  fht80b_bufoff = 3;
 }
 
 void
 fht80b_timer(void)
 {
   if(fht80b_repeatcnt) {
-    fht_sendpacket(fht80b_out);
-    fht80b_timeout = 62;               // repeat if there is no msg for 0.5sec
+    fht80b_sendpacket();
+    fht80b_timeout = 31;               // repeat if there is no msg for 0.25sec
     fht80b_repeatcnt--;
   } else {
-    fht80b_state = 0;
+    fht80b_reset_state();
   }
+}
+
+static void
+fht80b_send_repeated(void)
+{
+  fht80b_sendpacket(); 
+  if(fht80b_out[2]==FHT_ACK2)
+    return;
+  fht80b_timeout = 41;
+  fht80b_repeatcnt = 1;                // Never got reply for the 3.rd data
 }
 
 void
 fht_hook(uint8_t *fht_in)
 {
-  fht80b_timeout = 0;                  // no resend if there is an answer
-  if(fht_hc[0] == 0 && fht_hc[1] == 0) // FHT processing is off
-    goto DONE;
+  uint8_t fi0 = fht_in[0];             // Makes code 18 bytes smaller...
+  uint8_t fi1 = fht_in[1];
+  uint8_t fi2 = fht_in[2];
+  uint8_t fi3 = fht_in[3];
+  uint8_t fi4 = fht_in[4];
 
-  if(fht80b_out[0] != fht_in[0] ||     // A different FHT is sending data
-     fht80b_out[1] != fht_in[1]) {
-    fht80b_state = 0;
-    fht80b_ldata = 0;
-    fht80b_out[0] = fht_in[0];
-    fht80b_out[1] = fht_in[1];
+  fht80b_timeout = 0;                  // no resend if there is an answer
+  if(fht_hc0 == 0 && fht_hc1 == 0)     // FHT processing is off
+    return;
+
+  if(fht80b_out[0] != fi0 ||           // A different FHT is sending data
+     fht80b_out[1] != fi1) {
+    fht80b_reset_state();
+    fht80b_out[0] = fi0;
+    fht80b_out[1] = fi1;
   }
 
   if(fht80b_state == FHT_FOREIGN)       // This is not our FHT, forget it
-    goto DONE;
+    return;
 
   uint8_t inb, outb;
-  for(uint8_t i = 2; i < 5; i++)        // Copy the input, as it
-    fht80b_out[i] = fht_in[i];          // cannot be reused for sending
+  fht80b_out[2] = fi2;                  // copy the in buffer as it cannot
+  fht80b_out[3] = fi3;                  // be used for sending it out again
+  fht80b_out[4] = fi4;
+
 
   //////////////////////////////
   // FHT->CUL part: ack everything.
-  if(fht_in[2] && fht80b_state == 0) {            
+  if(fi2 && fht80b_state == 0) {            
 
-    if(fht_in[4] != fht_hc[0] &&        // Foreign (not our) FHT/FHZ, forget it
-       fht_in[4] != 100 &&              // not the unassigned one
-       (fht_in[2] == FHT_CAN_XMIT ||    // FHZ start seq
-        fht_in[2] == FHT_CAN_RCV  ||    // FHZ start seq?
-        fht_in[2] == FHT_START_XMIT)) { // FHT start seq
+    if(fi4 != fht_hc0 &&                // Foreign (not our) FHT/FHZ, forget it
+       fi4 != 100 &&                    // not the unassigned one
+       (fi2 == FHT_CAN_XMIT ||          // FHZ start seq
+        fi2 == FHT_CAN_RCV  ||          // FHZ start seq?
+        fi2 == FHT_START_XMIT)) {       // FHT start seq
       fht80b_state = FHT_FOREIGN;
-      goto DONE;
+      return;
     }
 
     // Setting fht80b_out[4] to our hosecode for FHT_CAN_RCV & FHT_START_XMIT
     // won't change the FHT pairing
-    if(fht_in[2] == FHT_CAN_RCV) {
-      if(fht_getbuf(fht80b_out)) {
-        fht80b_state = RCV_OFFSET;
-        goto FHT_CONVERSATION;
-      }
-      fht80b_out[2] = FHT_END_XMIT;     // Send "Shut up" message
-    }
+    if(fi2 == FHT_CAN_RCV)
+      return;
 
-    if((fht_in[3]&0xf0) == 0x60) {      // Answer only 0x6. packets, else we get
-      fht80b_out[3] |= 0x70;            // strange "endless" loops when other
-      fht_sendpacket(fht80b_out);       // CUL's / FHT's are involved
+    if((fi3&0xf0) == 0x60) {            // Ack only 0x6. packets, else we get
+      fht80b_out[3] = fi3|0x70;         // strange "endless" loops when other
+      fht80b_send_repeated();           // CUL's / FHT's are involved
     }
-    goto DONE;
+    return;
 
   }
+
 
   //////////////////////////////
   // CUL->FHT part
   if(!fht_getbuf(fht80b_out) && fht80b_state == 0)
-    goto DONE;
+    return;
 
-FHT_CONVERSATION:
   // What is the FHT80 supposed to send?
   inb = (fht80b_ldata ? fht80b_ldata :
                                 __LPM(fht80b_state_tbl+fht80b_state));
 
   // We frequently loose the FHT_CAN_XMIT msg from the FHT
   // so skip this state if the next msg comes in.
-  if(inb == FHT_CAN_XMIT && fht_in[2] == FHT_CAN_RCV) {
+  if(inb == FHT_CAN_XMIT && fi2 == FHT_CAN_RCV) {
     inb = FHT_CAN_RCV;
     fht80b_state += 2;
   }
     
   // Ack-Check: correct ack from the FHT?
-  if(inb != fht_in[2]) {
-    fht80b_state = fht80b_ldata = 0;
-    goto DONE;
+  if(inb != fi2) {
+    fht80b_reset_state();
+    return;
   }
 
-  // What should the CUL send back?
-  outb = 0;
+  outb = 0;                             // What should the CUL send back?
 
   if(fht80b_ldata) {
-    fht_delbuf(fht80b_out);
-    if(fht_getbuf(fht80b_out))       // Search for next
+    fht80b_bufoff += 2;
+
+    if(fht_getbuf(fht80b_out)) {        // Search for next
       outb = FHT_DATA;
-    else
+
+    } else {
       fht80b_state+=2;
+    }
   }
 
   if(!outb)
@@ -341,247 +361,147 @@ FHT_CONVERSATION:
   if(outb == FHT_DATA) {            
 
     fht80b_ldata = fht80b_out[2];
+
+    uint8_t f4 = fht80b_out[4];         // makes code 8 bytes smaller
     if(fht80b_ldata == FHT_MINUTE) {
-      fht80b_out[4] = (minute + 60 - fht80b_minoffset);
-      if(fht80b_out[4] > 60)
-        fht80b_out[4] -= 60;
+      f4 = (minute + 60 - fht80b_minoffset);
+      if(f4 > 60)
+        f4 -= 60;
     }
+    if(fht80b_ldata == FHT_HOUR) {
+      f4 = (hour + 24 - fht80b_hroffset);
+      if(f4 > 24)
+        f4 -= 24;
+    }
+    fht80b_out[4] = f4;
 
-  } else {                            // Follow the protocol table
-
+  } else {                              // Follow the protocol table
     fht80b_out[2] = outb;
     fht80b_out[3] = 0x77;
-    fht80b_out[4] = fht_hc[0];
-    fht80b_ldata = 0;
+    fht80b_out[4] = fht_hc0;
     fht80b_state += 2;
-    if(fht80b_state == sizeof(fht80b_state_tbl))
-      fht80b_state = 0;
+    fht80b_ldata = 0;
+    if(fht80b_state == sizeof(fht80b_state_tbl)) {
+      // If we delete the buffer earlier, and our conversation aborts, then the
+      // FHT will send every 10 minutes from here on a can_rcv telegram, and
+      // will stop sending temperature messages
+      fht_delbuf(fht80b_out);
+      fht80b_reset_state();
+    }
 
   }
 
-  if(outb) {
-    fht_sendpacket(fht80b_out);
-    fht80b_timeout = 62;       // repeat if there is no msg for 0.5sec
-    fht80b_repeatcnt = 2;
-  }
+  if(outb)
+    fht80b_send_repeated();
 
-DONE:
-  ;
 }
-
-// MODEL1: A slot contains all messages for a given housecode. Byte 0 is
-//         slotlen, byte 1&2 is housecode, followed by 2 byte netto data
-//         for each message. There are no empty slots, data is always moved
-//         so that all free space is at the end.
-//
-// MODEL2: 4 byte fixed slots per message. Byte 0&1 is housecode, 2&3 is netto
-//         data. Unused slots are marked with byte 0 = 0xff.
-//         Uses more RAM then MODEL1 if there is more than 1 message per FHT,
-//         else less. Needs 192b less program space.
-
 
 ///////////////////////
 // FHT buffer management functions
-
-#ifdef FHTBUF_MODEL1
+// "Dumb" FHZ model: store every incoming message in a separate buffer.
+// Transmit only one buffer at a time.  Delete a complete buffer if a
+// transmission is complete.
 static uint8_t*
 fht_lookbuf(uint8_t *buf)
 {
   uint8_t *p = fht80b_buf;
   while(p[0] && p < (fht80b_buf+FHTBUF_SIZE)) {
-    if(p[1] == buf[0] && p[2] == buf[1])
-      break;
-    p += *p;
+    if(buf != 0 && p[1] == buf[0] && p[2] == buf[1])
+      return p;
+    p += p[0];
   }
-  return p;
+  return (buf ? 0 : p);
 }
 
 static void
 fht_delbuf(uint8_t *buf)
 {
   uint8_t *p = fht_lookbuf(buf);
-  if(p[1] != buf[0] || p[2] != buf[1])
+  if(p == 0)
     return;
-  uint8_t *p1, *p2, sz;
-  if(p[0] == 5) {
-    sz = 5; p1 = p;
-  } else {
-    sz = 2; p1 = p+3;
-    p[0] -= 2;
+
+  uint8_t sz = p[0];
+  uint8_t *lim = fht80b_buf+FHTBUF_SIZE-sz; 
+
+  while(p < lim) {
+    p[0]=p[sz];
+    p++;
   }
-  p2 = fht80b_buf+FHTBUF_SIZE-sz;
-  while(p1 < p2) {
-    p1[0]=p1[sz];
-    p1++;
-  }
-  while(sz--)
-    p1[sz] = 0;
+  p[0] = 0;
 }
 
 
 static uint8_t
-fht_addbuf(uint8_t *buf)
+fht_addbuf(char *in)
 {
-  uint8_t *p = fht_lookbuf(buf);
+  uint8_t *p = fht_lookbuf(0);
+  uint8_t l = strlen(in+1)/2+1;
+  uint8_t i, j;
 
-  if(p[1] == buf[0] && p[2] == buf[1]) { // Append only the value
-    if(fht_free() < 2)
-      return 0;
+  if((p-fht80b_buf) > FHTBUF_SIZE-l)
+    return 0;
 
-    // insert 2 bytes
-    uint8_t *p1 = p+p[0];
-    uint8_t *p2 = fht80b_buf+FHTBUF_SIZE-3;
-    while(p2 >= p1) {
-      p2[2]=p2[0];
-      p2--;
+  p[0] = l;
+  for(i=1, j=1 ; j < l; i+=2, j++) {
+    fromhex(in+i, p+j, 1);
+    if(j > 2 && ((j&1) == 0)) {
+      if(p[j-1] == FHT_MINUTE) 
+        fht80b_minoffset = minute-p[j];
+      if(p[j-1] == FHT_HOUR) 
+        fht80b_hroffset = hour-p[j];
     }
-
-    uint8_t idx = p[0];
-    p[idx  ] = buf[2];
-    p[idx+1] = buf[4];
-    p[0] = idx+2;
-  } else {
-    if((p-fht80b_buf) > FHTBUF_SIZE-5)
-      return 0;
-    p[0] = 5;
-    p[1] = buf[0];
-    p[2] = buf[1];
-    p[3] = buf[2];
-    p[4] = buf[4];
   }
+  if(p < (fht80b_buf+FHTBUF_SIZE))
+    p[j] = 0;
   return 1;
 }
 
 static uint8_t
-fht_free(void)
+fht_bufspace(void)
 {
-  uint8_t buf[] = {0xff,0xff};
-  return (FHTBUF_SIZE - (uint8_t)(fht_lookbuf(buf)-fht80b_buf));
+  return (FHTBUF_SIZE - (uint8_t)(fht_lookbuf(0)-fht80b_buf));
 }
 
 static uint8_t
 fht_getbuf(uint8_t *buf)
 {
   uint8_t *p = fht_lookbuf(buf);
-  if(p[1] != buf[0] || p[2] != buf[1])
+  if(p == 0 || p[0] <= fht80b_bufoff)
     return 0;
-  buf[2] = p[3];
+  buf[2] = p[fht80b_bufoff];
   buf[3] = 0x79;
-  buf[4] = p[4];
+  buf[4] = p[fht80b_bufoff+1];
   return 1;
 }
 
 static void
 fht80b_initbuf()
 {
-  uint8_t i = 0;
-  while(i < FHTBUF_SIZE)
-    fht80b_buf[i++] = 0;
+  fht80b_buf[0] = 0;
 }
 
 static void
 fht80b_print()
 {
   uint8_t *p = fht80b_buf;
-  uint8_t i;
 
   if(!p[0])
     DS_P( PSTR("N/A") );
-  while(p[0]) {
+  while(p[0] && (p < (fht80b_buf+FHTBUF_SIZE))) {
     if(p != fht80b_buf)
       DC(' ');
-    DH(p[1], 2); DH(p[2], 2);
+    uint8_t i = 1;
+    DH2(p[i++])
+    DH2(p[i++])
     DC(':');
-    for(i = 3; i < p[0]; i+= 2) {
-      if(i > 3)
+    while(i < p[0]) {
+      if(i > 3 && (i&1))
         DC(',');
-      DH(p[i], 2);
-      DH(p[i+1], 2);
+      DH2(p[i++]);
     }
     p += p[0];
   }
   DNL();
 }
-#endif
-
-///////////////////////////////////////////////////////////////////////
-#ifdef FHTBUF_MODEL2
-
-static void
-fht_delbuf(uint8_t *buf)
-{
-  uint8_t i;
-  for(i = 0; i < FHTBUF_SIZE; i += 4)
-    if(fht80b_buf[i] == buf[0] && fht80b_buf[i+1] == buf[1]) {
-      fht80b_buf[i] = 0xff;
-      return;
-    }
-}
-
-static uint8_t
-fht_addbuf(uint8_t *buf)
-{
-  uint8_t i;
-  for(i = 0; i < FHTBUF_SIZE; i += 4)
-    if(fht80b_buf[i] == 0xff) {
-      fht80b_buf[i+0] = buf[0];
-      fht80b_buf[i+1] = buf[1];
-      fht80b_buf[i+2] = buf[2];
-      fht80b_buf[i+3] = buf[4];
-      return 1;
-    }
-  return 0;
-}
-
-static uint8_t
-fht_free(void)
-{
-  uint8_t i, j = 0;
-  for(i = 0; i < FHTBUF_SIZE; i += 4)
-    if(fht80b_buf[i] == 0xff)
-      j += 4;
-  return j;
-}
-
-static uint8_t
-fht_getbuf(uint8_t *buf)
-{
-  uint8_t i;
-  for(i = 0; i < FHTBUF_SIZE; i += 4)
-    if(fht80b_buf[i] == buf[0] && fht80b_buf[i+1] == buf[1]) {
-      buf[2] = fht80b_buf[i+2];
-      buf[3] = 0x79;
-      buf[4] = fht80b_buf[i+3];
-      return 1;
-    }
-  return 0;
-}
-
-static void
-fht80b_initbuf()
-{
-  for(uint8_t i = 0; i < FHTBUF_SIZE; i++)
-    fht80b_buf[i] = 0xff;
-}
-
-static void
-fht80b_print()
-{
-  uint8_t i, j = 0;
-  for(i = 0; i < FHTBUF_SIZE; i += 4)
-    if(fht80b_buf[i] != 0xff) {
-      if(j)
-        DC(' ');
-      DH(fht80b_buf[i+0], 2);
-      DH(fht80b_buf[i+1], 2);
-      DH(fht80b_buf[i+2], 2);
-      DH(fht80b_buf[i+3], 2);
-      j++;
-    }
-  if(!j)
-    DS_P( PSTR("N/A") );
-  DNL();
-}
-#endif
 
 #endif

@@ -1,5 +1,11 @@
+Version 1.27 (Sun Aug  9 2009)
+- CU*: fht interface rewrite (FHZ "mode")
+- CU*: rf fine-tuning for better FHT reception
+- CU*: command table moved into pgm memory to free up RAM.
+- CU*: CLOSE_IN_RX added (see cc1101 doc)
+
 Version 1.26 
-- CU*: FHT80b resend (not yet tested)
+- CU*: FHT80b resend
 - CU*: split transceiver.c in rf_send.c and rf_receive.c
 - CU*: experimenting with fast CC1101 based packet transmission
 

@@ -16,28 +16,25 @@ void version(char *);
 
 #define EE_MAGIC_OFFSET      (uint8_t *)0       // 2 bytes
 
-#define EE_START_CC1100      (uint8_t *)2
-#define EE_CC1100_SIZE1      0x29       // 41
-#define EE_CC1100_SIZE       (EE_CC1100_SIZE1+8)
+#define EE_CC1100_CFG        (EE_MAGIC_OFFSET+2)
+#define EE_CC1100_CFG_SIZE   0x29       // 41
+#define EE_CC1100_PA         (EE_CC1100_CFG+EE_CC1100_CFG_SIZE)
+#define EE_CC1100_PA_SIZE    8
 
-#define EE_REQBL             (uint8_t *)(EE_START_CC1100+EE_CC1100_SIZE)
-#define EE_LED               (uint8_t *)(EE_REQBL+1)
+#define EE_REQBL             (EE_CC1100_PA+EE_CC1100_PA_SIZE)
+#define EE_LED               (EE_REQBL+1)
+#define EE_FHTID             (EE_LED+1)
 
-#define EE_FHTID             (uint8_t *)(EE_LED+1)
-#define EE_FHT_ACTUATORS     (uint8_t *)(EE_FHTID+2)
-#define EE_START_FHTBUF      (uint8_t *)(EE_FHT_ACTUATORS+18) // (1+8)*2: FHT8v
-#define EE_FHTSLOTS          50                               // FHT80b
-#define EE_FHTBUF_SIZE       (5*EE_FHTSLOTS)     // 5 byte each, must be <= 255
+#define EE_FASTRF_CFG        (EE_FHTID+2)
+#define EE_FASTRF_CFG_SIZE   0x29       // 41
 
-// EEprom: CUL: 322 bytes of 512 used
+// EEprom: CUL: 96 bytes of 512 used
 
 #define EE_CONTRAST          (uint8_t *)0x200
-#define EE_BRIGHTNESS        (uint8_t *)(EE_CONTRAST+1)
-#define EE_SLEEPTIME         (uint8_t *)(EE_BRIGHTNESS+1)
+#define EE_BRIGHTNESS        (EE_CONTRAST+1)
+#define EE_SLEEPTIME         (EE_BRIGHTNESS+1)
 
-#define EE_START_UNUSED      (uint8_t *)0x078
-
-// EEprom: CUR: 516 bytes of 4096 used, minus the hole at the CUL
+// EEprom: CUR: 96+2 bytes of 4096/8192 used
 
 extern uint8_t led_mode;
 

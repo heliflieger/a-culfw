@@ -19,6 +19,7 @@ extern uint8_t fht_hc[2];
 #define FHT_START_XMIT 0x7D
 #define FHT_END_XMIT   0x7E
 #define FHT_MINUTE     0x64
+#define FHT_HOUR       0x63
 
 #define FHT_DATA       0xff
 #define FHT_FOREIGN    0xff

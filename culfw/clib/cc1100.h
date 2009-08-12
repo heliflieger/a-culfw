@@ -10,7 +10,7 @@
 #include <avr/io.h>
 #include "led.h"
 
-void ccInitChip(void);
+void ccInitChip(uint8_t *cfg, uint8_t *pa);
 void cc_factory_reset(void);
 void ccDump(void);
 void ccTX(void);
@@ -19,8 +19,13 @@ void ccStrobe(uint8_t);
 void ccreg(char*);
 void ccsetpa(char*);
 uint8_t cc1100_sendbyte(uint8_t data);
-uint8_t cc1100_read(uint8_t data);
+uint8_t cc1100_writeReg(uint8_t addr, uint8_t data);
 uint8_t cc1100_readReg(uint8_t addr);
+void set_ccoff(void);
+void set_ccon(void);
+
+extern uint8_t cc_on;
+
 
 // Configuration Registers
 #define CC1100_IOCFG2           0x00        // GDO2 output pin configuration

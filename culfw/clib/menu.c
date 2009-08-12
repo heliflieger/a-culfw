@@ -10,7 +10,7 @@
 #include "pcf8833.h"            // LCD
 #include "display.h"            // debugging
 #include "joy.h"                // input
-#include "ttydata.h"            // fntab
+#include "ttydata.h"            // callfn
 #include "battery.h"            // bat_drawstate
 #include "mysleep.h"            // dosleep
 #include "fht.h"                // fht_hc
@@ -375,17 +375,13 @@ menu_handle_joystick(uint8_t key)
 
       lcd_invon();
       fromhex((char *)arg, &idx, 1);
+
       off = menu_get_line(menu_offset[idx], menu_line, sizeof(menu_line));
       while(off && menu_line[0]) {
         off = menu_get_line(off, menu_line, sizeof(menu_line));
         if(off == 0 || !menu_line[0])
           break;
-        for(idx = 0; fntab[idx].name; idx++) {
-          if(menu_line[0] == fntab[idx].name) {
-            fntab[idx].fn((char *)menu_line);
-            break;
-          }
-        }
+        callfn((char *)menu_line);
       }
 
       lcd_invoff();

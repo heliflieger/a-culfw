@@ -3,7 +3,6 @@
  * Inspired by code from Dirk Tostmann
  * License: GPL v2
  */
-
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
@@ -25,6 +24,7 @@
 #endif
 #include "fastrf.h"
 
+#define CLOSE_IN_RX
 
 #define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
 #define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
@@ -37,7 +37,6 @@
 #define STATE_HMS     4
 
 uint8_t tx_report;              // global verbose / output-filter
-uint8_t cc_on;
 
 typedef struct {
   uint8_t hightime, lowtime;
@@ -61,10 +60,17 @@ static uint8_t hightime, lowtime;
 
 static uint8_t cksum2(uint8_t *buf, uint8_t len);
 static uint8_t cksum3(uint8_t *buf, uint8_t len);
-static void reset_input(void);
 static void addbit(bucket_t *b, uint8_t bit);
 static void delbit(bucket_t *b);
 static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime);
+
+#ifdef CLOSE_IN_RX
+static uint8_t ci_state;
+#define CI_INIT     0
+#define CI_CHECKED  1
+#define CI_MODIFIED 2
+#endif
+
 
 void
 tx_init(void)
@@ -79,39 +85,19 @@ tx_init(void)
   for(int i = 1; i < RCV_BUCKETS; i ++)
     bucket_array[i].state = STATE_RESET;
   cc_on = 0;
-}
-
-void
-set_txoff(void)
-{
-  ccStrobe(CC1100_SIDLE);
-  my_delay_ms(1);
-#ifdef BUSWARE_CUR
-  ccStrobe(CC1100_SPWD);
+#ifdef CLOSE_IN_RX
+  ci_state = CI_INIT;
 #endif
-  cc_on = 0;
-}
-
-void
-set_txon(uint8_t withrx)
-{
-#ifdef BUSWARE_CUR
-  ccStrobe(CC1100_SIDLE);
-  my_delay_ms(1);
-#endif
-  ccInitChip();
-  cc_on = 1;
-  if(withrx)
-    ccRX();
 }
 
 void
 set_txrestore()
 {
   if(tx_report) {
-    set_txon(tx_report);
+    set_ccon();
+    ccRX();
   } else {
-    set_txoff();
+    set_ccoff();
   }
 }
 
@@ -119,7 +105,7 @@ void
 set_txreport(char *in)
 {
   if(in[1] == 0) {              // Report Value
-    DH(tx_report, 2);
+    DH2(tx_report);
     DU(credit_10ms, 4);
     DNL();
     return;
@@ -392,11 +378,11 @@ TASK(RfAnalyze_Task)
       if(nibble)
         oby--;
       for(uint8_t i=0; i < oby; i++)
-        DH(obuf[i],2);
+        DH2(obuf[i]);
       if(nibble)
         DH(obuf[oby]&0xf,1);
       if(tx_report & REP_RSSI)
-        DH(cc1100_readReg(CC1100_RSSI),2);
+        DH2(cc1100_readReg(CC1100_RSSI));
       DNL();
     }
 
@@ -416,14 +402,14 @@ TASK(RfAnalyze_Task)
     DU(7-b->bitidx,     2);
     DC(' ');
     if(tx_report & REP_RSSI) {
-      DH(cc1100_readReg(CC1100_RSSI),2);
+      DH2(cc1100_readReg(CC1100_RSSI));
       DC(' ');
     }
     if(b->bitidx != 7)
       b->byteidx++;
 
     for(uint8_t i=0; i < b->byteidx; i++)
-       DH(b->data[i],2);
+       DH2(b->data[i]);
     DNL();
 
   }
@@ -466,6 +452,12 @@ ISR(TIMER1_COMPA_vect)
     return;
 
   }
+
+#ifdef CLOSE_IN_RX
+  if(ci_state == CI_MODIFIED)
+    cc1100_writeReg(CC1100_FIFOTHR, 0);
+  ci_state = CI_INIT;
+#endif
 
   if(bucket_nrused+1 == RCV_BUCKETS) {   // each bucket is full: reuse the last
 
@@ -539,6 +531,7 @@ ISR(CC1100_INTVECT)
     return;
   }
 #endif
+
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
@@ -577,6 +570,17 @@ ISR(CC1100_INTVECT)
 
   if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
 
+#ifdef CLOSE_IN_RX      // Set attenuation if rssi is too high
+    if(ci_state == CI_INIT) {
+      uint8_t rssi = cc1100_readReg(CC1100_RSSI);
+      if(rssi < 127 && rssi > 31) {
+        cc1100_writeReg(CC1100_FIFOTHR, (rssi >> 1)&0x30);
+        ci_state = CI_MODIFIED;
+      } else {
+        ci_state = CI_CHECKED;
+      }
+    }
+#endif
     b->zero.hightime = hightime;
     b->zero.lowtime = lowtime;
     b->sync  = 1;

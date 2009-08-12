@@ -3,17 +3,17 @@
    Inpired by the MyUSB USBtoSerial demo, Copyright (C) Dean Camera, 2008.
 */
 
-#include <avr/io.h>
 #include <avr/boot.h>
 #include <avr/eeprom.h>
-#include <string.h>
-#include <avr/wdt.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
+#include <avr/io.h>
+#include <avr/pgmspace.h>
+#include <avr/wdt.h>
+
+#include <string.h>
 
 #include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
 #include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
-#include <Drivers/AT90USB162/SPI.h>    // SPI drivers
 
 #include "cc1100.h"
 #include "cdc.h"
@@ -54,7 +54,7 @@ TASK_LIST
   { Task: FastRF_Task,   TaskStatus: TASK_STOP },
 };
 
-t_fntab fntab[] = {
+PROGMEM t_fntab fntab[] = {
 
   { 'B', prepare_boot },
   { 'C', ccreg },
@@ -83,10 +83,7 @@ t_fntab fntab[] = {
   { 't', gettime },
   { 'w', write_file },
   { 'x', ccsetpa },
-
-  { 0, 0 },
 };
-
 
 #if defined(__AVR_AT90USB1286__)
 #define jump_to_bootloader ((void(*)(void))0xf000)
@@ -182,7 +179,6 @@ main(void)
   fs_init(&fs, df, 0);          // needs df_init
   rtc_init();                   // does i2c_init too
   menu_init();                  // needs fs_init
-  ccInitChip();
   fht_init();
   log_init();                   // needs fs_init & rtc_init
   tx_init();

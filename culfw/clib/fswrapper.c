@@ -3,6 +3,7 @@
 #include "cdc.h"
 #include "menu.h"
 #include "rf_receive.h"
+#include "cc1100.h"
 #include <stdlib.h>
 #include <string.h>
 #include <avr/wdt.h>
@@ -58,7 +59,7 @@ read_file(char *in)
 
       offset = 0;
 
-      set_txoff();
+      set_ccoff();
 
       while(offset < filesize) {
 
@@ -130,12 +131,12 @@ DONE:
 
   if(ret == FS_OK) {
     if(filesize)
-      set_txoff();
+      set_ccoff();
     DH((uint16_t)((filesize>>16) & 0xffff),4);
     DH((uint16_t)(filesize & 0xffff),4);
   } else {
     DC('X');
-    DH(ret, 2);
+    DH2(ret);
   }
   DNL();
 

@@ -3,12 +3,14 @@
    Inpired by the MyUSB USBtoSerial demo, Copyright (C) Dean Camera, 2008.
 */
 
-#include <avr/io.h>
 #include <avr/boot.h>
 #include <avr/eeprom.h>
-#include <string.h>
-#include <avr/wdt.h>
 #include <avr/interrupt.h>
+#include <avr/io.h>
+#include <avr/pgmspace.h>
+#include <avr/wdt.h>
+
+#include <string.h>
 
 #include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
 #include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
@@ -39,7 +41,7 @@ TASK_LIST
   { Task: FastRF_Task,   TaskStatus: TASK_STOP },
 };
 
-t_fntab fntab[] = {
+PROGMEM t_fntab fntab[] = {
 
   { 'B', prepare_boot },
   { 'C', ccreg },
@@ -63,8 +65,6 @@ t_fntab fntab[] = {
 
   { 0, 0 },
 };
-
-
 
 
 void
@@ -128,7 +128,6 @@ main(void)
   Scheduler_Init();                        
   USB_Init();
   tty_init();
-  ccInitChip();
   fht_init();
   tx_init();
   output_enabled = OUTPUT_USB;

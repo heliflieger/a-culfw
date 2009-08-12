@@ -10,6 +10,7 @@
 #include "led.h"
 #include "battery.h"
 #include "rf_receive.h"
+#include "cc1100.h"
 #include "fncollection.h"
 
 
@@ -32,7 +33,7 @@ dosleep(void)
   wdt_disable(); 
   joy_enable_interrupts();
   lcd_switch(0);
-  set_txoff();
+  set_ccoff();
 
 
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);

@@ -5,7 +5,7 @@
 #include "led.h"
 #include "delay.h"
 #include "pcf8833.h"
-#include "ttydata.h"            // fntab
+#include "ttydata.h"            // callfn
 #include "fht.h"                // fht_hc
 #include "log.h"
 
@@ -146,4 +146,10 @@ display_hex(uint16_t h, int8_t pad, uint8_t padc)
   while(--pad >= 0 && i > 0)
     buf[--i] = padc;
   DS(buf+i);
+}
+
+void
+display_hex2(uint8_t h)
+{
+  display_hex(h, 2, '0');
 }

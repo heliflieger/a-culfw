@@ -1,71 +1,59 @@
+#include "board.h"
+#ifdef HAS_FASTRF
 #include <string.h>
 #include <avr/pgmspace.h>
 #include "fastrf.h"
 #include "cc1100.h"
 #include "delay.h"
 #include "display.h"
+#include "fncollection.h"
 
 uint8_t fastrf_on;
 
-PROGMEM prog_uint8_t FASTRF_CFG[] = {
-//   Addr  Value
-     0x00, 0x07,
-     0x03, 0x0D,
-     0x04, 0xE9,
-     0x05, 0xCA,
-     0x07, 0x0C,
-     0x0B, 0x06,
-     0x0D, 0x21,
-     0x0E, 0x65,
-     0x0F, 0x6A,
-     0x10, 0xC8,
-     0x11, 0x93,
-     0x12, 0x13,  // GFSK
-     0x15, 0x34,
-     0x17, 0x00,
-     0x18, 0x18,
-     0x19, 0x16,
-     0x1B, 0x43,
-     0x21, 0x56,
-     0x25, 0x00,
-     0x26, 0x11,
-     0x2D, 0x35,
-     0x3e, 0xc2,
-     0xff
+PROGMEM prog_uint8_t FASTRF_CFG[EE_FASTRF_CFG_SIZE] = {
+// CULFW   IDX NAME     
+   0x07, // 00 IOCFG2   
+   0x2E, // 01 IOCFG1   
+   0x3F, // 02 IOCFG0   
+   0x0D, // 03 FIFOTHR  
+   0xE9, // 04 SYNC1    
+   0xCA, // 05 SYNC0    
+   0xFF, // 06 PKTLEN   
+   0x0C, // 07 PKTCTRL1 
+   0x45, // 08 PKTCTRL0 
+   0x00, // 09 ADDR     
+   0x00, // 0A CHANNR   
+   0x06, // 0B FSCTRL1  
+   0x00, // 0C FSCTRL0  
+   0x21, // 0D FREQ2    
+   0x65, // 0E FREQ1    
+   0x6A, // 0F FREQ0    
+   0xC8, // 10 MDMCFG4  
+   0x93, // 11 MDMCFG3  
+   0x13, // 12 MDMCFG2  
+   0x22, // 13 MDMCFG1  
+   0xF8, // 14 MDMCFG0  
+   0x34, // 15 DEVIATN  
+   0x07, // 16 MCSM2    
+   0x00, // 17 MCSM1    
+   0x18, // 18 MCSM0    
+   0x16, // 19 FOCCFG   
+   0x6C, // 1A BSCFG    
+   0x43, // 1B AGCCTRL2 
+   0x40, // 1C AGCCTRL1 
+   0x91, // 1D AGCCTRL0 
+   0x87, // 1E WOREVT1  
+   0x6B, // 1F WOREVT0  
+   0xF8, // 20 WORCTRL  
+   0x56, // 21 FREND1   
+   0x11, // 22 FREND0  *
+   0xA9, // 23 FSCAL3   
+   0x0A, // 24 FSCAL2  *
+   0x00, // 25 FSCAL1  *
+   0x11, // 26 FSCAL0   
+   0x41, // 27 RCCTRL1  
+   0x00, // 28 RCCTRL0  
 };
-
-
-void
-frf_initChip(void)
-{
-  SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
-
-  CC1100_DEASSERT;                           // Toggle chip select signal
-  my_delay_us(30);
-  CC1100_ASSERT;
-  my_delay_us(30);
-  CC1100_DEASSERT;
-  my_delay_us(45);
-
-  ccStrobe( CC1100_SRES );                   // Send SRES command
-  my_delay_us(100);
-
-  uint8_t i = 0;
-  for(;;) {
-    uint8_t addr = __LPM(FASTRF_CFG+i);
-    uint8_t val  = __LPM(FASTRF_CFG+i+1);
-    if(addr == 0xff)
-      break;
-    CC1100_ASSERT;
-    cc1100_sendbyte( addr );
-    cc1100_sendbyte( val );
-    CC1100_DEASSERT;
-    i += 2;
-  }
-
-  ccStrobe( CC1100_SCAL );
-  my_delay_ms(1);
-}
 
 void
 fastrf(char *in)
@@ -73,9 +61,10 @@ fastrf(char *in)
   uint8_t len = strlen(in);
 
   if(in[1] == 's') {                       // Send
-    frf_initChip();
+    ccInitChip(EE_FASTRF_CFG, EE_CC1100_PA);
 
-    ccStrobe( CC1100_SFRX  );
+    ccStrobe( CC1100_SIDLE );
+//  ccStrobe( CC1100_SFRX  );
     ccStrobe( CC1100_SFTX  );
 
     CC1100_ASSERT;
@@ -84,12 +73,13 @@ fastrf(char *in)
     for(uint8_t i=2; i< len; i++)
       cc1100_sendbyte(in[i]);
     CC1100_DEASSERT;
-    ccStrobe( CC1100_SIDLE );
-    ccStrobe( CC1100_SFRX  );
+
+//  ccStrobe( CC1100_SIDLE );
+//  ccStrobe( CC1100_SFRX  );
     ccStrobe( CC1100_STX   );
 
   } else if(in[1] == 'r') {                // receive
-    frf_initChip();
+    ccInitChip(EE_FASTRF_CFG, EE_CC1100_PA);
     fastrf_on = 1;
     ccStrobe( CC1100_SFRX  );
     ccRX();
@@ -108,7 +98,7 @@ TASK(FastRF_Task)
     return;
 
   uint8_t buf[32];
-  uint8_t len = cc1100_read(CC1100_READ_SINGLE | CC1100_RXFIFO);
+  uint8_t len = cc1100_readReg(CC1100_RXFIFO);
 
   if(len < sizeof(buf)) {
     DC('f');
@@ -128,3 +118,25 @@ TASK(FastRF_Task)
 
   fastrf_on = 1;
 }
+
+//--------------------------------------------------------------------
+void
+fastrf_reset(void)
+{
+  uint8_t *t = EE_FASTRF_CFG;
+  for(uint8_t i = 0; i < sizeof(FASTRF_CFG); i++)
+    ewb(t++, __LPM(FASTRF_CFG+i));
+
+#ifdef BUSWARE_CUL
+  // check 433MHz version marker and patch default frequency
+  if (!bit_is_set(PINB, PB6)) {
+       t = EE_FASTRF_CFG + 0x0d;
+       ewb(t++, 0x10);
+       ewb(t++, 0xb0);
+       ewb(t++, 0x71);
+  }
+#endif
+}
+
+
+#endif

@@ -80,14 +80,12 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   credit_10ms -= sum;
 
   LED_ON();
-  if(cc_on)
-    ccStrobe(CC1100_SIDLE);
-  else
-    set_txon(0);
+  if(!cc_on)
+    set_ccon();
   ccTX();                       // Enable TX 
 
   do {
-    for(i = 0; i < sync; i++)                     // sync
+    for(i = 0; i < sync; i++)                   // sync
       send_bit(0);
     send_bit(1);
     
@@ -102,11 +100,12 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
 
   } while(--repeat > 0);
 
-  if(tx_report) {               // Enable RX
+  if(tx_report) {                               // Enable RX
     ccRX();
   } else {
     ccStrobe(CC1100_SIDLE);
   }
+
   LED_OFF();
 }
 

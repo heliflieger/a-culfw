@@ -11,6 +11,7 @@
 #include "clock.h"
 #include "mysleep.h"
 #include "fswrapper.h"
+#include "fastrf.h"
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -48,7 +49,7 @@ read_eeprom(char *in)
   DC('R');                    // prefix
   DH(addr,4);                 // register number
   DS_P( PSTR(" = ") );
-  DH(d,2);                    // result, hex
+  DH2(d);                    // result, hex
   DS_P( PSTR(" / ") );
   DU(d,2);                    // result, decimal
   DNL();
@@ -98,6 +99,10 @@ void
 eeprom_factory_reset(char *in)
 {
   cc_factory_reset();
+
+#ifdef HAS_FASTRF
+  fastrf_reset();
+#endif
 
   ewb(EE_MAGIC_OFFSET  , VERSION_1);
   ewb(EE_MAGIC_OFFSET+1, VERSION_2);

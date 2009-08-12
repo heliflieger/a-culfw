@@ -5,7 +5,6 @@ typedef struct _fntab {
   unsigned char name;
   void (* const fn)(char *);
 } t_fntab;
-extern t_fntab fntab[];
 
 void analyze_ttydata(void);
 void tty_init(void);
