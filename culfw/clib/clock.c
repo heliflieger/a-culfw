@@ -21,8 +21,10 @@
 uint8_t day,hour,minute,sec,hsec;
 static uint8_t lhsec, lsec, lmin;
 
+#ifdef HAS_ETHERNET
 //Counted time
-//clock_time_t clock_datetime = 0;
+volatile clock_time_t clock_datetime = 0;
+#endif
 	
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
@@ -30,9 +32,11 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
   hsec++;
 
-  if(hsec >= 125) {
+#ifdef HAS_ETHERNET
+    clock_datetime++;
+#endif
 
-    //clock_datetime++;
+  if(hsec >= 125) {
 
     sec++; hsec = 0;
     if(sec == 60) {
@@ -57,15 +61,10 @@ gettime(char *unused)
   DNL();
 }
 
-#if 0
+#ifdef HAS_ETHERNET
 //Return time
-clock_time_t
-clock_time()
-{
-  clock_time_t time;
-  cli();
-  time = clock_datetime;
-  sei();
+clock_time_t clock_time() {
+  clock_time_t time = clock_datetime;
   return time;
 }
 #endif

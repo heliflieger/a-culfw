@@ -9,6 +9,10 @@
 #include "fht.h"                // fht_hc
 #include "log.h"
 
+#ifdef HAS_ETHERNET
+#include "tcplink.h"
+#endif
+
 uint8_t output_enabled;
 
 //////////////////////////////////////////////////
@@ -16,6 +20,10 @@ uint8_t output_enabled;
 void
 display_char(char data)
 {
+
+#ifdef HAS_ETHERNET
+     tcp_putchar( data );
+#endif
 
 #ifdef HAS_USB
   if(USB_IsConnected && (output_enabled & OUTPUT_USB)) {
