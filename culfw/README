@@ -11,8 +11,12 @@ the can be used for low-power wireless communication in the 868 band.
 - The CUL (CC110x USB Light) has one CC1101 and an AT90USB162 MCU.
   See http://busware.de/tiki-index.php?page=CUL for details and on how to buy
   it.
+
 - The CUR (CC110x USB Remote) is a device with following features: CC1101 /
-  AT90USB1286 / IR: TX & RX / 128x128 color display / 5-way jogdial / Battery.
+  AT90USB646 / 16Mbit flash / 128x128 color display / 5-way jogdial / Battery.
+
+- The CUN (CC110x USB Network) is a device with following features: CC1101 /
+  AT90USB646 / TCPIPv4 interface / 16Mbit flash / 1Mbit SRAM
 
 
 This firmware makes it possible to use these devices with fhem. Right now the
@@ -275,6 +279,9 @@ Protocol
       the same without PA ramping. If the value is outside this spec, then the
       0dBm variant (02) will be used.
       Example: x03
+
+    q
+      Exit shell (CUN only)
 
     Unknown commands
       Prints the "help", the list of supported commands
