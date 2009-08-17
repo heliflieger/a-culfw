@@ -30,6 +30,9 @@
 
 #define HAS_USB                 1
 #define HAS_ETHERNET            1
+#define HAS_XRAM                1
+#define no_HAS_TOSC             1       // timer2 is clocked externally
+#define no_DEMOMODE             1
 
 #undef  HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
 #define HAS_FHT_80b                     // PROGMEM: 1158b, RAM:  5b

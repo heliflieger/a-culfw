@@ -28,7 +28,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * $Id: tcplink.c,v 1.1 2009-08-14 22:19:29 tostmann Exp $
+ * $Id: tcplink.c,v 1.2 2009-08-17 14:55:54 tostmann Exp $
  *
  */
 
@@ -43,6 +43,11 @@
 #include "version.h"
 #include "ringbuffer.h"
 #include "cdc.h"
+
+#ifdef DEMOMODE
+#include "timer.h"
+struct timer kickoff_timer;
+#endif
 
 static struct tcplink_state s;
 
@@ -114,20 +119,36 @@ static void newdata(void) {
      }
 
      usbinfunc();
+#ifdef DEMOMODE	  
+     timer_restart(&kickoff_timer);
+#endif
 }
 
 /*---------------------------------------------------------------------------*/
 void tcplink_appcall(void) {
 
      if(uip_connected()) {
-	  s.buffer = malloc( 50 );
+	  s.buffer = malloc( 100 );
 	  *s.buffer = 0;
-	  
+
+#ifdef DEMOMODE	  
+	  sprintf_P( s.buffer, PSTR("Welcome to " BOARD_ID_STR " running culfw (demo/read-only mode - timeout: 5 min) V " VERSION "\r\n" ) );
+#else
 	  sprintf_P( s.buffer, PSTR("Welcome to " BOARD_ID_STR " running culfw V " VERSION "\r\n" ) );
+#endif
 	  
 	  s.state = STATE_OPEN;
+
+#ifdef DEMOMODE     
+	  timer_set(&kickoff_timer, CLOCK_SECOND * 300);
+#endif
 	  
      }
+
+#ifdef DEMOMODE     
+     if (timer_expired(&kickoff_timer))
+	  s.state = STATE_CLOSE;
+#endif
 
      if(s.state == STATE_CLOSE) {
 	  s.state = STATE_OPEN;

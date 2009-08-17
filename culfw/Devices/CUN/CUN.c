@@ -9,7 +9,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 
 #include <string.h>
 
@@ -30,6 +30,7 @@
 #include "ttydata.h"
 #include "fht.h"
 #include "fastrf.h"
+#include "memory.h"
 
 #ifdef HAS_ETHERNET
 #include "global-conf.h"
@@ -59,25 +60,35 @@ TASK_LIST
 
 PROGMEM t_fntab fntab[] = {
 
+#ifndef DEMOMODE
   { 'B', prepare_boot },
-  { 'C', ccreg },
   { 'F', fs20send },
+
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
 #endif
-  { 'R', read_eeprom },
-  { 'T', fhtsend },
-  { 'V', version },
-  { 'W', write_eeprom },
-  { 'X', set_txreport },
 
   { 'e', eeprom_factory_reset },
+  { 'T', fhtsend },
+  { 'W', write_eeprom },
+  { 'x', ccsetpa },
+  { 'l', ledfunc },
+
 #ifdef HAS_FASTRF
   { 'f', fastrf },
 #endif
-  { 'l', ledfunc },
+
+#endif
+
+  { 'm', getfreemem },
+  { 'M', testmem },
+  { 'V', version },
+  { 'X', set_txreport },
+
+  { 'C', ccreg },
+  { 'R', read_eeprom },
+
   { 't', gettime },
-  { 'x', ccsetpa },
 #ifdef HAS_ETHERNET
   { 'q', tcplink_close },
 #endif
@@ -105,6 +116,34 @@ start_bootloader(void)
 
   jump_to_bootloader();
 }
+
+#ifdef HAS_XRAM
+
+void init_memory_mapped (void) __attribute__ ((naked)) __attribute__ ((section (".init1")));
+
+
+/*
+ *  * Setup the External Memory Interface early during device initialization
+ *   
+*/
+
+void init_memory_mapped(void) {    
+
+     DDRF  |= _BV( PF1 );
+     PORTF &= ~_BV( PF1 ); // set A16 low
+
+     // check EXTMEMOPTS in makefile for mem usage!
+
+     /* enable external memory mapped interface */
+
+     PORTA = 0xff;
+     PORTC = 0xff;
+     XMCRA = _BV(SRE); // | _BV( SRW10 );
+     XMCRB = 0;
+     
+}
+
+#endif
 
 EVENT_HANDLER(USB_Connect)
 {
@@ -169,8 +208,6 @@ int
 main(void)
 {
 
-  PORTB |= _BV( PB6 ); // Pull 433MHz marker
-
   // reset Ethernet
   DDRD   |= _BV( PD6 );
   PORTD  &= ~_BV( PD6 );
@@ -194,12 +231,19 @@ main(void)
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
 
+#ifdef HAS_TOSC
+  // Init RTC in processor located in Timer2 using external 32kHz crystal
+  ASSR   |= _BV( AS2 );
+  TCCR2B |= _BV( CS20) | _BV( CS21) | _BV( CS22); // prescaler 1024, gives 32 ticks per sec
+#endif
+
   SetSystemClockPrescaler(0);              // Disable Clock Division
 
   MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
   wdt_enable(WDTO_2S); 
 
   led_init();
+
   rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
   rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
 

@@ -5,6 +5,7 @@
 #include <avr/io.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include "board.h"
 
 /**
  * 8 bit datatype
@@ -53,7 +54,11 @@ typedef unsigned short uip_stats_t;
  *
  * \hideinitializer
  */
+#if HAS_XRAM
+#define UIP_CONF_BUFFER_SIZE     1500
+#else
 #define UIP_CONF_BUFFER_SIZE     350
+#endif
 /**
  * CPU byte order.
  *

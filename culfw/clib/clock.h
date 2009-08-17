@@ -6,10 +6,10 @@
 extern uint8_t day,hour,minute,sec,hsec;
 void gettime(char*);
 
-// Seconds - needed for Ethernet
+#ifdef HAS_ETHERNET
 typedef uint16_t clock_time_t;
-#define CLOCK_CONF_SECOND	1
 clock_time_t clock_time(void);
+#endif
 
 TASK(Minute_Task);
 

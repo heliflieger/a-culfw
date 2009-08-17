@@ -96,6 +96,7 @@ SRC = $(TARGET).c                                                  \
 		../clib/display.c                                  \
 		../clib/stringfunc.c                               \
 		../clib/fncollection.c                             \
+		../clib/memory.c                                   \
 		../clib/ringbuffer.c                               \
 		../clib/rf_send.c                                  \
 		../clib/rf_receive.c                               \
@@ -287,15 +288,15 @@ EXTRALIBDIRS =
 
 #---------------- External Memory Options ----------------
 
-# 64 KB of external RAM, starting after internal RAM (ATmega128!),
+# 64 KB of external RAM, starting after internal RAM (AT90USB646!),
 # used for variables (.data/.bss) and heap (malloc()).
 #EXTMEMOPTS = -Wl,-Tdata=0x801100,--defsym=__heap_end=0x80ffff
 
-# 64 KB of external RAM, starting after internal RAM (ATmega128!),
+# 64 KB of external RAM, starting after internal RAM (AT90USB646!),
 # only used for heap (malloc()).
-#EXTMEMOPTS = -Wl,--section-start,.data=0x801100,--defsym=__heap_end=0x80ffff
+EXTMEMOPTS = -Wl,--section-start,.data=0x801100,--defsym=__heap_end=0x80ffff
 
-EXTMEMOPTS =
+#EXTMEMOPTS =
 
 
 
