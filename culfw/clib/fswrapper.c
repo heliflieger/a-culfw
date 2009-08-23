@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <avr/wdt.h>
+#include "clock.h"
+#include <avr/wdt.h>
 
 #define BUFSIZE 128
 fs_t fs;
@@ -80,6 +82,7 @@ read_file(char *in)
   }
   output_enabled = old_oe;
 }
+
 
 //////////////////////////////////
 // Input: length (32bit, hex) + space + filename + newline
@@ -164,3 +167,48 @@ write_filedata(void)
   }
   rb_reset(USB_Rx_Buffer);
 }
+
+#if 0 // read/write speed test
+void        
+test_file(char *in)
+{
+  fs_status_t ret = 0;
+  fs_inode_t inode = 0;
+  char *fname = "TESTFILE";
+  char buf[32];
+
+  wdt_disable(); 
+
+  DH2(sec); DH2(hsec); DNL();
+  if(in[1] == 'w') {
+    DC('w');
+
+    fs_remove( &fs, fname);
+    ret = fs_create( &fs, fname);
+    if(ret != FS_OK)
+      goto DONE;
+
+    inode = fs_get_inode( &fs, fname );
+    for(uint16_t offset = 0; offset < 65500; offset += sizeof(buf)) {
+      ret = fs_write(&fs, inode, buf, offset, sizeof(buf));
+      if(ret != FS_OK)
+        goto DONE;
+    }
+
+  } else {
+
+    DC('r');
+    inode = fs_get_inode( &fs, fname );
+    for(uint16_t offset = 0; offset < 65500; offset += sizeof(buf)) {
+      ret = fs_write(&fs, inode, buf, offset, sizeof(buf));
+      if(ret != FS_OK)
+        goto DONE;
+    }
+
+  }
+DONE:
+  DH2(ret);
+  DH2(sec); DH2(hsec); DNL();
+  wdt_enable(WDTO_2S); 
+}
+#endif

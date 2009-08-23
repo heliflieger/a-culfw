@@ -247,7 +247,7 @@ fht80b_timer(void)
 {
   if(fht80b_repeatcnt) {
     fht80b_sendpacket();
-    fht80b_timeout = 31;               // repeat if there is no msg for 0.25sec
+    fht80b_timeout = 41;               // repeat if there is no msg for 0.3sec
     fht80b_repeatcnt--;
   } else {
     fht80b_reset_state();

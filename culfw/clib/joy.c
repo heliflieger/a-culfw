@@ -50,7 +50,8 @@ check_key(void)
   return key;
 }
 
-TASK(JOY_Task)
+void
+JOY_Task(void)
 {
   uint8_t key = check_key();
 

@@ -7,6 +7,11 @@
 #include <stdbool.h>
 #include "board.h"
 
+#define LITTLE_ENDIAN 1
+#define UIP_ARCH_ADD32 0
+#define UIP_ARCH_CHKSUM 0
+#define UIP_NEIGHBOR_CONF_ADDRTYPE 0
+
 /**
  * 8 bit datatype
  *

@@ -85,7 +85,7 @@ Quick Test:
 
   Windows
   =======
-    Install a virtual COM port, use MyUSB_USBtoSerial.inf from the tools
+    Install a virtual COM port, use MyUSB_USBtoSerial.inf from the docs
     directory. Locate the COM-port in the device manager shown as
     "USB Virtual Serial Port (COMx)". Start Hyperterminal, open a connection
     to COMx 9600,8,n,1.

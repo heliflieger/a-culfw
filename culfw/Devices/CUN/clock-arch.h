@@ -1,6 +1,7 @@
 #ifndef __CLOCK_ARCH_H__
 #define __CLOCK_ARCH_H__
 
+#include <avr/io.h>
 #include "board.h"
 
 // all done in clib/clock.h

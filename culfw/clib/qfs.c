@@ -3,25 +3,33 @@
  * (c)2008 Rudolf Koenig 
  * Quasi-FS: Very primitive FS designed for the Atmel 2Mbit flash chip.
  *
- * Why: fs.c is too slow (ca 300B/sec write) and buggy (writing more than
- * 512Byte does not work and reading crashes too). fs.c initialization 
- * (not formatting!) is annoyingly slow with between 5 and 17 seconds.
+ * Why: fs.c from Alexander Neumann (etherrape) is too slow (ca 300B/sec write)
+ * and buggy (writing more than 512Byte does not work and reading crashes too).
+ * fs.c initialization (not formatting!) is annoyingly slow with between 5 and
+ * 17 seconds.
  *
  * In qfs we sacrifice space for simplicity and speed (i.e. for as few as
  * possible flash operations).
  *
  * "Features" of qfs:
- * The FS has room for up to 32 Files, each up to 64kB on a 2MB flash (up to the
- * last file which is 512bytes shorter). Filenames are up to 14Bytes.
- * Write speed is 9523B/sec, read 26000B/sec (through USB/fswrapper/32B blocks)
+ * - memory requirements: 6+(#DF*22) bytes, program memory: ca 2kB
+ * - up to 32 files, each up to 64kB on a 2MB flash (up to the last file which
+ *   is 512bytes shorter).
+ * - filenames are up to 14Bytes, no directory support
+ * - for an at45db161 with 4mBit SPI (fosc/2)
+ *   write speed is  26758 Byte/sec, read 27662 Byte/sec
+ * - sending/reading the data to/from USB, write speed is 9523B/sec, read
+ *   26000B/sec
+ * - qfs is using only 512 bytes per flash-block (ignoring 16 bytes / 3%)
  *
  * The interface is compatible with the more advanced fs.c up to the following
  * exception: to ensure that data is written to the flash you have to use
  * fs_sync.
  *
- * It uses extensively the feature of the dataflash chip, with its two buffers:
+ * It uses extensively the feature of the dataflash chip with its two buffers:
  * DF_BUF1 is used for data caching, DF_BUF2 for caching the superblock, which
  * holds all the inodes.
+ *
  */
 
 #include <avr/io.h>
@@ -57,14 +65,13 @@ fs_init(fs_t *fs, df_chip_t chip, uint8_t force)
     df_buf_write(fs->chip, DF_BUF2,
                         &fs->last_inode, QFS_MAGIC_OFFSET, sizeof(inode_t));
 
-    // Then write each inode with 0 length + no-name -> unused
-    fs->last_inode.len = 0;
+    // Then write each inode with no-name -> unused
     fs->last_inode.name[0] = 0;
     for(uint16_t off = 0; off < QFS_MAGIC_OFFSET; off += sizeof(inode_t))
       df_buf_write(fs->chip, DF_BUF2, &fs->last_inode, off, sizeof(inode_t));
 
-    df_buf_save(fs->chip, DF_BUF2, QFS_ROOT_PAGE);
-    df_wait(fs->chip);
+    fs->flags = QFS_ROOTPAGE_MODIFIED;
+    fs_sync(fs);
   }
   return FS_OK;
 }
@@ -93,10 +100,13 @@ fs_create(fs_t *fs, char *name)
 fs_status_t
 fs_rename(fs_t *fs, char *from, char *to)
 {
-  fs_remove(fs, to);
+  if(*to)
+    fs_remove(fs, to);
   if(fs_get_inode(fs, from) == 0xffff)
     return FS_NOSUCHFILE;
   strncpy(fs->last_inode.name, to, QFS_FILENAMESIZE);
+  df_buf_write(fs->chip, DF_BUF2, &fs->last_inode,
+                         fs->last_inode_index*sizeof(inode_t), sizeof(inode_t));
   fs->flags |= QFS_ROOTPAGE_MODIFIED;
   return FS_OK;
 }
@@ -105,13 +115,7 @@ fs_rename(fs_t *fs, char *from, char *to)
 fs_status_t
 fs_remove(fs_t *fs, char *name)
 {
-  if(fs_get_inode(fs, name) == 0xffff)
-    return FS_NOSUCHFILE;
-  fs->last_inode.name[0] = 0;
-  df_buf_write(fs->chip, DF_BUF2, &fs->last_inode,
-                         fs->last_inode_index*sizeof(inode_t), sizeof(inode_t));
-  fs->flags |= QFS_ROOTPAGE_MODIFIED;
-  return FS_OK;
+  return fs_rename(fs, name, "");
 }
 
 
@@ -196,7 +200,8 @@ offset2page(uint16_t inode, uint16_t offset)
 
 ////////////////////////////////////////////////////////////////////////
 fs_size_t
-fs_read(fs_t *fs, fs_inode_t inode, void *buf, fs_size_t offset, fs_size_t length)
+fs_read(fs_t *fs, fs_inode_t inode,
+        void *buf, fs_size_t offset, fs_size_t length)
 {
   uint16_t poffset = (uint16_t)offset;  // only the lower bits are used
   uint16_t len = (uint16_t)length;   
@@ -230,7 +235,8 @@ fs_read(fs_t *fs, fs_inode_t inode, void *buf, fs_size_t offset, fs_size_t lengt
 
 ////////////////////////////////////////////////////////////////////////
 fs_status_t
-fs_write(fs_t *fs, fs_inode_t inode, void *buf, fs_size_t offset, fs_size_t length)
+fs_write(fs_t *fs, fs_inode_t inode,
+         void *buf, fs_size_t offset, fs_size_t length)
 {
   if(offset+length > 0xffff) 
     return FS_EOF;

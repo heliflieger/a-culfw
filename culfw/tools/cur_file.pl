@@ -79,6 +79,8 @@ if($ARGV[0] eq "-r") {
     die("Strange length received: $len2 instead of $len\n");
   }
 
+  # Sleep time:Max write speed to the flash is 26kB, write buffer is 32 byte.
+  # 1/(26000/32) = 0.00123 sec
   $off = 0;
   while($off < $len) {
     my $mlen = ($len-$off) > 32 ? 32 : ($len-$off);

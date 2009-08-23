@@ -24,6 +24,7 @@
 #include "display.h"
 #endif
 
+uint8_t  cdctask_enabled;
 void (*usbinfunc)(void);
 
 /* Globals: */
@@ -47,7 +48,7 @@ EVENT_HANDLER(USB_ConfigurationChanged)
   Endpoint_ConfigureEndpoint(CDC_RX_EPNUM, EP_TYPE_BULK,
       ENDPOINT_DIR_OUT, CDC_TX_EPSIZE, ENDPOINT_BANK_DOUBLE);
 
-  Scheduler_SetTaskMode(CDC_Task, TASK_RUN);	
+  cdctask_enabled = 1;
 }
 
 //////////////////////////////////////////////
@@ -101,7 +102,8 @@ EVENT_HANDLER(USB_UnhandledControlPacket)
 
 ////////////////////
 // Fill data from USB to the RingBuffer and vice-versa
-TASK(CDC_Task)
+void
+CDC_Task(void)
 {
   static char inCDC_TASK = 0;
 

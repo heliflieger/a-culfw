@@ -9,7 +9,7 @@ void fht80b_timer(void);
 
 extern uint8_t fht8v_timeout;
 extern uint8_t fht80b_timeout;
-extern uint8_t fht_hc[2];
+extern uint8_t fht_hc0, fht_hc1; // Our housecode.
 
 #define FHT_ACTUATOR   0x00
 #define FHT_ACK        0x4B

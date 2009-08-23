@@ -70,7 +70,8 @@ clock_time_t clock_time() {
 }
 #endif
 
-TASK(Minute_Task)
+void
+Minute_Task(void)
 {
   if(lhsec == hsec)
     return;

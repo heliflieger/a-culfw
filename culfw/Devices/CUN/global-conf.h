@@ -11,6 +11,7 @@
 #define ETHADDR3		0x33
 #define ETHADDR4		0x05
 #define ETHADDR5		0x71
+
 //Mac adress definition for uip
 #define UIP_ETHADDR0    ETHADDR0
 #define UIP_ETHADDR1    ETHADDR1

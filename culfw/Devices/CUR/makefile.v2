@@ -34,7 +34,6 @@ SRC = $(TARGET).c                                                  \
 		../clib/more.c                                     \
 		../clib/fastrf.c                                   \
 		../clib/twimaster.c                                \
-		../MyUSB/Scheduler/Scheduler.c                     \
 		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
 		../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \
 		../MyUSB/Drivers/USB/LowLevel/DevChapter9.c        \

@@ -272,8 +272,8 @@ menu_getlineword(uint8_t wordnr, uint8_t *frombuf, uint8_t *tobuf, uint8_t max)
     else if(*frombuf == '$') {
 
       if(max > 4) {
-        tohex(fht_hc[0], tobuf);
-        tohex(fht_hc[1], tobuf+2);
+        tohex(fht_hc0, tobuf);
+        tohex(fht_hc1, tobuf+2);
         tobuf += 4; max -= 4;
       }
 

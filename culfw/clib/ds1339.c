@@ -37,6 +37,7 @@ rtc_init(void)
   i2c_init();               // init I2C interface
   rtc_write( 0x10, 0xa5 );  // TCS3,TCS1,DS0,ROUT0 (No diode, 250Ohm)
   rtc_write( 0x0e, 0x18 ); 
+
 #if 0
   uint8_t hb[6];
   rtc_dotime(1, hb);
@@ -60,6 +61,17 @@ rtc_init(void)
 }
 
 void
+rtcget(uint8_t data[6])
+{
+  data[0] = rtc_read(6);         // year
+  data[1] = rtc_read(5);         // month
+  data[2] = rtc_read(4);         // mday
+  data[3] = rtc_read(2);         // hour
+  data[4] = rtc_read(1);         // min
+  data[5] = rtc_read(0);         // sec
+}
+
+void
 rtcset(uint8_t len, uint8_t data[6])
 {
   uint8_t p = 0;
@@ -73,16 +85,6 @@ rtcset(uint8_t len, uint8_t data[6])
   rtc_write(0, data[p++]);
 }
 
-void
-rtcget(uint8_t data[6])
-{
-  data[0] = rtc_read(6);         // year
-  data[1] = rtc_read(5);         // month
-  data[2] = rtc_read(4);         // mday
-  data[3] = rtc_read(2);         // hour
-  data[4] = rtc_read(1);         // min
-  data[5] = rtc_read(0);         // sec
-}
 
 void
 rtcfunc(char *in)
@@ -90,7 +92,7 @@ rtcfunc(char *in)
   uint8_t hb[6], t;
 
   t = fromhex(in+1, hb, 6);
-  if(t == 1) {
+  if(t < 3) {
     t = hb[0];
     rtcget(hb);
 
@@ -113,6 +115,7 @@ rtcfunc(char *in)
 
   else  {       // 3: time only, 6: date & time
     rtcset(t, hb);
+
   }
 
 }

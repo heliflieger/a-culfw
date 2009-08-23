@@ -24,7 +24,13 @@
 #endif
 #include "fastrf.h"
 
+// If FS or LCD is defined, the SPI bus will be busy after the first message
+// with displaying/logging the data.  Checking the RSSI via SPI in the next
+// interrupt will lead then to an instant reboot. We disable this feature until
+// the SPI gets locked properly
+#ifdef BUSWARE_CUL
 #define CLOSE_IN_RX
+#endif
 
 #define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
 #define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
@@ -106,7 +112,7 @@ set_txreport(char *in)
 {
   if(in[1] == 0) {              // Report Value
     DH2(tx_report);
-    DU(credit_10ms, 4);
+    DU(credit_10ms, 5);
     DNL();
     return;
   }
@@ -204,6 +210,7 @@ analyze(bucket_t *b, uint8_t t)
     oby++;
   else if(nibble)                                     // half byte msg 
     oby++;
+
   if(oby == 0)
     return 0;
   return 1;
@@ -269,11 +276,11 @@ analyze_hms(bucket_t *b)
 
 
 //////////////////////////////////////////////////////////////////////
-TASK(RfAnalyze_Task)
+void
+RfAnalyze_Task(void)
 {
   uint8_t datatype = 0;
   bucket_t *b;
-
 
   if(lowtime) {
 #ifdef HAS_LCD

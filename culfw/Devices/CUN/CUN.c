@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
-#include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
 
 #include "spi.h"
 #include "cc1100.h"
@@ -32,66 +31,65 @@
 #include "fastrf.h"
 #include "memory.h"
 
-#ifdef HAS_ETHERNET
 #include "global-conf.h"
 #include "uip_arp.h"
-#include "network.h"
-#include "enc28j60.h"
-
+#include "drivers/interfaces/network.h"
+#include "drivers/enc28j60/enc28j60.h"
 #include "timer.h"
 
+void Ethernet_Task(void);
 #define BUF ((struct uip_eth_hdr *)&uip_buf[0])
 struct timer periodic_timer, arp_timer;
-TASK(Ethernet_Task);
-#endif
 
-/* Scheduler Task List */
-TASK_LIST
+static uint8_t usbtask_enabled;
+
+void
+checkbits(char *in)
 {
-  { Task: USB_USBTask  , TaskStatus: TASK_STOP },
-  { Task: CDC_Task     , TaskStatus: TASK_STOP },
-  { Task: RfAnalyze_Task,TaskStatus: TASK_RUN },
-  { Task: Minute_Task,   TaskStatus: TASK_RUN },
-  { Task: FastRF_Task,   TaskStatus: TASK_STOP },
-#ifdef HAS_ETHERNET
-  { Task: Ethernet_Task, TaskStatus: TASK_RUN },
-#endif
-};
+  uint8_t  SigReadAddress     = 0x0E;
+  for (uint8_t SerialCharNum = 0; SerialCharNum < 20; SerialCharNum++)
+  {
+    uint8_t SerialByte = boot_signature_byte_get(SigReadAddress);
+    if(SerialCharNum & 0x01) {
+      SerialByte >>= 4;
+      SigReadAddress++;
+    }
+    DH2(SerialByte);
+  }
+  DNL();
+  DH2(boot_lock_fuse_bits_get(GET_LOW_FUSE_BITS));
+  DH2(boot_lock_fuse_bits_get(GET_HIGH_FUSE_BITS));
+  DH2(boot_lock_fuse_bits_get(GET_EXTENDED_FUSE_BITS));
+  DH2(boot_lock_fuse_bits_get(GET_LOCK_BITS));
+  DNL();
+}
 
 PROGMEM t_fntab fntab[] = {
 
-#ifndef DEMOMODE
   { 'B', prepare_boot },
+  { 'C', ccreg },
   { 'F', fs20send },
-
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
 #endif
-
-  { 'e', eeprom_factory_reset },
+  { 'M', testmem },
+  { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'W', write_eeprom },
-  { 'x', ccsetpa },
-  { 'l', ledfunc },
-
-#ifdef HAS_FASTRF
-  { 'f', fastrf },
-#endif
-
-#endif
-
-  { 'm', getfreemem },
-  { 'M', testmem },
   { 'V', version },
   { 'X', set_txreport },
 
-  { 'C', ccreg },
-  { 'R', read_eeprom },
-
-  { 't', gettime },
-#ifdef HAS_ETHERNET
-  { 'q', tcplink_close },
+  { 'e', eeprom_factory_reset },
+#ifdef HAS_FASTRF
+  { 'f', fastrf },
 #endif
+  { 'l', ledfunc },
+  { 'm', getfreemem },
+  { 'q', tcplink_close },
+  { 't', gettime },
+  { 'x', ccsetpa },
+
+  { 'z', checkbits },
 
   { 0, 0 },
 };
@@ -109,7 +107,7 @@ start_bootloader(void)
 #if defined(__AVR_AT90USB1286__)
 #define jump_to_bootloader ((void(*)(void))0xf000)
 #elif defined(__AVR_AT90USB646__)
-#define jump_to_bootloader ((void(*)(void))0x7800)
+#define jump_to_bootloader ((void(*)(void))0x7800) // BOOTSZ0=1,BOOTSZ1=0
 #else
 #define jump_to_bootloader ((void(*)(void))0x1800)
 #endif
@@ -147,49 +145,53 @@ void init_memory_mapped(void) {
 
 EVENT_HANDLER(USB_Connect)
 {
-  Scheduler_SetTaskMode(USB_USBTask, TASK_RUN);
+  usbtask_enabled = 1;
 }
 
 EVENT_HANDLER(USB_Disconnect)
 {
-  Scheduler_SetTaskMode(USB_USBTask, TASK_STOP);
-  Scheduler_SetTaskMode(CDC_Task,    TASK_STOP);
+  usbtask_enabled = 0;
+  cdctask_enabled = 0;
   ccStrobe(CC1100_SIDLE);
 }
 
-#ifdef HAS_ETHERNET
-void start_networking (void) {
-     // reset Ethernet
-     DDRD   |= _BV( PD6 );
-     PORTD  &= ~_BV( PD6 );
+void
+start_networking (void)
+{
+  // reset Ethernet
+  DDRD   |= _BV( PD6 );
+  PORTD  &= ~_BV( PD6 );
 
-     _delay_ms( 200 );
+  my_delay_ms( 200 );
 
-     // unreset Ethernet
-     PORTD |= _BV( PD6 );
+  // unreset Ethernet
+  PORTD |= _BV( PD6 );
 
-     _delay_ms( 200 );
+  my_delay_ms( 200 );
 
-     network_init();
-     
-     uip_ipaddr_t ipaddr;
+  network_init();
   
-     // setup two periodic timers
-     timer_set(&periodic_timer, CLOCK_SECOND / 2);
-     timer_set(&arp_timer, CLOCK_SECOND * 10);
-     
-     uip_init();
-     
-     struct uip_eth_addr mac = {UIP_ETHADDR0, UIP_ETHADDR1, UIP_ETHADDR2, UIP_ETHADDR3, UIP_ETHADDR4, UIP_ETHADDR5};
-     
-     uip_setethaddr(mac);
+  uip_ipaddr_t ipaddr;
+  
+  // setup two periodic timers
+  timer_set(&periodic_timer, CLOCK_SECOND / 2);
+  timer_set(&arp_timer, CLOCK_SECOND * 10);
+  
+  uip_init();
+  
+  struct uip_eth_addr mac = {
+    { UIP_ETHADDR0, UIP_ETHADDR1, UIP_ETHADDR2,
+      UIP_ETHADDR3, UIP_ETHADDR4, UIP_ETHADDR5 }
+  };
+  
+  uip_setethaddr(mac);
 
 #ifdef __DHCPC_H__
   dhcpc_init(&mac, 6);
 #else
-  uip_ipaddr(ipaddr, 10,10,12,123);
+  uip_ipaddr(ipaddr, 192,168,178,9);
   uip_sethostaddr(ipaddr);
-  uip_ipaddr(ipaddr, 10,10,12,2);
+  uip_ipaddr(ipaddr, 192,168,178,1);
   uip_setdraddr(ipaddr);
   uip_ipaddr(ipaddr, 255,255,255,0);
   uip_setnetmask(ipaddr);
@@ -201,7 +203,6 @@ void start_networking (void) {
 #endif 
   
 }
-#endif
 
 
 int
@@ -247,11 +248,7 @@ main(void)
   rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
   rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
 
-  Scheduler_Init();                        
-
-#ifdef HAS_ETHERNET
   start_networking();
-#endif
 
   USB_Init();
   tty_init();
@@ -261,76 +258,78 @@ main(void)
 
   LED_OFF();
 
-  Scheduler_Start();                       // Won't return
+  for(;;) {
+    if(usbtask_enabled)
+      USB_USBTask();
+    if(cdctask_enabled)
+      CDC_Task();
+    RfAnalyze_Task();
+    Minute_Task();
+    if(fastrf_on)
+      FastRF_Task();
+    Ethernet_Task();
+  }
+
 }
 
-#ifdef HAS_ETHERNET
-TASK(Ethernet_Task) {
-     int i;
-     
-     cli(); // this is safe, but not good for performace - needs changing (Ethernet is not using any interrupts)!
-     
-     uip_len = network_read();
-     
-     if(uip_len > 0) {
-	  if(BUF->type == htons(UIP_ETHTYPE_IP)){
-	       uip_arp_ipin();
-	       uip_input();
-	       if(uip_len > 0) {
-		    uip_arp_out();
-		    network_send();
-	       }
-	  } else if(BUF->type == htons(UIP_ETHTYPE_ARP)){
-	       uip_arp_arpin();
-	       if(uip_len > 0){
-		    network_send();
-	       }
-	  }
-	  
-     } else if(timer_expired(&periodic_timer)) {
-	  timer_reset(&periodic_timer);
-	  
-	  for(i = 0; i < UIP_CONNS; i++) {
-	       uip_periodic(i);
-	       if(uip_len > 0) {
-		    uip_arp_out();
-		    network_send();
-	       }
-	  }
-	  
+void
+Ethernet_Task()
+{
+  int i;
+  
+  uip_len = network_read();
+  
+  if(uip_len > 0) {
+       if(BUF->type == htons(UIP_ETHTYPE_IP)){
+            uip_arp_ipin();
+            uip_input();
+            if(uip_len > 0) {
+                 uip_arp_out();
+                 network_send();
+            }
+       } else if(BUF->type == htons(UIP_ETHTYPE_ARP)){
+            uip_arp_arpin();
+            if(uip_len > 0){
+                 network_send();
+            }
+       }
+       
+  } else if(timer_expired(&periodic_timer)) {
+       timer_reset(&periodic_timer);
+       
+       for(i = 0; i < UIP_CONNS; i++) {
+            uip_periodic(i);
+            if(uip_len > 0) {
+                 uip_arp_out();
+                 network_send();
+            }
+       }
+       
 #if UIP_UDP
-	  for(i = 0; i < UIP_UDP_CONNS; i++) {
-	       uip_udp_periodic(i);
-	       if(uip_len > 0) {
-		    uip_arp_out();
-		    network_send();
-	       }
-	  }
+       for(i = 0; i < UIP_UDP_CONNS; i++) {
+            uip_udp_periodic(i);
+            if(uip_len > 0) {
+                 uip_arp_out();
+                 network_send();
+            }
+       }
 #endif
-	  
-	  if(timer_expired(&arp_timer)) {
-	       timer_reset(&arp_timer);
-	       uip_arp_timer();
-	       
-	  }
-     }
-
-     sei();
+       
+       if(timer_expired(&arp_timer)) {
+            timer_reset(&arp_timer);
+            uip_arp_timer();
+            
+       }
+  }
 
 }
-#endif
 
 #ifdef __DHCPC_H__
 void dhcpc_configured(const struct dhcpc_state *s)
 {
-
-     uip_sethostaddr(s->ipaddr);
-     uip_setnetmask(s->netmask);
-     uip_setdraddr(s->default_router);
-     //resolv_conf(s->dnsaddr);
-
-
-//	printf("DHCP Ok\r\n");
-	
+  uip_sethostaddr(s->ipaddr);
+  uip_setnetmask(s->netmask);
+  uip_setdraddr(s->default_router);
+  //resolv_conf(s->dnsaddr);
 }
 #endif /* __DHCPC_H__ */

@@ -9,7 +9,6 @@
 #include "ringbuffer.h"
 
 #include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
-#include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
 
 /* Macros: */
 #define GET_LINE_CODING			0x21
@@ -48,11 +47,12 @@ enum CDC_Line_Codeing_Parity_t
         Parity_Space        = 4,
 };
 
-TASK(CDC_Task);
-
+extern uint8_t cdctask_enabled;
 extern rb_t *const USB_Tx_Buffer;
 extern rb_t *const USB_Rx_Buffer;
 extern void (*usbinfunc)(void);
+
+void CDC_Task(void);
 void cdc_flush(void);
 
 #endif

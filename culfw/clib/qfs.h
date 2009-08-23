@@ -35,14 +35,14 @@ typedef struct {
 } fs_t;
 
 typedef enum {
-    FS_OK = 0,
+    FS_OK         = 0,
     FS_NOSUCHFILE = 1,
-    FS_EOF = 2,
-    FS_BADPAGE = 3,
-    FS_BADINODE = 4,
-    FS_DUPLICATE = 5,
-    FS_MEM = 6,
-    FS_BADSEEK = 7,
+    FS_EOF        = 2,
+    FS_BADPAGE    = 3,
+    FS_BADINODE   = 4,
+    FS_DUPLICATE  = 5,
+    FS_MEM        = 6,
+    FS_BADSEEK    = 7,
 } fs_status_t;
 
 fs_status_t fs_init(fs_t *fs, df_chip_t chip, uint8_t force);
@@ -51,8 +51,10 @@ fs_status_t fs_rename(fs_t *fs, char *from, char *to);
 fs_status_t fs_remove(fs_t *fs, char *name);
 fs_status_t fs_list(fs_t *fs, char *dir, char *buf, fs_index_t index);
 fs_inode_t  fs_get_inode(fs_t *fs, char *file);
-fs_size_t   fs_read(fs_t *fs, fs_inode_t inode, void *buf, fs_size_t offset, fs_size_t length);
-fs_status_t fs_write(fs_t *fs, fs_inode_t inode, void *buf, fs_size_t offset, fs_size_t length);
+fs_size_t   fs_read(fs_t *fs, fs_inode_t inode,
+                        void *buf, fs_size_t offset, fs_size_t length);
+fs_status_t fs_write(fs_t *fs, fs_inode_t inode,
+                        void *buf, fs_size_t offset, fs_size_t length);
 fs_size_t   fs_size(fs_t *fs, fs_inode_t inode);
 fs_status_t fs_sync(fs_t *fs);
 

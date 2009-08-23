@@ -14,14 +14,13 @@
 
 #undef  HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
 #define HAS_FHT_80b                     // PROGMEM: 1158b, RAM:  5b
-#define FHTBUF_SIZE             128     //                 RAM: 48b
-#define FHTBUF_MODEL1                   // see fht.c for details
+#define FHTBUF_SIZE           128       //                 RAM:128b
 
 #define FULL_CC1100_PA                  // PROGMEM:  100b
 #define RCV_BUCKETS             4       //                 RAM: 25b / bucket
 
 #define HAS_RAWSEND                     // PROGMEM:   90b  RAM:  6b
-#define HAS_FASTRF                      // PROGMEM:  274b  RAM:  6b
+#define HAS_FASTRF                      // PROGMEM:  274b  RAM:  4b
 #define HAS_LONGMSG                     // CUR support     RAM: 20b
 
 

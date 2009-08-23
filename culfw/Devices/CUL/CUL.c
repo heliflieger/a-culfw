@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
-#include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
 
 #include "spi.h"
 #include "cc1100.h"
@@ -30,16 +29,7 @@
 #include "fht.h"
 #include "fastrf.h"
 
-
-/* Scheduler Task List */
-TASK_LIST
-{
-  { Task: USB_USBTask  , TaskStatus: TASK_STOP },
-  { Task: CDC_Task     , TaskStatus: TASK_STOP },
-  { Task: RfAnalyze_Task,TaskStatus: TASK_RUN },
-  { Task: Minute_Task,   TaskStatus: TASK_RUN },
-  { Task: FastRF_Task,   TaskStatus: TASK_STOP },
-};
+static uint8_t usbtask_enabled;
 
 PROGMEM t_fntab fntab[] = {
 
@@ -82,13 +72,13 @@ start_bootloader(void)
 
 EVENT_HANDLER(USB_Connect)
 {
-  Scheduler_SetTaskMode(USB_USBTask, TASK_RUN);
+  usbtask_enabled = 1;
 }
 
 EVENT_HANDLER(USB_Disconnect)
 {
-  Scheduler_SetTaskMode(USB_USBTask, TASK_STOP);
-  Scheduler_SetTaskMode(CDC_Task,    TASK_STOP);
+  usbtask_enabled = 0;
+  cdctask_enabled = 0;
   ccStrobe(CC1100_SIDLE);
 }
 
@@ -125,7 +115,6 @@ main(void)
   led_init();
   rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
   rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
-  Scheduler_Init();                        
   USB_Init();
   tty_init();
   fht_init();
@@ -134,5 +123,14 @@ main(void)
 
   LED_OFF();
 
-  Scheduler_Start();                       // Won't return
+  for(;;) {
+    if(usbtask_enabled)
+      USB_USBTask();
+    if(cdctask_enabled)
+      CDC_Task();
+    RfAnalyze_Task();
+    Minute_Task();
+    if(fastrf_on)
+      FastRF_Task();
+  }
 }

@@ -29,7 +29,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * $Id: tcplink.h,v 1.1 2009-08-14 22:19:29 tostmann Exp $
+ * $Id: tcplink.h,v 1.2 2009-08-23 11:36:12 rudolfkoenig Exp $
  *
  */
 #ifndef __TCPLINK_H__
@@ -40,6 +40,7 @@
 void tcplink_appcall(void);
 void tcp_putchar(char data);
 void tcplink_close(char *unused);
+void tcplink_init(void);
 
 struct tcplink_state {
   char *buffer;

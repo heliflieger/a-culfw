@@ -33,7 +33,6 @@ uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
 
 extern uint8_t tx_report;
 
-#include <MyUSB/Scheduler/Scheduler.h> // Simple scheduler for task management
-TASK(RfAnalyze_Task);
+void RfAnalyze_Task(void);
 
 #endif

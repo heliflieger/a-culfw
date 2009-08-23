@@ -105,9 +105,14 @@ SRC = $(TARGET).c                                                  \
 		../clib/ttydata.c                                  \
 		../clib/spi.c                                      \
 		../clib/tcplink.c                                  \
-                avr-uip/drivers/enc28j60/enc28j60.c                \
-                avr-uip/drivers/enc28j60/network.c \
-                avr-uip/uip/uip.c avr-uip/uip/uip_arp.c avr-uip/uip/uiplib.c avr-uip/uip/psock.c avr-uip/uip/timer.c avr-uip/uip/uip-neighbor.c \
+		../avr-uip/drivers/enc28j60/enc28j60.c             \
+		../avr-uip/drivers/enc28j60/network.c              \
+		../avr-uip/uip/uip.c                               \
+		../avr-uip/uip/uip_arp.c                           \
+		../avr-uip/uip/uiplib.c                            \
+		../avr-uip/uip/psock.c                             \
+		../avr-uip/uip/timer.c                             \
+		../avr-uip/uip/uip-neighbor.c                      \
 		../MyUSB/Scheduler/Scheduler.c                     \
 		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
 		../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \
@@ -116,11 +121,9 @@ SRC = $(TARGET).c                                                  \
 		../MyUSB/Drivers/USB/HighLevel/USBInterrupt.c      \
 		../MyUSB/Drivers/USB/HighLevel/Events.c            \
 		../MyUSB/Drivers/USB/HighLevel/StdDescriptors.c    \
-
-#		avr-uip/apps/dhcpc/dhcpc.c	                   \
-#		avr-uip/apps/simple-httpd/simple-httpd.c           \
-#		avr-uip/lib/memb.c \
-#		avr-uip/apps/telnetd/shell.c avr-uip/apps/telnetd/telnetd.c \
+#		../avr-uip/apps/dhcpc/dhcpc.c                      \
+#		../avr-uip/apps/simple-httpd/simple-httpd.c        \
+#		../avr-uip/lib/memb.c                              \
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
@@ -154,7 +157,7 @@ DEBUG = dwarf-2
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = .. ../clib avr-uip/uip avr-uip/lib avr-uip/apps/simple-httpd avr-uip/apps/telnetd avr-uip/apps/dhcpc avr-uip/drivers/enc28j60 avr-uip/drivers/interfaces
+EXTRAINCDIRS = ..  ../clib ../avr-uip ../avr-uip/uip
 
 
 # Compiler flag to set the C Standard level.

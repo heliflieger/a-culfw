@@ -68,7 +68,7 @@ display_char(char data)
     if(!cmdmode && off == 5 && buf[0] == 'F') {
       uint8_t hb[2];
       fromhex((char*)buf+1, hb, 2);
-      if(hb[0] == fht_hc[0] && hb[1] == fht_hc[1]) {
+      if(hb[0] == fht_hc0 && hb[1] == fht_hc1) {
         cmdmode = 1;
         off = 0;
       }

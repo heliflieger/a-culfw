@@ -6,6 +6,7 @@
 #include "cc1100.h"
 #include "delay.h"
 #include "display.h"
+#include "rf_receive.h"
 #include "fncollection.h"
 
 uint8_t fastrf_on;
@@ -61,21 +62,16 @@ fastrf(char *in)
   uint8_t len = strlen(in);
 
   if(in[1] == 's') {                       // Send
+
     ccInitChip(EE_FASTRF_CFG, EE_CC1100_PA);
-
     ccStrobe( CC1100_SIDLE );
-//  ccStrobe( CC1100_SFRX  );
     ccStrobe( CC1100_SFTX  );
-
     CC1100_ASSERT;
     cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
     cc1100_sendbyte( len-2 );
     for(uint8_t i=2; i< len; i++)
       cc1100_sendbyte(in[i]);
     CC1100_DEASSERT;
-
-//  ccStrobe( CC1100_SIDLE );
-//  ccStrobe( CC1100_SFRX  );
     ccStrobe( CC1100_STX   );
 
   } else if(in[1] == 'r') {                // receive
@@ -83,16 +79,16 @@ fastrf(char *in)
     fastrf_on = 1;
     ccStrobe( CC1100_SFRX  );
     ccRX();
-    Scheduler_SetTaskMode(FastRF_Task, TASK_RUN);	
 
   } else {                                 // reset
     fastrf_on = 0;
-    Scheduler_SetTaskMode(FastRF_Task, TASK_STOP);	
+    set_txrestore();
 
   }
 }
 
-TASK(FastRF_Task)
+void
+FastRF_Task(void)
 {
   if(fastrf_on != 2)
     return;
