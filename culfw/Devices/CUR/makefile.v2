@@ -7,44 +7,44 @@ OBJDIR = .
 
 
 SRC = $(TARGET).c                                                  \
-		../clib/Descriptors.c                              \
-		../clib/cc1100.c                                   \
-		../clib/cdc.c                                      \
-		../clib/clock.c                                    \
-		../clib/delay.c                                    \
-		../clib/display.c                                  \
-		../clib/fncollection.c                             \
-		../clib/ringbuffer.c                               \
-		../clib/spi.c                                      \
-		../clib/df.c                                       \
-		../clib/qfs.c                                      \
-		../clib/fswrapper.c                                \
-		../clib/stringfunc.c                               \
-		../clib/rf_send.c                                  \
-		../clib/rf_receive.c                               \
-		../clib/fht.c                                      \
-		../clib/ttydata.c                                  \
-		../clib/pcf8833.c                                  \
-		../clib/menu.c                                     \
-		../clib/battery.c                                  \
-		../clib/joy.c                                      \
-		../clib/mysleep.c                                  \
-		../clib/ds1339.c                                   \
-		../clib/log.c                                      \
-		../clib/more.c                                     \
-		../clib/fastrf.c                                   \
-		../clib/twimaster.c                                \
-		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
-		../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \
-		../MyUSB/Drivers/USB/LowLevel/DevChapter9.c        \
-		../MyUSB/Drivers/USB/HighLevel/USBTask.c           \
-		../MyUSB/Drivers/USB/HighLevel/USBInterrupt.c      \
-		../MyUSB/Drivers/USB/HighLevel/Events.c            \
-		../MyUSB/Drivers/USB/HighLevel/StdDescriptors.c    \
+		../../clib/Descriptors.c                              \
+		../../clib/cc1100.c                                   \
+		../../clib/cdc.c                                      \
+		../../clib/clock.c                                    \
+		../../clib/delay.c                                    \
+		../../clib/display.c                                  \
+		../../clib/fncollection.c                             \
+		../../clib/ringbuffer.c                               \
+		../../clib/spi.c                                      \
+		../../clib/df.c                                       \
+		../../clib/qfs.c                                      \
+		../../clib/fswrapper.c                                \
+		../../clib/stringfunc.c                               \
+		../../clib/rf_send.c                                  \
+		../../clib/rf_receive.c                               \
+		../../clib/fht.c                                      \
+		../../clib/ttydata.c                                  \
+		../../clib/pcf8833.c                                  \
+		../../clib/menu.c                                     \
+		../../clib/battery.c                                  \
+		../../clib/joy.c                                      \
+		../../clib/mysleep.c                                  \
+		../../clib/ds1339.c                                   \
+		../../clib/log.c                                      \
+		../../clib/more.c                                     \
+		../../clib/fastrf.c                                   \
+		../../clib/twimaster.c                                \
+		../../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
+		../../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \
+		../../MyUSB/Drivers/USB/LowLevel/DevChapter9.c        \
+		../../MyUSB/Drivers/USB/HighLevel/USBTask.c           \
+		../../MyUSB/Drivers/USB/HighLevel/USBInterrupt.c      \
+		../../MyUSB/Drivers/USB/HighLevel/Events.c            \
+		../../MyUSB/Drivers/USB/HighLevel/StdDescriptors.c    \
 
 
 OPT = s
-EXTRAINCDIRS = .. ../clib
+EXTRAINCDIRS = ../.. ../../clib
 CSTANDARD = -std=gnu99
 CDEFS  = -DF_CPU=$(F_CPU)UL -DBOARD=BOARD_$(BOARD) -DCURV2
 CDEFS += -DUSB_DEVICE_ONLY\

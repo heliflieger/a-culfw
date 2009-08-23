@@ -88,28 +88,28 @@ OBJDIR = .
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC = $(TARGET).c                                                  \
-		../clib/Descriptors.c                              \
-		../clib/cc1100.c                                   \
-		../clib/cdc.c                                      \
-		../clib/clock.c                                    \
-		../clib/delay.c                                    \
-		../clib/display.c                                  \
-		../clib/stringfunc.c                               \
-		../clib/fncollection.c                             \
-		../clib/ringbuffer.c                               \
-		../clib/rf_send.c                                  \
-		../clib/rf_receive.c                               \
-		../clib/fht.c                                      \
-		../clib/fastrf.c                                   \
-		../clib/ttydata.c                                  \
-		../clib/spi.c                                      \
-		../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
-		../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \
-		../MyUSB/Drivers/USB/LowLevel/DevChapter9.c        \
-		../MyUSB/Drivers/USB/HighLevel/USBTask.c           \
-		../MyUSB/Drivers/USB/HighLevel/USBInterrupt.c      \
-		../MyUSB/Drivers/USB/HighLevel/Events.c            \
-		../MyUSB/Drivers/USB/HighLevel/StdDescriptors.c    \
+		../../clib/Descriptors.c                              \
+		../../clib/cc1100.c                                   \
+		../../clib/cdc.c                                      \
+		../../clib/clock.c                                    \
+		../../clib/delay.c                                    \
+		../../clib/display.c                                  \
+		../../clib/stringfunc.c                               \
+		../../clib/fncollection.c                             \
+		../../clib/ringbuffer.c                               \
+		../../clib/rf_send.c                                  \
+		../../clib/rf_receive.c                               \
+		../../clib/fht.c                                      \
+		../../clib/fastrf.c                                   \
+		../../clib/ttydata.c                                  \
+		../../clib/spi.c                                      \
+		../../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
+		../../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \
+		../../MyUSB/Drivers/USB/LowLevel/DevChapter9.c        \
+		../../MyUSB/Drivers/USB/HighLevel/USBTask.c           \
+		../../MyUSB/Drivers/USB/HighLevel/USBInterrupt.c      \
+		../../MyUSB/Drivers/USB/HighLevel/Events.c            \
+		../../MyUSB/Drivers/USB/HighLevel/StdDescriptors.c    \
 
 
 
@@ -144,7 +144,7 @@ DEBUG = dwarf-2
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = .. ../clib
+EXTRAINCDIRS = ../.. ../../clib
 
 
 # Compiler flag to set the C Standard level.
