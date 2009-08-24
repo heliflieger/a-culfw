@@ -27,9 +27,12 @@
   arising out of or in connection with the use or performance of
   this software.
 */
-
 #include "Descriptors.h"
 #include "board.h"
+
+#ifdef LUFA
+#define NO_DESCRIPTOR_STRING NO_DESCRIPTOR
+#endif
 
 USB_Descriptor_Device_t DeviceDescriptor PROGMEM =
 {
@@ -48,7 +51,11 @@ USB_Descriptor_Device_t DeviceDescriptor PROGMEM =
           
   ManufacturerStrIndex:   0x01,
   ProductStrIndex:        0x02,
+#ifdef LUFA
+  SerialNumStrIndex:      USE_INTERNAL_SERIAL,
+#else
   SerialNumStrIndex:      NO_DESCRIPTOR_STRING,
+#endif
           
   NumberOfConfigurations: 1
 };
@@ -67,7 +74,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
               
       ConfigAttributes:       (USB_CONFIG_ATTR_BUSPOWERED | USB_CONFIG_ATTR_SELFPOWERED),
       
-      MaxPowerConsumption:    USB_CONFIG_POWER_MA(100)
+      MaxPowerConsumption:    USB_CONFIG_POWER_MA(USB_MAX_POWER)
     },
           
   CCI_Interface:
@@ -102,7 +109,6 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
                                  {Size: sizeof(CDC_FUNCTIONAL_DESCRIPTOR(2)),
                                   Type: 0x24},
                                   SubType: 0x01},
-      
       Data:                   {0x03, 0x01}
     },
 
@@ -112,7 +118,6 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
                                  {Size: sizeof(CDC_FUNCTIONAL_DESCRIPTOR(1)),
                                   Type: 0x24},
                                   SubType: 0x02},
-      
       Data:                   {0x06}
     },
           
@@ -122,7 +127,6 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
                                {Size: sizeof(CDC_FUNCTIONAL_DESCRIPTOR(2)),
                                 Type: 0x24},
                                 SubType: 0x06},
-      
       Data:                   {0x00, 0x01}
     },	
 
@@ -186,7 +190,7 @@ USB_Descriptor_String_t LanguageString PROGMEM =
 
 USB_Descriptor_String_t ManufacturerString PROGMEM =
 {
-  Header:           {Size: USB_STRING_LEN(11),
+  Header:           {Size: USB_STRING_LEN(10),
                      Type: DTYPE_String},
   UnicodeString:    L"busware.de"
 };
@@ -208,8 +212,18 @@ USB_Descriptor_String_t ProductString433 PROGMEM =
 #endif
 
 
-bool USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex,
-                       void** const DescriptorAddress, uint16_t* const DescriptorSize)
+#ifdef LUFA
+#define DESCRIPTOR_ADDRESS(x) ((void*)&x)
+uint16_t
+CALLBACK_USB_GetDescriptor(const uint16_t wValue,
+                           const uint8_t wIndex,
+                           void** const DescriptorAddress)
+#else
+bool USB_GetDescriptor (const uint16_t wValue,
+                        const uint8_t wIndex,
+                        void** const DescriptorAddress,
+                        uint16_t* const DescriptorSize)
+#endif
 {
   void*    Address = NULL;
   uint16_t Size    = 0;
@@ -246,11 +260,15 @@ bool USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex,
       break;
   }
   
+#ifdef LUFA
+  *DescriptorAddress = Address;
+  return Size;
+#else
   if(Address != NULL) {
     *DescriptorAddress = Address;
     *DescriptorSize    = Size;
     return true;
   }
-          
   return false;
+#endif
 }

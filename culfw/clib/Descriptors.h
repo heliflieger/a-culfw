@@ -32,7 +32,7 @@
 #define _DESCRIPTORS_H_
 
 	/* Includes: */
-		#include <MyUSB/Drivers/USB/USB.h>
+		#include <Drivers/USB/USB.h>
 
 		#include <avr/pgmspace.h>
 

@@ -14,6 +14,8 @@
 #define CC1100_INTVECT          INT4_vect
 #define CC1100_ISC		ISC40
 
+#define USB_MAX_POWER		100
+
 #define LED_DDR                 DDRC
 #define LED_PORT                PORTC
 #define LED_PIN                 PC4

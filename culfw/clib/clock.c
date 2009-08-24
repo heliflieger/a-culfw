@@ -17,7 +17,7 @@
 #ifdef HAS_LCD
 #include "pcf8833.h"
 #endif
-#include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
+#include "cdc.h"
 
 uint8_t day,hour,minute,sec,hsec;
 static uint8_t lhsec, lsec, lmin;

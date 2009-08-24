@@ -1,0 +1,2 @@
+MCU = at90usb1286
+BOARD = CURV2

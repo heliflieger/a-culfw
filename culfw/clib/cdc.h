@@ -2,13 +2,14 @@
 #define _CDC_H_
 
 /* Includes: */
+#include "board.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
 #include "Descriptors.h"
 #include "ringbuffer.h"
 
-#include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
+#include <Drivers/USB/USB.h>     // USB Functionality
 
 /* Macros: */
 #define GET_LINE_CODING			0x21
@@ -16,10 +17,9 @@
 #define SET_CONTROL_LINE_STATE		0x22
 
 /* Event Handlers: */
-HANDLES_EVENT(USB_Connect);
-HANDLES_EVENT(USB_Disconnect);
-HANDLES_EVENT(USB_ConfigurationChanged);
-HANDLES_EVENT(USB_UnhandledControlPacket);
+#ifdef LUFA
+  #define USB_IsConnected (USB_DeviceState == DEVICE_STATE_Configured)
+#endif
 
 /* Type Defines: */
 typedef struct

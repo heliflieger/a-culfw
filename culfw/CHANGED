@@ -1,5 +1,6 @@
 Version 1.28
-- CUN: directory reorg, include avr-uip
+- directory reorganization, adding avr-uip
+- MyUSB (aka lufa) update. 2 Makefile per project for MyUSB and lufa
 
 Version 1.27 (Sun Aug  9 2009)
 - CU*: fht interface rewrite (FHZ "mode")

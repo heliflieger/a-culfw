@@ -1,6 +1,8 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#define USB_MAX_POWER           250
+
 #define CC1100_CS_DDR		DDRF
 #define CC1100_CS_PORT          PORTF
 #define CC1100_CS_PIN		PF3

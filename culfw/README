@@ -47,7 +47,7 @@ Prerequisites
 
 Compile (optional)
 ==================
-  Change into your device directory (e.g. CUL)
+  Change into your device directory (e.g. Devices/CUL)
   Type "make", which will output text like:
     Compiling C: CUL.c
     [...]

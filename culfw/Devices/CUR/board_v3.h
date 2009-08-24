@@ -1,3 +1,4 @@
+#define USB_MAX_POWER           500
 
 #define CC1100_CS_PORT  	PORTE
 #define CC1100_CS_DDR		DDRE

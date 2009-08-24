@@ -5,7 +5,7 @@
 #ifdef HAS_LCD
 #include "pcf8833.h"
 #endif
-#include <MyUSB/Drivers/USB/USB.h>     // USB_IsConnected
+#include <Drivers/USB/USB.h>     // USB_IsConnected
 
 uint8_t battery_state;
 

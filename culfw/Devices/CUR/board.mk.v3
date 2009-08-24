@@ -1,0 +1,2 @@
+MCU = at90usb646
+BOARD = CURV3

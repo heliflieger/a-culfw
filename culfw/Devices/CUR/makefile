@@ -1,5 +1,4 @@
-MCU = at90usb646
-BOARD  =
+include board.mk
 F_CPU = 8000000
 FORMAT = ihex
 TARGET = CUR
@@ -44,9 +43,9 @@ SRC = $(TARGET).c                                                  \
 
 
 OPT = s
-EXTRAINCDIRS = ../.. ../../clib
+EXTRAINCDIRS = ../.. ../../MyUSB ../../clib
 CSTANDARD = -std=gnu99
-CDEFS  = -DF_CPU=$(F_CPU)UL -DBOARD=BOARD_$(BOARD) -DCURV3
+CDEFS  = -DF_CPU=$(F_CPU)UL -D$(BOARD)
 CDEFS += -DUSB_DEVICE_ONLY\
         -DUSE_STATIC_OPTIONS="(USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED)"\
         -DUSE_NONSTANDARD_DESCRIPTOR_NAMES
@@ -62,7 +61,7 @@ CFLAGS += -finline-limit=20
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
-CFLAGS += -Wunreachable-code
+#CFLAGS += -Wunreachable-code
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)

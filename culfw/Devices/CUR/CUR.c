@@ -4,6 +4,7 @@
 */
 
 #include <avr/boot.h>
+#include <avr/power.h>
 #include <avr/eeprom.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -11,8 +12,6 @@
 #include <avr/wdt.h>
 
 #include <string.h>
-
-#include <MyUSB/Drivers/USB/USB.h>     // USB Functionality
 
 #include "cc1100.h"
 #include "cdc.h"
@@ -41,8 +40,6 @@
 #include "fastrf.h"
 
 df_chip_t df;
-
-static uint8_t usbtask_enabled;
 
 PROGMEM t_fntab fntab[] = {
 
@@ -105,18 +102,6 @@ start_bootloader(void)
   jump_to_bootloader();
 }
 
-EVENT_HANDLER(USB_Connect)
-{
-  usbtask_enabled = 1;
-}
-
-EVENT_HANDLER(USB_Disconnect)
-{
-  usbtask_enabled = 0;
-  cdctask_enabled = 0;
-  ccStrobe(CC1100_SIDLE);
-}
-
 int
 main(void)
 {
@@ -149,7 +134,7 @@ main(void)
   TCCR3B =  _BV(WGM32) | _BV(CS31);        // Prescaler 8MHz/8: 3.9KHz 
 #endif
 
-  SetSystemClockPrescaler(0);              // Disable Clock Division
+  clock_prescale_set(clock_div_1);         // Disable Clock Division
 
   MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
   wdt_enable(WDTO_2S); 
@@ -177,10 +162,8 @@ main(void)
   LED_OFF();
 
   for(;;) {
-    if(usbtask_enabled)
-      USB_USBTask();
-    if(cdctask_enabled)
-      CDC_Task();
+    USB_USBTask();
+    CDC_Task();
     RfAnalyze_Task();
     Minute_Task();
     if(fastrf_on)

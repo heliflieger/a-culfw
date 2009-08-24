@@ -43,7 +43,7 @@ SRC = $(TARGET).c                                                  \
 
 OPT=s
 DEBUG = dwarf-2
-EXTRAINCDIRS = ../..  ../../clib ../../avr-uip ../../avr-uip/uip
+EXTRAINCDIRS = ../.. ../../MyUSB ../../clib ../../avr-uip ../../avr-uip/uip
 
 CSTANDARD = -std=gnu99
 
@@ -68,7 +68,7 @@ CFLAGS += -finline-limit=20
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
-CFLAGS += -Wunreachable-code
+#CFLAGS += -Wunreachable-code
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)

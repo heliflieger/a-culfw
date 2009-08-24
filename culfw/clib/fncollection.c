@@ -1,12 +1,12 @@
 #include <avr/eeprom.h>
-#include <MyUSB/Drivers/USB/USB.h>
+#include <Drivers/USB/USB.h>
 
 #include "board.h"
 #include "display.h"
 #include "delay.h"
 #include "fncollection.h"
 #include "cc1100.h"
-#include "version.h"
+#include "../version.h"
 #include "cdc.h"
 #include "clock.h"
 #include "mysleep.h"
