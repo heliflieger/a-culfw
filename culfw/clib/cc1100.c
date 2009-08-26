@@ -208,6 +208,9 @@ ccTX(void)
   uint8_t cnt = 0xff;
   EIMSK  &= ~_BV(CC1100_INT);
 
+  // Going from RX to TX does not work if there was a reception less than 0.5
+  // sec ago. Using IDLE helps to shorten this period(?)
+  ccStrobe(CC1100_SIDLE);
   while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != MARCSTATE_TX) {
     ccStrobe( CC1100_STX );
     my_delay_us(10);
@@ -219,7 +222,6 @@ void
 ccRX(void)
 {
   uint8_t cnt = 0xff;
-
 
   while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != MARCSTATE_RX)
     ccStrobe( CC1100_SRX );
