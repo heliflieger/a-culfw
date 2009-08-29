@@ -3,6 +3,7 @@ Version 1.28
 - MyUSB (aka lufa) update. 2 Makefiles per project for MyUSB and lufa
 - CU*: sending immediately after receiving fixed (problems in fhem notify)
 - CUN: "unique" MAC adress, IP/MAC configured via eeprom (see the README)
+- CUN: DHCP added
 
 Version 1.27 (Sun Aug  9 2009)
 - CU*: fht interface rewrite (FHZ "mode")

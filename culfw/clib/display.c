@@ -22,7 +22,7 @@ display_char(char data)
 {
 
 #ifdef HAS_ETHERNET
-     tcp_putchar( data );
+  tcp_putchar( data );
 #endif
 
 #ifdef HAS_USB

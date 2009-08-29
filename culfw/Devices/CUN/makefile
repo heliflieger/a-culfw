@@ -33,6 +33,7 @@ SRC = $(TARGET).c                                                  \
 		../../avr-uip/uip/psock.c                             \
 		../../avr-uip/uip/timer.c                             \
 		../../avr-uip/uip/uip-neighbor.c                      \
+		../../avr-uip/apps/dhcpc/dhcpc.c                      \
 		../../lufa/Drivers/USB/LowLevel/DevChapter9.c         \
 		../../lufa/Drivers/USB/LowLevel/Endpoint.c            \
 		../../lufa/Drivers/USB/LowLevel/Host.c                \

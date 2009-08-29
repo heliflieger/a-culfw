@@ -10,12 +10,11 @@
 #include "uip_arp.h"
 #include "drivers/interfaces/network.h"
 #include "drivers/enc28j60/enc28j60.h"
+#include "apps/dhcpc/dhcpc.h"
 #include "delay.h"
 
-#define BUF ((struct uip_eth_hdr *)&uip_buf[0])
+#define BUF ((struct uip_eth_hdr *)uip_buf)
 struct timer periodic_timer, arp_timer;
-
-#undef USE_DHCP
 
 uint8_t
 bsbg(uint8_t a)
@@ -44,6 +43,15 @@ ethernet_reset(void)
   write_eeprom(buf);
 }
 
+/*
+static void
+dumphdr(void)
+{
+  for(uint8_t i = 0; i < sizeof(struct uip_eth_hdr); i++)
+    DH2(uip_buf[i]);
+}
+*/
+
 void
 Ethernet_Task(void)
 {
@@ -52,6 +60,7 @@ Ethernet_Task(void)
   uip_len = network_read();
   
   if(uip_len > 0) {
+       //DC('e'); DH2(uip_len); DC('.'); dumphdr(); DNL();
        if(BUF->type == htons(UIP_ETHTYPE_IP)){
             uip_arp_ipin();
             uip_input();
@@ -96,23 +105,32 @@ Ethernet_Task(void)
 
 }
 
-#ifdef USE_DHCP
-void
-dhcpc_configured(const struct dhcpc_state *s)
-{
-  uip_sethostaddr(s->ipaddr);
-  uip_setnetmask(s->netmask);
-  uip_setdraddr(s->default_router);
-  //resolv_conf(s->dnsaddr);
-}
-#endif
-
-// EEPROM Read IP
-void
+static void                             // EEPROM Read IP
 erip(uip_ipaddr_t ip, uint8_t *addr)
 {
   uip_ipaddr(ip, erb(addr), erb(addr+1), erb(addr+2), erb(addr+3));
 }
+
+static void                             // EEPROM Write IP
+ewip(const u16_t ip[2], uint8_t *addr)
+{
+  uint16_t ip0 = HTONS(ip[0]);
+  uint16_t ip1 = HTONS(ip[1]);
+  ewb(addr+0, ip0>>8);
+  ewb(addr+1, ip0&0xff);
+  ewb(addr+2, ip1>>8);
+  ewb(addr+3, ip1&0xff);
+}
+
+void
+dhcpc_configured(const struct dhcpc_state *s)
+{
+  ewip(s->ipaddr, EE_IP4_ADDR);            uip_sethostaddr(s->ipaddr);
+  ewip(s->default_router, EE_IP4_GATEWAY); uip_setdraddr(s->default_router);
+  ewip(s->netmask, EE_IP4_NETMASK);        uip_setnetmask(s->netmask);
+  //resolv_conf(s->dnsaddr);
+}
+
 
 void
 ethernet_init(void)
@@ -138,7 +156,7 @@ ethernet_init(void)
   
   uip_init();
   
-  struct uip_eth_addr mac;
+  static struct uip_eth_addr mac;       // static for dhcpc
   mac.addr[0] = erb(EE_MAC_ADDR+0);
   mac.addr[1] = erb(EE_MAC_ADDR+1);
   mac.addr[2] = erb(EE_MAC_ADDR+2);
@@ -148,13 +166,14 @@ ethernet_init(void)
   uip_setethaddr(mac);
   network_set_MAC(mac.addr);
 
-#ifdef USE_DHCP
-  dhcpc_init(mac.addr, 6);
-#endif
-  {
+  if(erb(EE_USE_DHCP)) {
+    dhcpc_init(mac.addr, 6);
+
+  } else {
     erip(ipaddr, EE_IP4_ADDR);    uip_sethostaddr(ipaddr);
     erip(ipaddr, EE_IP4_GATEWAY); uip_setdraddr(ipaddr);
     erip(ipaddr, EE_IP4_NETMASK); uip_setnetmask(ipaddr);
+
   }
     
 
