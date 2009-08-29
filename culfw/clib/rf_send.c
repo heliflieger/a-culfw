@@ -83,7 +83,6 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   if(!cc_on)
     set_ccon();
   ccTX();                       // Enable TX 
-
   do {
     for(i = 0; i < sync; i++)                   // sync
       send_bit(0);

@@ -70,6 +70,8 @@ PROGMEM t_fntab fntab[] = {
   { 't', gettime },
   { 'w', write_file },
   { 'x', ccsetpa },
+
+  { 0, 0 },
 };
 
 #if defined(__AVR_AT90USB1286__)

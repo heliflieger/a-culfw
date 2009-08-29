@@ -28,7 +28,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * $Id: tcplink.c,v 1.2 2009-08-17 14:55:54 tostmann Exp $
+ * $Id: tcplink.c,v 1.3 2009-08-29 13:02:07 rudolfkoenig Exp $
  *
  */
 
@@ -44,138 +44,111 @@
 #include "ringbuffer.h"
 #include "cdc.h"
 
-#ifdef DEMOMODE
-#include "timer.h"
-struct timer kickoff_timer;
-#endif
-
-static struct tcplink_state s;
-
 #define STATE_CLOSED 0
 #define STATE_OPEN   1
 #define STATE_CLOSE  2
 
-/*---------------------------------------------------------------------------*/
-void tcplink_init(void) {
-     uip_listen(HTONS(2323));
-     s.buffer = NULL;
-     s.state  = STATE_CLOSED;
-}
-
-void tcp_putchar(char data) {
-     if (!s.buffer)
-	  return;
-     
-     strncat( s.buffer, &data, 1 );
-}
-
-void tcplink_close(char *unused) {
-     s.state = STATE_CLOSE;
-}
-
+#define s uip_conns[0].appstate
 
 /*---------------------------------------------------------------------------*/
-static void senddata(void) {
-     static char *bufptr;
-     static int buflen;
-
-     buflen = strlen(s.buffer);
-
-     if (buflen<1)
-	  return;
-     
-     bufptr = uip_appdata;
-
-     memcpy(bufptr, s.buffer, buflen);
-     *s.buffer = 0;
-
-     uip_send(uip_appdata, buflen);
+void
+tcplink_init(void)
+{
+  uip_listen(HTONS(2323));
 }
+
+void
+tcp_putchar(char data)
+{
+  if(s.offset < 255)
+    s.buffer[s.offset++] = data;
+}
+
+void
+tcplink_close(char *unused)
+{
+  s.state = STATE_CLOSE;
+}
+
+
+
 /*---------------------------------------------------------------------------*/
-static void closed(void) {
-     if (s.buffer)
-	  free( s.buffer );
-     s.buffer = NULL;
-     s.state  = STATE_CLOSED;
+static void
+senddata(void)
+{
+  if(s.offset == 0)
+    return;
+  memcpy(uip_appdata, s.buffer, s.offset);
+  uip_send(uip_appdata, s.offset);
+  s.offset = 0;
 }
 
 /*---------------------------------------------------------------------------*/
-static void newdata(void) {
+static void
+closed(void)
+{
+  s.offset = 0;
+  s.state  = STATE_CLOSED;
+}
 
-     u16_t len;
-     char *dataptr;
+/*---------------------------------------------------------------------------*/
+static void
+newdata(void)
+{
+  u16_t len;
+  char *dataptr;
+
+  len = uip_datalen();
+
+  if (len<1)
+       return;
+
+  dataptr = (char *)uip_appdata;
   
-     len = uip_datalen();
+  while(len > 0) {
+       rb_put(USB_Rx_Buffer, *dataptr);
+       ++dataptr;
+       --len;
+  }
 
-     if (len<1)
-	  return;
-
-     dataptr = (char *)uip_appdata;
-     
-     while(len > 0) {
-	  rb_put(USB_Rx_Buffer, *dataptr);
-	  ++dataptr;
-	  --len;
-     }
-
-     usbinfunc();
-#ifdef DEMOMODE	  
-     timer_restart(&kickoff_timer);
-#endif
+  usbinfunc();
 }
 
 /*---------------------------------------------------------------------------*/
-void tcplink_appcall(void) {
+void
+tcplink_appcall(void)
+{
+  if(uip_connected()) {
+    s.offset = 0;
+    s.state = STATE_OPEN;
+  }
 
-     if(uip_connected()) {
-	  s.buffer = malloc( 100 );
-	  *s.buffer = 0;
+  if(s.state == STATE_CLOSE) {
+    s.state = STATE_OPEN;
+    uip_close();
+    return;
+  }
 
-#ifdef DEMOMODE	  
-	  sprintf_P( s.buffer, PSTR("Welcome to " BOARD_ID_STR " running culfw (demo/read-only mode - timeout: 5 min) V " VERSION "\r\n" ) );
-#else
-	  sprintf_P( s.buffer, PSTR("Welcome to " BOARD_ID_STR " running culfw V " VERSION "\r\n" ) );
-#endif
-	  
-	  s.state = STATE_OPEN;
-
-#ifdef DEMOMODE     
-	  timer_set(&kickoff_timer, CLOCK_SECOND * 300);
-#endif
-	  
-     }
-
-#ifdef DEMOMODE     
-     if (timer_expired(&kickoff_timer))
-	  s.state = STATE_CLOSE;
-#endif
-
-     if(s.state == STATE_CLOSE) {
-	  s.state = STATE_OPEN;
-	  uip_close();
-	  return;
-     }
-
-     if(uip_closed() ||
-	uip_aborted() ||
-	uip_timedout()) {
-	  closed();
-     }
-     
-//  if(uip_acked()) {
-//    acked();
-//  }
-     
-     if(uip_newdata()) {
-	  newdata();
-     }
-     
-     if(uip_rexmit() ||
-	uip_newdata() ||
-	uip_acked() ||
-	uip_connected() ||
-	uip_poll()) {
-	  senddata();
-     }
+  if(uip_closed() ||
+    uip_aborted() ||
+    uip_timedout()) {
+      closed();
+  }
+  
+// if(uip_acked()) {
+//   acked();
+// }
+  
+  if(uip_newdata()) {
+    newdata();
+  }
+  
+  if(uip_rexmit() ||
+    uip_newdata() ||
+    uip_acked() ||
+    uip_connected() ||
+    uip_poll()) {
+      senddata();
+  }
 }
 /*---------------------------------------------------------------------------*/

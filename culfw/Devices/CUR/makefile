@@ -8,7 +8,7 @@ OBJDIR = .
 SRC = $(TARGET).c                                                  \
 		../../clib/Descriptors.c                              \
 		../../clib/cc1100.c                                   \
-		../../clib/cdc.c                                      \
+		../../clib/cdcLUFA.c                                      \
 		../../clib/clock.c                                    \
 		../../clib/delay.c                                    \
 		../../clib/display.c                                  \
@@ -33,22 +33,34 @@ SRC = $(TARGET).c                                                  \
 		../../clib/more.c                                     \
 		../../clib/fastrf.c                                   \
 		../../clib/twimaster.c                                \
-		../../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
-		../../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \
-		../../MyUSB/Drivers/USB/LowLevel/DevChapter9.c        \
-		../../MyUSB/Drivers/USB/HighLevel/USBTask.c           \
-		../../MyUSB/Drivers/USB/HighLevel/USBInterrupt.c      \
-		../../MyUSB/Drivers/USB/HighLevel/Events.c            \
-		../../MyUSB/Drivers/USB/HighLevel/StdDescriptors.c    \
+                ../../lufa/Drivers/USB/LowLevel/DevChapter9.c         \
+                ../../lufa/Drivers/USB/LowLevel/Endpoint.c            \
+                ../../lufa/Drivers/USB/LowLevel/Host.c                \
+                ../../lufa/Drivers/USB/LowLevel/HostChapter9.c        \
+                ../../lufa/Drivers/USB/LowLevel/LowLevel.c            \
+                ../../lufa/Drivers/USB/LowLevel/Pipe.c                \
+                ../../lufa/Drivers/USB/HighLevel/Events.c             \
+                ../../lufa/Drivers/USB/HighLevel/USBInterrupt.c       \
+                ../../lufa/Drivers/USB/HighLevel/USBTask.c            \
+                ../../lufa/Drivers/USB/HighLevel/ConfigDescriptor.c   \
+
 
 
 OPT = s
-EXTRAINCDIRS = ../.. ../../MyUSB ../../clib
+LUFA_OPTS  = -D USE_NONSTANDARD_DESCRIPTOR_NAMES
+LUFA_OPTS += -D NO_STREAM_CALLBACKS
+LUFA_OPTS += -D USB_DEVICE_ONLY
+LUFA_OPTS += -D FIXED_CONTROL_ENDPOINT_SIZE=8
+LUFA_OPTS += -D FIXED_NUM_CONFIGURATIONS=1
+LUFA_OPTS += -D USE_FLASH_DESCRIPTORS
+LUFA_OPTS += -D F_CLOCK=$(F_CPU)UL
+LUFA_OPTS += -D USE_STATIC_OPTIONS="(USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)"
+
+EXTRAINCDIRS = ../.. ../../lufa ../../clib
 CSTANDARD = -std=gnu99
 CDEFS  = -DF_CPU=$(F_CPU)UL -D$(BOARD)
-CDEFS += -DUSB_DEVICE_ONLY\
-        -DUSE_STATIC_OPTIONS="(USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED)"\
-        -DUSE_NONSTANDARD_DESCRIPTOR_NAMES
+CDEFS += -DLUFA $(LUFA_OPTS)
+
 ADEFS = -DF_CPU=$(F_CPU)
 CFLAGS += $(CDEFS)
 CFLAGS += -O$(OPT)

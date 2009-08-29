@@ -30,11 +30,28 @@ void version(char *);
 
 // EEprom: CUL: 96 bytes of 512 used
 
-#define EE_CONTRAST          (uint8_t *)0x200
-#define EE_BRIGHTNESS        (EE_CONTRAST+1)
-#define EE_SLEEPTIME         (EE_BRIGHTNESS+1)
+#ifdef HAS_ETHERNET
+# define EE_MAC_ADDR         (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE) // FF==generated
+# define EE_MAC_ADDR_SIZE     6
+# define EE_IP4_ADDR_SIZE     4
+# define EE_USE_DHCP         (EE_MAC_ADDR+EE_MAC_ADDR_SIZE)
+# define EE_IP4_ADDR         (EE_USE_DHCP+1)
+# define EE_IP4_NETMASK      (EE_IP4_ADDR+EE_IP4_ADDR_SIZE)
+# define EE_IP4_GATEWAY      (EE_IP4_NETMASK+EE_IP4_ADDR_SIZE)
+# define EE_IP4_TCPLINK_PORT (EE_IP4_GATEWAY+EE_IP4_ADDR_SIZE)
+# define EE_IP4_PORTSIZE     2
+#endif
 
-// EEprom: CUR: 96+2 bytes of 4096/8192 used
+#ifdef HAS_LCD
+#ifdef HAS_ETHERNET
+# define EE_CONTRAST          (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE)
+#else
+# define EE_CONTRAST          (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE)
+#endif
+# define EE_BRIGHTNESS        (EE_CONTRAST+1)
+# define EE_SLEEPTIME         (EE_BRIGHTNESS+1)
+#endif
+
 
 extern uint8_t led_mode;
 

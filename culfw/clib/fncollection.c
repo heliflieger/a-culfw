@@ -12,6 +12,7 @@
 #include "mysleep.h"
 #include "fswrapper.h"
 #include "fastrf.h"
+#include "ethernet.h"
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -32,53 +33,110 @@ erb(uint8_t *p)
   return eeprom_read_byte(p);
 }
 
+#ifdef HAS_ETHERNET
+void
+display_mac(uint8_t *a)
+{
+  uint8_t cnt = 6;
+  while(cnt--) {
+    DH2(erb(a++));
+    if(cnt)
+      DC(':');
+  }
+  
+}
+
+void
+display_ip4(uint8_t *a)
+{
+  uint8_t cnt = 4;
+  while(cnt--) {
+    DU(erb(a++),1);
+    if(cnt)
+      DC('.');
+  }
+  
+}
+#endif
+
 void
 read_eeprom(char *in)
 {
   uint8_t hb[2], d;
   uint16_t addr;
 
-  hb[0] = hb[2] = 0;
-  d = fromhex(in+1, hb, 2);
-  if(d == 2)
-    addr = (hb[0] << 8) | hb[1];
-  else
-    addr = hb[0];
+#ifdef HAS_ETHERNET
+  if(in[1] == 'i') {
+           if(in[2] == 'm') { display_mac(EE_MAC_ADDR);
+    } else if(in[2] == 'd') { DH2(erb(EE_USE_DHCP));
+    } else if(in[2] == 'a') { display_ip4(EE_IP4_ADDR);
+    } else if(in[2] == 'n') { display_ip4(EE_IP4_NETMASK);
+    } else if(in[2] == 'g') { display_ip4(EE_IP4_GATEWAY);
+    } else if(in[2] == 'p') {
+      DU(eeprom_read_word((uint16_t *)EE_IP4_TCPLINK_PORT), 0);
+    }
+  } else 
+#endif
+  {
+    hb[0] = hb[2] = 0;
+    d = fromhex(in+1, hb, 2);
+    if(d == 2)
+      addr = (hb[0] << 8) | hb[1];
+    else
+      addr = hb[0];
 
-  d = erb((uint8_t *)addr);
-  DC('R');                    // prefix
-  DH(addr,4);                 // register number
-  DS_P( PSTR(" = ") );
-  DH2(d);                    // result, hex
-  DS_P( PSTR(" / ") );
-  DU(d,2);                    // result, decimal
+    d = erb((uint8_t *)addr);
+    DC('R');                    // prefix
+    DH(addr,4);                 // register number
+    DS_P( PSTR(" = ") );
+    DH2(d);                    // result, hex
+    DS_P( PSTR(" / ") );
+    DU(d,2);                    // result, decimal
+  }
   DNL();
 }
 
 void
 write_eeprom(char *in)
 {
-  uint8_t hb[3], d;
-  uint16_t addr;
+  uint8_t hb[6], d = 0;
 
-  d = fromhex(in+1, hb, 3);
-  if(d < 2)
-    return;
-  if(d == 2)
-    addr = hb[0];
-  else
-    addr = (hb[0] << 8) | hb[1];
-    
-  ewb((uint8_t*)addr, hb[d-1]);
+#ifdef HAS_ETHERNET
+  if(in[1] == 'i') {
+    uint8_t *addr = 0;
+           if(in[2] == 'm') { d=6; fromhex(in+3,hb,6); addr=EE_MAC_ADDR;
+    } else if(in[2] == 'd') { d=1; fromdec(in+3,hb);   addr=EE_USE_DHCP;
+    } else if(in[2] == 'a') { d=4; fromip (in+3,hb,4); addr=EE_IP4_ADDR;
+    } else if(in[2] == 'n') { d=4; fromip (in+3,hb,4); addr=EE_IP4_NETMASK;
+    } else if(in[2] == 'g') { d=4; fromip (in+3,hb,4); addr=EE_IP4_GATEWAY;
+    } else if(in[2] == 'p') { d=2; fromdec(in+3,hb);   addr=EE_IP4_TCPLINK_PORT;
+    }
+    for(uint8_t i = 0; i < d; i++)
+      ewb(addr++, hb[i]);
 
-  // If there are still bytes left, then write them too
-  in += (2*d+1);
-  while(in[0]) {
-    addr++;
-    if(!fromhex(in, hb, 1))
+  } else 
+#endif
+  {
+    uint16_t addr;
+    d = fromhex(in+1, hb, 3);
+    if(d < 2)
       return;
-    ewb((uint8_t*)addr++, hb[0]);
-    in += 2;
+    if(d == 2)
+      addr = hb[0];
+    else
+      addr = (hb[0] << 8) | hb[1];
+      
+    ewb((uint8_t*)addr, hb[d-1]);
+
+    // If there are still bytes left, then write them too
+    in += (2*d+1);
+    while(in[0]) {
+      addr++;
+      if(!fromhex(in, hb, 1))
+        return;
+      ewb((uint8_t*)addr++, hb[0]);
+      in += 2;
+    }
   }
 }
 
@@ -99,7 +157,6 @@ void
 eeprom_factory_reset(char *in)
 {
   cc_factory_reset();
-
 #ifdef HAS_FASTRF
   fastrf_reset();
 #endif
@@ -112,14 +169,14 @@ eeprom_factory_reset(char *in)
 #ifdef HAS_LCD
   ewb(EE_CONTRAST,   0x40);
   ewb(EE_BRIGHTNESS, 0x80);
-#endif
-#ifdef HAS_SLEEP
   ewb(EE_SLEEPTIME, 30);
+#endif
+#ifdef HAS_ETHERNET
+  ethernet_reset();
 #endif
   prepare_boot(in);
 }
 
-//////////////////////////////////////////////////
 // LED
 void
 ledfunc(char *in)

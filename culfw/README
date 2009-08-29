@@ -190,6 +190,15 @@ Protocol
       See fncollection.h for more details.
       Example: R00 -> 63
 
+      Additional CUN-only commands:
+        Rim - read MAC Address
+        Rid - read DHCP enabled flag
+        Ria - read IPV4 Address
+        Rig - read IPV4 gateway
+        Rin - read IPV4 network mask
+        Rip - read tcplink port
+        
+
     r<filename>
       (CUR only)
       output the file name <filename>. First the length of the file,
@@ -240,6 +249,20 @@ Protocol
       followed by one byte hex data <DD>. See R above for address (AAAA)
       explanation.
       Example: W1D06
+
+      Additional CUN-only commands:
+        Wim - write MAC Address
+        Wid - write DHCP enabled flag
+        Wia - write IPV4 Address
+        Wig - write IPV4 gateway
+        Win - write IPV4 network mask
+        Wip - write tcplink port
+        Notes:
+        - Everything is only active after a reboot.
+        - MAC adress is written as hex, with optional semicolon (as usual)
+        - IP4 adresses are written in decimal with dot separator as usual
+        - port is written in decimal
+        - factory reset will re-initialize this data
 
 
     w<length><filename>

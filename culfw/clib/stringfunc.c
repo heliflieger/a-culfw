@@ -14,7 +14,7 @@ fromhex(const char *in, uint8_t *out, uint8_t buflen)
     if(c >= 'A' && c <= 'F') { h |= c-'A'+10; fnd = 1; }
     if(c >= 'a' && c <= 'f') { h |= c-'a'+10; fnd = 1; }
     if(!fnd) {
-      if(c != ' ')
+      if(c != ' ' && c != ':')
         break;
       continue;
     }
@@ -30,6 +30,45 @@ fromhex(const char *in, uint8_t *out, uint8_t buflen)
   }
   return op-out;
 }
+
+// Used to parse ip-adresses, but may also be used to parse single-byte values
+int
+fromip(const char *in, uint8_t *out, uint8_t buflen)
+{
+  uint8_t *op = out, c, h = 0, fnd = 0;
+  while((c = *in++)) {
+    fnd = 0;
+    if(c >= '0' && c <= '9') {
+      h = h*10 + (c-'0');
+      fnd = 1;
+    } else {
+      if(c != ' ' && c != '.')
+        break;
+      if(buflen) {
+        *op++ = h;
+        fnd = h = 0;
+        buflen--;
+      }
+    }
+  }
+  if(fnd && buflen)
+    *op++ = h;
+  return op-out;
+}
+
+// Used to parse ip-adresses, but may also be used to parse single-byte values
+void
+fromdec(const char *in, uint8_t *out)
+{
+  uint8_t c;
+  uint16_t h = 0;
+
+  while((c = *in++))
+    if(c >= '0' && c <= '9')
+      h = h*10 + (c-'0');
+  *(uint16_t*)out = h;
+}
+
 
 // Just one byte
 void

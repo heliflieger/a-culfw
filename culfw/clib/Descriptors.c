@@ -64,32 +64,26 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
 {
   Config:
     {
-      Header:                 {Size: sizeof(USB_Descriptor_Configuration_Header_t), Type: DTYPE_Configuration},
-
+      Header:           {Size: sizeof(USB_Descriptor_Configuration_Header_t),
+                         Type: DTYPE_Configuration},
       TotalConfigurationSize: sizeof(USB_Descriptor_Configuration_t),
       TotalInterfaces:        2,
-              
       ConfigurationNumber:    1,
       ConfigurationStrIndex:  NO_DESCRIPTOR_STRING,
-              
-      ConfigAttributes:       (USB_CONFIG_ATTR_BUSPOWERED | USB_CONFIG_ATTR_SELFPOWERED),
-      
+      ConfigAttributes:       (USB_CONFIG_ATTR_BUSPOWERED),
       MaxPowerConsumption:    USB_CONFIG_POWER_MA(USB_MAX_POWER)
     },
           
   CCI_Interface:
     {
-      Header:                 {Size: sizeof(USB_Descriptor_Interface_t), Type: DTYPE_Interface},
-
+      Header:           {Size: sizeof(USB_Descriptor_Interface_t),
+                         Type: DTYPE_Interface},
       InterfaceNumber:        0,
       AlternateSetting:       0,
-      
       TotalEndpoints:         1,
-              
       Class:                  0x02,
       SubClass:               0x02,
       Protocol:               0x01,
-              
       InterfaceStrIndex:      NO_DESCRIPTOR_STRING
     },
 
@@ -99,7 +93,6 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
                                  {Size: sizeof(CDC_FUNCTIONAL_DESCRIPTOR(2)),
                                   Type: 0x24},
                                   SubType: 0x00},
-      
       Data:                   {0x01, 0x10}
     },
 
@@ -134,8 +127,8 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
     {
       Header:                 {Size: sizeof(USB_Descriptor_Endpoint_t),
                                Type: DTYPE_Endpoint},
-                                                               
-      EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_IN | CDC_NOTIFICATION_EPNUM),
+      EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_IN |
+                               CDC_NOTIFICATION_EPNUM),
       Attributes:             EP_TYPE_INTERRUPT,
       EndpointSize:           CDC_NOTIFICATION_EPSIZE,
       PollingIntervalMS:      0xFF
@@ -145,16 +138,12 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
     {
       Header:                 {Size: sizeof(USB_Descriptor_Interface_t),
                                Type: DTYPE_Interface},
-
       InterfaceNumber:        1,
       AlternateSetting:       0,
-      
       TotalEndpoints:         2,
-              
       Class:                  0x0A,
       SubClass:               0x00,
       Protocol:               0x00,
-              
       InterfaceStrIndex:      NO_DESCRIPTOR_STRING
     },
 
@@ -162,7 +151,6 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
     {
       Header:                 {Size: sizeof(USB_Descriptor_Endpoint_t),
                                Type: DTYPE_Endpoint},
-                                                               
       EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_OUT | CDC_RX_EPNUM),
       Attributes:             EP_TYPE_BULK,
       EndpointSize:           CDC_TX_EPSIZE,
@@ -173,7 +161,6 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
     {
       Header:                 {Size: sizeof(USB_Descriptor_Endpoint_t),
                                Type: DTYPE_Endpoint},
-                                                               
       EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_IN | CDC_TX_EPNUM),
       Attributes:              EP_TYPE_BULK,
       EndpointSize:            CDC_RX_EPSIZE,

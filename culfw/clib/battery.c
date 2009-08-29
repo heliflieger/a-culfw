@@ -2,6 +2,7 @@
 #include "board.h"
 #include "display.h"
 #include "delay.h"
+#include "cdc.h"
 #ifdef HAS_LCD
 #include "pcf8833.h"
 #endif

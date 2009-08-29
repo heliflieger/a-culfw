@@ -28,6 +28,7 @@
 // with displaying/logging the data.  Checking the RSSI via SPI in the next
 // interrupt will lead then to an instant reboot. We disable this feature until
 // the SPI gets locked properly
+
 #ifdef BUSWARE_CUL
 #define CLOSE_IN_RX
 #endif
