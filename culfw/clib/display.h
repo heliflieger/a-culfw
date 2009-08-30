@@ -26,5 +26,6 @@ extern uint8_t output_enabled;
 #define OUTPUT_USB (1<<0)
 #define OUTPUT_LCD (1<<1)
 #define OUTPUT_LOG (1<<2)
+#define OUTPUT_TCP (1<<3)
 
 #endif

@@ -327,7 +327,7 @@ void enc28j60Init(void)
 	// enable packet reception
 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 /*
-	enc28j60PhyWrite(PHLCON, 0x0AA2);
+	enc28j60PhyWrite(PHLCON, 0x0AA2);       // Link Status an blink slow
 
 	// setup duplex ----------------------
 

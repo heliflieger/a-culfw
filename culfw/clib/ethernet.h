@@ -6,5 +6,6 @@
 void ethernet_reset(void);
 void ethernet_init(void);
 void Ethernet_Task(void);
+extern uint8_t eth_initialized;
 
 #endif

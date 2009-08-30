@@ -225,3 +225,28 @@ version(char *unused)
   DS_P( PSTR("V " VERSION " " BOARD_ID_STR) );
   DNL();
 }
+
+void
+dumpmem(uint8_t *addr, uint16_t len)
+{
+  for(uint16_t i = 0; i < len; i += 16) {
+    uint8_t l = len & 0xf;
+    DH(i,4);
+    DC(':'); DC(' ');
+    for(uint8_t j = 0; j <= l; j++) {
+      DH2(addr[j]);
+      if(j&1)
+        DC(' ');
+    }
+    DC(' ');
+    for(uint8_t j = 0; j <= l; j++) {
+      if(addr[j] >= ' ' && addr[j] <= '~')
+        DC(addr[j]);
+      else
+        DC('.');
+    }
+    addr += 16;
+    DNL();
+  }
+  DNL();
+}

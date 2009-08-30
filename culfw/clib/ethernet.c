@@ -5,6 +5,7 @@
 #include "stringfunc.h"
 #include "timer.h"
 #include "display.h"
+#include "delay.h"
 
 #include "global-conf.h"
 #include "uip_arp.h"
@@ -43,14 +44,27 @@ ethernet_reset(void)
   write_eeprom(buf);
 }
 
-/*
-static void
-dumphdr(void)
+void
+dumppkt(void)
 {
-  for(uint8_t i = 0; i < sizeof(struct uip_eth_hdr); i++)
-    DH2(uip_buf[i]);
+  uint8_t *a = uip_buf;
+
+  output_enabled &= ~OUTPUT_TCP;
+  DC(' '); DC('d'); DC(':');
+  for(uint8_t i = 0; i < sizeof(struct uip_eth_addr); i++)
+    DH2(*a++);
+  DC(' '); DC('s'); DC(':');
+  for(uint8_t i = 0; i < sizeof(struct uip_eth_addr); i++)
+    DH2(*a++);
+
+  DC(' '); DC('t'); DC(':');
+  DH2(*a++);
+  DH2(*a++);
+  DNL();
+
+  dumpmem(a, uip_len - sizeof(struct uip_eth_hdr));
+  output_enabled |= OUTPUT_TCP;
 }
-*/
 
 void
 Ethernet_Task(void)
@@ -58,9 +72,9 @@ Ethernet_Task(void)
   int i;
   
   uip_len = network_read();
-  
+
   if(uip_len > 0) {
-       //DC('e'); DH2(uip_len); DC('.'); dumphdr(); DNL();
+       //DC('e'); DH(uip_len,4); dumppkt(); DNL();
        if(BUF->type == htons(UIP_ETHTYPE_IP)){
             uip_arp_ipin();
             uip_input();
@@ -129,6 +143,7 @@ dhcpc_configured(const struct dhcpc_state *s)
   ewip(s->default_router, EE_IP4_GATEWAY); uip_setdraddr(s->default_router);
   ewip(s->netmask, EE_IP4_NETMASK);        uip_setnetmask(s->netmask);
   //resolv_conf(s->dnsaddr);
+  enc28j60PhyWrite(PHLCON,0x476);// LED A: Link Status  LED B: TX/RX
 }
 
 
@@ -145,10 +160,7 @@ ethernet_init(void)
   PORTD |= _BV( PD6 );
 
   my_delay_ms( 200 );
-
   network_init();
-  
-  uip_ipaddr_t ipaddr;
   
   // setup two periodic timers
   timer_set(&periodic_timer, CLOCK_SECOND / 2);
@@ -167,16 +179,18 @@ ethernet_init(void)
   network_set_MAC(mac.addr);
 
   if(erb(EE_USE_DHCP)) {
+    enc28j60PhyWrite(PHLCON,0x4A6);// LED A: Link Status  LED B: Blink slow
     dhcpc_init(mac.addr, 6);
 
   } else {
+    uip_ipaddr_t ipaddr;
     erip(ipaddr, EE_IP4_ADDR);    uip_sethostaddr(ipaddr);
     erip(ipaddr, EE_IP4_GATEWAY); uip_setdraddr(ipaddr);
     erip(ipaddr, EE_IP4_NETMASK); uip_setnetmask(ipaddr);
+    enc28j60PhyWrite(PHLCON,0x476);// LED A: Link Status  LED B: TX/RX
 
   }
     
-
   tcplink_init();
   
 }

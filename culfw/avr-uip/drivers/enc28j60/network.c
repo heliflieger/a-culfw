@@ -23,7 +23,7 @@ void network_init(void)
 	enc28j60Init();
 
 	//Configure leds
-	enc28j60PhyWrite(PHLCON,0x476);
+	//enc28j60PhyWrite(PHLCON,0x476);
 }
 
 void network_get_MAC(u08* macaddr)

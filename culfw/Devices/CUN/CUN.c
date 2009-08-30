@@ -34,6 +34,30 @@
 #include "ethernet.h"
 #include "tcplink.h"
 
+#if 0
+void
+memtest(char *in)
+{
+  uint8_t hb;
+
+  if(in[1] == 'r') {
+    fromhex(in+2, &hb, 1);
+    dumpmem((uint8_t *)(hb<<8), 0xff);
+
+  } else {
+    fromhex(in+2, &hb, 1);
+    uint8_t *addr = (uint8_t *)(hb<<8);
+
+    for(uint8_t i = 0; i < 16; i++) {
+      for(uint8_t j = 0; j < 16; j++)
+        addr[j] = hb+j;
+      DH((uint16_t)addr, 4); DC(' '); DH2(hb); DNL();
+      addr += 16;
+    }
+  }
+}
+  { 'M', memtest },
+#endif
 
 PROGMEM t_fntab fntab[] = {
 
@@ -54,7 +78,6 @@ PROGMEM t_fntab fntab[] = {
   { 'f', fastrf },
 #endif
   { 'l', ledfunc },
-  { 'm', getfreemem },
   { 'q', tcplink_close },
   { 't', gettime },
   { 'x', ccsetpa },

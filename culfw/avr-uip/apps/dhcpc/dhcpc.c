@@ -28,7 +28,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * @(#)$Id: dhcpc.c,v 1.1 2009-08-29 16:11:54 rudolfkoenig Exp $
+ * @(#)$Id: dhcpc.c,v 1.2 2009-08-30 16:10:43 rudolfkoenig Exp $
  */
 
 #include <stdio.h>
@@ -38,6 +38,9 @@
 #include "dhcpc.h"
 #include "timer.h"
 #include "pt.h"
+#include "board.h"
+#include "drivers/interfaces/network.h"
+#include "delay.h"
 
 #define STATE_INITIAL         0
 #define STATE_SENDING         1
@@ -159,6 +162,7 @@ create_msg(register struct dhcp_msg *m)
 #ifndef UIP_CONF_DHCP_LIGHT
   memset(m->sname, 0, sizeof(m->sname));
   memset(m->file, 0, sizeof(m->file));
+  strcpy((char *)m->sname, BOARD_ID_STR);
 #endif
 
   memcpy(m->options, magic_cookie, sizeof(magic_cookie));
@@ -264,8 +268,16 @@ PT_THREAD(handle_dhcp(void))
       break;
     }
 
-    if(s.ticks < CLOCK_SECOND * 60) {
+    if(s.ticks < CLOCK_SECOND * 30) {
       s.ticks *= 2;
+
+    } else {
+      // Reset every 32 seconds, if there is no answer.  Sometimes the enc28j60
+      // is not initialized properly, perhaps this is the problem and not a
+      // missing DHCP server.
+      network_init();
+      my_delay_ms( 200 );
+
     }
   } while(s.state != STATE_OFFER_RECEIVED);
   

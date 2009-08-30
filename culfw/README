@@ -192,12 +192,13 @@ Protocol
 
       Additional CUN-only commands:
         Rim - read MAC Address
-        Rid - read DHCP enabled flag
+        Rid - read DHCP enabled flag.
         Ria - read IPV4 Address
         Rig - read IPV4 gateway
         Rin - read IPV4 network mask
         Rip - read tcplink port
-        
+        Note: If DHCP is enabled, the left (RX/TX) led blinks till a valid DHCP
+              adress is received.
 
     r<filename>
       (CUR only)

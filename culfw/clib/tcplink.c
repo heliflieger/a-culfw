@@ -89,11 +89,13 @@ tcplink_appcall(void)
   if(uip_connected()) {
     s.offset = 0;
     s.state = STATE_OPEN;
+    output_enabled |= OUTPUT_TCP;
   }
 
   if(s.state == STATE_CLOSE) {
     s.state = STATE_OPEN;
     uip_close();
+    output_enabled &= ~OUTPUT_TCP;
     return;
   }
 

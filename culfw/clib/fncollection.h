@@ -7,6 +7,7 @@ void eeprom_init(void);
 void eeprom_factory_reset(char *unused);
 void ewb(uint8_t *p, uint8_t v);
 uint8_t erb(uint8_t *p);
+void dumpmem(uint8_t *addr, uint16_t len);
 
 void ledfunc(char *);
 void prepare_boot(char *);
