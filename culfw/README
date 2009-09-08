@@ -145,6 +145,16 @@ Protocol
       - 09/0A: Insert a new line at the bottom/top of the screen,
                scrolling the rest.
 
+    E<x> eth debugging
+      (CUN only)
+      - i
+        Reinitialize the ethernet subsystem
+      - d
+        increae debug level. Meaning of the levels
+        1: application debugging, e.g. the NTP module will display the time
+        2: print ETH header (mac adress + ETH frametime)
+        3: dump whole ethernet packet.
+
     e (eeprom) factory reset
       - resets all eeprom values. A reboot is required to activate the
         changes.
@@ -168,6 +178,10 @@ Protocol
       - Bit 0: Set LED on/off
       - Bit 1: The LED will blink once a second if the bit is set
 
+    N
+      (CUN only)
+      Display the current NTP synchronized date and time
+
     P<hex><filename>
       (CUR only)
       Display a picture. The hex part consists of 4 bytes (x,y,w,h), and the
@@ -190,15 +204,7 @@ Protocol
       See fncollection.h for more details.
       Example: R00 -> 63
 
-      Additional CUN-only commands:
-        Rim - read MAC Address
-        Rid - read DHCP enabled flag.
-        Ria - read IPV4 Address
-        Rig - read IPV4 gateway
-        Rin - read IPV4 network mask
-        Rip - read tcplink port
-        Note: If DHCP is enabled, the left (RX/TX) led blinks till a valid DHCP
-              adress is received.
+      Additional CUN-only commands Rxx, see the W section for details
 
     r<filename>
       (CUR only)
@@ -252,18 +258,31 @@ Protocol
       Example: W1D06
 
       Additional CUN-only commands:
-        Wim - write MAC Address
-        Wid - write DHCP enabled flag
-        Wia - write IPV4 Address
-        Wig - write IPV4 gateway
-        Win - write IPV4 network mask
-        Wip - write tcplink port
+        Wim - MAC Address
+        Wid - DHCP enabled flag
+        Wia - IPV4 Address
+        Wig - IPV4 gateway
+        Win - IPV4 network mask
+        Wip - tcplink port
+        WiN - NTP sever
+        Wio - GMT offset
         Notes:
-        - Everything is only active after a reboot.
-        - MAC adress is written as hex, with optional semicolon (as usual)
-        - IP4 adresses are written in decimal with dot separator as usual
+        - Factory reset: DHCP, tcplink:2323, NTP-Server = Router, GMT:0
+        - Everything becomes active only after a reboot.
+        - MAC adress is written as hex, with optional semicolon
+        - IP4 adresses are written in decimal with dot separator
         - port is written in decimal
-        - factory reset will re-initialize this data
+        - if the NTP server is 0.0.0.0 (default), then the router is used as
+          an NTP server.
+        - the GMT offset is specified as a hex number, and is a signed value:
+          ff==-1, fe==-2, etc
+        - factory reset will re-initialize this data, with a unique MAC address
+        - If DHCP is enabled, the left (orange RX/TX) led blinks till a valid
+          DHCP adress is received.
+        Example:
+          Wim01:02:03:04:05:06
+          Wia192.168.0.1
+          Wio02
 
 
     w<length><filename>

@@ -8,10 +8,11 @@
 //#include "simple-httpd.h"
 //#include "telnetd.h"
 //#include "webserver.h"
-#include "apps/dhcpc/dhcpc.h"
 //#include "resolv.h"
 //#include "webclient.h"
 
+#include "ethernet.h"
+#include "apps/dhcpc/dhcpc.h"
 #include "tcplink.h"
 
 #endif /*__APPS_CONF_H__*/

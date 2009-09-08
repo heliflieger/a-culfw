@@ -16,13 +16,17 @@
 #define STATE_OPEN   1
 #define STATE_CLOSE  2
 
+// FIXME
 #define s uip_conns[0].appstate
+
+uint16_t tcplink_port;
 
 /*---------------------------------------------------------------------------*/
 void
 tcplink_init(void)
 {
-  uip_listen(HTONS(eeprom_read_word((uint16_t *)EE_IP4_TCPLINK_PORT)));
+  tcplink_port = HTONS(eeprom_read_word((uint16_t *)EE_IP4_TCPLINK_PORT));
+  uip_listen(tcplink_port);
 }
 
 void

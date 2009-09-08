@@ -1,7 +1,8 @@
-#include "global-conf.h"
-#include "enc28j60.h"
+#include "board.h"
+#include "uip.h"
 #include <avr/io.h>
 #include <util/delay.h>
+#include "enc28j60.h"
 
 unsigned int network_read(void){
 	uint16_t len;

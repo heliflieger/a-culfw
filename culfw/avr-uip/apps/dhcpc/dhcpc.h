@@ -28,7 +28,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * @(#)$Id: dhcpc.h,v 1.1 2009-08-29 16:11:54 rudolfkoenig Exp $
+ * @(#)$Id: dhcpc.h,v 1.2 2009-09-08 12:55:59 rudolfkoenig Exp $
  */
 #ifndef __DHCPC_H__
 #define __DHCPC_H__
@@ -57,12 +57,10 @@ struct dhcpc_state {
 void dhcpc_init(const void *mac_addr, int mac_len);
 void dhcpc_request(void);
 
-void dhcpc_appcall(void);
+PT_THREAD(handle_dhcp(void));
 
 void dhcpc_configured(const struct dhcpc_state *s);
 
 typedef struct dhcpc_state uip_udp_appstate_t;
-#define UIP_UDP_APPCALL dhcpc_appcall
-
 
 #endif /* __DHCPC_H__ */

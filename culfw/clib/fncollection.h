@@ -31,21 +31,21 @@ void version(char *);
 
 // EEprom: CUL: 96 bytes of 512 used
 
-#ifdef HAS_ETHERNET
-# define EE_MAC_ADDR         (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE) // FF==generated
-# define EE_MAC_ADDR_SIZE     6
-# define EE_IP4_ADDR_SIZE     4
-# define EE_USE_DHCP         (EE_MAC_ADDR+EE_MAC_ADDR_SIZE)
+#ifdef HAS_ETHERNET 
+# define EE_MAC_ADDR         (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE)
+# define EE_USE_DHCP         (EE_MAC_ADDR+6)
 # define EE_IP4_ADDR         (EE_USE_DHCP+1)
-# define EE_IP4_NETMASK      (EE_IP4_ADDR+EE_IP4_ADDR_SIZE)
-# define EE_IP4_GATEWAY      (EE_IP4_NETMASK+EE_IP4_ADDR_SIZE)
-# define EE_IP4_TCPLINK_PORT (EE_IP4_GATEWAY+EE_IP4_ADDR_SIZE)
-# define EE_IP4_PORTSIZE     2
+# define EE_IP4_NETMASK      (EE_IP4_ADDR+4)
+# define EE_IP4_GATEWAY      (EE_IP4_NETMASK+4)
+# define EE_IP4_NTPSERVER    (EE_IP4_GATEWAY+4)
+# define EE_IP4_TCPLINK_PORT (EE_IP4_NTPSERVER+4)
+# define EE_IP4_NTPOFFSET    (EE_IP4_TCPLINK_PORT+2)
+# define EE_ETH_LAST         (EE_IP4_NTPOFFSET+1)       // 
 #endif
 
 #ifdef HAS_LCD
 #ifdef HAS_ETHERNET
-# define EE_CONTRAST          (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE)
+# define EE_CONTRAST          EE_ETH_LAST
 #else
 # define EE_CONTRAST          (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE)
 #endif

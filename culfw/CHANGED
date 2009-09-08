@@ -1,3 +1,6 @@
+Version 1.29
+- CUN: NTP added.
+
 Version 1.28
 - directory reorganization, adding avr-uip
 - MyUSB (aka lufa) update. 2 Makefiles per project for MyUSB and lufa

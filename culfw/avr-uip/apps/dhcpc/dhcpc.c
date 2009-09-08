@@ -28,7 +28,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * @(#)$Id: dhcpc.c,v 1.2 2009-08-30 16:10:43 rudolfkoenig Exp $
+ * @(#)$Id: dhcpc.c,v 1.3 2009-09-08 12:55:59 rudolfkoenig Exp $
  */
 
 #include <stdio.h>
@@ -248,7 +248,6 @@ parse_msg(void)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-static
 PT_THREAD(handle_dhcp(void))
 {
   PT_BEGIN(&s.pt);
@@ -268,11 +267,11 @@ PT_THREAD(handle_dhcp(void))
       break;
     }
 
-    if(s.ticks < CLOCK_SECOND * 30) {
+    if(s.ticks < CLOCK_SECOND * 15) {
       s.ticks *= 2;
 
     } else {
-      // Reset every 32 seconds, if there is no answer.  Sometimes the enc28j60
+      // Reset every 16 seconds, if there is no answer.  Sometimes the enc28j60
       // is not initialized properly, perhaps this is the problem and not a
       // missing DHCP server.
       network_init();
@@ -321,7 +320,7 @@ PT_THREAD(handle_dhcp(void))
   dhcpc_configured(&s);
   
   /*  timer_stop(&s.timer);*/
-
+#if 0
   /*
    * PT_END restarts the thread so we do this instead. Eventually we
    * should reacquire expired leases here.
@@ -329,7 +328,7 @@ PT_THREAD(handle_dhcp(void))
   while(1) {
     PT_YIELD(&s.pt);
   }
-
+#endif
   PT_END(&s.pt);
 }
 
@@ -349,12 +348,6 @@ dhcpc_init(const void *mac_addr, int mac_len)
     uip_udp_bind(s.conn, HTONS(DHCPC_CLIENT_PORT));
   }
   PT_INIT(&s.pt);
-}
-/*---------------------------------------------------------------------------*/
-void
-dhcpc_appcall(void)
-{
-  handle_dhcp();
 }
 /*---------------------------------------------------------------------------*/
 void

@@ -17,13 +17,12 @@
 //
 //*****************************************************************************
 
-#include "global-conf.h"
+#include "board.h"
+#include "uip.h"
 #include <avr/io.h>
 #include "delay.h"
 #include "global.h"
 //#include "timer.h"	//Note have been replaced with _delay_us() as this is more convient
-
-#include "enc28j60.h"
 
 #ifdef SPDR0
 	#define SPDR	SPDR0
@@ -41,7 +40,7 @@
 #endif
 
 // include configuration
-#include "enc28j60conf.h"
+#include "enc28j60.h"
 
 u08 Enc28j60Bank;
 u16 NextPacketPtr;
@@ -310,12 +309,12 @@ void enc28j60Init(void)
 	// do bank 3 stuff
 	// write MAC address
 	// NOTE: MAC address in ENC28J60 is byte-backward
-	enc28j60Write(MAADR5, ENC28J60_MAC0);
-	enc28j60Write(MAADR4, ENC28J60_MAC1);
-	enc28j60Write(MAADR3, ENC28J60_MAC2);
-	enc28j60Write(MAADR2, ENC28J60_MAC3);
-	enc28j60Write(MAADR1, ENC28J60_MAC4);
-	enc28j60Write(MAADR0, ENC28J60_MAC5);
+	enc28j60Write(MAADR5, 0);
+	enc28j60Write(MAADR4, 0);
+	enc28j60Write(MAADR3, 0);
+	enc28j60Write(MAADR2, 0);
+	enc28j60Write(MAADR1, 0);
+	enc28j60Write(MAADR0, 0);
 
 	// no loopback of transmitted frames
 	enc28j60PhyWrite(PHCON2, PHCON2_HDLDIS);

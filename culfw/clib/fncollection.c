@@ -72,6 +72,8 @@ read_eeprom(char *in)
     } else if(in[2] == 'a') { display_ip4(EE_IP4_ADDR);
     } else if(in[2] == 'n') { display_ip4(EE_IP4_NETMASK);
     } else if(in[2] == 'g') { display_ip4(EE_IP4_GATEWAY);
+    } else if(in[2] == 'N') { display_ip4(EE_IP4_NTPSERVER);
+    } else if(in[2] == 'o') { DH2(erb(EE_IP4_NTPOFFSET));
     } else if(in[2] == 'p') {
       DU(eeprom_read_word((uint16_t *)EE_IP4_TCPLINK_PORT), 0);
     }
@@ -110,6 +112,8 @@ write_eeprom(char *in)
     } else if(in[2] == 'n') { d=4; fromip (in+3,hb,4); addr=EE_IP4_NETMASK;
     } else if(in[2] == 'g') { d=4; fromip (in+3,hb,4); addr=EE_IP4_GATEWAY;
     } else if(in[2] == 'p') { d=2; fromdec(in+3,hb);   addr=EE_IP4_TCPLINK_PORT;
+    } else if(in[2] == 'N') { d=4; fromip (in+3,hb,4); addr=EE_IP4_NTPSERVER;
+    } else if(in[2] == 'o') { d=1; fromhex(in+3,hb,1); addr=EE_IP4_NTPOFFSET;
     }
     for(uint8_t i = 0; i < d; i++)
       ewb(addr++, hb[i]);
@@ -230,16 +234,18 @@ void
 dumpmem(uint8_t *addr, uint16_t len)
 {
   for(uint16_t i = 0; i < len; i += 16) {
-    uint8_t l = len & 0xf;
+    uint8_t l = len;
+    if(l > 16)
+      l = 16;
     DH(i,4);
     DC(':'); DC(' ');
-    for(uint8_t j = 0; j <= l; j++) {
+    for(uint8_t j = 0; j < l; j++) {
       DH2(addr[j]);
       if(j&1)
         DC(' ');
     }
     DC(' ');
-    for(uint8_t j = 0; j <= l; j++) {
+    for(uint8_t j = 0; j < l; j++) {
       if(addr[j] >= ' ' && addr[j] <= '~')
         DC(addr[j]);
       else

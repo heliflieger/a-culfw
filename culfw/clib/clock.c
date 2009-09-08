@@ -18,12 +18,12 @@
 #include "pcf8833.h"
 #endif
 #include "cdc.h"
+#include "ntp.h"
 
 uint8_t day,hour,minute,sec,hsec;
 static uint8_t lhsec, lsec, lmin;
 
 #ifdef HAS_ETHERNET
-//Counted time
 volatile clock_time_t clock_datetime = 0;
 #endif
 	
@@ -34,7 +34,16 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
   hsec++;
 
 #ifdef HAS_ETHERNET
-    clock_datetime++;
+  clock_datetime++;
+
+#ifdef HAS_NTP
+  ntp_hsec++;
+  if(ntp_hsec >= 125) {
+    ntp_sec++;
+    ntp_hsec = 0;
+  }
+#endif
+
 #endif
 
   if(hsec >= 125) {
@@ -64,9 +73,10 @@ gettime(char *unused)
 
 #ifdef HAS_ETHERNET
 //Return time
-clock_time_t clock_time() {
-  clock_time_t time = clock_datetime;
-  return time;
+clock_time_t
+clock_time()
+{
+  return clock_datetime;
 }
 #endif
 

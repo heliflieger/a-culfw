@@ -33,6 +33,7 @@
 #include "memory.h"
 #include "ethernet.h"
 #include "tcplink.h"
+#include "ntp.h"
 
 #if 0
 void
@@ -63,10 +64,12 @@ PROGMEM t_fntab fntab[] = {
 
   { 'B', prepare_boot },
   { 'C', ccreg },
+  { 'E', eth_func },
   { 'F', fs20send },
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
 #endif
+  { 'N', ntp_func },
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'W', write_eeprom },
@@ -151,6 +154,7 @@ main(void)
   }
 
   // Setup the timers. Are needed for watchdog-reset
+  // 250: NTP is faster: +32,+35,+35
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250
   TCCR0B = _BV(CS02);       
   TCCR0A = _BV(WGM01);
@@ -158,12 +162,6 @@ main(void)
 
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
-
-#ifdef HAS_TOSC
-  // Init RTC in processor located in Timer2 using external 32kHz crystal
-  ASSR   |= _BV( AS2 );
-  TCCR2B |= _BV( CS20) | _BV( CS21) | _BV( CS22); // prescaler 1024, gives 32 ticks per sec
-#endif
 
   clock_prescale_set(clock_div_1);         // Disable Clock Division
 
