@@ -12,6 +12,7 @@
 #define CC1100_INT		INT5
 #define CC1100_INTVECT  	INT5_vect
 #define CC1100_ISC		ISC50
+#define CC1100_EICR             EICRB
 
 #define LED_DDR                 DDRC
 #define LED_PORT                PORTC

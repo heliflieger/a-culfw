@@ -13,6 +13,7 @@
 #define CC1100_INT		INT4
 #define CC1100_INTVECT          INT4_vect
 #define CC1100_ISC		ISC40
+#define CC1100_EICR             EICRB
 
 #define USB_MAX_POWER		100
 
