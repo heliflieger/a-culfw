@@ -72,12 +72,14 @@ Log(char *data)
 #endif
 
   if(logfd == 0xffff)
-    return;
+       return;
 
   if(logoffset >= 1024)
-    log_rotate();
-  rtcget(now);
+       log_rotate();
 
+#ifdef HAS_RTC  
+  rtcget(now);
+  
   // 0314 09:00:00
   fmtdec(now[1], fmtnow);
   fmtdec(now[2], fmtnow+ 2); fmtnow[ 4] = ' ';
@@ -88,6 +90,7 @@ Log(char *data)
 
   fs_write(&fs, logfd, fmtnow, logoffset, LOG_TIMELEN+1);
   logoffset += LOG_TIMELEN+1;
+#endif
 
   uint8_t len = strlen(data);
   data[len++] = '\n';

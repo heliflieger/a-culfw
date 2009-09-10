@@ -24,14 +24,20 @@
 #include "df.h"
 #include "spi.h"
 #include "led.h"
+#include <avr/interrupt.h>
 
 #ifdef DEBUG
 #include "uart.h"
 #endif
 
 /* module local macros */
+#ifdef BUSWARE_CUN
+#define cs_low()  uint8_t sreg = SREG; cli(); DF_PORT &= ~_BV(DF_CS)
+#define cs_high() DF_PORT |= _BV(DF_CS); SREG = sreg
+#else
 #define cs_low()  DF_PORT &= ~_BV(DF_CS)
 #define cs_high() DF_PORT |= _BV(DF_CS)
+#endif
 
 void df_init(df_chip_t chip)
 /* {{{ */ {

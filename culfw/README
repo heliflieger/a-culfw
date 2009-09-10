@@ -16,7 +16,7 @@ the can be used for low-power wireless communication in the 868 band.
   AT90USB646 / 16Mbit flash / 128x128 color display / 5-way jogdial / Battery.
 
 - The CUN (CC110x USB Network) is a device with following features: CC1101 /
-  AT90USB646 / TCPIPv4 interface / 16Mbit flash / 1Mbit SRAM
+  AT90USB1287 / Ethernet interface / 16Mbit flash / 256Kbit SRAM / MicroSD
 
 
 This firmware makes it possible to use these devices with fhem. Right now the

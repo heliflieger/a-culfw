@@ -27,13 +27,13 @@ void
 ethernet_init(void)
 {
   // reset Ethernet
-  DDRD   |= _BV( PD6 );
-  PORTD  &= ~_BV( PD6 );
+  ENC28J60_RESET_DDR  |= _BV( ENC28J60_RESET_BIT );
+  ENC28J60_RESET_PORT &= ~_BV( ENC28J60_RESET_BIT );
 
   my_delay_ms( 200 );
 
   // unreset Ethernet
-  PORTD |= _BV( PD6 );
+  ENC28J60_RESET_PORT |= _BV( ENC28J60_RESET_BIT );
 
   my_delay_ms( 200 );
   network_init();

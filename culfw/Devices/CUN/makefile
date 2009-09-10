@@ -1,4 +1,4 @@
-MCU = at90usb646
+MCU = at90usb1287
 BOARD  =
 F_CPU = 8000000
 FORMAT = ihex
@@ -20,7 +20,11 @@ SRC = $(TARGET).c                                                  \
 		../../clib/rf_send.c                                  \
 		../../clib/rf_receive.c                               \
 		../../clib/fht.c                                      \
+		../../clib/df.c                                       \
+		../../clib/qfs.c                                      \
+		../../clib/fswrapper.c                                \
 		../../clib/fastrf.c                                   \
+		../../clib/log.c                                      \
 		../../clib/ttydata.c                                  \
 		../../clib/spi.c                                      \
 		../../clib/ethernet.c                                 \
@@ -125,7 +129,8 @@ EXTRALIBDIRS =
 
 
 
-EXTMEMOPTS = -Wl,--section-start,.data=0x801100,--defsym=__heap_end=0x80ffff
+EXTMEMOPTS = -Wl,--section-start,.data=0x802200,--defsym=__heap_end=0x80a1ff
+#EXTMEMOPTS =
 
 
 

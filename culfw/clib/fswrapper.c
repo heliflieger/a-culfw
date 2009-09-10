@@ -156,10 +156,12 @@ write_filedata(void)
   if(offset+len == filesize) { // Ready
     usbinfunc = oldinfunc;
     fs_sync(&fs);
+#ifdef HAS_LCD
     if(isMenu) {
       menu_init();
       menu_push(0);
     }
+#endif
     set_txrestore();
 
   } else {

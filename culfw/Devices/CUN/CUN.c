@@ -33,12 +33,14 @@
 #include "memory.h"
 #include "ethernet.h"
 #include "tcplink.h"
+#include "fswrapper.h"
+#include "log.h"
 #include "ntp.h"
 
+df_chip_t df;
+
 #if 0
-void
-memtest(char *in)
-{
+void memtest(char *in) {
   uint8_t hb;
 
   if(in[1] == 'r') {
@@ -57,10 +59,12 @@ memtest(char *in)
     }
   }
 }
-  { 'M', memtest },
 #endif
 
 PROGMEM t_fntab fntab[] = {
+
+  { 'M', testmem },
+  { 'm', getfreemem },
 
   { 'B', prepare_boot },
   { 'C', ccreg },
@@ -85,6 +89,9 @@ PROGMEM t_fntab fntab[] = {
   { 't', gettime },
   { 'x', ccsetpa },
 
+  { 'r', read_file },
+  { 'w', write_file },
+
   { 0, 0 },
 };
 
@@ -98,9 +105,9 @@ start_bootloader(void)
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
 
-#if defined(__AVR_AT90USB1286__)
+#if (defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB1287__))
 #define jump_to_bootloader ((void(*)(void))0xf000)
-#elif defined(__AVR_AT90USB646__)
+#elif (defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB647__))
 #define jump_to_bootloader ((void(*)(void))0x7800) // BOOTSZ0=1,BOOTSZ1=0
 #else
 #define jump_to_bootloader ((void(*)(void))0x1800)
@@ -122,9 +129,6 @@ void
 init_memory_mapped(void)
 {
 
-  DDRF  |= _BV( PF1 );
-  PORTF &= ~_BV( PF1 ); // set A16 low
-
   // check EXTMEMOPTS in makefile for mem usage!
   /* enable external memory mapped interface */
   PORTA = 0xff;
@@ -138,10 +142,6 @@ init_memory_mapped(void)
 int
 main(void)
 {
-
-  // reset Ethernet
-  DDRD   |= _BV( PD6 );
-  PORTD  &= ~_BV( PD6 );
 
   spi_init();
   eeprom_init();
@@ -174,12 +174,17 @@ main(void)
   rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
   USB_Init();
   tty_init();
+
+  df_init(&df);
+  fs_init(&fs, df, 0);          // needs df_init
+
   ethernet_init();
 
   fht_init();
+  log_init();                   // needs fs_init & rtc_init
   tx_init();
 
-  output_enabled = OUTPUT_USB;
+  output_enabled = OUTPUT_USB|OUTPUT_LOG;
 
   LED_OFF();
 
