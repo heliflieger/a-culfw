@@ -28,7 +28,6 @@
   #define ENC28J60_CONTROL_DDR    DDRD
   #define ENC28J60_CONTROL_CS     PD7
 
-
 #else
 
   #define CC1100_CS_DDR           DDRD

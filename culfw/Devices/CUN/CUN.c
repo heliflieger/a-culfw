@@ -89,7 +89,7 @@ PROGMEM t_fntab fntab[] = {
   { 'q', tcplink_close },
   { 't', gettime },
   { 'x', ccsetpa },
-#ifdef _HAS_FS
+#ifdef HAS_FS
   { 'r', read_file },
   { 'w', write_file },
 #endif
