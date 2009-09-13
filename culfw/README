@@ -1,12 +1,10 @@
 Firmware for different busware.de gadgets
 
-Copyright Rudolf Koenig, 2008.
+Copyright Rudolf Koenig, 2008,2009
 License: GPL v2
 
 These gadgets all feature one or more CC1101 transceiver and an Atmel MCU, so
 the can be used for low-power wireless communication in the 868 band.
-
-  blocks are an Atmel AT90USB162 MCU and a TI CC1101 transceiver.  See
 
 - The CUL (CC110x USB Light) has one CC1101 and an AT90USB162 MCU.
   See http://busware.de/tiki-index.php?page=CUL for details and on how to buy
@@ -25,12 +23,12 @@ following device families are supported:
 - FHT
 - EM
 - KS300/S300TH
+- HMS
 
 Thanks to the MyUSB project (http://www.fourwalledcubicle.com/MyUSB.php, ) the
 device/firmware combination confirms to the Universal Serial Bus Communication
 Device Class Abstract Control Model (USB CDC ACM) specification, so it can be
-used out of the box with a lot of operating systems. We incorporated the
-relevant parts of MyUSB, version 1.5.2.
+used out of the box with a lot of operating systems. 
 
 
 Prerequisites
@@ -111,7 +109,7 @@ Protocol
      - Display the battery state:
        XX = 01  raw reading
        XX = 00  reading transformed into %, taking nonlinearity into account
-     If both XX and Y is specified (CURV3 only):
+     If both XX and YY is specified (CURV3 only):
        XX = 00  Charge with 500mA (YY=01) or 100mA (YY=00)
        XX = 01  Disable USB charging (YY=01) or enable it (YY=00)
 
@@ -125,11 +123,14 @@ Protocol
       Example: C35 -> C35 = 0x0D / 13
 
     c<hex>
-      (CUR only)
-      Read/set the RTC. If hex is 01, then display the date, if it is 02 the
+      (CUR/CUN )
+      Read/set the clock: either the RTC chip (CUR only) or the internal NTP
+      counter (CUN only). If hex is 01, then display the date, if it is 02 the
       time, if it is 03, then both date and time. If the length of hex is 6,
       then the RTC will be set to YYMMDDHHmmSS. Data is written BCD, i.e
-      December is written as 12 and not as 0C.
+      December is written as 12 and not as 0C. The RTC version of the clock
+      may be set partially: if hex is 6 characters long (converted to 3 bytes)
+      then only the time part will be set. This is not applicable to NTP.
 
     d<hex>data
       (CUR only)
@@ -147,13 +148,21 @@ Protocol
 
     E<x> eth debugging
       (CUN only)
-      - i
-        Reinitialize the ethernet subsystem
+      - c
+        Print out the currently configured IP & MAC Adress.
+
       - d
         increae debug level. Meaning of the levels
         1: application debugging, e.g. the NTP module will display the time
-        2: print ETH header (mac adress + ETH frametime)
+        2: print ETH header (mac adress + ETH frametype)
         3: dump whole ethernet packet.
+
+      - i
+        Reinitialize the ethernet subsystem, restart DHCP & NTP
+
+      - n
+        Request an NTP update
+
 
     e (eeprom) factory reset
       - resets all eeprom values. A reboot is required to activate the
@@ -175,19 +184,16 @@ Protocol
 
     l<hex>
       Set the led mode.
-      - Bit 0: Set LED on/off
-      - Bit 1: The LED will blink once a second if the bit is set
-
-    N
-      (CUN only)
-      Display the current NTP synchronized date and time
+      - 00: Set LED off
+      - 01: Set LED on
+      - 02: The LED will blink once a second
 
     P<hex><filename>
       (CUR only)
       Display a picture. The hex part consists of 4 bytes (x,y,w,h), and the
       file contains the data in a 12bit per pixel format. Use
       fonts/pgm2fourbit.pl with the raw option to convert raw PPM files into
-      the needed format.
+      the needed format, and tools/cur_file.pl to upload the file
 
     R<AA> or R<AAAA>
       Read eeprom (i.e. "saved configuration") byte. Arguments: one or two
@@ -204,10 +210,10 @@ Protocol
       See fncollection.h for more details.
       Example: R00 -> 63
 
-      Additional CUN-only commands Rxx, see the W section for details
+      For the additional CUN-only see the corresponding W (write eeprom) section.
 
     r<filename>
-      (CUR only)
+      (CUR/CUN)
       output the file name <filename>. First the length of the file,
       (hex 8 byte+nl) is written to the output, then the body of the file.
       Use "." as filename to get a listing of the current files with length.
@@ -241,14 +247,13 @@ Protocol
         hour/minute command to the fht.
         
     t
-      Output the time since boot. The output has the following form: 
-      DDD HH:MM:SS:mmm. Note: the mmm msec has an 8msec resolution.
-      Example: t -> 000 00:00:07.888
-
+      Output the time since boot (uptime). The output has the following form: 
+      DDD HH:MM:SS
+      Example: t -> 000 00:00:07
 
     V
       Print the firmware version.
-      Example: V -> V 1.11 CUL 04
+      Example: V -> V 1.28 CUL868
 
 
     W<AA><DD> or W<AAAA><DD>
@@ -291,9 +296,9 @@ Protocol
       The command must be followed by length bytes of data, which will be
       written to the local file.  If length is FFFFFFFF, then the file will be
       deleted.
-      Use the program cur_file from the tools directory to write a file, e.g.:
+      Use the program cur_file.pl from the tools directory to write a file, e.g.:
         perl cur_file.pl -w MENU /dev/ttyACM0
-      NOTE: No fhem/screen must be connected to the CUR while reading/writing
+      NOTE: _NO_ fhem/screen must be connected to the CUR while reading/writing
 
 
     X<RR> Enable data reporting.
@@ -438,18 +443,13 @@ Notes
 
 TODO/BUGS:
 ==========
-  - CU* "clean/good" send
-  - CU* FHT send
+  - CU* Improve FHT
   - CU* FS20 dim commands do not repeat.
-  - CU* HMS reception (Manchester code)
+  - CU* FS20 repeater
   - CUR fhem MENU/files creation support
   - CUR RTC interrupts
   - CUR check for FS20 group commands
   - CUR umlauts
   - CUR sleep problems: FS20 1%-management
-  - CUR Infrared send/learn
-  - CUR Radio/Ir bridging
-  - CU* Fast data transfer using the cc1101
   - CUR Xfer&Display plots from fhem
   - CU* Compute S300TH/KS300 second half of checksum (Nice to have)
-  - CU* MyUSB upgrade

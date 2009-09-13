@@ -20,54 +20,51 @@ struct timer periodic_timer, arp_timer;
 static struct uip_eth_addr mac;       // static for dhcpc
 uint8_t eth_debug = 0;
 
+static uint8_t dhcp_state;
+
+static void set_eeprom_addr(void);
+static void ip_initialized(void);
 
 #define bsbg boot_signature_byte_get
-
 void
 ethernet_init(void)
 {
+
   // reset Ethernet
   ENC28J60_RESET_DDR  |= _BV( ENC28J60_RESET_BIT );
   ENC28J60_RESET_PORT &= ~_BV( ENC28J60_RESET_BIT );
-
   my_delay_ms( 200 );
-
   // unreset Ethernet
   ENC28J60_RESET_PORT |= _BV( ENC28J60_RESET_BIT );
 
   my_delay_ms( 200 );
   network_init();
-  
-  // setup two periodic timers
-  timer_set(&periodic_timer, CLOCK_SECOND / 2);
-  timer_set(&arp_timer, CLOCK_SECOND * 10);
-  
-  uip_init();
-  
   mac.addr[0] = erb(EE_MAC_ADDR+0);
   mac.addr[1] = erb(EE_MAC_ADDR+1);
   mac.addr[2] = erb(EE_MAC_ADDR+2);
   mac.addr[3] = erb(EE_MAC_ADDR+3);
   mac.addr[4] = erb(EE_MAC_ADDR+4);
   mac.addr[5] = erb(EE_MAC_ADDR+5);
-  uip_setethaddr(mac);
   network_set_MAC(mac.addr);
+
+  uip_setethaddr(mac);
+  uip_init();
+
+  // setup two periodic timers
+  timer_set(&periodic_timer, CLOCK_SECOND / 4);
+  timer_set(&arp_timer, CLOCK_SECOND * 10);
 
   if(erb(EE_USE_DHCP)) {
     enc28j60PhyWrite(PHLCON,0x4A6);// LED A: Link Status  LED B: Blink slow
-    dhcpc_init(mac.addr, 6);
+    dhcpc_init(&mac);
 
   } else {
-    uip_ipaddr_t ipaddr;
-    erip(ipaddr, EE_IP4_ADDR);    uip_sethostaddr(ipaddr);
-    erip(ipaddr, EE_IP4_GATEWAY); uip_setdraddr(ipaddr);
-    erip(ipaddr, EE_IP4_NETMASK); uip_setnetmask(ipaddr);
-    enc28j60PhyWrite(PHLCON,0x476);// LED A: Link Status  LED B: TX/RX
+    set_eeprom_addr();
 
   }
-    
-  tcplink_init();
-  ntp_gmtoff = erb(EE_IP4_NTPOFFSET);
+
+  dhcp_state = PT_WAITING;
+  ntp_conn = 0;
 }
 
 void
@@ -93,16 +90,46 @@ ethernet_reset(void)
   write_eeprom(buf);
 }
 
+static void
+display_mac(uint8_t *a)
+{
+  uint8_t cnt = 6;
+  while(cnt--) {
+    DH2(*a++);
+    if(cnt)
+      DC(':');
+  }
+}
+
+static void
+display_ip4(uint8_t *a)
+{
+  uint8_t cnt = 4;
+  while(cnt--) {
+    DU(*a++,1);
+    if(cnt)
+      DC('.');
+  }
+}
+
 void
 eth_func(char *in)
 {
   if(in[1] == 'i') {
     ethernet_init();
 
+  } else if(in[1] == 'c') {
+    display_ip4((uint8_t *)uip_hostaddr); DC(' ');
+    display_mac((uint8_t *)uip_ethaddr.addr);
+    DNL();
+
   } else if(in[1] == 'd') {
     eth_debug = (eth_debug+1) & 0x3;
     DH2(eth_debug);
     DNL();
+
+  } else if(in[1] == 'n') {
+    ntp_sendpacket();
 
   }
 }
@@ -116,16 +143,9 @@ dumppkt(void)
   DU(uip_len,5);
 
   output_enabled &= ~OUTPUT_TCP;
-  DC(' '); DC('d'); DC(':');
-  for(uint8_t i = 0; i < sizeof(struct uip_eth_addr); i++)
-    DH2(*a++);
-  DC(' '); DC('s'); DC(':');
-  for(uint8_t i = 0; i < sizeof(struct uip_eth_addr); i++)
-    DH2(*a++);
-
-  DC(' '); DC('t'); DC(':');
-  DH2(*a++);
-  DH2(*a++);
+  DC(' '); DC('d'); DC(' '); display_mac(a); a+= sizeof(struct uip_eth_addr);
+  DC(' '); DC('s'); DC(' '); display_mac(a); a+= sizeof(struct uip_eth_addr);
+  DC(' '); DC('t'); DH2(*a++); DH2(*a++);
   DNL();
 
   if(eth_debug > 2)
@@ -142,6 +162,11 @@ Ethernet_Task(void)
 
   if(uip_len > 0) {
 
+    if(uip_len > MAX_FRAMELEN) {
+      ethernet_init();
+      return;
+    }
+      
     if(eth_debug > 1)
       dumppkt();
 
@@ -183,6 +208,7 @@ Ethernet_Task(void)
       uip_arp_timer();
          
     }
+
   }
 
 }
@@ -204,16 +230,40 @@ ewip(const u16_t ip[2], uint8_t *addr)
   ewb(addr+3, ip1&0xff);
 }
 
+static void
+ip_initialized(void)
+{
+  enc28j60PhyWrite(PHLCON,0x476);// LED A: Link Status  LED B: TX/RX
+  ntp_init();
+  tcplink_init();
+}
+
 void
 dhcpc_configured(const struct dhcpc_state *s)
 {
-  ewip(s->ipaddr, EE_IP4_ADDR);            uip_sethostaddr(s->ipaddr);
+  if(s == 0) {
+    set_eeprom_addr();
+    return;
+  }
+  ewip(s->ipaddr,         EE_IP4_ADDR);    uip_sethostaddr(s->ipaddr);
   ewip(s->default_router, EE_IP4_GATEWAY); uip_setdraddr(s->default_router);
-  ewip(s->netmask, EE_IP4_NETMASK);        uip_setnetmask(s->netmask);
+  ewip(s->netmask,        EE_IP4_NETMASK); uip_setnetmask(s->netmask);
   //resolv_conf(s->dnsaddr);
-  enc28j60PhyWrite(PHLCON,0x476);// LED A: Link Status  LED B: TX/RX
   uip_udp_remove(s->conn);
+  ip_initialized();
 }
+
+static void
+set_eeprom_addr()
+{
+  uip_ipaddr_t ipaddr;
+  erip(ipaddr, EE_IP4_ADDR);    uip_sethostaddr(ipaddr);
+  erip(ipaddr, EE_IP4_GATEWAY); uip_setdraddr(ipaddr);
+  erip(ipaddr, EE_IP4_NETMASK); uip_setnetmask(ipaddr);
+  ip_initialized();
+}
+
+
 
 void
 tcp_appcall()
@@ -225,20 +275,13 @@ tcp_appcall()
 void
 udp_appcall()
 {
-  static uint8_t dhcp_state = PT_WAITING;
-
   if(dhcp_state != PT_ENDED) {
     dhcp_state = handle_dhcp();
-    if(dhcp_state == PT_ENDED)
-      ntp_sendpacket();
 
   } else if(uip_udp_conn &&
             uip_newdata() &&
             uip_udp_conn->lport == HTONS(NTP_PORT)) {
     ntp_digestpacket();
 
-  } else if(timer_expired(&ntp_timer)) {
-    ntp_sendpacket();
-
-  }
+  } 
 }

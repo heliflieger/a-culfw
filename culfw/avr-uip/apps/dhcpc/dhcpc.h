@@ -28,7 +28,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * @(#)$Id: dhcpc.h,v 1.2 2009-09-08 12:55:59 rudolfkoenig Exp $
+ * @(#)$Id: dhcpc.h,v 1.3 2009-09-13 15:55:40 rudolfkoenig Exp $
  */
 #ifndef __DHCPC_H__
 #define __DHCPC_H__
@@ -42,8 +42,8 @@ struct dhcpc_state {
   struct uip_udp_conn *conn;
   struct timer timer;
   u16_t ticks;
-  const void *mac_addr;
-  int mac_len;
+  struct uip_eth_addr *mac_addr;
+  u8_t maxto;
   
   u8_t serverid[4];
 
@@ -54,7 +54,7 @@ struct dhcpc_state {
   u16_t default_router[2];
 };
 
-void dhcpc_init(const void *mac_addr, int mac_len);
+void dhcpc_init(struct uip_eth_addr *mac_addr);
 void dhcpc_request(void);
 
 PT_THREAD(handle_dhcp(void));

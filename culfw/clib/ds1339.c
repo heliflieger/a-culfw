@@ -61,7 +61,7 @@ rtc_init(void)
 }
 
 void
-rtcget(uint8_t data[6])
+rtc_get(uint8_t data[6])
 {
   data[0] = rtc_read(6);         // year
   data[1] = rtc_read(5);         // month
@@ -72,7 +72,7 @@ rtcget(uint8_t data[6])
 }
 
 void
-rtcset(uint8_t len, uint8_t data[6])
+rtc_set(uint8_t len, uint8_t data[6])
 {
   uint8_t p = 0;
   if(len == 6) {
@@ -87,14 +87,14 @@ rtcset(uint8_t len, uint8_t data[6])
 
 
 void
-rtcfunc(char *in)
+rtc_func(char *in)
 {
   uint8_t hb[6], t;
 
   t = fromhex(in+1, hb, 6);
   if(t < 3) {
     t = hb[0];
-    rtcget(hb);
+    rtc_get(hb);
 
     if(t&1) {
       DH2(hb[0]); DC('-');

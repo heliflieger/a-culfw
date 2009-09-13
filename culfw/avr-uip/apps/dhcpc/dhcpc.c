@@ -28,7 +28,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * @(#)$Id: dhcpc.c,v 1.3 2009-09-08 12:55:59 rudolfkoenig Exp $
+ * @(#)$Id: dhcpc.c,v 1.4 2009-09-13 15:55:40 rudolfkoenig Exp $
  */
 
 #include <stdio.h>
@@ -40,7 +40,9 @@
 #include "pt.h"
 #include "board.h"
 #include "drivers/interfaces/network.h"
+#include "drivers/enc28j60/enc28j60.h"
 #include "delay.h"
+#include "ethernet.h"
 
 #define STATE_INITIAL         0
 #define STATE_SENDING         1
@@ -147,7 +149,7 @@ create_msg(register struct dhcp_msg *m)
 {
   m->op = DHCP_REQUEST;
   m->htype = DHCP_HTYPE_ETHERNET;
-  m->hlen = s.mac_len;
+  m->hlen = sizeof(struct uip_eth_addr);
   m->hops = 0;
   memcpy(m->xid, xid, sizeof(m->xid));
   m->secs = 0;
@@ -157,8 +159,8 @@ create_msg(register struct dhcp_msg *m)
   memset(m->yiaddr, 0, sizeof(m->yiaddr));
   memset(m->siaddr, 0, sizeof(m->siaddr));
   memset(m->giaddr, 0, sizeof(m->giaddr));
-  memcpy(m->chaddr, s.mac_addr, s.mac_len);
-  memset(&m->chaddr[s.mac_len], 0, sizeof(m->chaddr) - s.mac_len);
+  memcpy(m->chaddr, s.mac_addr->addr, sizeof(struct uip_eth_addr));
+  memset(&m->chaddr[sizeof(struct uip_eth_addr)], 0, sizeof(m->chaddr) - sizeof(struct uip_eth_addr));
 #ifndef UIP_CONF_DHCP_LIGHT
   memset(m->sname, 0, sizeof(m->sname));
   memset(m->file, 0, sizeof(m->file));
@@ -241,7 +243,7 @@ parse_msg(void)
   
   if(m->op == DHCP_REPLY &&
      memcmp(m->xid, xid, sizeof(xid)) == 0 &&
-     memcmp(m->chaddr, s.mac_addr, s.mac_len) == 0) {
+     memcmp(m->chaddr, s.mac_addr->addr, sizeof(struct uip_eth_addr)) == 0) {
     memcpy(s.ipaddr, m->yiaddr, 4);
     return parse_options(&m->options[4], uip_datalen());
   }
@@ -274,8 +276,10 @@ PT_THREAD(handle_dhcp(void))
       // Reset every 16 seconds, if there is no answer.  Sometimes the enc28j60
       // is not initialized properly, perhaps this is the problem and not a
       // missing DHCP server.
-      network_init();
-      my_delay_ms( 200 );
+      if(--s.maxto == 0) {
+        dhcpc_configured(0);
+        return PT_ENDED;
+      }
 
     }
   } while(s.state != STATE_OFFER_RECEIVED);
@@ -334,15 +338,17 @@ PT_THREAD(handle_dhcp(void))
 
 /*---------------------------------------------------------------------------*/
 void
-dhcpc_init(const void *mac_addr, int mac_len)
+dhcpc_init(struct uip_eth_addr *mac_addr)
 {
-  uip_ipaddr_t addr;
+  memset(&s, 0, sizeof(s));
   
   s.mac_addr = mac_addr;
-  s.mac_len  = mac_len;
+  s.maxto = 8;        // 8*16 = 128 sec
 
   s.state = STATE_INITIAL;
+  uip_ipaddr_t addr;
   uip_ipaddr(addr, 255,255,255,255);
+  dhcpc_request();
   s.conn = uip_udp_new(&addr, HTONS(DHCPC_SERVER_PORT));
   if(s.conn != NULL) {
     uip_udp_bind(s.conn, HTONS(DHCPC_CLIENT_PORT));

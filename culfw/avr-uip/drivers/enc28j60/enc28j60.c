@@ -21,6 +21,7 @@
 #include "uip.h"
 #include <avr/io.h>
 #include "delay.h"
+#include "display.h"
 #include "global.h"
 //#include "timer.h"	//Note have been replaced with _delay_us() as this is more convient
 
@@ -65,36 +66,6 @@ unsigned int nicPoll(unsigned int maxlen, unsigned char* packet)
 {
 	enc28j60RegDump();
 }*/
-
-/*
-void ax88796SetupPorts(void)
-{
-#if NIC_CONNECTION == MEMORY_MAPPED
-	// enable external SRAM interface - no wait states
-	sbi(MCUCR, SRE);
-//	sbi(MCUCR, SRW10);
-//	sbi(XMCRA, SRW00);
-//	sbi(XMCRA, SRW01);
-//	sbi(XMCRA, SRW11);
-#else
-	// set address port to output
-	AX88796_ADDRESS_DDR = AX88796_ADDRESS_MASK;
-    
-	// set data port to input with pull-ups
-	AX88796_DATA_DDR = 0x00;
-	AX88796_DATA_PORT = 0xFF;
-
-	// initialize the control port read and write pins to de-asserted
-	sbi( AX88796_CONTROL_PORT, AX88796_CONTROL_READPIN );
-	sbi( AX88796_CONTROL_PORT, AX88796_CONTROL_WRITEPIN );
-	// set the read and write pins to output
-	sbi( AX88796_CONTROL_DDR, AX88796_CONTROL_READPIN );
-	sbi( AX88796_CONTROL_DDR, AX88796_CONTROL_WRITEPIN );
-#endif
-	// set reset pin to output
-	sbi( AX88796_RESET_DDR, AX88796_RESET_PIN );
-}
-*/
 
 u08 enc28j60ReadOp(u08 op, u08 address)
 {
@@ -306,6 +277,7 @@ void enc28j60Init(void)
 	enc28j60Write(MAMXFLL, MAX_FRAMELEN&0xFF);	
 	enc28j60Write(MAMXFLH, MAX_FRAMELEN>>8);
 
+#if 0
 	// do bank 3 stuff
 	// write MAC address
 	// NOTE: MAC address in ENC28J60 is byte-backward
@@ -315,6 +287,7 @@ void enc28j60Init(void)
 	enc28j60Write(MAADR2, 0);
 	enc28j60Write(MAADR1, 0);
 	enc28j60Write(MAADR0, 0);
+#endif
 
 	// no loopback of transmitted frames
 	enc28j60PhyWrite(PHCON2, PHCON2_HDLDIS);
@@ -325,7 +298,8 @@ void enc28j60Init(void)
 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE|EIE_PKTIE);
 	// enable packet reception
 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
-/*
+
+#if 0
 	enc28j60PhyWrite(PHLCON, 0x0AA2);       // Link Status an blink slow
 
 	// setup duplex ----------------------
@@ -355,7 +329,7 @@ void enc28j60Init(void)
 	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 
 	// setup duplex ----------------------
-*/
+#endif
 }
 
 void enc28j60PacketSend(unsigned int len1, unsigned char* packet1, unsigned int len2, unsigned char* packet2)
@@ -408,6 +382,9 @@ unsigned int enc28j60PacketReceive(unsigned int maxlen, unsigned char* packet)
 	// read the receive status
 	rxstat  = enc28j60ReadOp(ENC28J60_READ_BUF_MEM, 0);
 	rxstat |= enc28j60ReadOp(ENC28J60_READ_BUF_MEM, 0)<<8;
+
+        if(len > MAX_FRAMELEN)
+          return len;
 
 	// limit retrieve length
 	// (we reduce the MAC-reported length by 4 to remove the CRC)

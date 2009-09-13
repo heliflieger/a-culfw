@@ -13,7 +13,7 @@
 #include "tcplink.h"
 #endif
 
-uint8_t output_enabled;
+uint8_t output_enabled = 0;
 
 //////////////////////////////////////////////////
 // Display routines

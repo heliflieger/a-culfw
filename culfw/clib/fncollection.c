@@ -34,8 +34,8 @@ erb(uint8_t *p)
 }
 
 #ifdef HAS_ETHERNET
-void
-display_mac(uint8_t *a)
+static void
+display_ee_mac(uint8_t *a)
 {
   uint8_t cnt = 6;
   while(cnt--) {
@@ -46,8 +46,8 @@ display_mac(uint8_t *a)
   
 }
 
-void
-display_ip4(uint8_t *a)
+static void
+display_ee_ip4(uint8_t *a)
 {
   uint8_t cnt = 4;
   while(cnt--) {
@@ -67,12 +67,12 @@ read_eeprom(char *in)
 
 #ifdef HAS_ETHERNET
   if(in[1] == 'i') {
-           if(in[2] == 'm') { display_mac(EE_MAC_ADDR);
+           if(in[2] == 'm') { display_ee_mac(EE_MAC_ADDR);
     } else if(in[2] == 'd') { DH2(erb(EE_USE_DHCP));
-    } else if(in[2] == 'a') { display_ip4(EE_IP4_ADDR);
-    } else if(in[2] == 'n') { display_ip4(EE_IP4_NETMASK);
-    } else if(in[2] == 'g') { display_ip4(EE_IP4_GATEWAY);
-    } else if(in[2] == 'N') { display_ip4(EE_IP4_NTPSERVER);
+    } else if(in[2] == 'a') { display_ee_ip4(EE_IP4_ADDR);
+    } else if(in[2] == 'n') { display_ee_ip4(EE_IP4_NETMASK);
+    } else if(in[2] == 'g') { display_ee_ip4(EE_IP4_GATEWAY);
+    } else if(in[2] == 'N') { display_ee_ip4(EE_IP4_NTPSERVER);
     } else if(in[2] == 'o') { DH2(erb(EE_IP4_NTPOFFSET));
     } else if(in[2] == 'p') {
       DU(eeprom_read_word((uint16_t *)EE_IP4_TCPLINK_PORT), 0);
@@ -114,6 +114,10 @@ write_eeprom(char *in)
     } else if(in[2] == 'p') { d=2; fromdec(in+3,hb);   addr=EE_IP4_TCPLINK_PORT;
     } else if(in[2] == 'N') { d=4; fromip (in+3,hb,4); addr=EE_IP4_NTPSERVER;
     } else if(in[2] == 'o') { d=1; fromhex(in+3,hb,1); addr=EE_IP4_NTPOFFSET;
+#ifdef HAS_NTP
+      extern int8_t ntp_gmtoff;
+      ntp_gmtoff = hb[0];
+#endif
     }
     for(uint8_t i = 0; i < d; i++)
       ewb(addr++, hb[i]);

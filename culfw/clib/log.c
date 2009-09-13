@@ -1,14 +1,13 @@
 #include "board.h"
 #include <avr/pgmspace.h>
 #include "log.h"
-#include "ds1339.h"
 #include "qfs.h"
 #include "fswrapper.h"
 #include "string.h"
 #include "display.h"
-#ifdef HAS_BATTERY
 #include "battery.h"            // do not log on battery low
-#endif
+#include "ds1339.h"             // RTC
+#include "ntp.h" 
 
 static fs_inode_t logfd = 0xffff;
 static uint16_t logoffset;
@@ -44,20 +43,21 @@ log_rotate(void)
   log_init();
 }
 
+#if defined(HAS_RTC) || defined(HAS_NTP)
 static void
 fmtdec(uint8_t d, uint8_t *out)
 {
   out[0] = (d>>4) + '0';
   out[1] = (d&0xf) + '0';
 }
+#endif
 
 void
 Log(char *data)
 {
-  uint8_t now[6], fmtnow[LOG_TIMELEN+1];
+#ifdef HAS_BATTERY
   static uint8_t synced = 0;
 
-#ifdef HAS_BATTERY
   if(battery_state < 10) { // If battery goes below 10%, sync and stop logging
 
     if(!synced) {
@@ -72,13 +72,19 @@ Log(char *data)
 #endif
 
   if(logfd == 0xffff)
-       return;
+    return;
 
   if(logoffset >= 1024)
-       log_rotate();
+    log_rotate();
 
-#ifdef HAS_RTC  
-  rtcget(now);
+#if defined(HAS_RTC) || defined(HAS_NTP)
+  uint8_t now[6], fmtnow[LOG_TIMELEN+1];
+
+#ifdef HAS_RTC
+  rtc_get(now);
+#else
+  ntp_get(now);
+#endif
   
   // 0314 09:00:00
   fmtdec(now[1], fmtnow);

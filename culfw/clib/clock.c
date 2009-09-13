@@ -124,6 +124,11 @@ Minute_Task(void)
   }
 #endif
 
+#ifdef HAS_NTP
+  if((ntp_sec & NTP_INTERVAL_MASK) == 0)
+    ntp_sendpacket();
+#endif
+
   if(lmin == minute)
     return;
   lmin = minute;

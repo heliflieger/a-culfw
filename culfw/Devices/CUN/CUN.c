@@ -33,11 +33,14 @@
 #include "memory.h"
 #include "ethernet.h"
 #include "tcplink.h"
-#include "fswrapper.h"
-#include "log.h"
 #include "ntp.h"
 
+#ifdef HAS_FS
+#include "fswrapper.h"
+#include "log.h"
+
 df_chip_t df;
+#endif
 
 #if 0
 void memtest(char *in) {
@@ -73,24 +76,23 @@ PROGMEM t_fntab fntab[] = {
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
 #endif
-  { 'N', ntp_func },
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'W', write_eeprom },
   { 'V', version },
   { 'X', set_txreport },
 
+  { 'c', ntp_func },
   { 'e', eeprom_factory_reset },
-#ifdef HAS_FASTRF
   { 'f', fastrf },
-#endif
   { 'l', ledfunc },
   { 'q', tcplink_close },
   { 't', gettime },
   { 'x', ccsetpa },
-
+#ifdef _HAS_FS
   { 'r', read_file },
   { 'w', write_file },
+#endif
 
   { 0, 0 },
 };
@@ -128,9 +130,14 @@ void init_memory_mapped (void) __attribute__ ((naked)) __attribute__ ((section (
 void
 init_memory_mapped(void)
 {
-
   // check EXTMEMOPTS in makefile for mem usage!
   /* enable external memory mapped interface */
+
+#ifdef CUN_V10
+  DDRF  |= _BV( PF1 );
+  PORTF &= ~_BV( PF1 ); // set A16 low
+#endif
+
   PORTA = 0xff;
   PORTC = 0xff;
   XMCRA = _BV(SRE); // | _BV( SRW10 );
@@ -142,6 +149,11 @@ init_memory_mapped(void)
 int
 main(void)
 {
+#ifdef CUN_V10
+  // reset Ethernet
+  DDRD   |= _BV( PD6 );
+  PORTD  &= ~_BV( PD6 );
+#endif
 
   spi_init();
   eeprom_init();
@@ -174,17 +186,20 @@ main(void)
   rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
   USB_Init();
   tty_init();
-
-  df_init(&df);
-  fs_init(&fs, df, 0);          // needs df_init
-
   ethernet_init();
 
   fht_init();
-  log_init();                   // needs fs_init & rtc_init
   tx_init();
 
+#ifdef HAS_FS
+  df_init(&df);
+  fs_init(&fs, df, 0);          // needs df_init
+  log_init();                   // needs fs_init & rtc_init
   output_enabled = OUTPUT_USB|OUTPUT_LOG;
+#else
+  output_enabled = OUTPUT_USB;
+#endif
+
 
   LED_OFF();
 

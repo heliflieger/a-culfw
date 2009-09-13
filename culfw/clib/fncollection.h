@@ -13,6 +13,7 @@ void ledfunc(char *);
 void prepare_boot(char *);
 void version(char *);
 
+
 // Already used magics: c1,c2
 
 #define EE_MAGIC_OFFSET      (uint8_t *)0       // 2 bytes
