@@ -57,9 +57,9 @@ PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    0x00, // 0A CHANNR    00    00    
    0x06, // 0B FSCTRL1  *0F    06    152kHz IF Frquency
    0x00, // 0C FSCTRL0   00    00    
-   0x21, // 0D FREQ2    *1E    21    868.35 / 868.3 (def:800MHz)
+   0x21, // 0D FREQ2    *1E    21    868.3 (def:800MHz)
    0x65, // 0E FREQ1    *C4    65    
-   0xe8, // 0F FREQ0    *EC    e8    
+   0x6a, // 0F FREQ0    *EC    e8    
    0x55, // 10 MDMCFG4  *8C    55    bWidth 325kHz
    0xe4, // 11 MDMCFG3  *22   *43    Symbol rate 1500
    0x30, // 12 MDMCFG2  *02   *B0    Modulation
@@ -89,7 +89,7 @@ PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
  /*                                   
  Conf1: SmartRF Studio:               
    Xtal: 26Mhz, RF out: 0dB, PA ramping, Dev:5kHz, Data:1kHz, Modul: ASK/OOK,
-   RF: 868.35MHz, Chan:350kHz, RX Filter: 325kHz
+   RF: 868.30MHz, Chan:350kHz, RX Filter: 325kHz
    SimpleRX: Async, SimpleTX: Async+Unmodulated
  */
 };
@@ -239,7 +239,7 @@ ccreg(char *in)
 
     if(hb == 99) {
       for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++) {
-        DH2(cc1100_readReg(i))
+        DH2(cc1100_readReg(i));
         if((i&7) == 7)
           DNL();
       }

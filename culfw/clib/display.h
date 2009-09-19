@@ -18,7 +18,7 @@ void display_nl(void);
 #define DS_P display_string_P
 #define DU(a,b) display_udec(a,b,' ')
 #define DH(a,b) display_hex(a,b,'0')
-#define DH2(a) display_hex2(a);
+#define DH2(a) display_hex2(a)
 #define DNL display_nl
 
 extern uint8_t output_enabled;

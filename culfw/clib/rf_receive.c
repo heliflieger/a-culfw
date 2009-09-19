@@ -85,7 +85,7 @@ tx_init(void)
   CC1100_OUT_DDR  |=  _BV(CC1100_OUT_PIN);
   CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);
   CC1100_IN_DDR  &=  ~_BV(CC1100_IN_PIN);
-  CC1100_EICR |= _BV(CC1100_ISC);                // Any edge of INTx generates an int.
+  CC1100_EICR |= _BV(CC1100_ISC);          // Any edge of INTx generates an int.
 
   credit_10ms = MAX_CREDIT/2;
 
@@ -100,6 +100,9 @@ tx_init(void)
 void
 set_txrestore()
 {
+#ifdef HAS_FASTRF
+  fastrf_on = 0;
+#endif
   if(tx_report) {
     set_ccon();
     ccRX();

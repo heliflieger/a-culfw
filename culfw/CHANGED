@@ -1,6 +1,7 @@
 Version 1.29
 - CUN: NTP added, enc28j60 auto-reset algorithm changed
 - CUN: logging usig NTP enabled
+- CU*: new fastrf configuration
 
 Version 1.28
 - directory reorganization, adding avr-uip

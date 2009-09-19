@@ -11,38 +11,39 @@
 
 uint8_t fastrf_on;
 
-PROGMEM prog_uint8_t FASTRF_CFG[EE_FASTRF_CFG_SIZE] = {
+#if 0
+PROGMEM prog_uint8_t FASTRF_CFG[EE_FASTRF_CFG_SIZE] = { // 10kHz GFSK
 // CULFW   IDX NAME     
    0x07, // 00 IOCFG2   
    0x2E, // 01 IOCFG1   
    0x3F, // 02 IOCFG0   
-   0x0D, // 03 FIFOTHR  
+   0x0D, // 03 FIFOTHR    TX:9 / RX:56
    0xE9, // 04 SYNC1    
    0xCA, // 05 SYNC0    
    0xFF, // 06 PKTLEN   
    0x0C, // 07 PKTCTRL1 
-   0x45, // 08 PKTCTRL0 
+   0x45, // 08 PKTCTRL0    TX/RX Mode, Whiten, Check CRC, Inf Paket len
    0x00, // 09 ADDR     
    0x00, // 0A CHANNR   
-   0x06, // 0B FSCTRL1  
+   0x06, // 0B FSCTRL1     152kHz IF Freq
    0x00, // 0C FSCTRL0  
-   0x21, // 0D FREQ2    
+   0x21, // 0D FREQ2       868.3MHz
    0x65, // 0E FREQ1    
    0x6A, // 0F FREQ0    
-   0xC8, // 10 MDMCFG4  
-   0x93, // 11 MDMCFG3  
-   0x13, // 12 MDMCFG2  
-   0x22, // 13 MDMCFG1  
-   0xF8, // 14 MDMCFG0  
+   0xC8, // 10 MDMCFG4     101.5kHz
+   0x93, // 11 MDMCFG3     DRate: 9992 ((256+147)*2^8)*26000000/(2^28)
+   0x13, // 12 MDMCFG2     Modulation: GFSK, Sync 32:30
+   0x22, // 13 MDMCFG1     Preamble: 4
+   0xF8, // 14 MDMCFG0     Channel: 200kHz 26000000*(256+248)*2^2/2^18
    0x34, // 15 DEVIATN  
    0x07, // 16 MCSM2    
    0x00, // 17 MCSM1    
-   0x18, // 18 MCSM0    
+   0x18, // 18 MCSM0       Calibration: RX/TX->IDLE
    0x16, // 19 FOCCFG   
    0x6C, // 1A BSCFG    
-   0x43, // 1B AGCCTRL2 
+   0x43, // 1B AGCCTRL2    No highest gain, 33dB
    0x40, // 1C AGCCTRL1 
-   0x91, // 1D AGCCTRL0 
+   0x91, // 1D AGCCTRL0    16 channel samples
    0x87, // 1E WOREVT1  
    0x6B, // 1F WOREVT0  
    0xF8, // 20 WORCTRL  
@@ -55,6 +56,58 @@ PROGMEM prog_uint8_t FASTRF_CFG[EE_FASTRF_CFG_SIZE] = {
    0x41, // 27 RCCTRL1  
    0x00, // 28 RCCTRL0  
 };
+
+#else
+
+// Tried to implement parallel reception of slowrf and fastrf, but it does
+// not work: IOCFG2 & PKTCTRL0 must be reprogrammed
+
+PROGMEM prog_uint8_t FASTRF_CFG[EE_FASTRF_CFG_SIZE] = { // 101kHz ASK
+// CULFW   IDX NAME        COMMENT
+   0x07, // 00 IOCFG2      * GDO2 as serial output   EEPROM 0x37
+   0x2E, // 01 IOCFG1      Tri-State
+   0x2D, // 02 IOCFG0      GDO0 for input
+   0x07, // 03 FIFOTHR     TX:33 TX:32
+   0xD3, // 04 SYNC1       
+   0x91, // 05 SYNC0       
+   0xFF, // 06 PKTLEN    
+   0x0C, // 07 PKTCTRL1    No Addr check, Auto FIFO flush, Add Status
+   0x45, // 08 PKTCTRL0    TX/RX Mode, Whiten, Check CRC, Inf Paket len
+   0x00, // 09 ADDR        
+   0x00, // 0A CHANNR      
+   0x06, // 0B FSCTRL1     152kHz IF Frquency
+   0x00, // 0C FSCTRL0     
+   0x21, // 0D FREQ2       868.3MHz
+   0x65, // 0E FREQ1       
+   0x6a, // 0F FREQ0       
+   0x5c, // 10 MDMCFG4     bWidth 325kHz
+   0x00, // 11 MDMCFG3     Drate: 101562 ((256+0)*2^12)*26000000/(2^28)
+   0x33, // 12 MDMCFG2     Modulation: ASK/OOK, Sync 32:30
+   0x23, // 13 MDMCFG1     Preamble: 4
+   0xb9, // 14 MDMCFG0     Channel: 350kHz  26000000*(256+185)*2^3/2^18
+   0x00, // 15 DEVIATN     
+   0x07, // 16 MCSM2       ?
+   0x00, // 17 MCSM1       
+   0x18, // 18 MCSM0       Calibration: RX/TX->IDLE
+   0x14, // 19 FOCCFG      
+   0x6C, // 1A BSCFG       
+   0x07, // 1B AGCCTRL2    42dB
+   0x00, // 1C AGCCTRL1    
+   0x90, // 1D AGCCTRL0    4dB decision boundery
+   0x87, // 1E WOREVT1     
+   0x6B, // 1F WOREVT0     
+   0xF8, // 20 WORCTRL     
+   0x56, // 21 FREND1      
+   0x11, // 22 FREND0      0x11 for no PA ramping
+   0xE9, // 23 FSCAL3        
+   0x2A, // 24 FSCAL2        
+   0x00, // 25 FSCAL1        
+   0x1F, // 26 FSCAL0        
+   0x41, // 27 RCCTRL1       
+   0x00, // 28 RCCTRL0       
+                                      
+};
+#endif
 
 void
 fastrf(char *in)
@@ -79,10 +132,6 @@ fastrf(char *in)
     fastrf_on = 1;
     ccStrobe( CC1100_SFRX  );
     ccRX();
-
-  } else {                                 // reset
-    fastrf_on = 0;
-    set_txrestore();
 
   }
 }

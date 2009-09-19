@@ -491,8 +491,8 @@ fht80b_print()
     if(p != fht80b_buf)
       DC(' ');
     uint8_t i = 1;
-    DH2(p[i++])
-    DH2(p[i++])
+    DH2(p[i++]);
+    DH2(p[i++]);
     DC(':');
     while(i < p[0]) {
       if(i > 3 && (i&1))
