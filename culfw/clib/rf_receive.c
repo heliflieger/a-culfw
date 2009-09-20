@@ -147,15 +147,19 @@ cksum2(uint8_t *buf, uint8_t len)               // EM
 static uint8_t
 cksum3(uint8_t *buf, uint8_t len)               // KS300
 {
-  uint8_t x = 0, cnt = 0;
+  uint8_t x = 0, y = 5, cnt = 0;
   while(len) {
     uint8_t d = buf[--len];
     x ^= (d>>4);
-    if(!nibble || cnt)
+    y += (d>>4);
+    if(!nibble || cnt) {
       x ^= (d&0xf);
+      y += (d&0xf);
+    }
     cnt++;
   }
-  return x;
+  y += x;
+  return (y<<4)|x;
 }
 
 static uint8_t
@@ -331,7 +335,7 @@ RfAnalyze_Task(void)
     addbit(b, wave_equals(&b->one, hightime, b->one.lowtime));
     if(analyze(b, TYPE_KS300)) {
       oby--;                                 
-      if(cksum3(obuf, oby) == (obuf[oby-nibble]&0xf))
+      if(cksum3(obuf, oby) == obuf[oby-nibble])
         datatype = TYPE_KS300;
     }
     if(!datatype)

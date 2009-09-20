@@ -57,6 +57,7 @@ static uint8_t
 cksum3(uint8_t *buf, uint8_t len)               // KS300
 {
   uint8_t x = 0, cnt = 0;
+
   while(len) {
     uint8_t d = buf[--len];
     x ^= (d>>4);
@@ -230,7 +231,7 @@ printf("BAD CRC: %d vs. %d\n", crc, CRC);
     //"4FFF51FE20",
     //"4FC2D1E7A0",
 
-    // S300TH
+    // S300TH: 6 2
     //"884254CE2D9D40",
     //"884B94D72D2C40",
     //"885394CF2D7DC0",
@@ -240,7 +241,7 @@ printf("BAD CRC: %d vs. %d\n", crc, CRC);
     //"887B9494AD8C40",
     //"886714F5AD3C40",
   
-    // KS300
+    // KS300: 10 7
     //"EC4238C7A1084E54DDFB",
     //"EC4294CEB9884E54E633",
     //"EC46D8B7A1084E54CF7F",
@@ -250,7 +251,7 @@ printf("BAD CRC: %d vs. %d\n", crc, CRC);
     //"EC5A14E5A1084E54DC37",
     //"EC6614A5A1084E54FCF7",
 
-    // EM
+    // EM: 11 1
     //"40D04066B44804020100C800",
     //"40D07FA6B44804020100B780",
     //"40D072A03CC804020100F380",
@@ -297,6 +298,11 @@ main(int ac, char *av[])
 {
   int datatype = 0, i, j, l, cs;
 
+  if(ac < 4) {
+    printf("Usage: checksummer: byteidx bitidx hexdata\n");
+    printf(" e.g.  checksummer 6 2 8A6B14F53DEF40\n");
+    exit(1);
+  }
   px1.byteidx = strtol(av[1], 0, 0);
   px1.bitidx = strtol(av[2], 0, 0);
   printf("%d / %d\n", px1.byteidx, px1.bitidx);
