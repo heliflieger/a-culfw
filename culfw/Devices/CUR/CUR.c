@@ -58,7 +58,7 @@ PROGMEM t_fntab fntab[] = {
   { 'X', set_txreport },
 
   { 'a', batfunc },
-  { 'c', rtcfunc },
+  { 'c', rtc_func },
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
   { 'f', fastrf },

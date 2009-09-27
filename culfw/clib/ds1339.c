@@ -114,7 +114,7 @@ rtc_func(char *in)
   }
 
   else  {       // 3: time only, 6: date & time
-    rtcset(t, hb);
+    rtc_set(t, hb);
 
   }
 
