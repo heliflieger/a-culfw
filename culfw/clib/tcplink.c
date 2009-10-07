@@ -16,10 +16,8 @@
 #define STATE_OPEN   1
 #define STATE_CLOSE  2
 
-// FIXME
-#define s uip_conns[0].appstate
-
 uint16_t tcplink_port;
+int con_counter;
 
 /*---------------------------------------------------------------------------*/
 void
@@ -27,19 +25,28 @@ tcplink_init(void)
 {
   tcplink_port = HTONS(eeprom_read_word((uint16_t *)EE_IP4_TCPLINK_PORT));
   uip_listen(tcplink_port);
+  con_counter = 0;
 }
 
 void
 tcp_putchar(char data)
 {
-  if(s.offset < 255)
-    s.buffer[s.offset++] = data;
+	struct tcplink_state *s;
+	int c;
+	
+	for (c = 0; c < UIP_CONF_MAX_CONNECTIONS; ++c) {
+		s = &(uip_conns[c].appstate);
+  	if(s->offset < 255)
+	    s->buffer[s->offset++] = data;
+  }   
 }
 
 void
 tcplink_close(char *unused)
 {
-  s.state = STATE_CLOSE;
+	struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+
+  s->state = STATE_CLOSE;
 }
 
 
@@ -48,19 +55,23 @@ tcplink_close(char *unused)
 static void
 senddata(void)
 {
-  if(s.offset == 0)
+	struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+	
+  if(s->offset == 0)
     return;
-  memcpy(uip_appdata, s.buffer, s.offset);
-  uip_send(uip_appdata, s.offset);
-  s.offset = 0;
+  memcpy(uip_appdata, s->buffer, s->offset);
+  uip_send(uip_appdata, s->offset);
+  s->offset = 0;
 }
 
 /*---------------------------------------------------------------------------*/
 static void
 closed(void)
 {
-  s.offset = 0;
-  s.state  = STATE_CLOSED;
+	struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+	
+	s->offset = 0;
+  s->state  = STATE_CLOSED;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -90,16 +101,25 @@ newdata(void)
 void
 tcplink_appcall(void)
 {
+	//get momentary connection
+	struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+	
   if(uip_connected()) {
-    s.offset = 0;
-    s.state = STATE_OPEN;
-    output_enabled |= OUTPUT_TCP;
+    s->offset = 0;
+    s->state = STATE_OPEN;
+    if (con_counter == 0) {
+    	output_enabled |= OUTPUT_TCP;
+    }
+    ++con_counter;
   }
 
-  if(s.state == STATE_CLOSE) {
-    s.state = STATE_OPEN;
+  if(s->state == STATE_CLOSE) {
+    s->state = STATE_OPEN;
     uip_close();
-    output_enabled &= ~OUTPUT_TCP;
+    --con_counter;
+    if (con_counter == 0) {
+    	output_enabled &= ~OUTPUT_TCP;
+    }
     return;
   }
 

@@ -45,7 +45,11 @@ typedef unsigned short uip_stats_t;
  *
  * \hideinitializer
  */
-#define UIP_CONF_MAX_CONNECTIONS 1
+#ifdef TWO_CONNS
+	#define UIP_CONF_MAX_CONNECTIONS 2
+#else
+	#define UIP_CONF_MAX_CONNECTIONS 1
+#endif
 
 /**
  * Maximum number of listening TCP ports.
