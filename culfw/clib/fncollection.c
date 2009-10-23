@@ -12,6 +12,7 @@
 #include "mysleep.h"
 #include "fswrapper.h"
 #include "fastrf.h"
+#include "rf_router.h"
 #include "ethernet.h"
 
 uint8_t led_mode = 2;   // Start blinking
@@ -164,16 +165,16 @@ eeprom_init(void)
 void
 eeprom_factory_reset(char *in)
 {
-  cc_factory_reset();
-#ifdef HAS_FASTRF
-  fastrf_reset();
-#endif
-
   ewb(EE_MAGIC_OFFSET  , VERSION_1);
   ewb(EE_MAGIC_OFFSET+1, VERSION_2);
 
+  cc_factory_reset();
+
+  ewb(EE_RF_ROUTER_ID, 0);
+  ewb(EE_RF_ROUTER_ROUTER, 0);
   ewb(EE_REQBL, 0);
   ewb(EE_LED, 2);
+
 #ifdef HAS_LCD
   ewb(EE_CONTRAST,   0x40);
   ewb(EE_BRIGHTNESS, 0x80);
@@ -182,7 +183,12 @@ eeprom_factory_reset(char *in)
 #ifdef HAS_ETHERNET
   ethernet_reset();
 #endif
-  prepare_boot(in);
+#ifdef HAS_FS
+  ewb(EE_LOGENABLED, 0x00);
+#endif
+
+  if(in[1] != 'x')
+    prepare_boot(0);
 }
 
 // LED

@@ -28,6 +28,8 @@
 
 #define FS20_ZERO      400     //   400uS
 #define FS20_ONE       600     //   600uS
+#define FS20_ZERO      400     //   400uS
+#define FS20_ONE       600     //   600uS
 #define FS20_PAUSE      10     // 10000mS
 
 uint16_t credit_10ms;

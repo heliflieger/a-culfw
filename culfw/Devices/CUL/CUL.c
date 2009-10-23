@@ -29,6 +29,7 @@
 #include "ttydata.h"
 #include "fht.h"
 #include "fastrf.h"
+#include "rf_router.h"
 
 PROGMEM t_fntab fntab[] = {
 
@@ -46,10 +47,13 @@ PROGMEM t_fntab fntab[] = {
 
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
-  { 'f', fastrf },
+  { 'f', fastrf_func },
 #endif
   { 'l', ledfunc },
   { 't', gettime },
+#ifdef HAS_RF_ROUTER
+  { 'u', rf_router_func },
+#endif
   { 'x', ccsetpa },
 
   { 0, 0 },
@@ -72,7 +76,6 @@ start_bootloader(void)
 int
 main(void)
 {
-
   PORTB |= _BV( PB6 ); // Pull 433MHz marker
 
   spi_init();
@@ -107,6 +110,9 @@ main(void)
   fht_init();
   tx_init();
   output_enabled = OUTPUT_USB;
+#ifdef HAS_RF_ROUTER
+  rf_router_init();
+#endif
 
   LED_OFF();
 
@@ -115,7 +121,13 @@ main(void)
     CDC_Task();
     RfAnalyze_Task();
     Minute_Task();
+#ifdef HAS_FASTRF
     if(fastrf_on)
       FastRF_Task();
+#endif
+#ifdef HAS_RF_ROUTER
+    if(rf_router_status != RF_ROUTER_DISABLED)
+      rf_router_task();
+#endif
   }
 }

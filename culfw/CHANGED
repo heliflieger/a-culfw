@@ -1,28 +1,38 @@
-Version 1.29
+Version 1.30 (2009-10-23)
+- CU*: FHT8v support.
+- CU*: uptime (t) command is reporting in hex (to reduce code usage)
+- CU*: fastrf fixed
+- CU*: rf_routing  (first steps)
+- CU*: CLOSE_IN_RX deleted. Caused problems with close FHT's :/
+- CU*: T04 (setting sec offset for FHT time) is gone, see the README.
+- README updated.
+- CUN/CUR: Logging must be explicitly enabled with "w01", see the README
+
+Version 1.29 (2009-09-08)
 - CUN: NTP added, enc28j60 auto-reset algorithm changed
 - CUN: logging usig NTP enabled
 - CU*: new fastrf configuration
 - CU*: S300 checksum second nibble
 
-Version 1.28
+Version 1.28 (2009-08-23)
 - directory reorganization, adding avr-uip
 - MyUSB (aka lufa) update. 2 Makefiles per project for MyUSB and lufa
 - CU*: sending immediately after receiving fixed (problems in fhem notify)
 - CUN: "unique" MAC adress, IP/MAC configured via eeprom (see the README)
 - CUN: DHCP added. RX/TX Led blinks till an adress via DHCP is received
 
-Version 1.27 (Sun Aug  9 2009)
+Version 1.27 (2009-08-12)
 - CU*: fht interface rewrite (FHZ "mode")
 - CU*: rf fine-tuning for better FHT reception
 - CU*: command table moved into pgm memory to free up RAM.
 - CU*: CLOSE_IN_RX added (see cc1101 doc)
 
-Version 1.26 
+Version 1.26 (2009-08-01)
 - CU*: FHT80b resend
 - CU*: split transceiver.c in rf_send.c and rf_receive.c
 - CU*: experimenting with fast CC1101 based packet transmission
 
-Version 1.25 
+Version 1.25 (2009-07-25)
 - CUR: Brightness added for V3
 - CUR: fs_sync on reboot
 - CUR: if battery goes below 10% sync the fs and stop logging
@@ -30,39 +40,39 @@ Version 1.25
 - CUR: REP_LCDMON (on-screen RF monitor) 
 - CUL: No more power down for X00, go to idle first for wakeup on CUR
 
-Version 1.24 (Fri Jul  3 2009)
+Version 1.24 (2009-07-03)
 - CUR: Fixed it to work again on both V3 & V2 CUR
 
-Version 1.23 (Sat Jun 27 2009)
+Version 1.23 (2009-06-27)
 - CU*: Version string (USB & V) changed for the CUL433
 
-Version 1.22 (Fri Jun 26 2009)
+Version 1.22 (2009-06-26)
 - CU*: HMS support
 - CUR: V3 board support
 
-Version 1.21 (Tue Jun 02 2009)
+Version 1.21  (2009-06-02)
 - CU*: FHT protocol filtering flag (X64)
 - CUL: CUL 433 initialization
 
-Version 1.20 (Sun May 31 13:26:31 MEST 2009)
+Version 1.20 (2009-06-01)
 - CU*: FHT buffers moved from EEPROM to RAM, with better buffer usage
        There are 2 memory models, the default is more RAM efficient but needs
        ca 200bytes more of program memory.
 
-Version 1.19 (Sat May 16 13:19:12 MEST 2009)
+Version 1.19 (2009-05-30)
 - CUR: menu wraparound
 - CU*: FHT80b communication (no resend yet). TODO: FHT time sync
 - CUL: bugfix: jumping to bootloader works now.
 
-Version 1.18
+Version 1.18 (2008-04-20)
 - CUL: former bugfix got lost in Check-In procedure
 
-Version 1.17
+Version 1.17 (2008-04-19)
 - CUR: battery "line" calibrated
 - CUR: enable radio correctly after wakeup
 - CUL: bugfix: EE_LED wrapped on CUL to 0x2, overwriting CC1100 config
 
-Version 1.16
+Version 1.16 (2008-03-17)
 - CUR: syslog (with logrotate)
 - qfs: fs_rename, fs_read bugfix
 - CUR: "more" (file viewing)
@@ -74,14 +84,14 @@ Version 1.16
 - CUR: builtin logo replaced with a loadable one (each menu can have one)
 - CUR: battery calibrated (get the original values with a01)
 
-Version 1.13
+Version 1.13 (2009-01-02)
 - Fixed sending longer FS20 messages (for CUR/CUL communication)
 - CUR: Status request from fhem:00_CUL.pm for FS20/FHT/EM/S300 devices
 
-Version 1.12
+Version 1.12 (2008-12-28)
 - further fht experiments
 
-Version 1.11
+Version 1.11 (2008-12-22)
 - sending should work now
 - first fht experiments
 
@@ -91,10 +101,10 @@ Version 1.11
 - CUR: dpy off if connected to usb (real sleep else)
 - even more pa tables
 
-Version 1.10
+Version 1.10 (2008-12-11)
 - CUR: RTC
 
-Version 1.09 (Wed Dec 10 00:13:21 MET 2008)
+Version 1.09 (2008-12-10)
 - multiple PA tables: x02
 - reboot command changed (B00/B01 vs. b/B)
 - init cc1101 when sending before receive 
@@ -104,12 +114,12 @@ Version 1.09 (Wed Dec 10 00:13:21 MET 2008)
 - CUR: battery: display red line if not on USB
 - "Upgrade" to 1.5.3: no files changed -> no difference
 
-Version 1.08 (Wed Nov 12 07:42:45 MET 2008)
+Version 1.08 (2008-11-12)
 - cc1100.c: sending works again (reset to factory!)
 - CUR: command feedback in the menu
 - CVS tag CUL_VER_108
 
-Version 1.07 (Sat Nov  8 17:54:58 MET 2008)
+Version 1.07 (2008-11-08)
 - cc1100.c: abort ccTX / ccRX if 255 tries did not worked.
 - CUR: 5-fold speedup in display data transfer using HW SPI
 - CUR: display battery state on the lcd
@@ -117,19 +127,19 @@ Version 1.07 (Sat Nov  8 17:54:58 MET 2008)
 - CUR: Add some color to the menus
 - CUR: Intro logo
 
-Version 1.06 (Sun Nov  2 17:45:47 MET 2008)
+Version 1.06 (2008-11-02)
 - CUR: menu implementation
 - CUR: joystick support
 - CVS tag CUL_VER_106
 
-Version 1.05 (Sun Oct 26 15:22:16 MET 2008)
+Version 1.05 (2008-10-26)
 - USB output routines more stable now.
 - CUR: display routine (command d), with antialiased fonts, scrolling
 - CUR: battery check (command a)
 - CUR: Filesystem: qfs. Command r/w to read/write files. tools/cur_file.pl
 - CVS tag CUL_VER_105
 
-Version 1.04 (Sun Oct 12 11:24:02 MEST 2008)
+Version 1.04 (2008-10-12)
 - l command added (CUL/CUR)
 - L / s command (CUR). Note, s is experimental and will go away.
 - Accepting half-byte S300 messages

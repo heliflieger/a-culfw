@@ -84,10 +84,15 @@ PROGMEM t_fntab fntab[] = {
 
   { 'c', ntp_func },
   { 'e', eeprom_factory_reset },
-  { 'f', fastrf },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
+#endif
   { 'l', ledfunc },
   { 'q', tcplink_close },
   { 't', gettime },
+#ifdef HAS_RF_ROUTER
+  { 'u', rf_router_func },
+#endif
   { 'x', ccsetpa },
 #ifdef HAS_FS
   { 'r', read_file },
@@ -195,7 +200,7 @@ main(void)
   df_init(&df);
   fs_init(&fs, df, 0);          // needs df_init
   log_init();                   // needs fs_init & rtc_init
-  output_enabled = OUTPUT_USB|OUTPUT_LOG;
+  output_enabled = erb(EE_LOGENABLED) ? (OUTPUT_USB|OUTPUT_LOG) : OUTPUT_USB;
 #else
   output_enabled = OUTPUT_USB;
 #endif

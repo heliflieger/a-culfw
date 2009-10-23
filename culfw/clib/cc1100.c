@@ -10,9 +10,8 @@
 
 uint8_t cc_on;
 
-// FS20 devices can receive/decode signals sent with PA ramping,
+// NOTE: FS20 devices can receive/decode signals sent with PA ramping,
 // but the CC1101 cannot
-
 #ifdef FULL_CC1100_PA
 PROGMEM prog_uint8_t CC1100_PA[] = {
 
@@ -61,13 +60,13 @@ PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    0x65, // 0E FREQ1    *C4    65    
    0x6a, // 0F FREQ0    *EC    e8    
    0x55, // 10 MDMCFG4  *8C    55    bWidth 325kHz
-   0xe4, // 11 MDMCFG3  *22   *43    Symbol rate 1500
-   0x30, // 12 MDMCFG2  *02   *B0    Modulation
+   0xe4, // 11 MDMCFG3  *22   *43    Drate:6000 ((256+228)*2^7)*26000000/2^28
+   0x30, // 12 MDMCFG2  *02   *B0    Modulation: ASK
    0x23, // 13 MDMCFG1  *22    23    
    0xb9, // 14 MDMCFG0  *F8    b9    ChannelSpace: 350kHz
    0x00, // 15 DEVIATN  *47    00    
    0x07, // 16 MCSM2     07    07    
-   0x30, // 17 MCSM1     30    30    
+   0x00, // 17 MCSM1     30    30    
    0x18, // 18 MCSM0    *04    18    Calibration: RX/TX->IDLE
    0x14, // 19 FOCCFG   *36    14    
    0x6C, // 1A BSCFG     6C    6C    
@@ -80,12 +79,12 @@ PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    0x56, // 21 FREND1    56    56    
    0x11, // 22 FREND0   *16    17    0x11 for no PA ramping
    0xE9, // 23 FSCAL3   *A9    E9    
-   0x2A, // 24 FSCAL2   *0A    2A    
-   0x00, // 25 FSCAL1    20    00    
+   0x2A, // 24 FSCAL2   *0A    2A
+   0x00, // 25 FSCAL1    20    00
    0x1F, // 26 FSCAL0    0D    1F    
    0x41, // 27 RCCTRL1   41    41    
    0x00, // 28 RCCTRL0   00    00    
-                                      
+
  /*                                   
  Conf1: SmartRF Studio:               
    Xtal: 26Mhz, RF out: 0dB, PA ramping, Dev:5kHz, Data:1kHz, Modul: ASK/OOK,
@@ -94,6 +93,53 @@ PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
  */
 };
 
+#if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
+PROGMEM prog_uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
+// CULFW   IDX NAME     
+   0x07, // 00 IOCFG2 (x)    INT when a packet with CRC OK has been received
+   0x2E, // 01 IOCFG1        3-State
+   0x05, // 02 IOCFG0D (x)   Interrupt in TX underflow
+   0x0D, // 03 FIFOTHR (x)   TX:9 / RX:56, but irrelevant, see IOCFG2/IOCFG0
+   0xD3, // 04 SYNC1       
+   0x91, // 05 SYNC0       
+   0xFF, // 06 PKTLEN (x)    infinite
+   0x0C, // 07 PKTCTRL1 (x)  CRC_AUTOFLUSH, no ADDR check, Append RSSI/LQI
+   0x05, // 08 PKTCTRL0 (x)  Packet Mode, Check CRC, Variable paket len
+   0x00, // 09 ADDR (x)    
+   0x00, // 0A CHANNR (x)  
+   0x0C, // 0B FSCTRL1 (x)   305kHz IF Freq (26000000/1024*12)
+   0x00, // 0C FSCTRL0 (x)   Freq Off
+   0x21, // 0D FREQ2 (x)     868.3MHz
+   0x65, // 0E FREQ1 (x)   
+   0x6A, // 0F FREQ0 (x)   
+   0x2D, // 10 MDMCFG4 (x)   Channel Bandwith: 203.1kHz 26000000/(8*(4+0)*2^2)
+   0x3B, // 11 MDMCFG3 (x)   DataRate: 250kHz ((256+59)*2^13)*26000000/(2^28)
+   0x13, // 12 MDMCFG2 (x)   Modulation: GFSK, Sync 30/32
+   0x22, // 13 MDMCFG1 (x)   Preamble: 4bytes
+   0xF8, // 14 MDMCFG0 (x)   Channel: 200kHz 26000000*(256+248)*2^2/2^18
+   0x62, // 15 DEVIATN (x)   127kHz 26000000/131072*(8+2)*2^6
+   0x07, // 16 MCSM2
+   0x3F, // 17 MCSM1         CCA: RSSI&RX, RX->RX, TX->RX
+   0x18, // 18 MCSM0 (x)     Calibration: IDLE->TX/RX
+   0x1D, // 19 FOCCFG (x)  
+   0x1C, // 1A BSCFG (x)   
+   0xC7, // 1B AGCCTRL2 (x)  No 3 highest DVGA gain, Max LNA, 42dB
+   0x00, // 1C AGCCTRL1 (x)
+   0xB0, // 1D AGCCTRL0 (x)  Avg.Len: 8samples
+   0x87, // 1E WOREVT1
+   0x6B, // 1F WOREVT0
+   0xF8, // 20 WORCTRL
+   0xB6, // 21 FREND1 (x)
+   0x11, // 22 FREND0 (x)
+   0xEA, // 23 FSCAL3 (x)
+   0x2A, // 24 FSCAL2 (x)
+   0x00, // 25 FSCAL1 (x)
+   0x1F, // 26 FSCAL0 (x)
+   0x41, // 27 RCCTRL1
+   0x00, // 28 RCCTRL0
+};
+
+#endif
 
 uint8_t
 cc1100_sendbyte(uint8_t data)
@@ -105,7 +151,7 @@ cc1100_sendbyte(uint8_t data)
 
 
 void
-ccInitChip(uint8_t *cfg, uint8_t *pa)
+ccInitChip(uint8_t *cfg)
 {
   // Disable interrupts else cc1100_readReg (CLOSE_IN_RX) in the interrupt
   // handler causes watchdog reset while doing CC1100_SRES
@@ -125,11 +171,12 @@ ccInitChip(uint8_t *cfg, uint8_t *pa)
 
   CC1100_ASSERT;                             // load configuration
   cc1100_sendbyte( 0 | CC1100_WRITE_BURST );
-  for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++) {
+  for(uint8_t i = 0; i < EE_CC1100_CFG_SIZE; i++) {
     cc1100_sendbyte(erb(cfg++));
   }
   CC1100_DEASSERT;
 
+  uint8_t *pa = EE_CC1100_PA;
   CC1100_ASSERT;                             // setup PA table
   cc1100_sendbyte( CC1100_PATABLE | CC1100_WRITE_BURST );
   for (uint8_t i = 0;i<8;i++) {
@@ -178,14 +225,25 @@ cc_factory_reset(void)
   uint8_t *t = EE_CC1100_CFG;
   for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++)
     ewb(t++, __LPM(CC1100_CFG+i));
+#if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
+  t = EE_FASTRF_CFG;
+  for(uint8_t i = 0; i < sizeof(FASTRF_CFG); i++)
+    ewb(t++, __LPM(FASTRF_CFG+i));
+#endif
 
 #ifdef BUSWARE_CUL
   // check 433MHz version marker and patch default frequency
   if (!bit_is_set(PINB, PB6)) {
-       t = EE_CC1100_CFG + 0x0d;
-       ewb(t++, 0x10);
-       ewb(t++, 0xb0);
-       ewb(t++, 0x71);
+    t = EE_CC1100_CFG + 0x0d;
+    ewb(t++, 0x10);
+    ewb(t++, 0xb0);
+    ewb(t++, 0x71);
+#if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
+    t = EE_FASTRF_CFG + 0x0d;
+    ewb(t++, 0x10);
+    ewb(t++, 0xb0);
+    ewb(t++, 0x71);
+#endif   
   }
 #endif   
   cc_set_pa(8);
@@ -198,7 +256,7 @@ ccsetpa(char *in)
   uint8_t hb = 2;
   fromhex(in+1, &hb, 1);
   cc_set_pa(hb);
-  ccInitChip(EE_CC1100_CFG, EE_CC1100_PA);
+  ccInitChip(EE_CC1100_CFG);
 }
 
 //--------------------------------------------------------------------
@@ -209,12 +267,10 @@ ccTX(void)
   EIMSK  &= ~_BV(CC1100_INT);
 
   // Going from RX to TX does not work if there was a reception less than 0.5
-  // sec ago. Using IDLE helps to shorten this period(?)
+  // sec ago. Due to CCA? Using IDLE helps to shorten this period(?)
   ccStrobe(CC1100_SIDLE);
-  while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != MARCSTATE_TX) {
-    ccStrobe( CC1100_STX );
+  while(cnt-- && (ccStrobe( CC1100_STX ) & 0x70) != 2)
     my_delay_us(10);
-  }
 }
 
 //--------------------------------------------------------------------
@@ -223,11 +279,12 @@ ccRX(void)
 {
   uint8_t cnt = 0xff;
 
-  while (cnt-- && (cc1100_readReg( CC1100_MARCSTATE ) & 0x1f) != MARCSTATE_RX)
-    ccStrobe( CC1100_SRX );
+  while(cnt-- && (ccStrobe( CC1100_SRX ) & 0x70) != 1)
+    my_delay_us(10);
   EIMSK |= _BV(CC1100_INT);
 
 }
+
 
 //--------------------------------------------------------------------
 void
@@ -237,8 +294,8 @@ ccreg(char *in)
 
   if(fromhex(in+1, &hb, 1)) {
 
-    if(hb == 99) {
-      for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++) {
+    if(hb == 0x99) {
+      for(uint8_t i = 0; i < 0x30; i++) {
         DH2(cc1100_readReg(i));
         if((i&7) == 7)
           DNL();
@@ -270,19 +327,20 @@ cc1100_writeReg(uint8_t addr, uint8_t data)
 {
   CC1100_ASSERT;
   cc1100_sendbyte( addr|CC1100_READ_BURST );
-  uint8_t temp = cc1100_sendbyte( data );
+  uint8_t ret = cc1100_sendbyte( data );
   CC1100_DEASSERT;
-  return temp;
+  return ret;
 }
 
 
 //--------------------------------------------------------------------
-void
+uint8_t
 ccStrobe(uint8_t strobe)
 {
   CC1100_ASSERT;
-  cc1100_sendbyte( strobe );
+  uint8_t ret = cc1100_sendbyte( strobe );
   CC1100_DEASSERT;
+  return ret;
 }
 
 void
@@ -300,9 +358,9 @@ void
 set_ccon(void)
 {
 #ifdef BUSWARE_CUR
-  ccStrobe(CC1100_SIDLE);
+  ccStrobe(CC1100_SIDLE);       // Wake it up from the sleep
   my_delay_ms(1);
 #endif
-  ccInitChip(EE_CC1100_CFG, EE_CC1100_PA);
+  ccInitChip(EE_CC1100_CFG);
   cc_on = 1;
 }

@@ -24,11 +24,11 @@ get_adcw(uint8_t mux)
   uint8_t i;
   uint16_t result = 0;
   
-  // Frequenzvorteiler setzen auf 8 (1) und ADC aktivieren (1)
+  // Frequenzvorteiler setzen auf 8 (ADPS1/ADPS0) und ADC aktivieren (ADEN)
   ADCSRA = (1<<ADEN) | (1<<ADPS1) | (1<<ADPS0); 
 
   ADMUX = mux;                      // Kanal waehlen
-  ADMUX |= (1<<REFS1) | (1<<REFS0); // interne Referenzspannung nutzen
+  ADMUX |= (1<<REFS1) | (1<<REFS0); // interne Referenzspannung (2.56V) nutzen
 
   for(i=0; i<2; i++) {
     ADCSRA |= (1<<ADSC);              // Dummy readout
@@ -77,6 +77,8 @@ batfunc(char *in)
 
 #ifdef CURV3
 
+  // hb[0] = 00  Charge with 500mA (hb[1]=01) or 100mA (hb[1]=00)
+  // hb[0] = 01  Disable USB charging (hb[1]=01) or enable it (hb[1]=00)
   if(l == 2) {
     uint8_t pin = BAT_PEN2;
     if(hb[0] == 1) pin = BAT_USUS;

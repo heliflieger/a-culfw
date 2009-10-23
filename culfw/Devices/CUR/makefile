@@ -32,6 +32,7 @@ SRC = $(TARGET).c                                                  \
 		../../clib/log.c                                      \
 		../../clib/more.c                                     \
 		../../clib/fastrf.c                                   \
+		../../clib/rf_router.c                                \
 		../../clib/twimaster.c                                \
                 ../../lufa/Drivers/USB/LowLevel/DevChapter9.c         \
                 ../../lufa/Drivers/USB/LowLevel/Endpoint.c            \

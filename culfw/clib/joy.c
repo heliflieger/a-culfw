@@ -7,7 +7,7 @@
 #include <avr/interrupt.h>
 
 void (*joyfunc)(uint8_t) = 0;
-uint8_t joy_last_sec, joy_last_hsec, joy_last_key, joy_repeat;
+uint16_t joy_ltick, joy_last_key, joy_repeat;
 uint8_t joy_inactive;
 
 void
@@ -63,14 +63,9 @@ JOY_Task(void)
 
   if(key == joy_last_key) {
 
-    int16_t tdiff = sec-joy_last_sec;
-    if(tdiff < 0)
-      tdiff += 60;
-    if(tdiff < 2) {
-      tdiff = (tdiff ? 125 : 0) + hsec-joy_last_hsec;
-      if(tdiff < (joy_repeat ? 12 : 62))   // Repeat: 0.1 sec / First: 0.5 sec
-        return;
-    }
+    uint16_t tdiff = (uint16_t)ticks-joy_ltick;
+    if(tdiff < (joy_repeat ? 12 : 62))   // Repeat: 0.1 sec / First: 0.5 sec
+      return;
     joy_repeat = 1;
 
   } else {
@@ -82,8 +77,7 @@ JOY_Task(void)
     joyfunc(key);
 
   joy_inactive = 0;
-  joy_last_sec = sec;
-  joy_last_hsec = hsec;
+  joy_ltick = ticks;
   joy_last_key = key;
 }
 

@@ -13,34 +13,38 @@
 <h1>culfw</h1>
 GPL'd firmware for the <a href="http://shop.busware.de/advanced_search_result.php?keywords=CUL">CUL</a> family of devices.
 Current Version: (as of 2009-06-01) is <a
-href="http://www.koeniglich.de/culfw/culfw-1.24.tar.gz">1.24</a>
-
+href="http://www.koeniglich.de/culfw/culfw-1.30.tar.gz">1.30</a>
 See the <a href="CHANGED">CHANGED</a> file for current changes.
 
 <h2>Description</h2>
-<b>culfw</b> is used in conjunction with the CUL and <a
-href="/fhem/fhem.html">fhem</a> to automate some common tasks in the household
-like switching lamps/shutters/heating/etc. and to log events like
-temperature/humidity/power consumption. CUL is a device which is attached
+<b>culfw</b> is used in conjunction with the CUL/CUN/CUR and a high level
+software like <a href="/fhem/fhem.html">fhem</a> to automate some common tasks
+in the household like switching lamps/shutters/heating/etc. and to log events
+like temperature/humidity/power consumption. CUL is a device which is attached
 to the PC, making it capable to receive and send 868MHz RF signals. culfw is
 the firmware which implements some RF protocols on the CUL, and makes them
 useable by <a href="/fhem/fhem.html">fhem</a>, which runs on the PC and
-coordinates all the tasks.<br><br> 
+coordinates all the tasks.
 
 <h2>Hardware</h2>
-At the heart of the CUL family of devices is the Texas Instruments CC1100 RF IC
-and an Atmel CPU. The radio interface is tuned for 868MHz (or 433MHz). You can
-easily flash the CUL, actually you should do it, as it ships with a
-test-firmware.<br>
-
-Following devices are known:
+<table><tr><td>
+Following devices are known to work with culfw:
 <ul>
-  <li>CUL (CC1101 USB Light)</li>
-  <li>CUR (CC1101 USB Remote, prototype)</li>
-  <li>DCUN (DUAL CC1101 USB Network, prototype)</li>
+  <li>CUN (CC1101 USB Network, to the left)</li>
+  <li>CUR (CC1101 USB Remote, prototype, to the right)</li>
+  <li>CUL (CC1101 USB Light, at the bottom)</li>
 </ul>
-The culfw firmware supports the CUL and the CUR devices right now.<br>
+
+At the heart of the CUL family of devices is the Texas Instruments CC1101 RF IC
+and an Atmel CPU. The radio interface is tuned for 868MHz (or 433MHz). Both the
+CUN and the CUR have some oboard flash (2MB) for local logging. The CUN has an
+enc28j60 Ethernet chip, the CUR a pcf8833 (130x130 pixel, 12bit) display
+controller.
 <br>
+
+</td><td
+<img src="ccc.jpg"/>
+</td></tr></table>
 
 <h2>Features</h2>
 culfw supports following RF protocols:
@@ -49,8 +53,7 @@ culfw supports following RF protocols:
       There are numerous FS20 devices, AFAIK. all of them are fully
       supported.</li>
   <li>FHT: send/receive<br>
-      Communication to the FHT80b is supported, support for
-      talking directly to the valves (FHT8b) is planned.</li>
+      Communication to the FHT80b and directly to the FHT8v is supported.</li>
   <li>S300: receive<br>
       Examples of such devices: S300TH, KS300-2</li>
   <li>EM1000: receive<br>
@@ -69,7 +72,7 @@ culfw supports following RF protocols:
   Download the firmware (see the links below) and unpack it.  Change into your
   device directory (e.g. CUL)<br>
   <ul>
-    <li>CUL: Insert the USB-Stick while pressing the micro-switch.</li>
+    <li>CUL/CUN: Insert the USB-Stick while pressing the micro-switch.</li>
     <li>CUR: Remove Battery/USB. Put the device on a table with the jogdial
         facing down. Press the case, until you hear the jogdial is pressed.
         Insert the battery, then the USB-Cable.</li>
@@ -83,7 +86,7 @@ culfw supports following RF protocols:
       dfu-programmer at90usb162 flash CUL.hex
       dfu-programmer at90usb162 start</pre>
       The last command will reset the device, a new USB device should appear:
-      "03eb:204b Atmel Corp.". If not try to reinsert the CUL without pressing
+      "03eb:204b Atmel Corp.". If not reinsert the dvice without pressing
       the micro-switch.</li>
     <li>Windows:<br>
       See also <a href="http://groups.google.com/group/cul-fans/web/get-cul-running--windows">this</a>
@@ -108,15 +111,19 @@ culfw supports following RF protocols:
       Type "V<return>". The string "V 1.0..." should appear. Type X01<return>
       to enable the data reporting.
       </li>
-  </ul>
-  Read the README file for more. 
-</ul>
+    <li>CUN over TCP/IP:<br>
+      Connect the device to a network with a DHCP server, and then telnet to
+      the assigned IP address with "telnet <ip-adress> 2323"</li>
+      
+  </ul> Read the <a href="http://www.koeniglich.de/culfw/README">README</a>
+      file for more details.  </ul>
+  
 
 <h2>Links:</h2>
 <ul>
   Hardware: <a href="http://www.busware.de">http://www.busware.de</a><br>
-  culfw (firmware): <a href="http://www.koeniglich.de/culfw/culfw-1.24.tar.gz">
-  	http://www.koeniglich.de/culfw/culfw-1.24.tar.gz</a><br>
+  culfw (firmware): <a href="http://www.koeniglich.de/culfw/culfw-1.30.tar.gz">
+  	http://www.koeniglich.de/culfw/culfw-1.30.tar.gz</a><br>
   FAQ: <a href="http://www.koeniglich.de/culfw/faq.html">
   	http://www.koeniglich.de/culfw/faq.html</a><br>
   README: <a href="http://www.koeniglich.de/culfw/README">

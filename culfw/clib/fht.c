@@ -10,7 +10,6 @@
 #include "clock.h"
 #include "cc1100.h"
 
-
 // We have two different work models:
 // 1. Control the FHT80b. In this mode we have to wait for a message from the
 //    FHT80b, and then send all buffered messages to it, with a strange
@@ -23,14 +22,16 @@
 
 uint8_t fht_hc0, fht_hc1; // Our housecode. The first byte for 80b communication
 
+
 #ifdef HAS_FHT_80b
  
+       uint8_t fht80b_timer_enabled;
        uint8_t fht80b_timeout;
 static uint8_t fht80b_state;    // 80b state machine
 static uint8_t fht80b_ldata;    // last data waiting for ack
 static uint8_t fht80b_out[6];   // Last sent packet. Reserve 1 byte for checksum
 static uint8_t fht80b_repeatcnt;
-static  int8_t fht80b_minoffset, fht80b_hroffset;
+static uint32_t fht80b_timeoffset;
 static uint8_t fht80b_buf[FHTBUF_SIZE];
 static uint8_t fht80b_bufoff;   // offset in the current fht80b_buf
 
@@ -45,9 +46,8 @@ static void    fht80b_reset_state(void);
 #endif 
 
 #ifdef HAS_FHT_8v
-       uint8_t fht8v_timeout = 0;      
-       uint8_t fht8v_buf[18];
-static void set_fht8v_timer(void);
+uint16_t fht8v_timeout;
+uint8_t fht8v_buf[18], fht8v_idx;
 #endif
 
 void
@@ -56,8 +56,7 @@ fht_init(void)
   fht_hc0 = erb(EE_FHTID);
   fht_hc1 = erb(EE_FHTID+1);
 #ifdef HAS_FHT_8v
-  set_fht8v_timer();
-  for(uint8_t i = 0; i < 18; i+=2)
+  for(uint8_t i = 0; i < 18; i++)
     fht8v_buf[i] = 0xff;
 #endif
 
@@ -80,10 +79,11 @@ fhtsend(char *in)
         ewb(EE_FHTID  , hb[1]);        // 1.st byte: 80b relevant
         ewb(EE_FHTID+1, hb[2]);        // 1.st+2.nd byte: 8v relevant
         fht_init();
+        return;
+
       } else {
         DH2(fht_hc0);
         DH2(fht_hc1);
-        DNL();
       }
 
 #ifdef HAS_FHT_80b
@@ -92,15 +92,10 @@ fhtsend(char *in)
 
     } else if(hb[0] == 3) {            // Return the remaining fht buffer
       DH2(fht_bufspace());
-      DNL();
-
-    } else if(hb[0] == 4) {            // Needed by FHT_MINUTE below
-      sec = hb[1];
-
 #endif
 
 #ifdef HAS_FHT_8v
-    } else if(hb[0] == 10) {           // Return the 8v buffer
+    } else if(hb[0] == 0x10) {           // Return the 8v buffer
 
       uint8_t na=0, v, i = 8;
       do {
@@ -108,7 +103,8 @@ fhtsend(char *in)
           continue;
         if(na)
           DC(' ');
-        DH2(i); DC(':');
+        DH2(i);
+        DC(':');
         DH2(v);
         DH2(fht8v_buf[2*i+1]);
         na++;
@@ -116,13 +112,13 @@ fhtsend(char *in)
 
       if(na==0)
         DS_P( PSTR("N/A") );
-      DNL();
 
-    } else if(hb[0] == 11) {           // Return the next 8v timeout
-      DU(fht8v_timeout, 2);
-      DNL();
+    } else if(hb[0] == 0x11) {           // Return the next 8v timeout
+      DH2(fht8v_timeout/125);
 #endif
+
     }
+    DNL();
 
   } else {
 
@@ -130,18 +126,14 @@ fhtsend(char *in)
     if(hb[0]==fht_hc0 &&
        hb[1]==fht_hc1) {             // FHT8v mode commands
 
-      if(hb[3] == 0x2f ||              // Pair: Send immediately
-         hb[3] == 0x20 ||              // Syncnow: Send immediately
-         hb[3] == 0x2c) {              // Sync: Send immediately
-
+      if(hb[3] == 0x2f) {
         addParityAndSend(in, FHT_CSUM_START, 2);
 
       } else {                         // Store the rest
 
-        uint8_t a = (hb[2] < 9 ? hb[2] : 0);
-        fht8v_buf[a*2  ] = hb[3];      // Command or 0xff for disable
-        fht8v_buf[a*2+1] = hb[4];      // value
-        set_fht8v_timer();
+        fht8v_idx = (hb[2] < 9 ? hb[2] : 0);
+        fht8v_buf[fht8v_idx*2  ] = hb[3];      // Command or 0xff for disable
+        fht8v_buf[fht8v_idx*2+1] = hb[4];      // value
 
       }
       return;
@@ -154,52 +146,39 @@ fhtsend(char *in)
 #endif
 
   }
-
 }
 
+//////////////////////////////////////////////////////////////
 #ifdef HAS_FHT_8v
-
-static void
-set_fht8v_timer(void)
-{
-  uint8_t i;
-  for(i = 0; i < 9; i++)
-    if(fht8v_buf[2*i] != 0xff)
-      break;
-  if(i == 9)
-    fht8v_timeout = 0;
-  else if(fht8v_timeout == 0)
-    fht8v_timeout = 116;
-}
-
 void
 fht8v_timer(void)
 {
-  uint8_t hb[6], i = 8;
+  uint8_t hb[6];
 
   hb[0] = fht_hc0;
   hb[1] = fht_hc1;
 
-  do {
-    if((hb[3] = fht8v_buf[2*i]) == 0xff)
-      continue;
-    hb[2] = i;
-    hb[4] = fht8v_buf[2*i+1];
-    for(uint8_t j = 0; j < FHT_NMSG; j++) {
-      addParityAndSendData(hb, 5, FHT_CSUM_START, 1);
-      my_delay_ms(64);
+  fht8v_timeout = (125*(230+(fht_hc1&0x7)))>>1;
+
+  uint8_t i = fht8v_idx;
+  for(;;) {
+    if((hb[3] = fht8v_buf[2*i]) != 0xff) {
+      hb[2] = i;
+      hb[4] = fht8v_buf[2*i+1];
+      addParityAndSendData(hb, 5, FHT_CSUM_START, 2);
+      fht8v_idx = (fht8v_idx+1)%9;        // Next time start with the next slot
+      break;
     }
-    fht8v_buf[2*i] = 0xa6;
-  } while(i--);
-  fht8v_timeout = 116;
-
+    i = (i+1)%9;
+    if(i == fht8v_idx) {               
+      fht8v_idx = (fht8v_idx+1)%9;
+      break;
+    }
+  }
 }
-
 #endif
 
 
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
 #ifdef HAS_FHT_80b
 
@@ -247,6 +226,7 @@ fht80b_timer(void)
 {
   if(fht80b_repeatcnt) {
     fht80b_sendpacket();
+    fht80b_timer_enabled = 1;
     fht80b_timeout = 41;               // repeat if there is no msg for 0.3sec
     fht80b_repeatcnt--;
   } else {
@@ -260,6 +240,7 @@ fht80b_send_repeated(void)
   fht80b_sendpacket(); 
   if(fht80b_out[2]==FHT_ACK2)
     return;
+  fht80b_timer_enabled = 1; 
   fht80b_timeout = 41;
   fht80b_repeatcnt = 1;                // Never got reply for the 3.rd data
 }
@@ -273,7 +254,7 @@ fht_hook(uint8_t *fht_in)
   uint8_t fi3 = fht_in[3];
   uint8_t fi4 = fht_in[4];
 
-  fht80b_timeout = 0;                  // no resend if there is an answer
+  fht80b_timer_enabled = 0;            // no resend if there is an answer
   if(fht_hc0 == 0 && fht_hc1 == 0)     // FHT processing is off
     return;
 
@@ -364,14 +345,11 @@ fht_hook(uint8_t *fht_in)
 
     uint8_t f4 = fht80b_out[4];         // makes code 8 bytes smaller
     if(fht80b_ldata == FHT_MINUTE) {
-      f4 = (minute + 60 - fht80b_minoffset);
+      uint32_t diff = ticks-fht80b_timeoffset;
+      diff = diff / (125*60);
+      f4 = f4+diff;
       if(f4 > 60)
         f4 -= 60;
-    }
-    if(fht80b_ldata == FHT_HOUR) {
-      f4 = (hour + 24 - fht80b_hroffset);
-      if(f4 > 24)
-        f4 -= 24;
     }
     fht80b_out[4] = f4;
 
@@ -446,9 +424,7 @@ fht_addbuf(char *in)
     fromhex(in+i, p+j, 1);
     if(j > 2 && ((j&1) == 0)) {
       if(p[j-1] == FHT_MINUTE) 
-        fht80b_minoffset = minute-p[j];
-      if(p[j-1] == FHT_HOUR) 
-        fht80b_hroffset = hour-p[j];
+        fht80b_timeoffset = ticks;
     }
   }
   if(p < (fht80b_buf+FHTBUF_SIZE))
@@ -501,7 +477,6 @@ fht80b_print()
     }
     p += p[0];
   }
-  DNL();
 }
 
 #endif

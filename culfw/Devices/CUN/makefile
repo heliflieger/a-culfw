@@ -24,6 +24,7 @@ SRC = $(TARGET).c                                                  \
 		../../clib/qfs.c                                      \
 		../../clib/fswrapper.c                                \
 		../../clib/fastrf.c                                   \
+		../../clib/rf_router.c                                \
 		../../clib/log.c                                      \
 		../../clib/ttydata.c                                  \
 		../../clib/spi.c                                      \

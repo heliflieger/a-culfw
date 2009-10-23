@@ -315,8 +315,6 @@ lcd_cls(void)
   lcd_window (0, 0, 131, 131);	// set clearance window
   lcd_sendcmd (LCD_CMD_RAMWR);	// write memory
 
-  //uint8_t h = hsec;
-
   lcd_blk_setup();
   uint16_t i;
   for(i = 0; i < (132*132/2); i++) {
@@ -325,10 +323,6 @@ lcd_cls(void)
     lcd_blk_senddata(0xff);       // g b
   }
   lcd_blk_teardown();
-
-  //Stopwatch:
-  //h = (h > hsec ?  hsec+125-h : hsec-h);
-  //DU(h,2);
 }
 
 static void

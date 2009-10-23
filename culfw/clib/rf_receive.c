@@ -23,15 +23,19 @@
 #include "pcf8833.h"
 #endif
 #include "fastrf.h"
+#include "rf_router.h"
 
-// If FS or LCD is defined, the SPI bus will be busy after the first message
-// with displaying/logging the data.  Checking the RSSI via SPI in the next
-// interrupt will lead then to an instant reboot. We disable this feature until
-// the SPI gets locked properly
 
-#ifdef BUSWARE_CUL
-#define CLOSE_IN_RX
-#endif
+//////////////////////////
+// With a CUL measured RF timings, in us, high/low sum
+//           Bit zero        Bit one
+//  KS300:  854/366 1220    366/854 1220
+//  HRM:    992/448 1440    528/928 1456
+//  EM:     400/320  720    432/784 1216
+//  S300:   784/368 1152    304/864 1168
+//  FHT:    362/368  730    565/586 1151
+//  FS20:   376/357  733    592/578 1170
+
 
 #define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
 #define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
@@ -71,13 +75,6 @@ static void addbit(bucket_t *b, uint8_t bit);
 static void delbit(bucket_t *b);
 static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime);
 
-#ifdef CLOSE_IN_RX
-static uint8_t ci_state;
-#define CI_INIT     0
-#define CI_CHECKED  1
-#define CI_MODIFIED 2
-#endif
-
 
 void
 tx_init(void)
@@ -92,17 +89,11 @@ tx_init(void)
   for(int i = 1; i < RCV_BUCKETS; i ++)
     bucket_array[i].state = STATE_RESET;
   cc_on = 0;
-#ifdef CLOSE_IN_RX
-  ci_state = CI_INIT;
-#endif
 }
 
 void
 set_txrestore()
 {
-#ifdef HAS_FASTRF
-  fastrf_on = 0;
-#endif
   if(tx_report) {
     set_ccon();
     ccRX();
@@ -364,21 +355,20 @@ RfAnalyze_Task(void)
       
       // compare the data
 
-      uint32_t ctime = (((24*day + hour)*60 + minute)*60 + sec)*125+ hsec;
 
       if(roby == oby) {
         for(roby = 0; roby < oby; roby++)
           if(robuf[roby] != obuf[roby])
             break;
 
-        if(roby == oby && ctime - reptime < 38) // 38/125 = 0.3 sec
+        if(roby == oby && ticks - reptime < 38) // 38/125 = 0.3 sec
           isrep = 1;
       }
 
       // save the data
       for(roby = 0; roby < oby; roby++)
         robuf[roby] = obuf[roby];
-      reptime = ctime;
+      reptime = ticks;
 
     }
 
@@ -408,10 +398,10 @@ RfAnalyze_Task(void)
 
     DC('p');
     DU(b->state,        2);
-    DU(b->zero.hightime,4);
-    DU(b->zero.lowtime, 4);
-    DU(b->one.hightime, 4);
-    DU(b->one.lowtime,  4);
+    DU(b->zero.hightime*16, 5);
+    DU(b->zero.lowtime *16, 5);
+    DU(b->one.hightime *16, 5);
+    DU(b->one.lowtime  *16, 5);
     DU(b->sync,         3);
     DU(b->byteidx,      3);
     DU(7-b->bitidx,     2);
@@ -468,12 +458,6 @@ ISR(TIMER1_COMPA_vect)
 
   }
 
-#ifdef CLOSE_IN_RX
-  if(ci_state == CI_MODIFIED)
-    cc1100_writeReg(CC1100_FIFOTHR, 0);
-  ci_state = CI_INIT;
-#endif
-
   if(bucket_nrused+1 == RCV_BUCKETS) {   // each bucket is full: reuse the last
 
     if(tx_report & REP_BITS)
@@ -527,6 +511,18 @@ addbit(bucket_t *b, uint8_t bit)
   }
 }
 
+// Check for the validity of a 768:384us signal. Without PA ramping!
+// Some CUL's generate 20% values wich are out of these bounderies.
+uint8_t
+check_rf_sync(uint8_t l, uint8_t s)
+{
+  return (l >= 0x25 &&          // 592
+          l <= 0x3B &&          // 944
+          s >= 0x0A &&          // 160
+          s <= 0x26 &&          // 608
+          l > s);
+}
+
 static void
 delbit(bucket_t *b)
 {
@@ -543,6 +539,13 @@ ISR(CC1100_INTVECT)
 #ifdef HAS_FASTRF
   if(fastrf_on) {
     fastrf_on = 2;
+    return;
+  }
+#endif
+
+#ifdef HAS_RF_ROUTER
+  if(rf_router_status >= RF_WANTS_TRIGGER) {
+    rf_router_triggered = 1;
     return;
   }
 #endif
@@ -582,20 +585,12 @@ ISR(CC1100_INTVECT)
   // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
   TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
 
-
   if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
 
-#ifdef CLOSE_IN_RX      // Set attenuation if rssi is too high
-    if(ci_state == CI_INIT) {
-      uint8_t rssi = cc1100_readReg(CC1100_RSSI);
-      if(rssi < 127 && rssi > 31) {
-        cc1100_writeReg(CC1100_FIFOTHR, (rssi >> 1)&0x30);
-        ci_state = CI_MODIFIED;
-      } else {
-        ci_state = CI_CHECKED;
-      }
-    }
-#endif
+retry_sync:
+    if(hightime > TSCALE(1600) || lowtime > TSCALE(1600))
+      return;
+
     b->zero.hightime = hightime;
     b->zero.lowtime = lowtime;
     b->sync  = 1;
@@ -615,6 +610,20 @@ ISR(CC1100_INTVECT)
           (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
         b->state = STATE_HMS;
 
+#ifdef HAS_RF_ROUTER
+      } else if(rf_router_id &&
+                check_rf_sync(hightime, lowtime) &&
+                check_rf_sync(b->zero.lowtime, b->zero.hightime)) {
+        //DC('-');
+        //DH2(b->zero.hightime);
+        //DH2(b->zero.lowtime);
+        //DH2(hightime);
+        //DH2(lowtime);
+        rf_router_status = RF_ROUTER_SYNC_RCVD;
+        reset_input();
+        return;
+#endif
+
       } else {
         b->state = STATE_COLLECT;
 
@@ -631,7 +640,8 @@ ISR(CC1100_INTVECT)
 
     } else {                            // too few sync bits
 
-      reset_input();
+      b->state = STATE_RESET;
+      goto retry_sync;
 
     }
 
@@ -639,13 +649,13 @@ ISR(CC1100_INTVECT)
 
     if(wave_equals(&b->one, hightime, lowtime)) {
       addbit(b, 1);
-      if(b->byteidx == 0) {
-        b->one.hightime = makeavg(b->one.hightime, hightime);
-        b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-      }
+      b->one.hightime = makeavg(b->one.hightime, hightime);
+      b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
 
     } else if(wave_equals(&b->zero, hightime, lowtime)) {
       addbit(b, 0);
+      b->zero.hightime = makeavg(b->zero.hightime, hightime);
+      b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
 
     } else {
       reset_input();

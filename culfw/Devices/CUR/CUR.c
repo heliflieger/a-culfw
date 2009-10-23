@@ -61,13 +61,16 @@ PROGMEM t_fntab fntab[] = {
   { 'c', rtc_func },
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
-  { 'f', fastrf },
+  { 'f', fastrf_func },
 #endif
   { 'd', lcdfunc },
   { 'l', ledfunc },
   { 'r', read_file },
   { 's', mysleep },
   { 't', gettime },
+#ifdef HAS_RF_ROUTER
+  { 'u', rf_router_func },
+#endif
   { 'w', write_file },
   { 'x', ccsetpa },
 
@@ -158,7 +161,8 @@ main(void)
   fht_init();
   log_init();                   // needs fs_init & rtc_init
   tx_init();
-  output_enabled = OUTPUT_USB|OUTPUT_LCD|OUTPUT_LOG;
+  output_enabled = erb(EE_LOGENABLED) ? (OUTPUT_USB|OUTPUT_LCD|OUTPUT_LOG) :
+                                         OUTPUT_USB|OUTPUT_LCD;
   //Log("Boot");
 
   LED_OFF();

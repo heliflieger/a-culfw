@@ -18,7 +18,7 @@ my_delay_us( uint16_t d )
 }
 
 void
-my_delay_ms( uint16_t d )
+my_delay_ms( uint8_t d )
 {
   while(d--) {
     my_delay_us( 1000 );

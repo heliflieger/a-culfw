@@ -74,7 +74,7 @@ Log(char *data)
   if(logfd == 0xffff)
     return;
 
-  if(logoffset >= 1024)
+  if(logoffset >= 65000)
     log_rotate();
 
 #if defined(HAS_RTC) || defined(HAS_NTP)

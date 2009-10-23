@@ -1,4 +1,5 @@
 #include "fswrapper.h"
+#include "fncollection.h"       // EE_LOGENABLED
 #include "display.h"
 #include "cdc.h"
 #include "menu.h"
@@ -92,19 +93,24 @@ read_file(char *in)
 void
 write_file(char *in)
 {
-  uint8_t hb[4];
   uint8_t old_oe = output_enabled;
-  fs_status_t ret = 8;
+  uint8_t hb[4];
+  fs_status_t ret = 0xff;
 
   if(!strcmp(in+1, "format")) {
     fs_init(&fs, fs.chip, 1);
     ret = 0;
-    goto DONE;
-    
+    return;
   }
 
-  if(fromhex(in+1, hb, 4) != 4)
-    goto DONE;
+  if(fromhex(in+1, hb, 4) != 4) {
+    if(hb[0])
+      output_enabled |= OUTPUT_LOG;
+    else
+      output_enabled &= ~OUTPUT_LOG;
+    ewb(EE_LOGENABLED, hb[0]);
+    return;
+  }
 
   filesize = ((uint32_t)hb[0]<<24)|
              ((uint32_t)hb[1]<<16)|
@@ -180,8 +186,8 @@ test_file(char *in)
   char buf[32];
 
   wdt_disable(); 
-
-  DH2(sec); DH2(hsec); DNL();
+  uint8_t *p = (uint8_t *)&ticks;
+  DH2(p[1]); DH2(p[0]); DNL();
   if(in[1] == 'w') {
     DC('w');
 
@@ -210,7 +216,7 @@ test_file(char *in)
   }
 DONE:
   DH2(ret);
-  DH2(sec); DH2(hsec); DNL();
+  DH2(p[1]); DH2(p[0]); DNL();
   wdt_enable(WDTO_2S); 
 }
 #endif

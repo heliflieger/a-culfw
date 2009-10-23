@@ -6,22 +6,23 @@ TARGET = CUL
 OBJDIR = .
 
 
-SRC = $(TARGET).c                                                  \
-		../../clib/Descriptors.c                              \
-		../../clib/cc1100.c                                   \
-		../../clib/cdcLUFA.c                                  \
-		../../clib/clock.c                                    \
-		../../clib/delay.c                                    \
-		../../clib/display.c                                  \
-		../../clib/stringfunc.c                               \
-		../../clib/fncollection.c                             \
-		../../clib/ringbuffer.c                               \
-		../../clib/rf_send.c                                  \
-		../../clib/rf_receive.c                               \
-		../../clib/fht.c                                      \
-		../../clib/fastrf.c                                   \
-		../../clib/ttydata.c                                  \
-		../../clib/spi.c                                      \
+SRC = $(TARGET).c                                                    \
+		../../clib/Descriptors.c                             \
+		../../clib/cc1100.c                                  \
+		../../clib/cdcLUFA.c                                 \
+		../../clib/clock.c                                   \
+		../../clib/delay.c                                   \
+		../../clib/display.c                                 \
+		../../clib/stringfunc.c                              \
+		../../clib/fncollection.c                            \
+		../../clib/ringbuffer.c                              \
+		../../clib/rf_send.c                                 \
+		../../clib/rf_receive.c                              \
+		../../clib/rf_router.c                               \
+		../../clib/fht.c                                     \
+		../../clib/fastrf.c                                  \
+		../../clib/ttydata.c                                 \
+		../../clib/spi.c                                     \
                 ../../lufa/Drivers/USB/LowLevel/DevChapter9.c        \
                 ../../lufa/Drivers/USB/LowLevel/Endpoint.c           \
                 ../../lufa/Drivers/USB/LowLevel/Host.c               \

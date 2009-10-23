@@ -1,9 +1,9 @@
 #ifndef _FASTRF_H
 #define _FASTRF_H
 
-void fastrf(char *in);
-void fastrf_reset(void);
+void fastrf_func(char *in);
 extern uint8_t fastrf_on;
+
 
 void FastRF_Task(void);
 

@@ -20,21 +20,19 @@
 #include "cdc.h"
 #include "ntp.h"
 
-uint8_t day,hour,minute,sec,hsec;
-static uint8_t lhsec, lsec, lmin;
+uint32_t ticks;
+#if defined(HAS_LCD) && defined(BAT_PIN)
+#endif
 
 #ifdef HAS_ETHERNET
-volatile clock_time_t clock_datetime = 0;
+uint32_t ticks;
 #endif
 	
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
-  hsec++;
-
-#ifdef HAS_ETHERNET
-  clock_datetime++;
+  ticks++;
 
 #ifdef HAS_NTP
   ntp_hsec++;
@@ -44,30 +42,26 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
   }
 #endif
 
+#ifdef HAS_FHT_8v
+  if(fht8v_timeout)
+    fht8v_timeout--;
+#endif
+#ifdef HAS_FHT_80b
+  if(fht80b_timer_enabled && fht80b_timeout)
+    fht80b_timeout--;
 #endif
 
-  if(hsec >= 125) {
 
-    sec++; hsec = 0;
-    if(sec == 60) {
-      minute++; sec = 0;
-      if(minute == 60) {
-        hour++; minute = 0;
-        if(hour == 24) {
-          day++; hour = 0;
-        }
-      }
-    }
-  }
 }
 
 void
 gettime(char *unused)
 {
-  display_udec(day,3,'0');     DC(' ');
-  display_udec(hour, 2,'0');   DC(':');
-  display_udec(minute, 2,'0'); DC(':');
-  display_udec(sec, 2,'0');
+  uint8_t *p = (uint8_t *)&ticks;
+  DH2(p[3]);
+  DH2(p[2]);
+  DH2(p[1]);
+  DH2(p[0]);
   DNL();
 }
 
@@ -76,26 +70,30 @@ gettime(char *unused)
 clock_time_t
 clock_time()
 {
-  return clock_datetime;
+  return (clock_time_t)ticks;
 }
 #endif
 
 void
 Minute_Task(void)
 {
-  if(lhsec == hsec)
+  static uint8_t last_tick, clock_hsec;
+  if((uint8_t)ticks == last_tick)
     return;
-  lhsec = hsec;                         // 1/125 Tick from now on
+  last_tick = (uint8_t)ticks;
 
+#ifdef HAS_FHT_8v
+  if(fht8v_timeout == 0)
+    fht8v_timer();
+#endif
 #ifdef HAS_FHT_80b
-  if(fht80b_timeout)
-    if(--fht80b_timeout == 0)
-      fht80b_timer();
+  if(fht80b_timer_enabled && fht80b_timeout == 0)
+    fht80b_timer();
 #endif
 
-  if(lsec == sec)
+  if(clock_hsec++ < 125)     // Note: this can skip some hsecs
     return;
-  lsec = sec;                           // Second tick from now on
+  clock_hsec = 0;
 
   wdt_reset();
 
@@ -105,12 +103,6 @@ Minute_Task(void)
   // one second, 1% duty cycle, 10ms resolution => this is simple ;-)
   if (credit_10ms < MAX_CREDIT)
     credit_10ms += 1;
-
-#ifdef HAS_FHT_8v
-  if(fht8v_timeout)
-    if(--fht8v_timeout == 0)
-      fht8v_timer();
-#endif
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)
   if(joy_inactive < 255)
@@ -129,17 +121,13 @@ Minute_Task(void)
     ntp_sendpacket();
 #endif
 
-  if(lmin == minute)
-    return;
-  lmin = minute;
-
 #if defined(HAS_LCD) && defined(BAT_PIN)
+  static uint8_t clock_sec;
+  clock_sec++;
+  if(clock_sec != 60)                   // minute from now on
+    return;
+  clock_sec = 0;
+
   bat_drawstate();
 #endif
-
-#ifdef BUSWARE_CUL
-  if(!USB_IsConnected)  // kind of a watchdog
-    prepare_boot(0);
-#endif
-
 }

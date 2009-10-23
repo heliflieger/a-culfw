@@ -1,7 +1,7 @@
 #ifndef _CLOCK_H_
 #define _CLOCK_H_
 
-extern uint8_t day,hour,minute,sec,hsec;
+extern uint32_t ticks;  // 1/125 sec resolution
 void gettime(char*);
 
 #ifdef HAS_ETHERNET

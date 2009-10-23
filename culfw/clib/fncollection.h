@@ -16,24 +16,23 @@ void version(char *);
 
 // Already used magics: c1,c2
 
-#define EE_MAGIC_OFFSET      (uint8_t *)0       // 2 bytes
+#define EE_MAGIC_OFFSET      (uint8_t *)0                       // 2 bytes
 
-#define EE_CC1100_CFG        (EE_MAGIC_OFFSET+2)
-#define EE_CC1100_CFG_SIZE   0x29       // 41
-#define EE_CC1100_PA         (EE_CC1100_CFG+EE_CC1100_CFG_SIZE)
+#define EE_CC1100_CFG        (EE_MAGIC_OFFSET+2)                // Offset:  2
+#define EE_CC1100_CFG_SIZE   0x29                               // 41
+#define EE_CC1100_PA         (EE_CC1100_CFG+EE_CC1100_CFG_SIZE) // Offset 43/2B
 #define EE_CC1100_PA_SIZE    8
 
 #define EE_REQBL             (EE_CC1100_PA+EE_CC1100_PA_SIZE)
 #define EE_LED               (EE_REQBL+1)
 #define EE_FHTID             (EE_LED+1)
 
-#define EE_FASTRF_CFG        (EE_FHTID+2)
-#define EE_FASTRF_CFG_SIZE   0x29       // 41
+#define EE_FASTRF_CFG        (EE_FHTID+2)                       // Offset: 55:37
+#define EE_RF_ROUTER_ID      (EE_FASTRF_CFG+EE_CC1100_CFG_SIZE)
+#define EE_RF_ROUTER_ROUTER  (EE_RF_ROUTER_ID+1) 
 
-// EEprom: CUL: 96 bytes of 512 used
-
-#ifdef HAS_ETHERNET 
-# define EE_MAC_ADDR         (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE)
+#ifdef HAS_ETHERNET
+# define EE_MAC_ADDR         (EE_RF_ROUTER_ROUTER+1)
 # define EE_USE_DHCP         (EE_MAC_ADDR+6)
 # define EE_IP4_ADDR         (EE_USE_DHCP+1)
 # define EE_IP4_NETMASK      (EE_IP4_ADDR+4)
@@ -48,10 +47,18 @@ void version(char *);
 #ifdef HAS_ETHERNET
 # define EE_CONTRAST          EE_ETH_LAST
 #else
-# define EE_CONTRAST          (EE_FASTRF_CFG+EE_FASTRF_CFG_SIZE)
+# define EE_CONTRAST          (EE_FASTRF_CFG+EE_CC1100_CFG_SIZE)
 #endif
 # define EE_BRIGHTNESS        (EE_CONTRAST+1)
 # define EE_SLEEPTIME         (EE_BRIGHTNESS+1)
+# define EE_LCD_LAST          (EE_SLEEPTIME+1)
+#else
+# define EE_LCD_LAST          EE_ETH_LAST
+#endif
+
+#ifdef HAS_FS
+# define EE_LOGENABLED        (EE_LCD_LAST)
+# define EE_FS_LAST           (EE_LOGENABLED+1)
 #endif
 
 
