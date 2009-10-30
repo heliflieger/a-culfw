@@ -2,11 +2,10 @@
 #define _CDC_H_
 
 /* Includes: */
-#include "board.h"
+#include "Descriptors.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#include "Descriptors.h"
 #include "ringbuffer.h"
 
 #include <Drivers/USB/USB.h>     // USB Functionality
@@ -48,9 +47,6 @@ enum CDC_Line_Codeing_Parity_t
 };
 
 extern uint8_t cdctask_enabled;
-extern rb_t *const USB_Tx_Buffer;
-extern rb_t *const USB_Rx_Buffer;
-extern void (*usbinfunc)(void);
 
 void CDC_Task(void);
 void cdc_flush(void);

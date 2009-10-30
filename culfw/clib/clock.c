@@ -81,6 +81,7 @@ Minute_Task(void)
   if((uint8_t)ticks == last_tick)
     return;
   last_tick = (uint8_t)ticks;
+  wdt_reset();
 
 #ifdef HAS_FHT_8v
   if(fht8v_timeout == 0)
@@ -94,8 +95,6 @@ Minute_Task(void)
   if(clock_hsec++ < 125)     // Note: this can skip some hsecs
     return;
   clock_hsec = 0;
-
-  wdt_reset();
 
   if(led_mode & 2)
     LED_TOGGLE();

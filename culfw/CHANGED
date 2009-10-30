@@ -1,3 +1,9 @@
+Version 1.31
+- CUN: Answer commands only to "originator" (USB/TCP). "r" to TCP/IP
+- CU*: booting after eeprom_init fixed
+- CU*: FHT sync from Andreas
+- CU*: changed ringbuffer to fixed size
+
 Version 1.30 (2009-10-23)
 - CU*: FHT8v support.
 - CU*: uptime (t) command is reporting in hex (to reduce code usage)

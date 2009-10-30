@@ -2,16 +2,11 @@
 #include "ringbuffer.h"
 #include "cdc.h"
 
-void (*usbinfunc)(void);
-
 /* Globals: */
 CDC_Line_Coding_t LineCoding = { BaudRateBPS: 9600,
                                  CharFormat:  OneStopBit,
                                  ParityType:  Parity_None,
                                  DataBits:    8            };
-
-DEFINE_RBUF(USB_Tx_Buffer, CDC_TX_EPSIZE)
-DEFINE_RBUF(USB_Rx_Buffer, CDC_RX_EPSIZE)
 
 HANDLES_EVENT(USB_ConfigurationChanged)
 {
@@ -19,10 +14,10 @@ HANDLES_EVENT(USB_ConfigurationChanged)
       ENDPOINT_DIR_IN, CDC_NOTIFICATION_EPSIZE, ENDPOINT_BANK_SINGLE);
 
   Endpoint_ConfigureEndpoint(CDC_TX_EPNUM, EP_TYPE_BULK,
-      ENDPOINT_DIR_IN, CDC_RX_EPSIZE, ENDPOINT_BANK_DOUBLE);
+      ENDPOINT_DIR_IN, TTY_BUFSIZE, ENDPOINT_BANK_DOUBLE);
 
   Endpoint_ConfigureEndpoint(CDC_RX_EPNUM, EP_TYPE_BULK,
-      ENDPOINT_DIR_OUT, CDC_TX_EPSIZE, ENDPOINT_BANK_DOUBLE);
+      ENDPOINT_DIR_OUT, TTY_BUFSIZE, ENDPOINT_BANK_DOUBLE);
 }
 
 //////////////////////////////////////////////
@@ -78,22 +73,26 @@ CDC_Task(void)
   if(!inCDC_TASK && Endpoint_ReadWriteAllowed()){ // USB -> RingBuffer
 
     while (Endpoint_BytesInEndpoint()) {          // Discard data on buffer full
-      rb_put(USB_Rx_Buffer, Endpoint_Read_Byte());
+      rb_put(&TTY_Rx_Buffer, Endpoint_Read_Byte());
     }
     Endpoint_ClearCurrentBank(); 
     inCDC_TASK = 1;
-    usbinfunc();
+    output_flush_func = CDC_Task;
+    uint8_t odc = display_channel;
+    display_channel = DISPLAY_USB;
+    input_handle_func();
+    display_channel = odc;
     inCDC_TASK = 0;
   }
 
 
   Endpoint_SelectEndpoint(CDC_TX_EPNUM);          // Then data out
-  if(USB_Tx_Buffer->nbytes && Endpoint_ReadWriteAllowed()) {
+  if(TTY_Tx_Buffer.nbytes && Endpoint_ReadWriteAllowed()) {
 
     cli();
-    while(USB_Tx_Buffer->nbytes &&
-          (Endpoint_BytesInEndpoint() < CDC_TX_EPSIZE))
-      Endpoint_Write_Byte(rb_get(USB_Tx_Buffer));
+    while(TTY_Tx_Buffer.nbytes &&
+          (Endpoint_BytesInEndpoint() < TTY_BUFSIZE))
+      Endpoint_Write_Byte(rb_get(&TTY_Tx_Buffer));
     sei();
     
     Endpoint_ClearCurrentBank();                  // Send the data

@@ -1,7 +1,7 @@
 #include <string.h>
 #include "board.h"
 #include "uip.h"
-#include "uip_arp.h"            // uip_arp_out
+#include "uip_arp.h"            // uip_arp_out;
 #include "drivers/interfaces/network.h"            // network_send
 #include "display.h"
 #include "ntp.h"
@@ -37,7 +37,7 @@ ntp_init(void)
   if(ntp_conn == NULL)
     return;
   uip_udp_bind(ntp_conn, HTONS(NTP_PORT));
-  ntp_sendpacket();
+  //ntp_sendpacket();
 }
 
 ////////////////////////////////

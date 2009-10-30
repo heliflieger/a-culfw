@@ -15,7 +15,7 @@
 //    FHT80b, and then send all buffered messages to it, with a strange
 //    ask/reply protocol.
 // 2. Control the valves directly (8v mode). In this mode we have to send every
-//    116 second a message to the valves. Some messages (e.g. pair) are sent
+//    115+x second a message to the valves. Some messages (e.g. pair) are sent
 //    directly. This mode is activated when we receive an actuator message for
 //    our own housecode.
 
@@ -48,6 +48,7 @@ static void    fht80b_reset_state(void);
 #ifdef HAS_FHT_8v
 uint16_t fht8v_timeout;
 uint8_t fht8v_buf[18], fht8v_idx;
+uint8_t fht8v_insync, fht8v_ctsync;
 #endif
 
 void
@@ -124,16 +125,21 @@ fhtsend(char *in)
 
 #ifdef HAS_FHT_8v
     if(hb[0]==fht_hc0 &&
-       hb[1]==fht_hc1) {             // FHT8v mode commands
+       hb[1]==fht_hc1) {                 // FHT8v mode commands
 
       if(hb[3] == 0x2f) {
         addParityAndSend(in, FHT_CSUM_START, 2);
 
-      } else {                         // Store the rest
+      } else if(hb[3] == 0x2c) {         // start syncprocess
+        fht8v_insync = 1;
+        fht8v_ctsync = 0xf3;
+        fht8v_timeout=1;
+
+      } else {                           // Store the rest
 
         fht8v_idx = (hb[2] < 9 ? hb[2] : 0);
-        fht8v_buf[fht8v_idx*2  ] = hb[3];      // Command or 0xff for disable
-        fht8v_buf[fht8v_idx*2+1] = hb[4];      // value
+        fht8v_buf[fht8v_idx*2  ] = hb[3];// Command or 0xff for disable this
+        fht8v_buf[fht8v_idx*2+1] = hb[4];// slot (valve)
 
       }
       return;
@@ -141,8 +147,8 @@ fhtsend(char *in)
 #endif
 
 #ifdef HAS_FHT_80b
-    if(!fht_addbuf(in))                // FHT80b mode: Queue everything
-      DS_P( PSTR("EOB") );
+    if(!fht_addbuf(in))                  // FHT80b mode: Queue everything
+      DS_P( PSTR("EOB\r\n") );
 #endif
 
   }
@@ -157,6 +163,32 @@ fht8v_timer(void)
 
   hb[0] = fht_hc0;
   hb[1] = fht_hc1;
+
+  if (fht8v_insync == 1) {
+    hb[2] = 0;
+    hb[3] = 0x2c;
+
+    if(fht8v_ctsync > 1){
+      hb[4] = fht8v_ctsync;
+      fht8v_ctsync -=2;
+      fht8v_timeout = 125;
+      addParityAndSendData(hb, 5, FHT_CSUM_START, 1);
+      return;
+    }
+    if(fht8v_ctsync == 1){                // sleep 2 more seconds
+      fht8v_ctsync--;
+      fht8v_timeout = 250;
+      return;
+    }
+    if(fht8v_ctsync == 0){                // send broadcast
+      fht8v_insync = 0;
+      hb[3] = 0x26;
+      hb[4] = 0x00;
+      fht8v_timeout = (125*(230+(fht_hc1&0x7)))>>1;
+      addParityAndSendData(hb, 5, FHT_CSUM_START, 2);
+      return;
+    }
+  }
 
   fht8v_timeout = (125*(230+(fht_hc1&0x7)))>>1;
 
@@ -287,12 +319,12 @@ fht_hook(uint8_t *fht_in)
       return;
     }
 
-    // Setting fht80b_out[4] to our hosecode for FHT_CAN_RCV & FHT_START_XMIT
+    // Setting fht80b_out[4] to our housecode for FHT_CAN_RCV & FHT_START_XMIT
     // won't change the FHT pairing
     if(fi2 == FHT_CAN_RCV)
       return;
 
-    if((fi3&0xf0) == 0x60) {            // Ack only 0x6. packets, else we get
+    if((fi3 & 0xf0) == 0x60) {          // Ack only 0x6? packets, else we get
       fht80b_out[3] = fi3|0x70;         // strange "endless" loops when other
       fht80b_send_repeated();           // CUL's / FHT's are involved
     }

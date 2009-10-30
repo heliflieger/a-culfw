@@ -1,7 +1,6 @@
 #include "fswrapper.h"
 #include "fncollection.h"       // EE_LOGENABLED
 #include "display.h"
-#include "cdc.h"
 #include "menu.h"
 #include "rf_receive.h"
 #include "cc1100.h"
@@ -10,6 +9,7 @@
 #include <avr/wdt.h>
 #include "clock.h"
 #include <avr/wdt.h>
+#include "ttydata.h"
 
 #define BUFSIZE 128
 fs_t fs;
@@ -27,9 +27,8 @@ static uint8_t isMenu;                  // Menu hack
 void        
 read_file(char *in)
 {
-  uint8_t old_oe = output_enabled;
-  output_enabled = OUTPUT_USB;
-
+  uint8_t ole = log_enabled;
+  log_enabled = 0;
   if(in[1]==0 || (in[1]=='.' && in[2]==0)) {              // List directory
     char buf[FS_FILENAME+1];
     uint8_t i = 0;
@@ -58,7 +57,7 @@ read_file(char *in)
       DH((uint16_t)((filesize>>16) & 0xffff),4);
       DH((uint16_t)(filesize & 0xffff),4);
       DNL();
-      CDC_Task();       // flush as we reuse the buffer
+      output_flush_func();       // flush as we reuse the buffer
 
       offset = 0;
 
@@ -66,22 +65,21 @@ read_file(char *in)
 
       while(offset < filesize) {
 
-        USB_Tx_Buffer->nbytes = ((filesize-offset) > USB_Tx_Buffer->size ?
-                        USB_Tx_Buffer->size : filesize-offset);
+        TTY_Tx_Buffer.nbytes = ((filesize-offset) > TTY_BUFSIZE ?
+                        TTY_BUFSIZE : filesize-offset);
 
-        USB_Tx_Buffer->getoff = 0;
-        fs_read( &fs, inode, USB_Tx_Buffer->buf, offset, USB_Tx_Buffer->nbytes);
-        offset += USB_Tx_Buffer->nbytes;
-        CDC_Task();
+        TTY_Tx_Buffer.getoff = 0;
+        fs_read( &fs, inode, TTY_Tx_Buffer.buf, offset, TTY_Tx_Buffer.nbytes);
+        offset += TTY_Tx_Buffer.nbytes;
+        output_flush_func();
         wdt_reset();
       }
-      cdc_flush();
-      rb_reset(USB_Tx_Buffer);
+      rb_reset(&TTY_Tx_Buffer);
 
       set_txrestore();
     }
   }
-  output_enabled = old_oe;
+  log_enabled = ole;
 }
 
 
@@ -93,7 +91,7 @@ read_file(char *in)
 void
 write_file(char *in)
 {
-  uint8_t old_oe = output_enabled;
+  uint8_t ole = log_enabled;
   uint8_t hb[4];
   fs_status_t ret = 0xff;
 
@@ -104,11 +102,8 @@ write_file(char *in)
   }
 
   if(fromhex(in+1, hb, 4) != 4) {
-    if(hb[0])
-      output_enabled |= OUTPUT_LOG;
-    else
-      output_enabled &= ~OUTPUT_LOG;
-    ewb(EE_LOGENABLED, hb[0]);
+    log_enabled = hb[0];
+    ewb(EE_LOGENABLED, log_enabled);
     return;
   }
 
@@ -131,12 +126,12 @@ write_file(char *in)
 
   inode = fs_get_inode( &fs, in+9 );
   offset = 0;
-  oldinfunc = usbinfunc;
-  usbinfunc = write_filedata;
-  rb_reset(USB_Rx_Buffer);
+  oldinfunc = input_handle_func;
+  input_handle_func = write_filedata;
+  rb_reset(&TTY_Rx_Buffer);
 
 DONE:
-  output_enabled = OUTPUT_USB;
+  log_enabled = 0;
 
   if(ret == FS_OK) {
     if(filesize)
@@ -149,18 +144,18 @@ DONE:
   }
   DNL();
 
-  output_enabled = old_oe;
+  log_enabled = ole;
   return;
 }
 
 void
 write_filedata(void)
 {
-  uint8_t len = USB_Rx_Buffer->nbytes;
+  uint8_t len = TTY_Rx_Buffer.nbytes;
 
-  fs_write(&fs, inode, USB_Rx_Buffer->buf, offset, len);
+  fs_write(&fs, inode, TTY_Rx_Buffer.buf, offset, len);
   if(offset+len == filesize) { // Ready
-    usbinfunc = oldinfunc;
+    input_handle_func = oldinfunc;
     fs_sync(&fs);
 #ifdef HAS_LCD
     if(isMenu) {
@@ -173,7 +168,7 @@ write_filedata(void)
   } else {
     offset += len;
   }
-  rb_reset(USB_Rx_Buffer);
+  rb_reset(&TTY_Rx_Buffer);
 }
 
 #if 0 // read/write speed test

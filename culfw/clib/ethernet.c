@@ -8,6 +8,7 @@
 #include "display.h"
 #include "delay.h"
 #include "ntp.h"
+#include "led.h"
 
 #include "uip_arp.h"
 #include "drivers/interfaces/network.h"
@@ -49,6 +50,7 @@ ethernet_init(void)
 
   uip_setethaddr(mac);
   uip_init();
+  ntp_conn = 0;
 
   // setup two periodic timers
   timer_set(&periodic_timer, CLOCK_SECOND / 4);
@@ -57,14 +59,13 @@ ethernet_init(void)
   if(erb(EE_USE_DHCP)) {
     enc28j60PhyWrite(PHLCON,0x4A6);// LED A: Link Status  LED B: Blink slow
     dhcpc_init(&mac);
+    dhcp_state = PT_WAITING;
 
   } else {
+    dhcp_state = PT_ENDED;
     set_eeprom_addr();
 
   }
-
-  dhcp_state = PT_WAITING;
-  ntp_conn = 0;
 }
 
 void
@@ -142,7 +143,9 @@ dumppkt(void)
   DC('e');DC(' ');
   DU(uip_len,5);
 
-  output_enabled &= ~OUTPUT_TCP;
+  display_channel &= ~DISPLAY_TCP;
+  uint8_t ole = log_enabled;
+  log_enabled = 0;
   DC(' '); DC('d'); DC(' '); display_mac(a); a+= sizeof(struct uip_eth_addr);
   DC(' '); DC('s'); DC(' '); display_mac(a); a+= sizeof(struct uip_eth_addr);
   DC(' '); DC('t'); DH2(*a++); DH2(*a++);
@@ -150,7 +153,8 @@ dumppkt(void)
 
   if(eth_debug > 2)
     dumpmem(a, uip_len - sizeof(struct uip_eth_hdr));
-  output_enabled |= OUTPUT_TCP;
+  display_channel |= DISPLAY_TCP;
+  log_enabled = ole;
 }
 
 void
@@ -234,8 +238,8 @@ static void
 ip_initialized(void)
 {
   enc28j60PhyWrite(PHLCON,0x476);// LED A: Link Status  LED B: TX/RX
-  ntp_init();
   tcplink_init();
+  ntp_init();
 }
 
 void

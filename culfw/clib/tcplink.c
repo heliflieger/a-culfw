@@ -1,5 +1,8 @@
 #include "uip.h"
 #include <avr/pgmspace.h>
+#include "uip_arp.h"            // uip_arp_out;
+#include "drivers/interfaces/network.h"            // network_send
+#include "delay.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -11,11 +14,13 @@
 #include "display.h"
 #include "tcplink.h"
 #include "fncollection.h"
+#include "ttydata.h"
 
 #define STATE_CLOSED 0
 #define STATE_OPEN   1
 #define STATE_CLOSE  2
 
+static void senddata(void);
 uint16_t tcplink_port;
 int con_counter;
 
@@ -31,32 +36,52 @@ tcplink_init(void)
 void
 tcp_putchar(char data)
 {
-	struct tcplink_state *s;
-	int c;
-	
-	for (c = 0; c < UIP_CONF_MAX_CONNECTIONS; ++c) {
-		s = &(uip_conns[c].appstate);
-  	if(s->offset < 255)
-	    s->buffer[s->offset++] = data;
+  struct tcplink_state *s;
+  int c;
+  
+  for (c = 0; c < UIP_CONF_MAX_CONNECTIONS; ++c) {
+    s = &(uip_conns[c].appstate);
+    if(s->offset < 254)
+      s->buffer[s->offset++] = data;
   }   
 }
 
 void
 tcplink_close(char *unused)
 {
-	struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+  struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
 
   s->state = STATE_CLOSE;
 }
 
 
+static void
+tcpsend(void)
+{
+  struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+
+  while(TTY_Tx_Buffer.nbytes) {
+    s->buffer[s->offset] = rb_get(&TTY_Tx_Buffer);
+
+    if(s->offset < 254) {
+      s->offset++;
+
+    } else {
+      uip_process(UIP_TIMER);       // uip_send will be called
+      uip_arp_out();
+      network_send();
+      my_delay_ms(2);
+
+    }
+  }
+}
 
 /*---------------------------------------------------------------------------*/
 static void
 senddata(void)
 {
-	struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
-	
+  struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+
   if(s->offset == 0)
     return;
   memcpy(uip_appdata, s->buffer, s->offset);
@@ -68,9 +93,9 @@ senddata(void)
 static void
 closed(void)
 {
-	struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
-	
-	s->offset = 0;
+  struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+
+  s->offset = 0;
   s->state  = STATE_CLOSED;
 }
 
@@ -83,43 +108,42 @@ newdata(void)
 
   len = uip_datalen();
 
-  if (len<1)
-       return;
+  if(len<1)
+   return;
 
   dataptr = (char *)uip_appdata;
   
   while(len > 0) {
-       rb_put(USB_Rx_Buffer, *dataptr);
-       ++dataptr;
-       --len;
+    rb_put(&TTY_Rx_Buffer, *dataptr);
+    ++dataptr;
+    --len;
   }
-
-  usbinfunc();
+  uint8_t odc = display_channel;
+  output_flush_func = tcpsend;
+  display_channel = DISPLAY_TCP;
+  input_handle_func();
+  display_channel = odc;
 }
 
 /*---------------------------------------------------------------------------*/
 void
 tcplink_appcall(void)
 {
-	//get momentary connection
-	struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
+  //get momentary connection
+  struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
 	
   if(uip_connected()) {
     s->offset = 0;
     s->state = STATE_OPEN;
-    if (con_counter == 0) {
-    	output_enabled |= OUTPUT_TCP;
-    }
-    ++con_counter;
+    if(con_counter++ == 0)
+      display_channel |= DISPLAY_TCP;
   }
 
   if(s->state == STATE_CLOSE) {
     s->state = STATE_OPEN;
     uip_close();
-    --con_counter;
-    if (con_counter == 0) {
-    	output_enabled &= ~OUTPUT_TCP;
-    }
+    if(--con_counter == 0)
+    	display_channel &= ~DISPLAY_TCP;
     return;
   }
 

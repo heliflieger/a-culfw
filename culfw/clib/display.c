@@ -12,8 +12,11 @@
 #ifdef HAS_ETHERNET
 #include "tcplink.h"
 #endif
+#ifdef HAS_FS
+uint8_t log_enabled = 0;
+#endif
 
-uint8_t output_enabled = 0;
+uint8_t display_channel = 0;
 
 //////////////////////////////////////////////////
 // Display routines
@@ -22,15 +25,15 @@ display_char(char data)
 {
 
 #ifdef HAS_ETHERNET
-  if(output_enabled & OUTPUT_TCP)
+  if(display_channel & DISPLAY_TCP)
     tcp_putchar( data );
 #endif
 
 #ifdef HAS_USB
-  if(USB_IsConnected && (output_enabled & OUTPUT_USB)) {
-    if(USB_Tx_Buffer->nbytes >= USB_Tx_Buffer->size)
+  if(USB_IsConnected && (display_channel & DISPLAY_USB)) {
+    if(TTY_Tx_Buffer.nbytes >= TTY_BUFSIZE)
       CDC_Task();
-    rb_put(USB_Tx_Buffer, data);
+    rb_put(&TTY_Tx_Buffer, data);
     if(data == '\n')
       CDC_Task();
   }
@@ -38,7 +41,7 @@ display_char(char data)
 
 
 #ifdef HAS_LCD
-  if(output_enabled & OUTPUT_LCD) {
+  if(display_channel & DISPLAY_LCD) {
     static uint8_t buf[TITLE_LINECHARS+1];
     static uint8_t off = 0, cmdmode = 0;
     if(data == '\r')
@@ -78,7 +81,7 @@ display_char(char data)
 #endif
 
 #ifdef HAS_FS
-  if(output_enabled & OUTPUT_LOG) {
+  if(log_enabled) {
     static uint8_t buf[LOG_NETTOLINELEN+1];
     static uint8_t off = 0;
     if(data == '\r')

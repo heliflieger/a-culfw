@@ -154,11 +154,10 @@ init_memory_mapped(void)
 int
 main(void)
 {
-#ifdef CUN_V10
+
   // reset Ethernet
-  DDRD   |= _BV( PD6 );
-  PORTD  &= ~_BV( PD6 );
-#endif
+  ENC28J60_RESET_DDR     |=  _BV( ENC28J60_RESET_BIT );
+  ENC28J60_CONTROL_PORT  &= ~_BV( ENC28J60_RESET_BIT );
 
   spi_init();
   eeprom_init();
@@ -180,30 +179,24 @@ main(void)
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
 
-  clock_prescale_set(clock_div_1);         // Disable Clock Division
-
-  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
-  wdt_enable(WDTO_2S); 
-
+  clock_prescale_set(clock_div_1);         // Disable Clock Division:1->8MHz
+//  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
+//  wdt_enable(WDTO_2S); 
   led_init();
-
-  rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
-  rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
   USB_Init();
-  tty_init();
-  ethernet_init();
-
   fht_init();
   tx_init();
+  init_memory_mapped();
+  ethernet_init();
 
 #ifdef HAS_FS
   df_init(&df);
   fs_init(&fs, df, 0);          // needs df_init
   log_init();                   // needs fs_init & rtc_init
-  output_enabled = erb(EE_LOGENABLED) ? (OUTPUT_USB|OUTPUT_LOG) : OUTPUT_USB;
-#else
-  output_enabled = OUTPUT_USB;
+  log_enabled = erb(EE_LOGENABLED);
 #endif
+  display_channel = DISPLAY_USB;
+  input_handle_func = analyze_ttydata;
 
 
   LED_OFF();
@@ -215,6 +208,8 @@ main(void)
     Minute_Task();
     if(fastrf_on)
       FastRF_Task();
+#ifdef HAS_ETHERNET
     Ethernet_Task();
+#endif
   }
 }

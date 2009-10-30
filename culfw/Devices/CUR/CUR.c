@@ -146,10 +146,7 @@ main(void)
 
   led_init();
   LED_ON();
-  rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
-  rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
   USB_Init();
-  tty_init();
 
                                 // lcd init is done manually from menu_init
   joy_init();
@@ -161,8 +158,9 @@ main(void)
   fht_init();
   log_init();                   // needs fs_init & rtc_init
   tx_init();
-  output_enabled = erb(EE_LOGENABLED) ? (OUTPUT_USB|OUTPUT_LCD|OUTPUT_LOG) :
-                                         OUTPUT_USB|OUTPUT_LCD;
+  input_handle_func = analyze_ttydata;
+  log_enabled = erb(EE_LOGENABLED);
+  display_channel = DISPLAY_USB|DISPLAY_LCD;
   //Log("Boot");
 
   LED_OFF();

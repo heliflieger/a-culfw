@@ -21,11 +21,12 @@ void display_nl(void);
 #define DH2(a) display_hex2(a)
 #define DNL display_nl
 
-extern uint8_t output_enabled;
+extern uint8_t display_channel;
+extern uint8_t log_enabled;
 
-#define OUTPUT_USB (1<<0)
-#define OUTPUT_LCD (1<<1)
-#define OUTPUT_LOG (1<<2)
-#define OUTPUT_TCP (1<<3)
+#define DISPLAY_USB (1<<0)
+#define DISPLAY_LCD (1<<1)
+#define DISPLAY_TCP (1<<2)
+
 
 #endif

@@ -103,13 +103,11 @@ main(void)
   wdt_enable(WDTO_2S); 
 
   led_init();
-  rb_init(USB_Tx_Buffer, CDC_TX_EPSIZE);
-  rb_init(USB_Rx_Buffer, CDC_RX_EPSIZE);
   USB_Init();
-  tty_init();
   fht_init();
   tx_init();
-  output_enabled = OUTPUT_USB;
+  input_handle_func = analyze_ttydata;
+  display_channel = DISPLAY_USB;
 #ifdef HAS_RF_ROUTER
   rf_router_init();
 #endif

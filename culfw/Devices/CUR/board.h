@@ -12,9 +12,10 @@
 #define HAS_BATTERY
 #define HAS_RTC
 
-#undef  HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
-#define HAS_FHT_80b                     // PROGMEM: 1158b, RAM:  5b
-#define FHTBUF_SIZE           128       //                 RAM:128b
+#define TTY_BUFSIZE             64      // Must be a supported USB endpoint size
+#define HAS_FHT_8v                      // PROGMEM:  584b, RAM: 23b
+#define HAS_FHT_80b                     // PROGMEM: 1360b, RAM: 16b
+#define FHTBUF_SIZE            200      //                 RAM: 74b
 
 #define FULL_CC1100_PA                  // PROGMEM:  100b
 #define RCV_BUCKETS             4       //                 RAM: 25b / bucket

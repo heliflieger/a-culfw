@@ -3,6 +3,12 @@
 #include "cdc.h"
 #include <avr/pgmspace.h>
 
+void (*input_handle_func)(void);
+
+
+rb_t TTY_Tx_Buffer;
+rb_t TTY_Rx_Buffer;
+static char cmdbuf[TTY_BUFSIZE+1];
 
 extern PROGMEM t_fntab fntab[];
 uint8_t
@@ -27,13 +33,12 @@ callfn(char *buf)
 void
 analyze_ttydata()
 {
-  static char cmdbuf[33];
   static uint8_t cmdlen;
   uint8_t ucCommand;
     
-  while(USB_Rx_Buffer->nbytes) {
+  while(TTY_Rx_Buffer.nbytes) {
 
-    ucCommand = rb_get(USB_Rx_Buffer);
+    ucCommand = rb_get(&TTY_Rx_Buffer);
 
     if(ucCommand == '\n' || ucCommand == '\r') {
 
@@ -57,8 +62,3 @@ analyze_ttydata()
   }
 }
 
-void
-tty_init(void)
-{
-  usbinfunc = analyze_ttydata;
-}

@@ -14,6 +14,7 @@
 #include "fastrf.h"
 #include "rf_router.h"
 #include "ethernet.h"
+#include <avr/wdt.h>
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -223,6 +224,8 @@ prepare_boot(char *in)
        ewb( EE_REQBL, 1 );
 
   TIMSK0 = 0;        // Disable the clock which resets the watchdog
+
+  wdt_enable(WDTO_15MS);     // Make sure the watchdog is running 
 
   // go to bed, the wathchdog will take us to reset
   while (1);
