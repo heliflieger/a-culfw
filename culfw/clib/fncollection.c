@@ -1,5 +1,5 @@
 #include <avr/eeprom.h>
-#include <Drivers/USB/USB.h>
+#include <avr/wdt.h>
 
 #include "board.h"
 #include "display.h"
@@ -7,7 +7,10 @@
 #include "fncollection.h"
 #include "cc1100.h"
 #include "../version.h"
+#ifdef HAS_USB
+#include <Drivers/USB/USB.h>
 #include "cdc.h"
+#endif
 #include "clock.h"
 #include "mysleep.h"
 #include "fswrapper.h"
@@ -22,16 +25,20 @@ uint8_t led_mode = 2;   // Start blinking
 // EEprom
 
 // eeprom_write_byte is inlined and it is too big
-__attribute__((__noinline__)) void
+__attribute__((__noinline__)) 
+void
 ewb(uint8_t *p, uint8_t v)
 {
+  eeprom_busy_wait();
   eeprom_write_byte(p, v);
 }
 
 // eeprom_read_byte is inlined and it is too big
-__attribute__((__noinline__)) uint8_t
+__attribute__((__noinline__)) 
+uint8_t
 erb(uint8_t *p)
 {
+  eeprom_busy_wait();
   return eeprom_read_byte(p);
 }
 
@@ -153,9 +160,10 @@ write_eeprom(char *in)
 void
 eeprom_init(void)
 {
+
   if(erb(EE_MAGIC_OFFSET)   != VERSION_1 ||
      erb(EE_MAGIC_OFFSET+1) != VERSION_2)
-    eeprom_factory_reset(0);
+       eeprom_factory_reset(0);
 
   led_mode = erb(EE_LED);
 #ifdef HAS_SLEEP
@@ -166,6 +174,7 @@ eeprom_init(void)
 void
 eeprom_factory_reset(char *in)
 {
+
   ewb(EE_MAGIC_OFFSET  , VERSION_1);
   ewb(EE_MAGIC_OFFSET+1, VERSION_2);
 
@@ -214,7 +223,9 @@ prepare_boot(char *in)
   if(in)
     fromhex(in+1, &bl, 1);
 
+#ifdef HAS_USB
   USB_ShutDown();
+#endif
 #ifdef HAS_FS
   fs_sync(&fs);
 #endif

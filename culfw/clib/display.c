@@ -1,7 +1,11 @@
 #include "board.h"
 #include "display.h"
 #include "ringbuffer.h"
+#ifdef HAS_USB
 #include "cdc.h"
+#else
+#include "serial.h"
+#endif
 #include "led.h"
 #include "delay.h"
 #include "pcf8833.h"
@@ -37,6 +41,21 @@ display_char(char data)
     if(data == '\n')
       CDC_Task();
   }
+#endif
+
+#ifdef HAS_UART
+  if(display_channel & DISPLAY_USB) {
+
+/*       
+       while(TTY_Tx_Buffer.nbytes >= TTY_BUFSIZE) {
+	    uart_task();
+	    my_delay_ms(10);
+       }
+*/
+       
+       rb_put(&TTY_Tx_Buffer, data);
+  }
+  
 #endif
 
 

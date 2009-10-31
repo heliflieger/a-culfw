@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
+#include <avr/interrupt.h>
 
 #include "board.h"
 #include "led.h"
@@ -17,7 +18,9 @@
 #ifdef HAS_LCD
 #include "pcf8833.h"
 #endif
+#ifdef HAS_USB
 #include "cdc.h"
+#endif
 #include "ntp.h"
 
 uint32_t ticks;
@@ -32,6 +35,7 @@ uint32_t ticks;
 // a "minute" task too long
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
+
   ticks++;
 
 #ifdef HAS_NTP
