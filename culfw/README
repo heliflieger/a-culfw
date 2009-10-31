@@ -16,6 +16,9 @@ the can be used for low-power wireless communication in the 868 band.
 - The CUN (CC110x USB Network) is a device with following features: CC1101 /
   AT90USB1287 / Ethernet interface / 16Mbit flash / 256Kbit SRAM / MicroSD
 
+- The CSM (CC110x Serial Module) is a device you talk to a serial way using a 
+  host system with an USART available. 
+  I/O lines are 3.3V or 5V safe - ATMEGA88/168/328(P)
 
 This firmware makes it possible to use these devices with fhem. Right now the
 following RF protocols are supported:
@@ -54,7 +57,7 @@ Compile (optional)
 Install / Flash the firmware
 ============================
   Change into your device directory (e.g. CUL)
-  - CUL: Insert the USB-Stick while pressing the micro-switch.
+  - CUL/CUN: Insert the USB-Stick while pressing the micro-switch on the back.
   - CUR: Remove Battery/USB. Put the device on a table with the jogdial facing
          down. Press the case, until you hear the jogdial is pressed. Insert
          the battery, then the USB-Cable.
