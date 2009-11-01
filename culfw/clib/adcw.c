@@ -17,8 +17,8 @@ get_adcw(uint8_t mux)
   uint8_t i;
   uint16_t result = 0;
   
-  // Frequenzvorteiler setzen auf 8 (ADPS1/ADPS0) und ADC aktivieren (ADEN)
-  ADCSRA = (1<<ADEN) | (1<<ADPS1) | (1<<ADPS0); 
+  // Frequenzvorteiler setzen auf 64 == 125kHz (ADPS1/ADPS0) und ADC aktivieren (ADEN)
+  ADCSRA = (1<<ADEN) | (1<<ADPS1) | (1<<ADPS2); 
 
   ADMUX = mux;                      // Kanal waehlen
   ADMUX |= (1<<REFS1) | (1<<REFS0); // interne Referenzspannung (2.56V) nutzen
@@ -30,14 +30,14 @@ get_adcw(uint8_t mux)
   my_delay_ms(1);
   
   /* Eigentliche Messung - Mittelwert aus 4 aufeinanderfolgenden Wandlungen */
-  for(i=0; i<4; i++) {
+  for(i=0; i<2; i++) {
     ADCSRA |= (1<<ADSC);            // eine Wandlung "single conversion"
     while ( ADCSRA & (1<<ADSC) );   // auf Abschluss der Konvertierung warten
     result += ADCW;                 // Wandlungsergebnisse aufaddieren
   }
   ADCSRA &= ~(1<<ADEN);             // ADC deaktivieren (2)
   
-  result /= 4; 
+  result /= 2; 
   
   return result;
 }

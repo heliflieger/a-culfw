@@ -39,11 +39,21 @@ cctemp_func(char *in)
   uint8_t hb[1];
   uint8_t l = fromhex(in+1,hb,2);
 
-  ccStrobe(CC1100_SIDLE);
-  my_delay_ms(1);                       // Needed if calibrating on RX/TX->SIDLE
+  // Its assumed we are in RX state, not going into IDLE
+  
+//  ccStrobe(CC1100_SIDLE);  
+//  my_delay_ms(1);                       // Needed if calibrating on RX/TX->SIDLE
+
+  CLEAR_BIT( CC1100_OUT_DDR, CC1100_OUT_PIN);
+  CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);
+  
   cc1100_writeReg(CC1100_IOCFG0, 0x80); // Page 64
-  cc1100_writeReg(CC1100_PTEST,  0xBF); // Page 15 & 84
+//  cc1100_writeReg(CC1100_PTEST,  0xBF); // Page 15 & 84
+
+//  ccStrobe(CC1100_SIDLE);
+
   bv = get_adcw(CCTEMP_MUX);
+
   if(l >= 1 && hb[0]) {
     DU(bv, 4);
 
@@ -52,6 +62,12 @@ cctemp_func(char *in)
 
   }
   DNL();
-  cc1100_writeReg(CC1100_PTEST,  0x7F);
-  set_txrestore();
-}
+
+//  cc1100_writeReg(CC1100_PTEST,  0x7F);
+//  cc1100_writeReg(CC1100_IOCFG0, 0x2d); 
+  
+//  set_txrestore();
+
+  SET_BIT( CC1100_OUT_DDR, CC1100_OUT_PIN);
+  
+ }
