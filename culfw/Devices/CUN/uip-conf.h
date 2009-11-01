@@ -63,7 +63,7 @@ typedef unsigned short uip_stats_t;
  *
  * \hideinitializer
  */
-#if HAS_XRAM
+#ifdef HAS_XRAM
 #define UIP_CONF_BUFFER_SIZE     1500
 #else
 #define UIP_CONF_BUFFER_SIZE     350

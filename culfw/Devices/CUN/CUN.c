@@ -34,6 +34,7 @@
 #include "ethernet.h"
 #include "tcplink.h"
 #include "ntp.h"
+#include "cctemp.h"
 
 #ifdef HAS_FS
 #include "fswrapper.h"
@@ -64,6 +65,7 @@ void memtest(char *in) {
 }
 #endif
 
+
 PROGMEM t_fntab fntab[] = {
 
   { 'M', testmem },
@@ -87,6 +89,7 @@ PROGMEM t_fntab fntab[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
+  { 'h', cctemp_func },
   { 'l', ledfunc },
   { 'q', tcplink_close },
   { 't', gettime },
@@ -113,11 +116,11 @@ start_bootloader(void)
   MCUCR = _BV(IVSEL);
 
 #if (defined(__AVR_AT90USB1286__) || defined(__AVR_AT90USB1287__))
-#define jump_to_bootloader ((void(*)(void))0xf000)
+#  define jump_to_bootloader ((void(*)(void))0xf000)
 #elif (defined(__AVR_AT90USB646__) || defined(__AVR_AT90USB647__))
-#define jump_to_bootloader ((void(*)(void))0x7800) // BOOTSZ0=1,BOOTSZ1=0
+#  define jump_to_bootloader ((void(*)(void))0x7800) // BOOTSZ0=1,BOOTSZ1=0
 #else
-#define jump_to_bootloader ((void(*)(void))0x1800)
+#  define jump_to_bootloader ((void(*)(void))0x1800)
 #endif
 
   jump_to_bootloader();
@@ -125,13 +128,14 @@ start_bootloader(void)
 
 #ifdef HAS_XRAM
 
-void init_memory_mapped (void) __attribute__ ((naked)) __attribute__ ((section (".init1")));
-
-
 /*
  * Setup the External Memory Interface early during device initialization
  *   
 */
+
+void init_memory_mapped (void) __attribute__ ((naked))
+                               __attribute__ ((section (".init1")));
+
 void
 init_memory_mapped(void)
 {
@@ -148,29 +152,26 @@ init_memory_mapped(void)
   XMCRA = _BV(SRE); // | _BV( SRW10 );
   XMCRB = 0;
 }
-
 #endif
 
 int
 main(void)
 {
-
-  // reset Ethernet
-  ENC28J60_RESET_DDR     |=  _BV( ENC28J60_RESET_BIT );
-  ENC28J60_CONTROL_PORT  &= ~_BV( ENC28J60_RESET_BIT );
-
-  spi_init();
-  eeprom_init();
+  wdt_enable(WDTO_2S);                     // Avoid an early reboot
+  clock_prescale_set(clock_div_1);         // Disable Clock Division:1->8MHz
+#ifdef HAS_XRAM
+  init_memory_mapped(); // First initialize the RAM
+#endif
 
   // if we had been restarted by watchdog check the REQ BootLoader byte in the
-  // EEPROM ...
-  if(bit_is_set(MCUSR,WDRF) && eeprom_read_byte(EE_REQBL)) {
-    eeprom_write_byte( EE_REQBL, 0 ); // clear flag
+  // EEPROM
+  if(bit_is_set(MCUSR,WDRF) && erb(EE_REQBL)) {
+    ewb( EE_REQBL, 0 ); // clear flag
     start_bootloader();
   }
+  while(tx_report);                     // reboot if the bss is not initialized
 
   // Setup the timers. Are needed for watchdog-reset
-  // 250: NTP is faster: +32,+35,+35
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250
   TCCR0B = _BV(CS02);       
   TCCR0A = _BV(WGM01);
@@ -179,25 +180,23 @@ main(void)
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
 
-  clock_prescale_set(clock_div_1);         // Disable Clock Division:1->8MHz
-//  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
-//  wdt_enable(WDTO_2S); 
-  led_init();
+  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
+
+  led_init();                              // So we can debug 
+  spi_init();
+  eeprom_init();
   USB_Init();
   fht_init();
   tx_init();
-  init_memory_mapped();
   ethernet_init();
-
 #ifdef HAS_FS
   df_init(&df);
   fs_init(&fs, df, 0);          // needs df_init
   log_init();                   // needs fs_init & rtc_init
   log_enabled = erb(EE_LOGENABLED);
 #endif
-  display_channel = DISPLAY_USB;
   input_handle_func = analyze_ttydata;
-
+  display_channel = DISPLAY_USB;
 
   LED_OFF();
 

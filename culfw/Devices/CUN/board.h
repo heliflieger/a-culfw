@@ -59,6 +59,8 @@
   #define DF_PORT                 PORTD 
   #define DF_CS                   PD3
 
+  #define CCTEMP_MUX              2
+
 #endif
 
 
@@ -82,10 +84,10 @@
 #define BOARD_ID_STR            "CUN"
 #define BOARD_ID_USTR           L"CUN"
 
-#define HAS_USB                 1
-#define HAS_ETHERNET            1
-#define HAS_XRAM                1
-#define HAS_NTP                 1
+#define HAS_USB                 1       // undef or define...1
+#define HAS_ETHERNET            1       // undef or define...1
+#define HAS_XRAM                1       // undef or define...1
+#define HAS_NTP                 1       // undef or define...1
 
 #define TTY_BUFSIZE             64      // Must be a supported USB endpoint size
 #define HAS_FHT_8v                      // PROGMEM:  584b, RAM: 23b

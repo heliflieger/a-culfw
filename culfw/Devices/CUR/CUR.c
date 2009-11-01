@@ -77,24 +77,6 @@ PROGMEM t_fntab fntab[] = {
   { 0, 0 },
 };
 
-#if defined(__AVR_AT90USB1286__)
-#define jump_to_bootloader ((void(*)(void))0xf000)
-#elif defined(__AVR_AT90USB646__)
-#define jump_to_bootloader ((void(*)(void))0x7800)
-#else
-#define jump_to_bootloader ((void(*)(void))0x1800)
-#endif
-
-void
-dpy(char *in)
-{
-  uint8_t bl = 0;
-  fromhex(in+1, &bl, 1);
-
-}
-
-
-
 void
 start_bootloader(void)
 {
@@ -104,32 +86,36 @@ start_bootloader(void)
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
 
+#if defined(__AVR_AT90USB1286__)
+#define jump_to_bootloader ((void(*)(void))0xf000)
+#elif defined(__AVR_AT90USB646__)
+#define jump_to_bootloader ((void(*)(void))0x7800)
+#else
+#define jump_to_bootloader ((void(*)(void))0x1800)
+#endif
+
   jump_to_bootloader();
 }
 
 int
 main(void)
 {
-  spi_init();
-  eeprom_init();
+  wdt_enable(WDTO_2S); 
+  clock_prescale_set(clock_div_1);         // Disable Clock Division
 
   // if we had been restarted by watchdog check the REQ BootLoader byte in the
   // EEPROM ...
-  if (bit_is_set(MCUSR,WDRF) && eeprom_read_byte(EE_REQBL)) {
-     eeprom_write_byte( EE_REQBL, 0 ); // clear flag
+  if (bit_is_set(MCUSR,WDRF) && erb(EE_REQBL)) {
+     ewb( EE_REQBL, 0 ); // clear flag
      start_bootloader();
   }
 
-
-  // Setup the timers. 
-
-  // Timer0 is used by the main clock
+  // Setup the timers. Are needed for watchdog-reset
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250
   TCCR0B = _BV(CS02);       
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);
 
-  // Timer1 is used by my_delay and by the transceiver analyzer
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
 
@@ -139,29 +125,24 @@ main(void)
   TCCR3B =  _BV(WGM32) | _BV(CS31);        // Prescaler 8MHz/8: 3.9KHz 
 #endif
 
-  clock_prescale_set(clock_div_1);         // Disable Clock Division
-
   MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
-  wdt_enable(WDTO_2S); 
 
   led_init();
-  LED_ON();
+  spi_init();
+  eeprom_init();
   USB_Init();
-
-                                // lcd init is done manually from menu_init
-  joy_init();
+  fht_init();
+  tx_init();
+  joy_init();                   // lcd init is done manually from menu_init
   bat_init();
   df_init(&df);
   fs_init(&fs, df, 0);          // needs df_init
   rtc_init();                   // does i2c_init too
-  menu_init();                  // needs fs_init
-  fht_init();
   log_init();                   // needs fs_init & rtc_init
-  tx_init();
+  menu_init();                  // needs fs_init
   input_handle_func = analyze_ttydata;
   log_enabled = erb(EE_LOGENABLED);
   display_channel = DISPLAY_USB|DISPLAY_LCD;
-  //Log("Boot");
 
   LED_OFF();
 

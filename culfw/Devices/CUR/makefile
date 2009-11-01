@@ -26,6 +26,7 @@ SRC = $(TARGET).c                                                  \
 		../../clib/pcf8833.c                                  \
 		../../clib/menu.c                                     \
 		../../clib/battery.c                                  \
+		../../clib/adcw.c                                     \
 		../../clib/joy.c                                      \
 		../../clib/mysleep.c                                  \
 		../../clib/ds1339.c                                   \

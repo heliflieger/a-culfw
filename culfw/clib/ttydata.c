@@ -1,12 +1,5 @@
 #include "display.h"
 #include "ttydata.h"
-
-#ifdef HAS_USB
-#include "cdc.h"
-#else
-#include "serial.h"
-#endif
-
 #include <avr/pgmspace.h>
 
 void (*input_handle_func)(void);

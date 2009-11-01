@@ -61,7 +61,7 @@
 #define UART_BAUD_RATE          9600      
 
 #define TTY_BUFSIZE             32
-#undef HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
+#define HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
 #undef HAS_FHT_80b                     // PROGMEM: 1158b, RAM:  5b
 #define FHTBUF_SIZE             74      //                 RAM: 74b
 

@@ -28,6 +28,8 @@ SRC = $(TARGET).c                                                  \
 		../../clib/log.c                                      \
 		../../clib/ttydata.c                                  \
 		../../clib/spi.c                                      \
+		../../clib/cctemp.c                                   \
+		../../clib/adcw.c                                     \
 		../../clib/ethernet.c                                 \
 		../../clib/tcplink.c                                  \
 		../../avr-uip/drivers/enc28j60/enc28j60.c             \
@@ -130,8 +132,8 @@ EXTRALIBDIRS =
 
 
 
-EXTMEMOPTS = -Wl,--section-start,.data=0x802200,--defsym=__heap_end=0x80a1ff
-#EXTMEMOPTS =
+#EXTMEMOPTS = -Wl,--section-start,.data=0x802200,--defsym=__heap_end=0x80a1ff
+EXTMEMOPTS =
 
 
 

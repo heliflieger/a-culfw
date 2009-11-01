@@ -34,12 +34,12 @@ void do_wdt_enable(uint8_t t);
 
 #ifdef HAS_ETHERNET
 # define EE_MAC_ADDR         (EE_RF_ROUTER_ROUTER+1)
-# define EE_USE_DHCP         (EE_MAC_ADDR+6)
+# define EE_USE_DHCP         (EE_MAC_ADDR+6)                    // Offset x62
 # define EE_IP4_ADDR         (EE_USE_DHCP+1)
 # define EE_IP4_NETMASK      (EE_IP4_ADDR+4)
-# define EE_IP4_GATEWAY      (EE_IP4_NETMASK+4)
-# define EE_IP4_NTPSERVER    (EE_IP4_GATEWAY+4)
-# define EE_IP4_TCPLINK_PORT (EE_IP4_NTPSERVER+4)
+# define EE_IP4_GATEWAY      (EE_IP4_NETMASK+4)                 // Offset x71
+# define EE_IP4_NTPSERVER    (EE_IP4_GATEWAY+4)                      
+# define EE_IP4_TCPLINK_PORT (EE_IP4_NTPSERVER+4)               // Offset x79
 # define EE_IP4_NTPOFFSET    (EE_IP4_TCPLINK_PORT+2)
 # define EE_ETH_LAST         (EE_IP4_NTPOFFSET+1)       // 
 #endif

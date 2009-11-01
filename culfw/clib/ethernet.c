@@ -26,7 +26,6 @@ static uint8_t dhcp_state;
 static void set_eeprom_addr(void);
 static void ip_initialized(void);
 
-#define bsbg boot_signature_byte_get
 void
 ethernet_init(void)
 {
@@ -34,6 +33,7 @@ ethernet_init(void)
   // reset Ethernet
   ENC28J60_RESET_DDR  |= _BV( ENC28J60_RESET_BIT );
   ENC28J60_RESET_PORT &= ~_BV( ENC28J60_RESET_BIT );
+
   my_delay_ms( 200 );
   // unreset Ethernet
   ENC28J60_RESET_PORT |= _BV( ENC28J60_RESET_BIT );
@@ -84,9 +84,10 @@ ethernet_reset(void)
 
   // Generate a "unique" MAC address from the unique serial number
   buf[2] = 'm'; strcpy_P(buf+3, PSTR("000425"));        // Atmel MAC Range
-  tohex(bsbg(0x0e)+bsbg(0x10), (uint8_t*)buf+9);
-  tohex(bsbg(0x12)+bsbg(0x14), (uint8_t*)buf+11);
-  tohex(bsbg(0x16)+bsbg(0x18), (uint8_t*)buf+13);
+#define bsbg boot_signature_byte_get
+  tohex(bsbg(0x0e)+bsbg(0x0f), (uint8_t*)buf+9);
+  tohex(bsbg(0x10)+bsbg(0x11), (uint8_t*)buf+11);
+  tohex(bsbg(0x12)+bsbg(0x13), (uint8_t*)buf+13);
   buf[15] = 0;
   write_eeprom(buf);
 }

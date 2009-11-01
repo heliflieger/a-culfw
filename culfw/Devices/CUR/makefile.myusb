@@ -26,12 +26,14 @@ SRC = $(TARGET).c                                                  \
 		../../clib/pcf8833.c                                  \
 		../../clib/menu.c                                     \
 		../../clib/battery.c                                  \
+		../../clib/adcw.c                                     \
 		../../clib/joy.c                                      \
 		../../clib/mysleep.c                                  \
 		../../clib/ds1339.c                                   \
 		../../clib/log.c                                      \
 		../../clib/more.c                                     \
 		../../clib/fastrf.c                                   \
+		../../clib/rf_router.c                                \
 		../../clib/twimaster.c                                \
 		../../MyUSB/Drivers/USB/LowLevel/LowLevel.c           \
 		../../MyUSB/Drivers/USB/LowLevel/Endpoint.c           \

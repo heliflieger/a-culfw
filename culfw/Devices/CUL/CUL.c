@@ -76,15 +76,14 @@ start_bootloader(void)
 int
 main(void)
 {
+  wdt_enable(WDTO_2S); 
+  clock_prescale_set(clock_div_1);
   PORTB |= _BV( PB6 ); // Pull 433MHz marker
-
-  spi_init();
-  eeprom_init();
 
   // if we had been restarted by watchdog check the REQ BootLoader byte in the
   // EEPROM ...
-  if(bit_is_set(MCUSR,WDRF) && eeprom_read_byte(EE_REQBL)) {
-    eeprom_write_byte( EE_REQBL, 0 ); // clear flag
+  if(bit_is_set(MCUSR,WDRF) && erb(EE_REQBL)) {
+    ewb( EE_REQBL, 0 ); // clear flag
     start_bootloader();
   }
 
@@ -97,12 +96,11 @@ main(void)
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
 
-  clock_prescale_set(clock_div_1);
-
   MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
-  wdt_enable(WDTO_2S); 
 
   led_init();
+  spi_init();
+  eeprom_init();
   USB_Init();
   fht_init();
   tx_init();

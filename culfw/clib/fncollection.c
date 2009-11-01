@@ -9,7 +9,6 @@
 #include "../version.h"
 #ifdef HAS_USB
 #include <Drivers/USB/USB.h>
-#include "cdc.h"
 #endif
 #include "clock.h"
 #include "mysleep.h"
@@ -29,8 +28,8 @@ __attribute__((__noinline__))
 void
 ewb(uint8_t *p, uint8_t v)
 {
-  eeprom_busy_wait();
   eeprom_write_byte(p, v);
+  eeprom_busy_wait();
 }
 
 // eeprom_read_byte is inlined and it is too big
@@ -38,7 +37,6 @@ __attribute__((__noinline__))
 uint8_t
 erb(uint8_t *p)
 {
-  eeprom_busy_wait();
   return eeprom_read_byte(p);
 }
 
@@ -223,29 +221,28 @@ prepare_boot(char *in)
   if(in)
     fromhex(in+1, &bl, 1);
 
+  if(bl)                     // Next reboot we'd like to jump to the bootloader.
+    ewb( EE_REQBL, 1 );      // Simply jumping to the bootloader from here
+                             // wont't work. Neither helps to shutdown USB
+                             // first.
+                             
+
 #ifdef HAS_USB
-  USB_ShutDown();
+  USB_ShutDown();            // ??? Needed?
 #endif
 #ifdef HAS_FS
-  fs_sync(&fs);
+  fs_sync(&fs);              // Sync the filesystem
 #endif
 
-  // next reboot we like to jump to Bootloader ...
-  if(bl)
-       ewb( EE_REQBL, 1 );
-
-  TIMSK0 = 0;        // Disable the clock which resets the watchdog
-
+  TIMSK0 = 0;                // Disable the clock which resets the watchdog
   wdt_enable(WDTO_15MS);     // Make sure the watchdog is running 
-
-  // go to bed, the wathchdog will take us to reset
-  while (1);
+  while (1);                 // go to bed, the wathchdog will take us to reset
 }
 
 void
 version(char *unused)
 {
-#ifdef BUSWARE_CUL // check 433MHz version marker
+#ifdef BUSWARE_CUL           // check 433MHz version marker
   if (!bit_is_set(PINB, PB6))
     DS_P( PSTR("V " VERSION " " BOARD_ID_STR433) );
   else
