@@ -226,13 +226,13 @@ prepare_boot(char *in)
                              // wont't work. Neither helps to shutdown USB
                              // first.
                              
-
 #ifdef HAS_USB
   USB_ShutDown();            // ??? Needed?
 #endif
 #ifdef HAS_FS
   fs_sync(&fs);              // Sync the filesystem
 #endif
+
 
   TIMSK0 = 0;                // Disable the clock which resets the watchdog
   wdt_enable(WDTO_15MS);     // Make sure the watchdog is running 
