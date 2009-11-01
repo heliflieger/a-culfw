@@ -64,7 +64,7 @@ cctemp_func(char *in)
   DNL();
 
 //  cc1100_writeReg(CC1100_PTEST,  0x7F);
-//  cc1100_writeReg(CC1100_IOCFG0, 0x2d); 
+  cc1100_writeReg(CC1100_IOCFG0, 0x2d); 
   
 //  set_txrestore();
 
