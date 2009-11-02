@@ -79,10 +79,11 @@ static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime);
 void
 tx_init(void)
 {
-  CC1100_OUT_DDR  |=  _BV(CC1100_OUT_PIN);
-  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);
-  CC1100_IN_DDR  &=  ~_BV(CC1100_IN_PIN);
-  CC1100_EICR |= _BV(CC1100_ISC);          // Any edge of INTx generates an int.
+  SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
+  CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);
+
+  CLEAR_BIT( CC1100_IN_DDR,   CC1100_IN_PIN);
+  SET_BIT( CC1100_EICR, CC1100_ISC);  // Any edge of INTx generates an int.
 
   credit_10ms = MAX_CREDIT/2;
 
