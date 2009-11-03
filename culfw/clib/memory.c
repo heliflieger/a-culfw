@@ -25,8 +25,10 @@ uint16_t freeMem(void) {
 
 
 void getfreemem(char *unused) {
-     display_udec(freeMem(),5,' ');
-     DNL();
+     DC('B'); DU(__brkval,           5); DNL();
+     DC('S'); DU(__malloc_heap_start,5); DNL();
+     DC('E'); DU(__malloc_heap_end,  5); DNL();
+     DC('F'); DU(freeMem(),          5); DNL();
 }
 
 void testmem(char *unused) {
@@ -35,18 +37,17 @@ void testmem(char *unused) {
 
      DS_P( PSTR("testing ") );
 
-     size = 16384; // freeMem() - 500;
+     size = 32765;
      display_udec(size, 5,' ');
 
      DS_P( PSTR(" bytes of RAM - ") );
      
      buf = malloc( size );
-
-     memset( buf, 0x77, size );
      
      if (buf != NULL) {
 
 	  // write
+          memset( buf, 0x77, size );
 	  for (uint16_t i = 0; i<size; i++)
 	       *(buf+i) = (i & 0xff);
 	  

@@ -43,29 +43,6 @@
 df_chip_t df;
 #endif
 
-#if 0
-void memtest(char *in) {
-  uint8_t hb;
-
-  if(in[1] == 'r') {
-    fromhex(in+2, &hb, 1);
-    dumpmem((uint8_t *)(hb<<8), 0xff);
-
-  } else {
-    fromhex(in+2, &hb, 1);
-    uint8_t *addr = (uint8_t *)(hb<<8);
-
-    for(uint8_t i = 0; i < 16; i++) {
-      for(uint8_t j = 0; j < 16; j++)
-        addr[j] = hb+j;
-      DH((uint16_t)addr, 4); DC(' '); DH2(hb); DNL();
-      addr += 16;
-    }
-  }
-}
-#endif
-
-
 PROGMEM t_fntab fntab[] = {
 
   { 'M', testmem },
@@ -89,7 +66,6 @@ PROGMEM t_fntab fntab[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
-  { 'h', cctemp_func },
   { 'l', ledfunc },
   { 'q', tcplink_close },
   { 't', gettime },
@@ -157,6 +133,7 @@ init_memory_mapped(void)
 int
 main(void)
 {
+  //ewb((uint8_t*)0x80, erb((uint8_t*)0x80)+1);
   wdt_enable(WDTO_2S);                     // Avoid an early reboot
   clock_prescale_set(clock_div_1);         // Disable Clock Division:1->8MHz
 #ifdef HAS_XRAM

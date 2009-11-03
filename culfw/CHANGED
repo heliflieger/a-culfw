@@ -1,3 +1,6 @@
+Version 1.33
+- CUN: fixed EXTMEM, 40k of RAM is available
+
 Version 1.32 (2009-11-01)
 - CUN: rebooting (B01 & B00) fixed
 - CUN: generate the same MAC address across updates

@@ -126,13 +126,7 @@ MATH_LIB = -lm
 EXTRALIBDIRS = 
 
 
-
-
-
-EXTMEMOPTS = -Wl,--section-start,.data=0x802200,--defsym=__heap_end=0x80a1ff
-#EXTMEMOPTS =
-
-
+EXTMEMOPTS = -Wl,--defsym=__heap_start=0x802100,--defsym=__heap_end=0x80a0ff
 
 
 LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
