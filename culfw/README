@@ -508,8 +508,18 @@ Notes
     MARCSTATE: C35 -> 01 (Idle), 13 (RX)
 
 
-TODO/Known BUGS:
-==========
+Considerations
+==============
+
+- Multiple CULs
+  If two CULs are too close together they could disturb each other even in 
+  reception mode. So you should keep them apart at least at arm's length. 
+  Especially if plugged side-by-side in the same USB hub, one could get 
+  unexplicable results.
+  
+
+TODO/Known BUGS
+===============
   - CU* Setting time sometimes changes the date too
   - CU* rf_router: fhem module, execute cmd, test
   - CU* FS20 dim commands do not repeat.
