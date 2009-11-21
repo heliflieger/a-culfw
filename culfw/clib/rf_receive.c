@@ -376,7 +376,8 @@ RfAnalyze_Task(void)
     if(datatype == TYPE_FHT && !(tx_report & REP_FHTPROTO) &&
        (obuf[2] == FHT_ACK        || obuf[2] == FHT_ACK2    ||
         obuf[2] == FHT_CAN_XMIT   || obuf[2] == FHT_CAN_RCV ||
-        obuf[2] == FHT_START_XMIT || obuf[2] == FHT_END_XMIT))
+        obuf[2] == FHT_START_XMIT || obuf[2] == FHT_END_XMIT ||
+        (obuf[3] & 0x70) == 0x70))
       isrep = 1;
 
     if(!isrep) {
@@ -545,8 +546,8 @@ ISR(CC1100_INTVECT)
 #endif
 
 #ifdef HAS_RF_ROUTER
-  if(rf_router_status >= RF_WANTS_TRIGGER) {
-    rf_router_triggered = 1;
+  if(rf_router_status == RF_ROUTER_DATA_WAIT) {
+    rf_router_status = RF_ROUTER_GOT_DATA;
     return;
   }
 #endif
@@ -664,4 +665,10 @@ retry_sync:
     }
 
   }
+}
+
+uint8_t
+rf_isreceiving()
+{
+  return (bucket_array[bucket_in].state != STATE_RESET);
 }

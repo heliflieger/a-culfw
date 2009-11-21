@@ -271,6 +271,32 @@ culfw<->PC Protocol (over USB or TCP/IP)
       Output the time since boot (uptime). The output is a hex number,
       resolution is 1/125 sec. An overflow occures every 397 days.
 
+    u<data>
+      RF_ROUTER functionality
+      A CUL can funtion as a router, by sending/receiving data to/from a remote
+      CUL via RF. So it is possible to extend the range by plugging additional
+      CULs int to the socket, and configure them to send their data to the
+      local (i.e. PC-connected) CUL.
+
+      - u (without parameter)
+        Display the own and the router id, both one byte hex.
+      - uiIIRR
+        Set the own id, and the router id (the id of the CUL connected to fhem).
+        If II is not 00, the RF_ROUTER functionality is enabled.
+        If RR is not 00, the RF reception is enabled at start (X21) and all
+        received messages (FS20/FHT/etc) are relayed to the CUL with id RR.
+        Messages arrive on the local CUL (with id RR) with the prefix RRU, see
+        the exampe below.
+      - uII<message>
+        Send <message> to the CUL with ID <II>. <message> will be executed
+        as a local command on the remote CUL.
+
+      Example:
+        ui0603 (configure remote CUL)
+        ui0300 (configure local CUL)
+        u06V -> 03UV 1.33 CUL868
+        u06C35 -> 03UC35 = 0D / 13
+
     V
       Print the firmware version.
       Example: V -> V 1.30 CUL868
@@ -484,13 +510,10 @@ Notes
 
 TODO/Known BUGS:
 ==========
-  - CUN Temperature sensor
-  - CU* Improve FHT
+  - CU* Setting time sometimes changes the date too
+  - CU* rf_router: fhem module, execute cmd, test
   - CU* FS20 dim commands do not repeat.
-  - CU* rf_router
+  - CUR Xfer&Display plots from fhem
   - CUR fhem MENU/files creation support
-  - CUR RTC interrupts
-  - CUR check for FS20 group commands
   - CUR umlauts
   - CUR sleep problems: FS20 1%-management
-  - CUR Xfer&Display plots from fhem

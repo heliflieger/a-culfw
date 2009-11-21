@@ -31,9 +31,10 @@ fastrf_func(char *in)
       cc1100_sendbyte(in[i]);
     CC1100_DEASSERT;
     ccTX();
-    while(cc1100_readReg(CC1100_TXBYTES) & 0x7f)  // Wait for the data to be sent
+    // Wait for the data to be sent
+    while(cc1100_readReg(CC1100_TXBYTES) & 0x7f)
       my_delay_us(100);
-    ccRX();                          // set reception again. MCSM1 does not work.
+    ccRX();                    // set reception again. MCSM1 does not work.
 
   } else {
     fastrf_on = 0;

@@ -12,18 +12,19 @@
 #define HAS_BATTERY
 #define HAS_RTC
 
-#define TTY_BUFSIZE             64      // Must be a supported USB endpoint size
-#define HAS_FHT_8v                      // PROGMEM:  584b, RAM: 23b
-#define HAS_FHT_80b                     // PROGMEM: 1360b, RAM: 16b
-#define FHTBUF_SIZE            200      //                 RAM: 74b
 
-#define FULL_CC1100_PA                  // PROGMEM:  100b
+
+#define TTY_BUFSIZE             64      // Must be a supported USB endpoint size
+#define HAS_FHT_8v                      // PROGMEM:  586b, RAM: 23b
+#define HAS_FHT_80b                     // PROGMEM: 1374b, RAM: 90b
+#define FHTBUF_SIZE             200     //                 RAM:200b
+#define HAS_RF_ROUTER           1       // PROGMEM: 1106b, RAM: 43b
 #define RCV_BUCKETS             4       //                 RAM: 25b / bucket
 
+#define FULL_CC1100_PA                  // PROGMEM:  100b
+#define HAS_FASTRF                      // PROGMEM:  362b  RAM:  1b
 #define HAS_RAWSEND                     // PROGMEM:   90b  RAM:  6b
 #define HAS_FASTRF                      // PROGMEM:  274b  RAM:  4b
-#define HAS_LONGMSG                     // CUR support     RAM: 20b
-
 
 #ifdef CURV3
 #  include "board_v3.h"

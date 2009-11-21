@@ -10,6 +10,7 @@
  *
  * In qfs we sacrifice space for simplicity and speed (i.e. for as few as
  * possible flash operations).
+ * NOTE: qfs may cause a premature wear out of the flash.
  *
  * "Features" of qfs:
  * - memory requirements: 6+(#DF*22) bytes, program memory: ca 2kB
@@ -18,8 +19,11 @@
  * - filenames are up to 14Bytes, no directory support
  * - for an at45db161 with 4mBit SPI (fosc/2)
  *   write speed is  26758 Byte/sec, read 27662 Byte/sec
- * - sending/reading the data to/from USB, write speed is 9523B/sec, read
- *   26000B/sec
+ * - sending/reading the data to/from
+ *   USB (USB buffersize 32 byte): write  9523B/sec, read 26000B/sec.
+ *   USB (USB buffersize 64 byte): write 21934B/sec, read 26000B/sec.
+ *   TCP/IP                        write 23290B/sec, read 26576B/sec.
+ *
  * - qfs is using only 512 bytes per flash-block (ignoring 16 bytes / 3%)
  *
  * The interface is compatible with the more advanced fs.c up to the following

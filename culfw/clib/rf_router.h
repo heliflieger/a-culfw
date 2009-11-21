@@ -1,22 +1,23 @@
 #ifndef _RF_ROUTER_H
 #define _RF_ROUTER_H
 
+#include "ringbuffer.h"
 
 void rf_router_init(void);
 void rf_router_func(char *);
-void rf_router_reset(void);
-void rf_router_send(void);
 void rf_router_task(void);
+void rf_router_flush(void);
 
 extern uint8_t rf_router_status;
-extern uint8_t rf_router_triggered;
-extern uint8_t rf_router_id;
+extern uint8_t rf_router_router;        // id of the router
+extern uint8_t rf_router_id;            // Own id
+extern uint32_t rf_router_sendtime;
+extern rb_t RFR_Buffer;
 
-#define RF_ROUTER_DISABLED    0
+
+#define RF_ROUTER_INACTIVE    0
 #define RF_ROUTER_SYNC_RCVD   1
 #define RF_ROUTER_DATA_WAIT   2
-#define RF_ROUTER_ACK_WAIT    3
-
-#define RF_WANTS_TRIGGER      2
+#define RF_ROUTER_GOT_DATA    3
 
 #endif

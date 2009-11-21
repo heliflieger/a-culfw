@@ -24,9 +24,10 @@ void display_nl(void);
 extern uint8_t display_channel;
 extern uint8_t log_enabled;
 
-#define DISPLAY_USB (1<<0)
-#define DISPLAY_LCD (1<<1)
-#define DISPLAY_TCP (1<<2)
+#define DISPLAY_USB      (1<<0)
+#define DISPLAY_LCD      (1<<1)
+#define DISPLAY_TCP      (1<<2)
+#define DISPLAY_RFROUTER (1<<3)
 
 
 #endif

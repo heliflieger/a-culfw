@@ -12,25 +12,14 @@
 #include "fht.h"
 #include "fswrapper.h"                 // fs_sync();
 #include "rf_send.h"                   // credit_10ms
-#ifdef HAS_SLEEP
 #include "mysleep.h"
-#endif
-#ifdef HAS_LCD
 #include "pcf8833.h"
-#endif
-#ifdef HAS_USB
 #include "cdc.h"
-#endif
+#include "rf_router.h"                  // rf_router_flush();
 #include "ntp.h"
 
 uint32_t ticks;
-#if defined(HAS_LCD) && defined(BAT_PIN)
-#endif
 
-#ifdef HAS_ETHERNET
-uint32_t ticks;
-#endif
-	
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
@@ -94,6 +83,10 @@ Minute_Task(void)
 #ifdef HAS_FHT_80b
   if(fht80b_timer_enabled && fht80b_timeout == 0)
     fht80b_timer();
+#endif
+#ifdef HAS_RF_ROUTER
+  if(rf_router_sendtime == ticks)
+    rf_router_flush();
 #endif
 
   if(clock_hsec++ < 125)     // Note: this can skip some hsecs

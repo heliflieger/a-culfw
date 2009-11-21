@@ -9,22 +9,50 @@
 #include "rf_receive.h"
 #include "fncollection.h"
 #include "clock.h"
+#include "ringbuffer.h"
+#include "ttydata.h"
+#include "fht.h"
+#include "cdc.h"
 
-uint8_t rf_router_triggered;
 uint8_t rf_router_status;
 uint8_t rf_router_id;
 uint8_t rf_router_router;
 uint8_t rf_router_hsec;
-uint8_t rf_router_data[32];
-uint8_t rf_dlen;
+uint32_t rf_router_sendtime;
+rb_t RFR_Buffer;
 
 void rf_router_ping(void);
+void rf_router_send(void);
+void rf_debug_out(uint8_t);
+
+static void
+rf_initbuf(void)
+{
+  uint8_t buf[2];
+  tohex(rf_router_router, buf);
+  rb_put(&RFR_Buffer, buf[0]);
+  rb_put(&RFR_Buffer, buf[1]);
+  rb_put(&RFR_Buffer, 'U');
+}
 
 void
 rf_router_init()
 {
   rf_router_id = erb(EE_RF_ROUTER_ID);
   rf_router_router = erb(EE_RF_ROUTER_ROUTER);
+  rf_initbuf();
+  if(rf_router_router) {
+    tx_report = 0x21;
+    set_txrestore();
+  }
+}
+
+void
+rf_echo(char *in)
+{
+  while(*in)
+    DC(*in++);
+  DNL();
 }
 
 void
@@ -32,8 +60,13 @@ rf_router_func(char *in)
 {
   if(in[1] == 0) {               // u: display id and router
     DH2(rf_router_id);
-    DC(' ');
     DH2(rf_router_router);
+/*
+    DC('.');
+    uint8_t *p;
+    p = (uint8_t *)&ticks;              DH2(p[1]); DH2(p[0]); DC('.');
+    p = (uint8_t *)&rf_router_sendtime; DH2(p[1]); DH2(p[0]);
+*/
     DNL();
 
   } else if(in[1] == 'i') {      // uiXXYY: set own id to XX and router id to YY
@@ -41,18 +74,15 @@ rf_router_func(char *in)
     ewb(EE_RF_ROUTER_ID, rf_router_id);
     fromhex(in+4, &rf_router_router, 1);
     ewb(EE_RF_ROUTER_ROUTER, rf_router_router);
+    rf_initbuf();
 
   } else {                      // uYYDATA: send data to node with id YY
-    rf_router_ping();
-    ccInitChip(EE_FASTRF_CFG);
-    my_delay_ms(1);
+    rb_reset(&RFR_Buffer);
     in++;
-    for(rf_dlen = 0; rf_dlen < sizeof(rf_router_data) && *in; rf_dlen++)
-      rf_router_data[rf_dlen] = *in++;
+    while(*in)
+      rb_put(&RFR_Buffer, *in++);
     rf_router_send();
-    rf_router_status = RF_ROUTER_ACK_WAIT;
-    rf_router_hsec = (uint8_t)ticks;
-    ccRX();
+
   }
 }
 
@@ -64,12 +94,10 @@ rf_router_func(char *in)
 #define SET_HIGH CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN)
 #define SET_LOW  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN)
 
-
 void
 rf_router_ping(void)
 {
-  if(rf_router_status != RF_ROUTER_DISABLED)
-    set_ccon();
+  set_ccon();
   ccTX();
 
   // Sync
@@ -86,85 +114,106 @@ rf_router_ping(void)
 void
 rf_router_send()
 {
+  rf_router_ping();
+  ccInitChip(EE_FASTRF_CFG);
+  my_delay_ms(3);             // 3ms: Found by trial and error
   CC1100_ASSERT;
   cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
-  cc1100_sendbyte( rf_dlen );
-  for(uint8_t i=0; i < rf_dlen; i++)
-    cc1100_sendbyte(rf_router_data[i]);
+  cc1100_sendbyte( RFR_Buffer.nbytes );
+  while(RFR_Buffer.nbytes)
+    cc1100_sendbyte(rb_get(&RFR_Buffer));
   CC1100_DEASSERT;
   ccTX();
-  while(cc1100_readReg(CC1100_TXBYTES) & 0x7f)  // Wait for the data to be sent
-    my_delay_us(100);
-  ccRX();                          // set reception again. MCSM1 does not work.
+
+  // Wait for the data to be sent
+  uint8_t maxwait = 20;        // max 20ms
+  while(cc1100_readReg(CC1100_TXBYTES) & 0x7f && maxwait--)
+    my_delay_ms(1);
+  set_txrestore();
+  rf_initbuf();
 }
 
 void
 rf_router_task(void)
 {
-  uint8_t hsec = (uint8_t)ticks;
-  uint8_t diff = hsec - rf_router_hsec;
+  if(rf_router_status == RF_ROUTER_INACTIVE)
+    return;
 
-  if(rf_router_status == RF_ROUTER_DATA_WAIT) {
-    if(diff > 5) {
-      DC('a'); DNL();
-      set_txrestore();
-      rf_router_status = RF_ROUTER_DISABLED;
+  uint8_t hsec = (uint8_t)ticks;
+
+  if(rf_router_status == RF_ROUTER_GOT_DATA) {
+
+    uint8_t len = cc1100_readReg(CC1100_RXFIFO)+2;
+    if(len < TTY_BUFSIZE) {
+
+      rb_reset(&TTY_Rx_Buffer);
+      CC1100_ASSERT;
+      cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
+      while(len-- > 2)
+        rb_put(&TTY_Rx_Buffer, cc1100_sendbyte(0));
+      cc1100_sendbyte(0);       // RSSI
+      cc1100_sendbyte(0);       // LQI
+      CC1100_DEASSERT;
+
+      uint8_t id;
+      if(fromhex(TTY_Rx_Buffer.buf, &id, 1) == 1 &&
+         id == rf_router_id) {
+
+        if(TTY_Rx_Buffer.buf[2] == 'U') {
+          while(TTY_Rx_Buffer.nbytes)
+            DC(rb_get(&TTY_Rx_Buffer));
+          DNL();
+
+        } else {
+          TTY_Rx_Buffer.nbytes -= 2;
+          TTY_Rx_Buffer.getoff = 2;
+          rb_put(&TTY_Rx_Buffer, '\n');
+          analyze_ttydata();
+        }
+
+      } else {
+        rb_reset(&TTY_Rx_Buffer);
+      }
+
     }
 
-  } else if(rf_router_status == RF_ROUTER_ACK_WAIT) {
-    if(diff > 5) {
-      DC('w'); DNL();
+    set_txrestore();
+    rf_router_status = RF_ROUTER_INACTIVE;
+
+  } else if(rf_router_status == RF_ROUTER_DATA_WAIT) {
+    uint8_t diff = hsec - rf_router_hsec;
+    if(diff > 7) {              // 3 (delay above) + 3 ( ((4+64)*8)/250kBaud )
       set_txrestore();
-      rf_router_status = RF_ROUTER_DISABLED;
+      rf_router_status = RF_ROUTER_INACTIVE;
     }
 
   } else if(rf_router_status == RF_ROUTER_SYNC_RCVD) {
-    DC('~');
     ccInitChip(EE_FASTRF_CFG);
     ccRX();
     rf_router_status = RF_ROUTER_DATA_WAIT;
     rf_router_hsec = hsec;
 
-  } else if(rf_router_triggered) {
+  } 
+}
 
-DC('u');
-    uint8_t len = cc1100_readReg(CC1100_RXFIFO)+2;
-    rf_router_triggered = 0;
-DH2(len);
-    if(len < sizeof(rf_router_data)) {
-      uint8_t i;
-
-      CC1100_ASSERT;
-      cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
-      for(i=0; i<len; i++)
-        rf_router_data[i] = cc1100_sendbyte( 0 );
-      CC1100_DEASSERT;
-      rf_dlen = len;
-
-      for(i=0; i<len-2; i++)
-        DC(rf_router_data[i]);
-      DC('.');
-      DH2(rf_router_data[i++]);
-      DH2(rf_router_data[i]);
-    }
-
-    if(rf_router_status == RF_ROUTER_DATA_WAIT) {
-      ccTX();
-      my_delay_ms(1);
-      tohex(rf_router_id, rf_router_data);
-      rf_dlen = 2;
-      rf_router_send();
-
-    } else if(len == 2) {       // ACK_WAIT
-      DC('A');
-
-    }
-    rf_router_status = RF_ROUTER_DISABLED;
-    set_txrestore();
-    DNL();
+void
+rf_router_flush()
+{
+  if(RFR_Buffer.nbytes == 0)
+    return;
+  if(rf_isreceiving()) {
+    rf_router_sendtime = ticks+3;     // 16-24ms, to avoid FS20 collision
+    return;
   }
+  rf_router_send();
+}
 
-
+void
+rf_debug_out(uint8_t c)
+{
+  display_channel = DISPLAY_USB;
+  DC(c); CDC_Task();
+  display_channel = (DISPLAY_USB|DISPLAY_RFROUTER);
 }
 
 #endif

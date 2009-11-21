@@ -25,10 +25,10 @@ uint16_t freeMem(void) {
 
 
 void getfreemem(char *unused) {
-     DC('B'); DU(__brkval,           5); DNL();
-     DC('S'); DU(__malloc_heap_start,5); DNL();
-     DC('E'); DU(__malloc_heap_end,  5); DNL();
-     DC('F'); DU(freeMem(),          5); DNL();
+     DC('B'); DU((uint16_t)__brkval,           5); DNL();
+     DC('S'); DU((uint16_t)__malloc_heap_start,5); DNL();
+     DC('E'); DU((uint16_t)__malloc_heap_end,  5); DNL();
+     DC('F'); DU((uint16_t)freeMem(),          5); DNL();
 }
 
 void testmem(char *unused) {

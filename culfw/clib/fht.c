@@ -24,10 +24,10 @@ uint8_t fht_hc0, fht_hc1; // Our housecode. The first byte for 80b communication
 
 
 #ifdef HAS_FHT_80b
- 
+
        uint8_t fht80b_timer_enabled;
        uint8_t fht80b_timeout;
-static uint8_t fht80b_state;    // 80b state machine
+       uint8_t fht80b_state;    // 80b state machine
 static uint8_t fht80b_ldata;    // last data waiting for ack
 static uint8_t fht80b_out[6];   // Last sent packet. Reserve 1 byte for checksum
 static uint8_t fht80b_repeatcnt;
@@ -282,9 +282,9 @@ fht_hook(uint8_t *fht_in)
 {
   uint8_t fi0 = fht_in[0];             // Makes code 18 bytes smaller...
   uint8_t fi1 = fht_in[1];
-  uint8_t fi2 = fht_in[2];
-  uint8_t fi3 = fht_in[3];
-  uint8_t fi4 = fht_in[4];
+  uint8_t fi2 = fht_in[2];             // FHT Command with extension bit
+  uint8_t fi3 = fht_in[3];             // Originator: CUL or FHT
+  uint8_t fi4 = fht_in[4];             // Command Argument
 
   fht80b_timer_enabled = 0;            // no resend if there is an answer
   if(fht_hc0 == 0 && fht_hc1 == 0)     // FHT processing is off

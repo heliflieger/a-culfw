@@ -12,6 +12,7 @@
 #include "rf_receive.h"
 #include "cc1100.h"
 #include "fncollection.h"
+#include <Drivers/USB/USB.h>     // USB Functionality
 
 
 uint8_t sleep_time;
@@ -29,12 +30,12 @@ mysleep(char *in)
 void
 dosleep(void)
 {
+  USB_ShutDown();
   LED_OFF();
   wdt_disable(); 
   joy_enable_interrupts();
   lcd_switch(0);
   set_ccoff();
-
 
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   cli();
@@ -42,12 +43,12 @@ dosleep(void)
   sei();
   sleep_cpu();
 
-
   // Wake-up sequence
   sleep_disable();
   joy_disable_interrupts();
   sei();
   wdt_enable(WDTO_2S); 
+  USB_Init();
   lcd_switch(1);
   bat_drawstate();
   set_txrestore();

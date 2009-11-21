@@ -11,6 +11,8 @@
 #include "pcf8833.h"
 #include "ttydata.h"            // callfn
 #include "fht.h"                // fht_hc
+#include "rf_router.h"
+#include "clock.h"
 #include "log.h"
 
 #ifdef HAS_ETHERNET
@@ -44,20 +46,19 @@ display_char(char data)
 #endif
 
 #ifdef HAS_UART
-  if(display_channel & DISPLAY_USB) {
-
-/*       
-       while(TTY_Tx_Buffer.nbytes >= TTY_BUFSIZE) {
-	    uart_task();
-	    my_delay_ms(10);
-       }
-*/
-       
-       rb_put(&TTY_Tx_Buffer, data);
-  }
-  
+  if(display_channel & DISPLAY_USB)
+    rb_put(&TTY_Tx_Buffer, data);
 #endif
 
+#ifdef HAS_RF_ROUTER
+  if(rf_router_router &&
+     (display_channel & DISPLAY_RFROUTER) &&
+     !(data == '\n' || data == '\r')) {
+    rb_put(&RFR_Buffer, data);
+    //rf_router_sendtime = ticks+5;     // 32-40ms, to avoid FS20 collision
+    rf_router_sendtime = ticks+3;     // 16-24ms, to avoid FS20 collision
+  }
+#endif
 
 #ifdef HAS_LCD
   if(display_channel & DISPLAY_LCD) {

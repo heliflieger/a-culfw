@@ -17,7 +17,9 @@ static fs_size_t filesize, offset;
 static fs_inode_t inode;
 static void (*oldinfunc)(void);
 static void write_filedata(void);
+#ifdef HAS_LCD
 static uint8_t isMenu;                  // Menu hack
+#endif
 
 //////////////////////////////////
 // Input: Filename 
@@ -67,7 +69,6 @@ read_file(char *in)
 
         TTY_Tx_Buffer.nbytes = ((filesize-offset) > TTY_BUFSIZE ?
                         TTY_BUFSIZE : filesize-offset);
-
         TTY_Tx_Buffer.getoff = 0;
         fs_read( &fs, inode, TTY_Tx_Buffer.buf, offset, TTY_Tx_Buffer.nbytes);
         offset += TTY_Tx_Buffer.nbytes;
@@ -122,7 +123,9 @@ write_file(char *in)
   if(ret != FS_OK || filesize == 0)                       // Create only
     goto DONE;
 
+#ifdef HAS_LCD
   isMenu = !strcmp(in+9, "MENU");
+#endif
 
   inode = fs_get_inode( &fs, in+9 );
   offset = 0;

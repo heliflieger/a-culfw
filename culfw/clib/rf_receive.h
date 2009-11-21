@@ -20,15 +20,12 @@
 #define REP_LCDMON   _BV(7)
 
 /* public prototypes */
-#ifdef HAS_LONGMSG
-#define MAXMSG 17               // inclusive parity (Netto 15), for CUR requests
-#else
 #define MAXMSG 12               // EMEM messages
-#endif
 
 void set_txreport(char *in);
 void set_txrestore(void);
 void tx_init(void);
+uint8_t rf_isreceiving(void);
 uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
 
 extern uint8_t tx_report;

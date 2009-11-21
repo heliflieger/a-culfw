@@ -41,9 +41,9 @@ tcp_putchar(char data)
   
   for (c = 0; c < UIP_CONF_MAX_CONNECTIONS; ++c) {
     s = &(uip_conns[c].appstate);
-    if(s->offset < 254)
+    if(s->offset < sizeof(s->buffer))
       s->buffer[s->offset++] = data;
-  }   
+  }
 }
 
 void
@@ -61,18 +61,17 @@ tcpsend(void)
   struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
 
   while(TTY_Tx_Buffer.nbytes) {
-    s->buffer[s->offset] = rb_get(&TTY_Tx_Buffer);
 
-    if(s->offset < 254) {
-      s->offset++;
-
-    } else {
+    if(s->offset == sizeof(s->buffer)) {
       uip_process(UIP_TIMER);       // uip_send will be called
       uip_arp_out();
       network_send();
       my_delay_ms(2);
+      Ethernet_Task();
 
     }
+    s->buffer[s->offset++] = rb_get(&TTY_Tx_Buffer);
+
   }
 }
 
@@ -113,14 +112,17 @@ newdata(void)
 
   dataptr = (char *)uip_appdata;
   
-  while(len > 0) {
-    rb_put(&TTY_Rx_Buffer, *dataptr);
-    ++dataptr;
-    --len;
-  }
   uint8_t odc = display_channel;
   output_flush_func = tcpsend;
   display_channel = DISPLAY_TCP;
+
+  while(len > 0) {
+    rb_put(&TTY_Rx_Buffer, *dataptr);
+    if(TTY_Rx_Buffer.nbytes == TTY_BUFSIZE)
+      input_handle_func();
+    ++dataptr;
+    --len;
+  }
   input_handle_func();
   display_channel = odc;
 }

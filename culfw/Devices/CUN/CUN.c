@@ -35,6 +35,7 @@
 #include "tcplink.h"
 #include "ntp.h"
 #include "cctemp.h"
+#include "rf_router.h"
 
 #ifdef HAS_FS
 #include "fswrapper.h"
@@ -52,9 +53,7 @@ PROGMEM t_fntab fntab[] = {
   { 'C', ccreg },
   { 'E', eth_func },
   { 'F', fs20send },
-#ifdef HAS_RAWSEND
   { 'G', rawsend },
-#endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'W', write_eeprom },
@@ -63,15 +62,12 @@ PROGMEM t_fntab fntab[] = {
 
   { 'c', ntp_func },
   { 'e', eeprom_factory_reset },
-#ifdef HAS_FASTRF
+//  { 'h', cctemp_func },       // HU: hömérsék :)
   { 'f', fastrf_func },
-#endif
   { 'l', ledfunc },
   { 'q', tcplink_close },
   { 't', gettime },
-#ifdef HAS_RF_ROUTER
   { 'u', rf_router_func },
-#endif
   { 'x', ccsetpa },
 #ifdef HAS_FS
   { 'r', read_file },
@@ -182,8 +178,8 @@ main(void)
     CDC_Task();
     RfAnalyze_Task();
     Minute_Task();
-    if(fastrf_on)
-      FastRF_Task();
+    FastRF_Task();
+    rf_router_task();
 #ifdef HAS_ETHERNET
     Ethernet_Task();
 #endif

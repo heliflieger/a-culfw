@@ -1,24 +1,39 @@
 #!/usr/bin/perl
 
+use IO::Socket;
+use IO::File;
+
 use strict;
 use warnings;
 
 my $debug = 0;
 
 if(@ARGV != 3 || ($ARGV[0] ne "-r" && $ARGV[0] ne "-w")) {
-  die("Usage: cur_file.pl {-r|-w} filename <dur-device>\n");
+  die("Usage: cur_file.pl {-r|-w} filename /dev/ttyXXX> or host:port\n");
 }
 
-open(DEV, "+<$ARGV[2]") || die("Can't open $ARGV[2]: $!\n");
+my $istcp = 0;
+my $dev;
+if($ARGV[2] =~ m/:\d+$/) {
+  $dev = IO::Socket::INET->new(PeerAddr => $ARGV[2]);
+  die("Can't connect to $ARGV[2]: $!\n") if(!$dev);
+    
+} else {
+  $istcp = 1;
+  $dev = new IO::File;
+  die("Can't open $ARGV[2]: $!\n") if(!$dev->open("+<$ARGV[2]"));
+}
+
+
 
 ###################################################
 my $buf;
 for(;;) {                       # Drain input
   my $rin = "";
-  vec($rin, fileno(DEV), 1) = 1;
+  vec($rin, $dev->fileno, 1) = 1;
   my $nfound = select($rin, undef, undef, 0.3);
   last if($nfound <= 0);
-  sysread(DEV, $buf, 1);
+  $dev->sysread($buf, 1);
 }
    
 
@@ -29,14 +44,14 @@ if($ARGV[0] eq "-r") {
 
   open(FH, ">$ARGV[1]") || die("Can't open $ARGV[1]: $!\n");
  
-  syswrite(DEV, "r$ARGV[1]\r\n");       # Send the filename
-  sysread(DEV, $buf, 1);                # Check if its found
+  $dev->syswrite("r$ARGV[1]\r\n");       # Send the filename
+  $dev->sysread($buf, 1);                # Check if its found
   if($buf =~ m/^X/) {
     die("CUR: File not found\n");
   }
   my $off = 1;
   while(length($buf) != 10) {
-    sysread(DEV, $buf, 10-$off, $off);  # Read length (8byte hex)+\r\n
+    $dev->sysread($buf, 10-$off, $off);  # Read length (8byte hex)+\r\n
   }
   $buf =~ s/[\r\n]//g;
   my $len = hex($buf);
@@ -45,7 +60,7 @@ if($ARGV[0] eq "-r") {
   printf STDERR "Got length: $len\n" if($debug);
 
   while($off < $len) {
-    my $chunklen += sysread(DEV, $buf, $len-$off); # Read data
+    my $chunklen += $dev->sysread($buf, $len-$off); # Read data
     last if(!$chunklen);
     syswrite(FH, $buf);
     printf STDERR "Got: $chunklen\n" if($debug);
@@ -63,15 +78,15 @@ if($ARGV[0] eq "-r") {
   my $buf = join("", <FH>);
   my $len = length($buf);
  
-  syswrite(DEV, sprintf("w%08X%s\r\n", $len, $ARGV[1])); 
+  $dev->syswrite(sprintf("w%08X%s\r\n", $len, $ARGV[1])); 
   my $ret;
-  sysread(DEV, $ret, 1);                # Check if it can be written
+  $dev->sysread($ret, 1);                # Check if it can be written
   if($ret =~ m/^X/) {
     die("CUR: Cant write file\n");
   }
   my $off = 1;
   while(length($ret) != 10) {
-    sysread(DEV, $ret, 10-$off, $off);  # Read length (8byte hex)+\r\n
+    $dev->sysread($ret, 10-$off, $off);  # Read length (8byte hex)+\r\n
   }
   $ret =~ s/[\r\n]//g;
   my $len2 = hex($ret);
@@ -84,8 +99,8 @@ if($ARGV[0] eq "-r") {
   $off = 0;
   while($off < $len) {
     my $mlen = ($len-$off) > 32 ? 32 : ($len-$off);
-    $off += syswrite(DEV, $buf, $mlen, $off); # Write data
-    select(undef, undef, undef, 0.001);
+    $off += $dev->syswrite($buf, $mlen, $off); # Write data
+    select(undef, undef, undef, 0.001) if(!$istcp);
   }
 
 }

@@ -11,6 +11,7 @@ extern uint16_t fht8v_timeout;
 extern uint8_t fht80b_timer_enabled, fht80b_timeout;
 
 extern uint8_t fht_hc0, fht_hc1; // Our housecode.
+extern uint8_t fht80b_state;
 
 #define FHT_ACTUATOR   0x00
 #define FHT_ACK        0x4B

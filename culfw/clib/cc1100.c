@@ -153,10 +153,7 @@ cc1100_sendbyte(uint8_t data)
 void
 ccInitChip(uint8_t *cfg)
 {
-  // Disable interrupts else cc1100_readReg (CLOSE_IN_RX) in the interrupt
-  // handler causes watchdog reset while doing CC1100_SRES
   EIMSK &= ~_BV(CC1100_INT);                 
-
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
 
   CC1100_DEASSERT;                           // Toggle chip select signal
@@ -349,10 +346,13 @@ ccStrobe(uint8_t strobe)
 void
 set_ccoff(void)
 {
-  ccStrobe(CC1100_SIDLE);
 #ifdef BUSWARE_CUR
-  my_delay_ms(1);
+  uint8_t cnt = 0xff;
+  while(cnt-- && (ccStrobe( CC1100_SIDLE ) & 0x70) != 0)
+    my_delay_us(10);
   ccStrobe(CC1100_SPWD);
+#else
+  ccStrobe(CC1100_SIDLE);
 #endif
   cc_on = 0;
 }
@@ -360,10 +360,6 @@ set_ccoff(void)
 void
 set_ccon(void)
 {
-#ifdef BUSWARE_CUR
-  ccStrobe(CC1100_SIDLE);       // Wake it up from the sleep
-  my_delay_ms(1);
-#endif
   ccInitChip(EE_CC1100_CFG);
   cc_on = 1;
 }

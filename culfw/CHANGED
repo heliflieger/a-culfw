@@ -1,5 +1,9 @@
 Version 1.33
-- CUN: fixed EXTMEM, 40k of RAM is available
+- CUN: EXTMEM fixed
+- CUN: temperature disabled as it is too inaccurate.
+- CUN: reading/writing files over ethernet fixed.
+- CUR: reenabled USB after wakeup (myusb/lufa change?)
+- CU*: RF_ROUTER seems to work.
 
 Version 1.32 (2009-11-01)
 - CUN: rebooting (B01 & B00) fixed

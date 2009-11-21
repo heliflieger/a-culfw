@@ -149,18 +149,29 @@ menu_push(uint8_t idx)
   if(idx == 0)
     lcd_resetscroll();
 
-  for(uint8_t i = 0; i < BODY_LINES; i++) {
-    if(menu_topitem+i < menu_nitems) {
-      menu_get_line(menu_item_offset[menu_topitem+i],
-                        menu_line, sizeof(menu_line));
-      menu_getlineword(1, menu_line, dpybuf+1, sizeof(dpybuf)-1);
-      dpybuf[0] = (menu_topitem+i == menu_curitem ? '>' : ' ');
-    } else {
-      dpybuf[0] = 0;         // Clear the rest
-    }
+  uint8_t fullsizepic = 0;
+  if(picbuf[0]) {
+    uint8_t hb[4];
+    fromhex((char *)picbuf+1, hb, 4); // x, y, w, h
+    if(hb[2] >= VISIBLE_WIDTH &&
+       hb[3] >= VISIBLE_HEIGHT)
+      fullsizepic = 1;
+  }
 
-    menu_setbg(i);
-    lcd_putline(i+1, (char *)dpybuf);
+  if(!fullsizepic) {
+    for(uint8_t i = 0; i < BODY_LINES; i++) {
+      if(menu_topitem+i < menu_nitems) {
+        menu_get_line(menu_item_offset[menu_topitem+i],
+                          menu_line, sizeof(menu_line));
+        menu_getlineword(1, menu_line, dpybuf+1, sizeof(dpybuf)-1);
+        dpybuf[0] = (menu_topitem+i == menu_curitem ? '>' : ' ');
+      } else {
+        dpybuf[0] = 0;         // Clear the rest
+      }
+
+      menu_setbg(i);
+      lcd_putline(i+1, (char *)dpybuf);
+    }
   }
 
   if(picbuf[0])

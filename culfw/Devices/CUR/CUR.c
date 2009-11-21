@@ -38,6 +38,7 @@
 #include "log.h"
 #include "more.h"
 #include "fastrf.h"
+#include "rf_router.h"
 
 df_chip_t df;
 
@@ -46,9 +47,7 @@ PROGMEM t_fntab fntab[] = {
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
-#ifdef HAS_RAWSEND
   { 'G', rawsend },
-#endif
   { 'M', more },
   { 'P', lcd_drawpic },
   { 'R', read_eeprom },
@@ -60,17 +59,13 @@ PROGMEM t_fntab fntab[] = {
   { 'a', batfunc },
   { 'c', rtc_func },
   { 'e', eeprom_factory_reset },
-#ifdef HAS_FASTRF
   { 'f', fastrf_func },
-#endif
   { 'd', lcdfunc },
   { 'l', ledfunc },
   { 'r', read_file },
   { 's', mysleep },
   { 't', gettime },
-#ifdef HAS_RF_ROUTER
   { 'u', rf_router_func },
-#endif
   { 'w', write_file },
   { 'x', ccsetpa },
 
@@ -142,7 +137,8 @@ main(void)
   menu_init();                  // needs fs_init
   input_handle_func = analyze_ttydata;
   log_enabled = erb(EE_LOGENABLED);
-  display_channel = DISPLAY_USB|DISPLAY_LCD;
+  display_channel = (DISPLAY_USB|DISPLAY_LCD|DISPLAY_RFROUTER);
+  rf_router_init();
 
   LED_OFF();
 
@@ -151,8 +147,8 @@ main(void)
     CDC_Task();
     RfAnalyze_Task();
     Minute_Task();
-    if(fastrf_on)
-      FastRF_Task();
+    FastRF_Task();
+    rf_router_task();
     JOY_Task();
   }
 }
