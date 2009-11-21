@@ -176,9 +176,9 @@ culfw<->PC Protocol (over USB or TCP/IP)
       use only.
 
     f<type>[<data>]
-      Experimental "fast" (250kBaud) rf txmit via CC1101 packet handling
-      Send data: fs<data>, e.g. fsHallo
-      Receive data: fr (fHallo will be displayed)
+      Experimental "fast" (250kBaud) rf txmit via CC1101 packet handling.
+      First switch both devices to fastrf mode with "fr", then send data:
+      fs<data>, e.g. fsHallo
       Reset to "SlowRF": fx, followed by X21
 
     F<hex>
