@@ -28,11 +28,11 @@ void rf_debug_out(uint8_t);
 static void
 rf_initbuf(void)
 {
-  uint8_t buf[2];
-  tohex(rf_router_router, buf);
-  rb_put(&RFR_Buffer, buf[0]);
-  rb_put(&RFR_Buffer, buf[1]);
-  rb_put(&RFR_Buffer, 'U');
+  tohex(rf_router_router, (uint8_t *)RFR_Buffer.buf);
+  tohex(rf_router_id,     (uint8_t *)RFR_Buffer.buf+2);
+  RFR_Buffer.buf[4] = 'U';
+  RFR_Buffer.nbytes = RFR_Buffer.putoff = 5;
+  RFR_Buffer.getoff = 0;
 }
 
 void
@@ -61,12 +61,12 @@ rf_router_func(char *in)
   if(in[1] == 0) {               // u: display id and router
     DH2(rf_router_id);
     DH2(rf_router_router);
-/*
-    DC('.');
+#ifndef BUSWARE_CUL              // save mem on the CUL
+    DC(' ');
     uint8_t *p;
     p = (uint8_t *)&ticks;              DH2(p[1]); DH2(p[0]); DC('.');
     p = (uint8_t *)&rf_router_sendtime; DH2(p[1]); DH2(p[0]);
-*/
+#endif
     DNL();
 
   } else if(in[1] == 'i') {      // uiXXYY: set own id to XX and router id to YY
@@ -144,7 +144,7 @@ rf_router_task(void)
   if(rf_router_status == RF_ROUTER_GOT_DATA) {
 
     uint8_t len = cc1100_readReg(CC1100_RXFIFO)+2;
-    if(len < TTY_BUFSIZE) {
+    if(len < TTY_BUFSIZE && len > 4) {
 
       rb_reset(&TTY_Rx_Buffer);
       CC1100_ASSERT;
@@ -159,16 +159,19 @@ rf_router_task(void)
       if(fromhex(TTY_Rx_Buffer.buf, &id, 1) == 1 &&
          id == rf_router_id) {
 
-        if(TTY_Rx_Buffer.buf[2] == 'U') {
+        if(TTY_Rx_Buffer.buf[4] == 'U') {
           while(TTY_Rx_Buffer.nbytes)
             DC(rb_get(&TTY_Rx_Buffer));
           DNL();
 
         } else {
-          TTY_Rx_Buffer.nbytes -= 2;
-          TTY_Rx_Buffer.getoff = 2;
+          TTY_Rx_Buffer.nbytes -= 4;    // Skip dest/src bytes
+          TTY_Rx_Buffer.getoff = 4;
           rb_put(&TTY_Rx_Buffer, '\n');
+          uint8_t odc = display_channel;
+          display_channel = DISPLAY_RFROUTER;
           analyze_ttydata();
+          display_channel = odc;
         }
 
       } else {
@@ -202,7 +205,7 @@ rf_router_flush()
   if(RFR_Buffer.nbytes == 0)
     return;
   if(rf_isreceiving()) {
-    rf_router_sendtime = ticks+3;     // 16-24ms, to avoid FS20 collision
+    rf_router_sendtime = ticks+5;     // 32-40ms, to avoid FS20 collision
     return;
   }
   rf_router_send();
@@ -211,9 +214,10 @@ rf_router_flush()
 void
 rf_debug_out(uint8_t c)
 {
+  uint8_t odc = display_channel;
   display_channel = DISPLAY_USB;
-  DC(c); CDC_Task();
-  display_channel = (DISPLAY_USB|DISPLAY_RFROUTER);
+  DH2(c); CDC_Task();
+  display_channel = odc;
 }
 
 #endif

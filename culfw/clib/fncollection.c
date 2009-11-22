@@ -194,6 +194,10 @@ eeprom_factory_reset(char *in)
 #ifdef HAS_FS
   ewb(EE_LOGENABLED, 0x00);
 #endif
+#ifdef HAS_RF_ROUTER
+  ewb(EE_RF_ROUTER_ID, 0x00);
+  ewb(EE_RF_ROUTER_ROUTER, 0x00);
+#endif
 
   if(in[1] != 'x')
     prepare_boot(0);

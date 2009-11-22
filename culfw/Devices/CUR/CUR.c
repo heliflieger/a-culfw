@@ -137,7 +137,7 @@ main(void)
   menu_init();                  // needs fs_init
   input_handle_func = analyze_ttydata;
   log_enabled = erb(EE_LOGENABLED);
-  display_channel = (DISPLAY_USB|DISPLAY_LCD|DISPLAY_RFROUTER);
+  display_channel = DISPLAY_USB|DISPLAY_LCD|DISPLAY_RFROUTER;
   rf_router_init();
 
   LED_OFF();

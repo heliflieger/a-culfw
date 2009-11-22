@@ -52,7 +52,6 @@ FastRF_Task(void)
   uint8_t buf[33];
 
   if(len < sizeof(buf)) {
-    DC('f');
     CC1100_ASSERT;
     cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
     for(uint8_t i=0; i<len; i++)

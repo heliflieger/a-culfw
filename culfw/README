@@ -285,17 +285,19 @@ culfw<->PC Protocol (over USB or TCP/IP)
         If II is not 00, the RF_ROUTER functionality is enabled.
         If RR is not 00, the RF reception is enabled at start (X21) and all
         received messages (FS20/FHT/etc) are relayed to the CUL with id RR.
-        Messages arrive on the local CUL (with id RR) with the prefix RRU, see
+        Messages arrive on the local CUL (with id RR) with the prefix RRIIU see
         the exampe below.
-      - uII<message>
-        Send <message> to the CUL with ID <II>. <message> will be executed
-        as a local command on the remote CUL.
+      - uIIRR<message>
+        Send <message> to the CUL with ID <II> from the sender RR.
+        <message> will be executed as a local command on the remote CUL.
+        Answers will be sent (only!) to the configured router and not the
+        RR id specified in this command.
 
       Example:
         ui0603 (configure remote CUL)
         ui0300 (configure local CUL)
-        u06V -> 03UV 1.33 CUL868
-        u06C35 -> 03UC35 = 0D / 13
+        u0603V -> 0306UV 1.34 CUL868
+        u0603C35 -> 0306UC35 = 0D / 13
 
     V
       Print the firmware version.
@@ -508,18 +510,8 @@ Notes
     MARCSTATE: C35 -> 01 (Idle), 13 (RX)
 
 
-Considerations
-==============
-
-- Multiple CULs
-  If two CULs are too close together they could disturb each other even in 
-  reception mode. So you should keep them apart at least at arm's length. 
-  Especially if plugged side-by-side in the same USB hub, one could get 
-  unexplicable results.
-  
-
-TODO/Known BUGS
-===============
+TODO/Known BUGS:
+==========
   - CU* Setting time sometimes changes the date too
   - CU* rf_router: fhem module, execute cmd, test
   - CU* FS20 dim commands do not repeat.

@@ -1,4 +1,7 @@
-Version 1.33
+Version 1.34 (2009-11-22)
+- CU*: RF_ROUTER fixes (+ source id added to the packet)
+
+Version 1.33 (2009-11-21)
 - CUN: EXTMEM fixed
 - CUN: temperature disabled as it is too inaccurate.
 - CUN: reading/writing files over ethernet fixed.
