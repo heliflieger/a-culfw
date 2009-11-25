@@ -7,10 +7,22 @@
 #include "display.h"
 #include "rf_receive.h"
 #include "fncollection.h"
+#include "clock.h"
 
 #ifdef HAS_FASTRF
 uint8_t fastrf_on;
 
+void
+fastrf_mode(uint8_t on)
+{
+  if(on) {
+    ccInitChip(EE_FASTRF_CFG);
+    ccRX();
+    fastrf_on = 1;
+  } else {
+    fastrf_on = 0;
+  }
+}
 
 void
 fastrf_func(char *in)
@@ -18,9 +30,7 @@ fastrf_func(char *in)
   uint8_t len = strlen(in);
 
   if(in[1] == 'r') {                // Init
-    ccInitChip(EE_FASTRF_CFG);
-    ccRX();
-    fastrf_on = 1;
+    fastrf_mode(FASTRF_MODE_ON);
 
   } else if(in[1] == 's') {         // Send
 
@@ -31,10 +41,9 @@ fastrf_func(char *in)
       cc1100_sendbyte(in[i]);
     CC1100_DEASSERT;
     ccTX();
-    // Wait for the data to be sent
-    while(cc1100_readReg(CC1100_TXBYTES) & 0x7f)
+    while(cc1100_readReg(CC1100_TXBYTES) & 0x7f) // Wait for the data to be sent
       my_delay_us(100);
-    ccRX();                    // set reception again. MCSM1 does not work.
+    ccRX();                         // set reception again. MCSM1 does not work.
 
   } else {
     fastrf_on = 0;
@@ -45,11 +54,21 @@ fastrf_func(char *in)
 void
 FastRF_Task(void)
 {
-  if(fastrf_on != 2)
+  if(!fastrf_on)
     return;
 
-  uint8_t len = cc1100_readReg(CC1100_RXFIFO)+2;
-  uint8_t buf[33];
+  if(fastrf_on == 1) {
+    static uint8_t lasttick;         // Querying all the time affects reception.
+    if(lasttick != (uint8_t)ticks) {
+      if(cc1100_readReg(CC1100_MARCSTATE) == MARCSTATE_RXFIFO_OVERFLOW)
+        ccStrobe(CC1100_SFRX);
+      lasttick = (uint8_t)ticks;
+    }
+    return;
+  }
+
+  uint8_t len = cc1100_readReg(CC1100_RXFIFO);
+  uint8_t buf[TTY_BUFSIZE];
 
   if(len < sizeof(buf)) {
     CC1100_ASSERT;
@@ -59,14 +78,11 @@ FastRF_Task(void)
     CC1100_DEASSERT;
 
     uint8_t i;
-    for(i=0; i<len-2; i++)
+    for(i=0; i<len; i++)
       DC(buf[i]);
-    DC('.');
-    DH2(buf[i++]);
-    DH2(buf[i]);
+    DNL();
   }
 
-  DNL();
   fastrf_on = 1;
 }
 
