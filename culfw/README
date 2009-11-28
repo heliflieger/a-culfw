@@ -52,6 +52,8 @@ Compile (optional)
   Type "make", which will output text like:
     Compiling C: CUL.c
     [...]
+  To compile the CUL firmware with FHT8v support (and without RF_ROUTING),
+  type "make conf2"
 
 
 Install / Flash the firmware
@@ -280,24 +282,33 @@ culfw<->PC Protocol (over USB or TCP/IP)
 
       - u (without parameter)
         Display the own and the router id, both one byte hex.
-      - uiIIRR
-        Set the own id, and the router id (the id of the CUL connected to fhem).
-        If II is not 00, the RF_ROUTER functionality is enabled.
-        If RR is not 00, the RF reception is enabled at start (X21) and all
-        received messages (FS20/FHT/etc) are relayed to the CUL with id RR.
-        Messages arrive on the local CUL (with id RR) with the prefix RRIIU see
+      - uiRRBB
+        Set the own/rfr id, and the base id (the id of the CUL connected to
+        fhem).
+        If RR is not 00, the RF_ROUTER functionality is enabled.
+        If BB is not 00, the RF reception is enabled at start (X21) and all
+        received messages (FS20/FHT/etc) are relayed to the CUL with id BB.
+        Messages arrive on the base CUL (with id BB) with the prefix BBRRU see
         the exampe below.
-      - uIIRR<message>
-        Send <message> to the CUL with ID <II> from the sender RR.
+      - uRRBB<message>
+        Send <message> to the CUL with ID <RR> from the sender BB.
         <message> will be executed as a local command on the remote CUL.
         Answers will be sent (only!) to the configured router and not the
-        RR id specified in this command.
+        BB id specified in this command.
+      - ud (if compiled with RFR_DEBUG)
+        display the current ticks, and the ticks for the scheduled rf_router
+        answer. Used to check if rf_router is working
+      - us (if compiled with RFR_DEBUG)
+        Statistics: Number of sent messages in categories. The categories are:
+        F.T.E.K.H.x.#, x beeing the rest and # the number of delayed
+        transmissions due to current rf reception. All numbers are 16bit
+        counters.
 
       Example:
-        ui0603 (configure remote CUL)
-        ui0300 (configure local CUL)
-        u0603V -> 0306UV 1.34 CUL868
-        u0603C35 -> 0306UC35 = 0D / 13
+        ui0601 (configure remote CUL)
+        ui0100 (configure local CUL)
+        u0601V -> 0106UV 1.34 CUL868
+        u0601C35 -> 0106UC35 = 0D / 13
 
     V
       Print the firmware version.

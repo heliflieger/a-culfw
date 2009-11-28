@@ -14,7 +14,9 @@
 #include "rf_send.h"                   // credit_10ms
 #include "mysleep.h"
 #include "pcf8833.h"
+#ifdef HAS_USB
 #include "cdc.h"
+#endif
 #include "rf_router.h"                  // rf_router_flush();
 #include "ntp.h"
 

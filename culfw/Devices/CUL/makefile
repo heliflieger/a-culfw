@@ -185,9 +185,18 @@ ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
 ALL_CPPFLAGS = -mmcu=$(MCU) -I. -x c++ $(CPPFLAGS) $(GENDEPFLAGS)
 ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
+last: sizebefore build sizeafter
 
+conf1: create_conf1 build sizeafter
 
-all: sizebefore build sizeafter
+conf2: create_conf2 build sizeafter
+	mv CUL.hex CUL_FHT8v.hex
+
+create_conf1:
+	@echo "#undef HAS_FHT_8v" > compileconfig.h
+
+create_conf2:
+	@echo "#undef HAS_FHT_80b" > compileconfig.h
 
 build: elf hex eep lss sym
 

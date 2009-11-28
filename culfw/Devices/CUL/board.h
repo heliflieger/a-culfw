@@ -39,7 +39,7 @@
 #define HAS_FHT_8v                      // PROGMEM:  586b, RAM: 23b
 #define HAS_FHT_80b                     // PROGMEM: 1374b, RAM: 90b
 #define FHTBUF_SIZE             74      //                 RAM: 74b
-#define HAS_RF_ROUTER           1       // PROGMEM: 1106b, RAM: 43b
+#define HAS_RF_ROUTER           1       // PROGMEM: 1248b, RAM: 44b
 #define RCV_BUCKETS             2       //                 RAM: 25b / bucket
 
 //#define  FULL_CC1100_PA                 // PROGMEM:  108b
@@ -47,5 +47,7 @@
 //#define  HAS_FASTRF                     // PROGMEM:  362+106  RAM:  1b
 
 #define BUSWARE_CUL
+
+#include "compileconfig.h"
 
 #endif

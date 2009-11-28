@@ -103,7 +103,7 @@ PROGMEM prog_uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
    0xD3, // 04 SYNC1       
    0x91, // 05 SYNC0       
    0xFF, // 06 PKTLEN (x)    infinite
-   0x0C, // 07 PKTCTRL1 (x)  CRC_AUTOFLUSH, no ADDR check, Append RSSI/LQI
+   0x08, // 07 PKTCTRL1 (x)  CRC_AUTOFLUSH, no ADDR check, Append RSSI/LQI
    0x05, // 08 PKTCTRL0 (x)  Packet Mode, Check CRC, Variable paket len
    0x00, // 09 ADDR (x)    
    0x00, // 0A CHANNR (x)  

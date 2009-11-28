@@ -1,0 +1,16 @@
+Explanation:
+- NxM ticks: Checking N times, after M ticks (== M*8msec) if reception is active.
+  If it is, reset the check-counter to N. If not, send our data.
+- fw: number of messages sent out, counted in the firmware
+- fhem: number of messages received.
+- (x.y) avarage number of checks, where the reception was active.
+
+  | 1x5ticks      | 1x10ticks     | 2x5ticks      | 3x3ticks (4.6)| 2x3ticks (4.9)
+  |  fw fhem  %   | fw  fhem  %   | fw  fhem  %   | fw  fhem  %   | fw  fhem  %   
+T | 199 171  85.9 | 521 491  94.2 | 562 522  92.8 | 282 263  93.2 | 447 418  93.5 
+F |  21  11  52.3 |  21  16  76.1 |  44  38  88.3 |  36  23  63.8 |  20  17  85.0 
+E |  70  39  55.7 | 197 180  91.3 | 208 196  94.6 | 107  99  92.5 | 165 156  94.5 
+K | 188 176  93.6 | 397 376  94.7 | 455 434  95.3 | 280 265  94.6 | 545 515  94.4 
+H |  25  25 100.0 |  58  57  98.2 |  77  72  93.5 |  42  39  92.8 |  39  39 100.0 
+
+{ foreach my $d (sort keys %defs) { if($defs{$d}{RFR_MSGCNT}) { Log 1, "$d $defs{$d}{MSGCNT}  $defs{$d}{CUL_MSGCNT}  $defs{$d}{RFR_MSGCNT}" } } }

@@ -55,8 +55,8 @@ display_char(char data)
      (display_channel & DISPLAY_RFROUTER) &&
      !(data == '\n' || data == '\r')) {
     rb_put(&RFR_Buffer, data);
-    rf_router_sendtime = ticks+5;     // 32-40ms, to avoid FS20 collision
-    //rf_router_sendtime = ticks+3;     // 16-24ms, to avoid FS20 collision
+    rf_router_sendtime = ticks+3; 
+    rf_nr_send_checks = 2;
   }
 #endif
 

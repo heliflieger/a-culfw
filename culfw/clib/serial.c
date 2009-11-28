@@ -61,8 +61,7 @@ void uart_init(unsigned int baudrate)
 void uart_task(void) 
 {
 
-     analyze_ttydata();
-
+     input_handle_func();
      uart_flush();
      
 }

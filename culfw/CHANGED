@@ -1,3 +1,7 @@
+Version 1.35 (2009-11-28)
+- CU*: RF_ROUTER fixes (send-bug, timout calibration, PROTO headerbyte added)
+- CUL: Second configuration (make conf2) with FHT8v and without RF_ROUTER
+
 Version 1.34 (2009-11-22)
 - CU*: RF_ROUTER fixes (+ source id added to the packet)
 

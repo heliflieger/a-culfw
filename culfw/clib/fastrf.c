@@ -60,8 +60,10 @@ FastRF_Task(void)
   if(fastrf_on == 1) {
     static uint8_t lasttick;         // Querying all the time affects reception.
     if(lasttick != (uint8_t)ticks) {
-      if(cc1100_readReg(CC1100_MARCSTATE) == MARCSTATE_RXFIFO_OVERFLOW)
+      if(cc1100_readReg(CC1100_MARCSTATE) == MARCSTATE_RXFIFO_OVERFLOW) {
         ccStrobe(CC1100_SFRX);
+        ccRX();
+      }
       lasttick = (uint8_t)ticks;
     }
     return;
