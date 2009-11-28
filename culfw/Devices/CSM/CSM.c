@@ -74,10 +74,10 @@ start_bootloader(void)
 int
 main(void)
 {
-  wdt_disable(); 
+  wdt_disable();
   led_init();
   LED_ON();
-  
+
   spi_init();
 
 
@@ -85,9 +85,9 @@ main(void)
   eeprom_init();
 
 //  while(1);
-  
+
   led_mode = 2;
-  
+
   // if we had been restarted by watchdog check the REQ BootLoader byte in the
   // EEPROM ...
 //  if(bit_is_set(MCUSR,WDRF) && eeprom_read_byte(EE_REQBL)) {
@@ -97,7 +97,7 @@ main(void)
 
   // Setup the timers. Are needed for watchdog-reset
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250
-  TCCR0B = _BV(CS02);       
+  TCCR0B = _BV(CS02);
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);
 
@@ -107,12 +107,13 @@ main(void)
   clock_prescale_set(clock_div_1);
 
 //  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
-//  wdt_enable(WDTO_2S); 
+//  wdt_enable(WDTO_2S);
 
   uart_init( UART_BAUD_SELECT_DOUBLE_SPEED(UART_BAUD_RATE,F_CPU) );
 
 //  fht_init();
   tx_init();
+  input_handle_func = analyze_ttydata;
   display_channel = DISPLAY_USB;
 
 #ifdef HAS_RF_ROUTER
@@ -120,9 +121,12 @@ main(void)
 #endif
 
   LED_OFF();
-  
+
   sei();
-  
+
+//  DS_P( PSTR("CSM is here!") );
+//  DNL();
+
   for(;;) {
     uart_task();
     RfAnalyze_Task();
