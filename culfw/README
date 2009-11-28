@@ -16,8 +16,8 @@ the can be used for low-power wireless communication in the 868 band.
 - The CUN (CC110x USB Network) is a device with following features: CC1101 /
   AT90USB1287 / Ethernet interface / 16Mbit flash / 256Kbit SRAM / MicroSD
 
-- The CSM (CC110x Serial Module) is a device you talk to a serial way using a 
-  host system with an USART available. 
+- The CSM (CC110x Serial Module) is a device you talk to a serial way using a
+  host system with an USART available.
   I/O lines are 3.3V or 5V safe - ATMEGA88/168/328(P)
 
 This firmware makes it possible to use these devices with fhem. Right now the
@@ -49,11 +49,18 @@ Prerequisites
 Compile (optional)
 ==================
   Change into your device directory (e.g. Devices/CUL)
+
   Type "make", which will output text like:
     Compiling C: CUL.c
     [...]
+
+  CUL firware needs compileconfig.h. Before the first build type either
+  "make conf1" oder "make conf2".
+
+  To compile the CUL firmware with RF_ROUTING support (and without FHT8v),
+  type "make conf1".
   To compile the CUL firmware with FHT8v support (and without RF_ROUTING),
-  type "make conf2"
+  type "make conf2".
 
 
 Install / Flash the firmware
@@ -185,9 +192,9 @@ culfw<->PC Protocol (over USB or TCP/IP)
 
     F<hex>
       Send out an FS20 message. <hex> is a hex string of the following form:
-      hhhhaacc or hhhhaaccee, where 
-      - hhhh is the FS20 housecode, 
-      - aa is the FS20 device address, 
+      hhhhaacc or hhhhaaccee, where
+      - hhhh is the FS20 housecode,
+      - aa is the FS20 device address,
       - cc is the FS20 command
       - ee is the FS20 timespec. Note that cc must have the extension bit set.
       Example: F12340111
@@ -248,7 +255,7 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - OO   FHT80b: origin (CUL:77 or FHT:67), FHT8v: Command
       - AA   Command argument
       Store the message in the FHT80b or FHT8v buffer, and communicate with the
-      corresponding 80b/8v when the timeslot arrives. 8v commands are specified 
+      corresponding 80b/8v when the timeslot arrives. 8v commands are specified
       by setting HHHH to the "own" housecode. For command details see
       fhem/FHEM/11_FHT.pm
 
@@ -500,7 +507,7 @@ Notes
       address+2, for the FastRF Communication is CC1101 address+55. See
       fncollection.h for other values.
 
-  - Change frequency 
+  - Change frequency
      FREQ2(0D), FREQ1(0E), FREQ0(0F), Fosc = 26MHz
      Fcarrier = Fosc/65536*(FREQ2.FREQ1.FREQ0)
 
@@ -508,7 +515,7 @@ Notes
               W0F21, W1062, W1176 (868.00MHz)
     Note: fhem users can set it with "set CUL freq 868.3"
 
-  - Change channel bandwidth 
+  - Change channel bandwidth
     MDMCFG4 (10). CHANBW_E (bits 7:6), CHANBW_M (bits 5:4)
     BWchannel =  Fosc/(8 * (4+CHANBW_M) * 2 ^ CHANBW_E)
     Example: W1255 (325KHz, default)
