@@ -65,14 +65,14 @@ Compile (optional)
 
 Install / Flash the firmware
 ============================
-  Change into your device directory (e.g. CUL)
+  Change into your device directory (e.g. Devices/CUL)
   - CUL/CUN: Insert the USB-Stick while pressing the micro-switch on the back.
   - CUR: Remove Battery/USB. Put the device on a table with the jogdial facing
          down. Press the case, until you hear the jogdial is pressed. Insert
          the battery, then the USB-Cable.
 
   A USB device "03eb:2ffa Atmel Corp." should appear.
-  Now execute "make usbprogram", which will output text like:
+  Now execute following"make usbprogram", which will output text like:
     dfu-programmer at90usb162 erase
     dfu-programmer at90usb162 flash CUL.hex
     Validating...
@@ -379,10 +379,11 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - Bit 0: Report known messages (parity & checksum ok), with type prefix.
       - Bit 1: Report each of the (repeated) packets of a message
       - Bit 2: Report detailed data, even with wrong parity / checksum.
-      - Bit 3: Monitor mode: output an r/s/t/u on a risings edge (the letter
-               depends on the internal state), g/h/i on a falling edge
-      - Bit 4: Timing: in monitor mode output two additional bytes (high byte,
-               low byte) of the internal microsecond timer. This is binary!
+      - Bit 3: Monitor mode: output an r on a risings edge and 'f' on a falling
+               edge. Output a '.' at the end of the message (no signal for
+               4msec).
+      - Bit 4: Timing: in monitor mode output one additional byte of the
+               internal microsecond timer, divided by 16. This is binary!
       - Bit 5: RSSI: report RSSI value as an additional HEX byte after digested
                data or as a separate byte if Bit 3 is set too.
       - Bit 6: Report FHT protocol messages (ack, etc)
