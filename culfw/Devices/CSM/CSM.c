@@ -114,10 +114,11 @@ main(void)
 //  fht_init();
   tx_init();
   input_handle_func = analyze_ttydata;
-  display_channel = DISPLAY_USB;
-
 #ifdef HAS_RF_ROUTER
   rf_router_init();
+  display_channel = (DISPLAY_USB|DISPLAY_RFROUTER);
+#else
+  display_channel = DISPLAY_USB;
 #endif
 
   LED_OFF();
@@ -132,12 +133,10 @@ main(void)
     RfAnalyze_Task();
     Minute_Task();
 #ifdef HAS_FASTRF
-    if(fastrf_on)
-      FastRF_Task();
+    FastRF_Task();
 #endif
 #ifdef HAS_RF_ROUTER
-    if(rf_router_status != RF_ROUTER_DISABLED)
-      rf_router_task();
+    rf_router_task();
 #endif
   }
 

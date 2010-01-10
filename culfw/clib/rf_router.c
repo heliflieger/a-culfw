@@ -124,7 +124,6 @@ void
 rf_router_send()
 {
 #ifdef RFR_DEBUG
-#warning RF_ROUTER RFR_DEBUG enabled
        if(RFR_Buffer.buf[5] == 'T') nr_t++;
   else if(RFR_Buffer.buf[5] == 'F') nr_f++;
   else if(RFR_Buffer.buf[5] == 'E') nr_e++;

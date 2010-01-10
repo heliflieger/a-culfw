@@ -213,6 +213,7 @@ fht8v_timer(void)
 
 //////////////////////////////////////////////////////////////
 #ifdef HAS_FHT_80b
+// one FHT needs 2.1 sec RF send time per hour (75ms*7*4)
 
 PROGMEM prog_uint8_t fht80b_state_tbl[] = {
   //FHT80b          //CUL, 0 for no answer
