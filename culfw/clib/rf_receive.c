@@ -283,10 +283,21 @@ RfAnalyze_Task(void)
   bucket_t *b;
 
   if(lowtime) {
+    if(tx_report & REP_LCDMON) {
 #ifdef HAS_LCD
-    if(tx_report & REP_LCDMON)
       lcd_txmon(hightime, lowtime);
+#else
+      uint8_t rssi = cc1100_readReg(CC1100_RSSI);    //  0..256
+      rssi = (rssi >= 128 ? rssi-128 : rssi+128);    // Swap
+      if(rssi < 64)                                  // Drop low and high 25%
+        rssi = 0;
+      else if(rssi >= 192)
+        rssi = 15;
+      else 
+        rssi = (rssi-80)/8;
+      DC('a'+rssi);
 #endif
+    }
     if(tx_report & REP_MONITOR) {
       DC('r'); if(tx_report & REP_BINTIME) DC(hightime);
       DC('f'); if(tx_report & REP_BINTIME) DC(lowtime);
