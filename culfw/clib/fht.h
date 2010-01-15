@@ -9,6 +9,7 @@ void fht_init(void);
 
 extern uint16_t fht8v_timeout;
 extern uint8_t fht80b_timer_enabled, fht80b_timeout;
+extern uint8_t fht80b_minute;
 
 extern uint8_t fht_hc0, fht_hc1; // Our housecode.
 extern uint8_t fht80b_state;

@@ -50,17 +50,17 @@ Compile (optional)
 ==================
   Change into your device directory (e.g. Devices/CUL)
 
+  [Start CUL only section]
+  As the CUL has only 12kB of usable program memory (+4kB bootloader), and
+  culfw has too many features, we have to decide which ones to use by typing
+  "make conf1" oder "make conf2".
+  - "make conf1" will build a version without RFR_DEBUG (see below)
+  - "make conf2" will build a version without FHT_8v support
+  [End CUL only section]
+
   Type "make", which will output text like:
     Compiling C: CUL.c
     [...]
-
-  CUL firware needs compileconfig.h. Before the first build type either
-  "make conf1" oder "make conf2".
-
-  To compile the CUL firmware with RF_ROUTING support (and without FHT8v),
-  type "make conf1".
-  To compile the CUL firmware with FHT8v support (and without RF_ROUTING),
-  type "make conf2".
 
 
 Install / Flash the firmware

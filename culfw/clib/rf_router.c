@@ -1,3 +1,4 @@
+#define RFR_DEBUG       // will be switched off in compileconf.h
 #include "board.h"
 #ifdef HAS_RF_ROUTER
 #include <string.h>
@@ -25,7 +26,6 @@ rb_t RFR_Buffer;
 void rf_router_send(void);
 void rf_debug_out(uint8_t);
 
-#define RFR_DEBUG
 #ifdef RFR_DEBUG
 uint16_t nr_t, nr_f, nr_e, nr_k, nr_h, nr_r, nr_plus;
 #endif

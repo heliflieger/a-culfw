@@ -119,13 +119,19 @@ Minute_Task(void)
     ntp_sendpacket();
 #endif
 
-#if defined(HAS_LCD) && defined(BAT_PIN)
   static uint8_t clock_sec;
   clock_sec++;
   if(clock_sec != 60)                   // minute from now on
     return;
   clock_sec = 0;
 
+#ifdef HAS_FHT_80b
+  fht80b_minute++;
+  if(fht80b_minute >= 60)
+    fht80b_minute = 0;
+#endif
+
+#if defined(HAS_LCD) && defined(BAT_PIN)
   bat_drawstate();
 #endif
 }

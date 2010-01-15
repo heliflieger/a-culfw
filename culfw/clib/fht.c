@@ -28,10 +28,10 @@ uint8_t fht_hc0, fht_hc1; // Our housecode. The first byte for 80b communication
        uint8_t fht80b_timer_enabled;
        uint8_t fht80b_timeout;
        uint8_t fht80b_state;    // 80b state machine
+       uint8_t fht80b_minute;
 static uint8_t fht80b_ldata;    // last data waiting for ack
 static uint8_t fht80b_out[6];   // Last sent packet. Reserve 1 byte for checksum
 static uint8_t fht80b_repeatcnt;
-static uint32_t fht80b_timeoffset;
 static uint8_t fht80b_buf[FHTBUF_SIZE];
 static uint8_t fht80b_bufoff;   // offset in the current fht80b_buf
 
@@ -376,15 +376,8 @@ fht_hook(uint8_t *fht_in)
 
     fht80b_ldata = fht80b_out[2];
 
-    uint8_t f4 = fht80b_out[4];         // makes code 8 bytes smaller
-    if(fht80b_ldata == FHT_MINUTE) {
-      uint32_t diff = ticks-fht80b_timeoffset;
-      diff = diff / (125*60);
-      f4 = f4+diff;
-      if(f4 > 60)
-        f4 -= 60;
-    }
-    fht80b_out[4] = f4;
+    if(fht80b_ldata == FHT_MINUTE)      // Adjust the minute offset...
+      fht80b_out[4] = fht80b_minute;
 
   } else {                              // Follow the protocol table
     fht80b_out[2] = outb;
@@ -445,11 +438,11 @@ fht_delbuf(uint8_t *buf)
 static uint8_t
 fht_addbuf(char *in)
 {
-  uint8_t *p = fht_lookbuf(0);
-  uint8_t l = strlen(in+1)/2+1;
+  uint8_t *p = fht_lookbuf(0);  // get a free slot
+  uint8_t l = strlen(in+1)/2+1; // future size of the message
   uint8_t i, j;
 
-  if((p-fht80b_buf) > FHTBUF_SIZE-l)
+  if((p+l-fht80b_buf) > FHTBUF_SIZE)
     return 0;
 
   p[0] = l;
@@ -457,7 +450,7 @@ fht_addbuf(char *in)
     fromhex(in+i, p+j, 1);
     if(j > 2 && ((j&1) == 0)) {
       if(p[j-1] == FHT_MINUTE) 
-        fht80b_timeoffset = ticks;
+        fht80b_minute = p[j];
     }
   }
   if(p < (fht80b_buf+FHTBUF_SIZE))

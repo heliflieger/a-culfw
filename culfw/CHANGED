@@ -1,3 +1,7 @@
+Version 1.36 (2010-01-15)
+- CUL: size optimizations (compiler flags + fht80b_minute)
+- CUL: firmware with RFR/80b/8v, without RFR debug/statistics
+
 Version 1.35 (2009-11-28)
 - CU*: RF_ROUTER fixes (send-bug, timout calibration, PROTO headerbyte added)
 - CUL: Second configuration (make conf2) with FHT8v and without RF_ROUTER

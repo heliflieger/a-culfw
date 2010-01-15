@@ -294,7 +294,7 @@ RfAnalyze_Task(void)
       else if(rssi >= 192)
         rssi = 15;
       else 
-        rssi = (rssi-80)/8;
+        rssi = (rssi-80)>>3;
       DC('a'+rssi);
 #endif
     }

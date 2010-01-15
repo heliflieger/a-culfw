@@ -61,12 +61,13 @@ CPPDEFS = -DF_CPU=$(F_CPU)UL
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += -O$(OPT)
-CFLAGS += -funsigned-char
-CFLAGS += -funsigned-bitfields
-CFLAGS += -ffunction-sections
-CFLAGS += -fpack-struct
-CFLAGS += -fshort-enums
-CFLAGS += -finline-limit=20
+CFLAGS += -funsigned-char       #   12 Byte (shorter code)
+CFLAGS += -funsigned-bitfields  #    0
+CFLAGS += -ffunction-sections   # 2600
+CFLAGS += -fpack-struct         #    0
+CFLAGS += -fshort-enums         #    0
+CFLAGS += -mcall-prologues      #  130
+CFLAGS += -finline-limit=0      # 0=>150 10=>12 20=>0 40=>6 60=>0 80=>-2 100=>-2
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
@@ -74,7 +75,6 @@ CFLAGS += -Wundef
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
-CFLAGS += -mcall-prologues
 
 
 CPPFLAGS = -g$(DEBUG)
@@ -193,10 +193,10 @@ conf2: create_conf2 build sizeafter
 	mv CUL.hex CUL_FHT8v.hex
 
 create_conf1:
-	@echo "#undef HAS_FHT_8v" > compileconfig.h
+	@echo "#undef RFR_DEBUG" > compileconfig.h
 
 create_conf2:
-	@echo "#undef HAS_FHT_80b" > compileconfig.h
+	@echo "#undef HAS_FHT_8v" > compileconfig.h
 
 build: elf hex eep lss sym
 
