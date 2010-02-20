@@ -24,9 +24,12 @@ SRC = $(TARGET).c                                                  \
 		../../clib/qfs.c                                      \
 		../../clib/fswrapper.c                                \
 		../../clib/fastrf.c                                   \
+		../../clib/rf_router.c                                \
 		../../clib/log.c                                      \
 		../../clib/ttydata.c                                  \
 		../../clib/spi.c                                      \
+		../../clib/cctemp.c                                   \
+		../../clib/adcw.c                                     \
 		../../clib/ethernet.c                                 \
 		../../clib/tcplink.c                                  \
 		../../avr-uip/drivers/enc28j60/enc28j60.c             \
