@@ -1,6 +1,65 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
+#include <avr/power.h>
+
+#define CUL_V2
+
+#ifdef CUL_V3
+
+#ifndef __AVR_ATmega32U4__
+
+#error "CUL version 3 is supposed to run on ATMEGA32U4 processor - please change MCU line in makefile!"
+
+#else
+// not sure why libc is missing those ...
+
+#define PB0 PORTB0
+#define PB1 PORTB1
+#define PB2 PORTB2
+#define PB3 PORTB3
+#define PB6 PORTB6
+#define PD2 PORTD2
+#define PD3 PORTD3
+
+#ifndef clock_prescale_set
+#warning "avr/power.h needs patching for prescaler functions to work on m32u4 ... (just add __AVR_ATmega32U4__ for cpu types on prescale block)"
+#endif
+
+#endif
+
+#endif
+
+#define SPI_PORT		PORTB
+#define SPI_DDR			DDRB
+#define SPI_SS			PB0
+#define SPI_MISO		PB3
+#define SPI_MOSI		PB2
+#define SPI_SCLK		PB1
+
+#ifdef CUL_V3
+
+#define CC1100_CS_DDR		SPI_DDR
+#define CC1100_CS_PORT          SPI_PORT
+#define CC1100_CS_PIN		SPI_SS
+#define CC1100_OUT_DDR		DDRD
+#define CC1100_OUT_PORT         PORTD
+#define CC1100_OUT_PIN          PD3
+#define CC1100_IN_DDR		DDRD
+#define CC1100_IN_PORT          PIND
+#define CC1100_IN_PIN           PD2
+#define CC1100_INT		INT2
+#define CC1100_INTVECT          INT2_vect
+#define CC1100_ISC		ISC20
+#define CC1100_EICR             EICRA
+
+#define LED_DDR                 DDRE
+#define LED_PORT                PORTE
+#define LED_PIN                 6
+
+#else
+
 #define CC1100_CS_DDR		DDRC
 #define CC1100_CS_PORT          PORTC
 #define CC1100_CS_PIN		PC5
@@ -15,23 +74,18 @@
 #define CC1100_ISC		ISC40
 #define CC1100_EICR             EICRB
 
-#define USB_MAX_POWER		100
-
 #define LED_DDR                 DDRC
 #define LED_PORT                PORTC
 #define LED_PIN                 PC4
+
+#endif
+
+#define USB_MAX_POWER		100
 
 #define BOARD_ID_STR            "CUL868"
 #define BOARD_ID_STR433         "CUL433"
 #define BOARD_ID_USTR           L"CUL868"
 #define BOARD_ID_USTR433        L"CUL433"
-
-#define SPI_PORT		PORTB
-#define SPI_DDR			DDRB
-#define SPI_SS			PB0
-#define SPI_MISO		PB3
-#define SPI_MOSI		PB2
-#define SPI_SCLK		PB1
 
 #define HAS_USB                 1
 

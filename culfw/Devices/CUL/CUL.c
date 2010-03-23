@@ -31,7 +31,15 @@
 #include "fastrf.h"
 #include "rf_router.h"
 
+#ifdef CUL_V3
+#include "memory.h"
+#endif
+
 PROGMEM t_fntab fntab[] = {
+
+#ifdef CUL_V3
+  { 'm', getfreemem },
+#endif
 
   { 'B', prepare_boot },
   { 'C', ccreg },

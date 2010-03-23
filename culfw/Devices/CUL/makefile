@@ -1,4 +1,5 @@
 MCU = at90usb162
+#MCU = atmega32u4
 BOARD  =
 F_CPU = 8000000
 FORMAT = ihex
@@ -23,6 +24,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/fastrf.c                                  \
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
+		../../clib/memory.c                                  \
                 ../../lufa/Drivers/USB/LowLevel/DevChapter9.c        \
                 ../../lufa/Drivers/USB/LowLevel/Endpoint.c           \
                 ../../lufa/Drivers/USB/LowLevel/Host.c               \
