@@ -30,11 +30,14 @@ while(int(@ARGV)) {
       $fnstack{$fname} += $1  if($l =~ m/frame size = ([0-9]*) /);
       $fnstack{$fname}++ if($l =~ m/push r[0-9]/);
       $fncall{$fname}{$1}++ if($l =~ m/^[^\t]*\t\tcall (.*)$/);
-
     }
+    $fncall{analyze_ttydata}{$1}++ if($l =~ m/\t\t.word\tgs\((.*)\)$/);
   }
   close(FH);
 }
+
+$fncall{CDC_Task}{analyze_ttydata}++;
+delete($fncall{display_char}{CDC_Task});
 
 sub
 checkstack($)
@@ -61,6 +64,7 @@ checkstack($)
       $fnmaxstack{$fn} = "$fn($fnstack{$fn}) $fnmaxstack{$c}";
     }
   }
+
   if($fnstack{$fn}) {
     $max += $fnstack{$fn};
   } else {
@@ -100,5 +104,7 @@ print "INTERRUPT: $fnmaxstack{$maxintname}\n";
 
 print "\n";
 foreach my $f (sort keys %fnstack) {
-  print "$f: $fnstack{$f}\n";
+  my $fs = ($fnstack{$f} ? $fnstack{$f} : "");
+  my $fms = ($fnmaxstack{$f} ? $fnmaxstack{$f} : "");
+  print "$f: $fs $fms\n";
 }
