@@ -27,7 +27,6 @@ PROGMEM prog_uint8_t CC1100_PA[] = {
   0x00,0x81,0x00,0x00,0x00,0x00,0x00,0x00,      //  5 dBm
   0x00,0xC2,0x00,0x00,0x00,0x00,0x00,0x00,      // 10 dBm
 
-  0x00,0x32,0x38,0x3f,0x3f,0x3f,0x3f,0x3f       // ??
 };
 #else
 PROGMEM prog_uint8_t CC1100_PA[] = {
@@ -191,11 +190,11 @@ void
 cc_set_pa(uint8_t idx)
 {
   uint8_t *t = EE_CC1100_PA;
-  if(idx > 10)
+
+  if(idx > 9)
     idx = 8;
 
 #ifdef FULL_CC1100_PA
-
   uint8_t *f = CC1100_PA+idx*8;
   for (uint8_t i = 0; i < 8; i++)
     ewb(t++, __LPM(f+i));
@@ -204,8 +203,7 @@ cc_set_pa(uint8_t idx)
   ewb(EE_CC1100_CFG+0x22, (idx > 4 && idx < 10) ? 0x11 : 0x17);
 
 #else
-
-  if(idx >  5)
+  if(idx > 4)
     idx -= 5;
 
   for (uint8_t i = 0; i < 8; i++)
@@ -228,7 +226,7 @@ cc_factory_reset(void)
     ewb(t++, __LPM(FASTRF_CFG+i));
 #endif
 
-#ifdef BUSWARE_CUL
+#ifdef MULTI_FREQ_DEVICE
   // check 433MHz version marker and patch default frequency
   if (!bit_is_set(PINB, PB6)) {
     t = EE_CC1100_CFG + 0x0d;
@@ -297,7 +295,6 @@ ccreg(char *in)
         if((i&7) == 7)
           DNL();
       }
-      DNL();
     } else {
       out = cc1100_readReg(hb);
       DC('C');                    // prefix

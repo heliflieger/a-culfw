@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include "ringbuffer.h"
 #include "ttydata.h"
+#include "display.h"
     
 #include "led.h"
 #include "serial.h"
@@ -60,10 +61,8 @@ void uart_init(unsigned int baudrate)
 
 void uart_task(void) 
 {
-
-     input_handle_func();
+     input_handle_func(DISPLAY_USB);
      uart_flush();
-     
 }
 
 void uart_flush(void) 

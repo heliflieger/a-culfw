@@ -112,19 +112,16 @@ newdata(void)
 
   dataptr = (char *)uip_appdata;
   
-  uint8_t odc = display_channel;
   output_flush_func = tcpsend;
-  display_channel = DISPLAY_TCP;
 
   while(len > 0) {
     rb_put(&TTY_Rx_Buffer, *dataptr);
     if(TTY_Rx_Buffer.nbytes == TTY_BUFSIZE)
-      input_handle_func();
+      input_handle_func(DISPLAY_TCP);
     ++dataptr;
     --len;
   }
-  input_handle_func();
-  display_channel = odc;
+  input_handle_func(DISPLAY_TCP);
 }
 
 /*---------------------------------------------------------------------------*/

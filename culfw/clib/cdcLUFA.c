@@ -21,10 +21,10 @@ void EVENT_USB_Device_ConfigurationChanged(void)
       ENDPOINT_DIR_IN, CDC_NOTIFICATION_EPSIZE, ENDPOINT_BANK_SINGLE);
 
   Endpoint_ConfigureEndpoint(CDC_TX_EPNUM, EP_TYPE_BULK,
-      ENDPOINT_DIR_IN, TTY_BUFSIZE, ENDPOINT_BANK_SINGLE);
+      ENDPOINT_DIR_IN, USB_BUFSIZE, ENDPOINT_BANK_SINGLE);
 
   Endpoint_ConfigureEndpoint(CDC_RX_EPNUM, EP_TYPE_BULK,
-      ENDPOINT_DIR_OUT, TTY_BUFSIZE, ENDPOINT_BANK_SINGLE);
+      ENDPOINT_DIR_OUT, USB_BUFSIZE, ENDPOINT_BANK_SINGLE);
 
   LineCoding.BaudRateBPS = 0;
 }
@@ -86,10 +86,7 @@ CDC_Task(void)
 
     inCDC_TASK = 1;
     output_flush_func = CDC_Task;
-    uint8_t odc = display_channel;
-    display_channel = DISPLAY_USB;
-    input_handle_func();
-    display_channel = odc;
+    input_handle_func(DISPLAY_USB);
     inCDC_TASK = 0;
   }
 
@@ -99,11 +96,11 @@ CDC_Task(void)
 
     cli();
     while(TTY_Tx_Buffer.nbytes &&
-          (Endpoint_BytesInEndpoint() < TTY_BUFSIZE))
+          (Endpoint_BytesInEndpoint() < USB_BUFSIZE))
       Endpoint_Write_Byte(rb_get(&TTY_Tx_Buffer));
     sei();
     
-    bool IsFull = (Endpoint_BytesInEndpoint() == TTY_BUFSIZE);
+    bool IsFull = (Endpoint_BytesInEndpoint() == USB_BUFSIZE);
     Endpoint_ClearIN();                  // Send the data
     if(IsFull) {
       Endpoint_WaitUntilReady();

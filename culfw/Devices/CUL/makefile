@@ -1,13 +1,8 @@
-MCU = at90usb162
-#MCU = atmega32u4
-BOARD  =
 F_CPU = 8000000
 FORMAT = ihex
-TARGET = CUL
 OBJDIR = .
 
-
-SRC = $(TARGET).c                                                    \
+SRC =           CUL.c\
 		../../clib/Descriptors.c                             \
 		../../clib/cc1100.c                                  \
 		../../clib/cdcLUFA.c                                 \
@@ -45,271 +40,90 @@ LUFA_OPTS += -D FIXED_NUM_CONFIGURATIONS=1
 LUFA_OPTS += -D USE_FLASH_DESCRIPTORS
 LUFA_OPTS += -D F_CLOCK=$(F_CPU)UL
 LUFA_OPTS += -D USE_STATIC_OPTIONS="(USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)"
-
-
-OPT = s
-DEBUG = dwarf-2
-EXTRAINCDIRS = ../../lufa ../../clib
-CSTANDARD = -std=gnu99
-CDEFS  = -DF_CPU=$(F_CPU)UL
-CDEFS += -DLUFA $(LUFA_OPTS)
-
-
-
-ADEFS = -DF_CPU=$(F_CPU)
-CPPDEFS = -DF_CPU=$(F_CPU)UL
-
-
-CFLAGS = -g$(DEBUG)
-CFLAGS += $(CDEFS)
-CFLAGS += -O$(OPT)
+CFLAGS  = -D$(TARGET)
+CFLAGS += -DF_CPU=$(F_CPU)UL
+CFLAGS += -DLUFA $(LUFA_OPTS)
+CFLAGS += -Os
 CFLAGS += -funsigned-char       #   12 Byte (shorter code)
 CFLAGS += -funsigned-bitfields  #    0
 CFLAGS += -ffunction-sections   # 2600
 CFLAGS += -fpack-struct         #    0
 CFLAGS += -fshort-enums         #    0
 CFLAGS += -mcall-prologues      #  130
-CFLAGS += -finline-limit=0      # 0=>150 10=>12 20=>0 40=>6 60=>0 80=>-2 100=>-2
+CFLAGS += -finline-limit=20     # 0=>150 10=>12 20=>0 (0: RFR won't work!)
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
-#CFLAGS += -Wunreachable-code
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
-CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
-CFLAGS += $(CSTANDARD)
+CFLAGS += -I../../lufa -I../../clib
+CFLAGS += -std=gnu99
+#CFLAGS += -Wunreachable-code
+GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
+ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
 
-
-CPPFLAGS = -g$(DEBUG)
-CPPFLAGS += $(CPPDEFS)
-CPPFLAGS += -O$(OPT)
-CPPFLAGS += -funsigned-char
-CPPFLAGS += -funsigned-bitfields
-CPPFLAGS += -fpack-struct
-CPPFLAGS += -fshort-enums
-CPPFLAGS += -fno-exceptions
-CPPFLAGS += -Wall
-CFLAGS += -Wundef
-CPPFLAGS += -Wa,-adhlns=$(<:%.cpp=$(OBJDIR)/%.lst)
-CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
-
-
-ASFLAGS = $(ADEFS) -Wa,-adhlns=$(<:%.S=$(OBJDIR)/%.lst),-gstabs,--listing-cont-lines=100
-
-
-PRINTF_LIB_MIN = -Wl,-u,vfprintf -lprintf_min
-PRINTF_LIB_FLOAT = -Wl,-u,vfprintf -lprintf_flt
-PRINTF_LIB = 
-SCANF_LIB_MIN = -Wl,-u,vfscanf -lscanf_min
-SCANF_LIB_FLOAT = -Wl,-u,vfscanf -lscanf_flt
-SCANF_LIB = 
-MATH_LIB = -lm
-EXTRALIBDIRS = 
 EXTMEMOPTS =
-
-
 LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
 LDFLAGS += -Wl,--relax 
 LDFLAGS += -Wl,--gc-sections
 LDFLAGS += $(EXTMEMOPTS)
-LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
-LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
-
-
-
-AVRDUDE_PROGRAMMER = jtagmkII
-AVRDUDE_PORT = usb
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
-AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
-AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
-AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
-
-
-
-
-DEBUG_MFREQ = $(F_CPU)
-DEBUG_UI = insight
-DEBUG_BACKEND = avarice
-GDBINIT_FILE = __avr_gdbinit
-JTAG_DEV = /dev/com1
-
-DEBUG_PORT = 4242
-DEBUG_HOST = localhost
-
-
-
-
-
-SHELL = sh
 CC = avr-gcc
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
 SIZE = avr-size
 AR = avr-ar rcs
 NM = avr-nm
-AVRDUDE = avrdude
 REMOVE = rm -f
 REMOVEDIR = rm -rf
 COPY = cp
-WINSHELL = cmd
 
-MSG_ERRORS_NONE = Errors: none
-MSG_BEGIN = -------- begin --------
-MSG_END = --------  end  --------
-MSG_SIZE_BEFORE = Size before: 
-MSG_SIZE_AFTER = Size after:
-MSG_COFF = Converting to AVR COFF:
-MSG_EXTENDED_COFF = Converting to AVR Extended COFF:
+MSG_SIZE = Size:
 MSG_FLASH = Creating load file for Flash:
 MSG_EEPROM = Creating load file for EEPROM:
 MSG_EXTENDED_LISTING = Creating Extended Listing:
 MSG_SYMBOL_TABLE = Creating Symbol Table:
 MSG_LINKING = Linking:
 MSG_COMPILING = Compiling C:
-MSG_COMPILING_CPP = Compiling C++:
-MSG_ASSEMBLING = Assembling:
 MSG_CLEANING = Cleaning project:
-MSG_CREATING_LIBRARY = Creating library:
+
+OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
 
-
-
-OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) 
-
-LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) 
-
-
-GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
-
-
-ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
-ALL_CPPFLAGS = -mmcu=$(MCU) -I. -x c++ $(CPPFLAGS) $(GENDEPFLAGS)
-ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
-
-last: sizebefore build sizeafter
-
-conf1: create_conf1 build sizeafter
-
-conf2: create_conf2 build sizeafter
-	mv CUL.hex CUL_FHT8v.hex
-
-create_conf1:
-	@echo "#undef RFR_DEBUG" > compileconfig.h
-
-create_conf2:
-	@echo "#undef HAS_FHT_8v" > compileconfig.h
+all:
+	make TARGET=CUL_V2 MCU=at90usb162 mostly_clean build size
+	make TARGET=CUL_V3 MCU=atmega32u4 mostly_clean build size
 
 build: elf hex eep lss sym
-
 
 elf: $(TARGET).elf
 hex: $(TARGET).hex
 eep: $(TARGET).eep
 lss: $(TARGET).lss
 sym: $(TARGET).sym
-LIBNAME=lib$(TARGET).a
-lib: $(LIBNAME)
 
 
-
-begin:
-	@echo
-	@echo $(MSG_BEGIN)
-
-end:
-	@echo $(MSG_END)
-	@echo
-
-
-HEXSIZE = $(SIZE) $(TARGET).hex
 ELFSIZE = $(SIZE) $(TARGET).elf
 
-sizebefore:
-	@if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); \
+size:
+	@if test -f $(TARGET).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
 	2>/dev/null; echo; fi
 
-sizeafter:
-	@if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_AFTER); $(ELFSIZE); \
-	2>/dev/null; echo; fi
 
-checkhooks: build
-	@echo
-	@echo ------- Unhooked MyUSB Events -------
-	@$(shell) (grep -s '^Event.*MyUSB/.*\\.o' $(TARGET).map | \
-	           cut -d' ' -f1 | cut -d'_' -f2- | grep ".*") || \
-			   echo "(None)"
-	@echo ----- End Unhooked MyUSB Events -----
+usbprogram:
+	@echo 'use "make usbprogram_v2" or "make usbprogram_v3"'
 
-checklibmode:
-	@echo
-	@echo ----------- Library Mode -----------
-	@$(shell) ($(CC) $(ALL_CFLAGS) -E -dM - < /dev/null \
-	          | grep 'USB_\(DEVICE\|HOST\)_ONLY' | cut -d' ' -f2 | grep ".*") \
-	          || echo "No specific mode (both device and host mode allowable)."
-	@echo ------------------------------------
+usbprogram_v3: TARGET=CUL_V3
+usbprogram_v3: MCU=atmega32u4
+usbprogram_v3: do_usbprogram
 
-gccversion : 
-	@$(CC) --version
+usbprogram_v2: TARGET=CUL_V2
+usbprogram_v2: MCU=at90usb162
+usbprogram_v2: do_usbprogram
 
-
-program: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
-
-
-usbprogram: $(TARGET).hex
+do_usbprogram:
 	dfu-programmer $(MCU) erase || true
 	dfu-programmer $(MCU) flash $(TARGET).hex
 	dfu-programmer $(MCU) start
-
-
-gdb-config: 
-	@$(REMOVE) $(GDBINIT_FILE)
-	@echo define reset >> $(GDBINIT_FILE)
-	@echo SIGNAL SIGHUP >> $(GDBINIT_FILE)
-	@echo end >> $(GDBINIT_FILE)
-	@echo file $(TARGET).elf >> $(GDBINIT_FILE)
-	@echo target remote $(DEBUG_HOST):$(DEBUG_PORT)  >> $(GDBINIT_FILE)
-ifeq ($(DEBUG_BACKEND),simulavr)
-	@echo load  >> $(GDBINIT_FILE)
-endif
-	@echo break main >> $(GDBINIT_FILE)
-
-debug: gdb-config $(TARGET).elf
-ifeq ($(DEBUG_BACKEND), avarice)
-	@echo Starting AVaRICE - Press enter when "waiting to connect" message displays.
-	@$(WINSHELL) /c start avarice --jtag $(JTAG_DEV) --erase --program --file \
-	$(TARGET).elf $(DEBUG_HOST):$(DEBUG_PORT)
-	@$(WINSHELL) /c pause
-
-else
-	@$(WINSHELL) /c start simulavr --gdbserver --device $(MCU) --clock-freq \
-	$(DEBUG_MFREQ) --port $(DEBUG_PORT)
-endif
-	@$(WINSHELL) /c start avr-$(DEBUG_UI) --command=$(GDBINIT_FILE)
-
-
-
-
-COFFCONVERT = $(OBJCOPY) --debugging
-COFFCONVERT += --change-section-address .data-0x800000
-COFFCONVERT += --change-section-address .bss-0x800000
-COFFCONVERT += --change-section-address .noinit-0x800000
-COFFCONVERT += --change-section-address .eeprom-0x810000
-
-
-
-coff: $(TARGET).elf
-	@echo
-	@echo $(MSG_COFF) $(TARGET).cof
-	$(COFFCONVERT) -O coff-avr $< $(TARGET).cof
-
-
-extcoff: $(TARGET).elf
-	@echo
-	@echo $(MSG_EXTENDED_COFF) $(TARGET).cof
-	$(COFFCONVERT) -O coff-ext-avr $< $(TARGET).cof
-
 
 
 %.hex: %.elf
@@ -331,14 +145,6 @@ extcoff: $(TARGET).elf
 
 
 
-.SECONDARY : $(TARGET).a
-.PRECIOUS : $(OBJ)
-%.a: $(OBJ)
-	@echo
-	@echo $(MSG_CREATING_LIBRARY) $@
-	$(AR) $@ $(OBJ)
-
-
 .SECONDARY : $(TARGET).elf
 .PRECIOUS : $(OBJ)
 %.elf: $(OBJ)
@@ -350,37 +156,9 @@ $(OBJDIR)/%.o : %.c
 	@echo $(MSG_COMPILING) $<
 	@$(CC) -c $(ALL_CFLAGS) $< -o $@ 
 
-
-$(OBJDIR)/%.o : %.cpp
-	@echo
-	@echo $(MSG_COMPILING_CPP) $<
-	$(CC) -c $(ALL_CPPFLAGS) $< -o $@ 
-
-
-%.s : %.c
-	$(CC) -S $(ALL_CFLAGS) $< -o $@
-
-
-%.s : %.cpp
-	$(CC) -S $(ALL_CPPFLAGS) $< -o $@
-
-
-$(OBJDIR)/%.o : %.S
-	@echo
-	@echo $(MSG_ASSEMBLING) $<
-	$(CC) -c $(ALL_ASFLAGS) $< -o $@
-
-
-%.i : %.c
-	$(CC) -E -mmcu=$(MCU) -I. $(CFLAGS) $< -o $@ 
-
-clean: clean_list clean_binary
-
-clean_binary:
-	@$(REMOVE) $(TARGET).hex
-
-clean_list:
+mostly_clean:
 	@echo $(MSG_CLEANING)
+	@$(REMOVE) $(TARGET).hex
 	@$(REMOVE) $(TARGET).eep
 	@$(REMOVE) $(TARGET).cof
 	@$(REMOVE) $(TARGET).elf
@@ -392,17 +170,17 @@ clean_list:
 	@$(REMOVE) $(SRC:.c=.s)
 	@$(REMOVE) $(SRC:.c=.d)
 	@$(REMOVE) $(SRC:.c=.i)
-	@$(REMOVEDIR) .dep
 
+clean: mostly_clean
+	@$(REMOVE) *.hex
+	@$(REMOVE) *.eep
+	@$(REMOVE) *.cof
+	@$(REMOVE) *.elf
+	@$(REMOVE) *.map
+	@$(REMOVE) *.sym
+	@$(REMOVE) *.lss
+	@$(REMOVEDIR) .dep
 
 $(shell mkdir $(OBJDIR) 2>/dev/null)
 
-
 -include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)
-
-
-.PHONY : all checkhooks checklibmode begin  \
-finish end sizebefore sizeafter gccversion  \
-build elf hex eep lss sym coff extcoff      \
-clean clean_list clean_binary program debug \
-gdb-config

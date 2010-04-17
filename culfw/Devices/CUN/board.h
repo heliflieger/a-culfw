@@ -89,7 +89,8 @@
 #define HAS_XRAM                1       // undef or define...1
 #define HAS_NTP                 1       // undef or define...1
 
-#define TTY_BUFSIZE             64      // Must be a supported USB endpoint size
+#define TTY_BUFSIZE             64
+#define USB_BUFSIZE             64      // Must be a supported USB endpoint size
 #define HAS_FHT_8v                      // PROGMEM:  586b, RAM: 23b
 #define HAS_FHT_80b                     // PROGMEM: 1374b, RAM: 90b
 #define FHTBUF_SIZE            200      //                 RAM:200b

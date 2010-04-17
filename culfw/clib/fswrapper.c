@@ -15,8 +15,8 @@
 fs_t fs;
 static fs_size_t filesize, offset;
 static fs_inode_t inode;
-static void (*oldinfunc)(void);
-static void write_filedata(void);
+static void (*oldinfunc)(uint8_t);
+static void write_filedata(uint8_t channel);
 #ifdef HAS_LCD
 static uint8_t isMenu;                  // Menu hack
 #endif
@@ -151,10 +151,12 @@ DONE:
   return;
 }
 
-void
-write_filedata(void)
+static void
+write_filedata(uint8_t channel)
 {
   uint8_t len = TTY_Rx_Buffer.nbytes;
+  uint8_t odc = display_channel;
+  display_channel = channel;
 
   fs_write(&fs, inode, TTY_Rx_Buffer.buf, offset, len);
   if(offset+len == filesize) { // Ready
@@ -172,6 +174,7 @@ write_filedata(void)
     offset += len;
   }
   rb_reset(&TTY_Rx_Buffer);
+  display_channel = odc;
 }
 
 #if 0 // read/write speed test

@@ -1,4 +1,3 @@
-#define RFR_DEBUG       // will be switched off in compileconf.h
 #include "board.h"
 #ifdef HAS_RF_ROUTER
 #include <string.h>
@@ -16,14 +15,17 @@
 #include "cdc.h"
 
 uint8_t rf_router_status;
-uint8_t rf_router_id;
-uint8_t rf_router_router;
+uint8_t rf_router_myid;
+uint8_t rf_router_target;
 uint8_t rf_router_hsec;
 uint32_t rf_router_sendtime;
 uint8_t  rf_nr_send_checks;
-rb_t RFR_Buffer;
 
-void rf_router_send(void);
+#ifndef RFR_SHADOW
+rb_t RFR_Buffer;
+#endif
+
+static void rf_router_send(uint8_t addAddr);
 void rf_debug_out(uint8_t);
 
 #ifdef RFR_DEBUG
@@ -31,23 +33,12 @@ uint16_t nr_t, nr_f, nr_e, nr_k, nr_h, nr_r, nr_plus;
 #endif
 
 
-static void
-rf_initbuf(void)
-{
-  tohex(rf_router_router, (uint8_t *)RFR_Buffer.buf);
-  tohex(rf_router_id,     (uint8_t *)RFR_Buffer.buf+2);
-  RFR_Buffer.buf[4] = 'U';
-  RFR_Buffer.nbytes = RFR_Buffer.putoff = 5;
-  RFR_Buffer.getoff = 0;
-}
-
 void
 rf_router_init()
 {
-  rf_router_id = erb(EE_RF_ROUTER_ID);
-  rf_router_router = erb(EE_RF_ROUTER_ROUTER);
-  rf_initbuf();
-  if(rf_router_router) {
+  rf_router_myid = erb(EE_RF_ROUTER_ID);
+  rf_router_target = erb(EE_RF_ROUTER_ROUTER);
+  if(rf_router_target) {
     tx_report = 0x21;
     set_txrestore();
   }
@@ -57,8 +48,8 @@ void
 rf_router_func(char *in)
 {
   if(in[1] == 0) {               // u: display id and router
-    DH2(rf_router_id);
-    DH2(rf_router_router);
+    DH2(rf_router_myid);
+    DH2(rf_router_target);
     DNL();
 #ifdef RFR_DEBUG 
   } else if(in[1] == 'd') {     // ud: Debug
@@ -77,21 +68,19 @@ rf_router_func(char *in)
 #endif
 
   } else if(in[1] == 'i') {      // uiXXYY: set own id to XX and router id to YY
-    fromhex(in+2, &rf_router_id, 1);
-    ewb(EE_RF_ROUTER_ID, rf_router_id);
-    fromhex(in+4, &rf_router_router, 1);
-    ewb(EE_RF_ROUTER_ROUTER, rf_router_router);
-    rf_initbuf();
+    fromhex(in+2, &rf_router_myid, 1);
+    ewb(EE_RF_ROUTER_ID, rf_router_myid);
+    fromhex(in+4, &rf_router_target, 1);
+    ewb(EE_RF_ROUTER_ROUTER, rf_router_target);
 
   } else {                      // uYYDATA: send data to node with id YY
     rb_reset(&RFR_Buffer);
     while(*++in)
       rb_put(&RFR_Buffer, *in);
-    rf_router_send();
+    rf_router_send(0);
 
   }
 }
-
 
 #define RF_ROUTER_ZERO_HIGH 384
 #define RF_ROUTER_ZERO_LOW  768
@@ -102,14 +91,14 @@ rf_router_func(char *in)
 void sethigh(uint16_t dur) { SET_HIGH; my_delay_us(dur); }
 void setlow(uint16_t dur) { SET_LOW; my_delay_us(dur); }
 
-// Duration is 8.448ms, more than one tick!
+// Duration is 15ms, more than one tick!
 static void
 rf_router_ping(void)
 {
-  set_ccon();
-  ccTX();
+  set_ccon();           // 1.7ms
+  ccTX();               // 4.8ms
 
-  // Sync
+  // Sync               // 8.5ms
   for(uint8_t i = 0; i < 6; i++) {
     sethigh(RF_ROUTER_ZERO_HIGH);
     setlow(RF_ROUTER_ZERO_LOW);
@@ -120,8 +109,8 @@ rf_router_ping(void)
   SET_LOW;
 }
 
-void
-rf_router_send()
+static void
+rf_router_send(uint8_t addAddr)
 {
 #ifdef RFR_DEBUG
        if(RFR_Buffer.buf[5] == 'T') nr_t++;
@@ -131,13 +120,24 @@ rf_router_send()
   else if(RFR_Buffer.buf[5] == 'H') nr_h++;
   else                              nr_r++;
 #endif
-  rf_router_ping();
-  ccInitChip(EE_FASTRF_CFG);
+
+  uint8_t buf[7], l = 1;
+  buf[0] = RF_ROUTER_PROTO_ID;
+  if(addAddr) {
+    tohex(rf_router_target, buf+1);
+    tohex(rf_router_myid,   buf+3),
+    buf[5] = 'U';
+    l = 6;
+  }
+  rf_router_ping();           // 15ms
+  ccInitChip(EE_FASTRF_CFG);  // 1.6ms
   my_delay_ms(3);             // 3ms: Found by trial and error
+
   CC1100_ASSERT;
   cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
-  cc1100_sendbyte( RFR_Buffer.nbytes+1 );
-  cc1100_sendbyte( RF_ROUTER_PROTO_ID );
+  cc1100_sendbyte(RFR_Buffer.nbytes+l);
+  for(uint8_t i = 0; i < l; i++)
+    cc1100_sendbyte(buf[i]);
   while(RFR_Buffer.nbytes)
     cc1100_sendbyte(rb_get(&RFR_Buffer));
   CC1100_DEASSERT;
@@ -148,8 +148,6 @@ rf_router_send()
   while((cc1100_readReg(CC1100_TXBYTES) & 0x7f) && maxwait--)
     my_delay_ms(1);
   set_txrestore();
-  rf_initbuf();
-
 }
 
 void
@@ -173,28 +171,30 @@ rf_router_task(void)
       while(--len)
         rb_put(&TTY_Rx_Buffer, cc1100_sendbyte(0));
       CC1100_DEASSERT;
+      //display_channel=DISPLAY_USB;
+      //TTY_Rx_Buffer.buf[TTY_Rx_Buffer.nbytes] = 0;
+      //display_string(TTY_Rx_Buffer.buf);
+      //DNL();
+      //display_channel=0xff;
     }
     set_txrestore();
     rf_router_status = RF_ROUTER_INACTIVE;
 
     if(proto == RF_ROUTER_PROTO_ID) {
       uint8_t id;
-      if(fromhex(TTY_Rx_Buffer.buf, &id, 1) == 1 &&
-         id == rf_router_id) {
+      if(fromhex(TTY_Rx_Buffer.buf, &id, 1) == 1 &&     // it is for us
+         id == rf_router_myid) {
 
-        if(TTY_Rx_Buffer.buf[4] == 'U') {
-          while(TTY_Rx_Buffer.nbytes)
+        if(TTY_Rx_Buffer.buf[4] == 'U') {               // "Display" the data
+          while(TTY_Rx_Buffer.nbytes)                   // downlink: RFR->CUL
             DC(rb_get(&TTY_Rx_Buffer));
           DNL();
 
-        } else {
-          TTY_Rx_Buffer.nbytes -= 4;    // Skip dest/src bytes
+        } else {                                        // uplink: CUL->RFR
+          TTY_Rx_Buffer.nbytes -= 4;                    // Skip dest/src bytes
           TTY_Rx_Buffer.getoff = 4;
           rb_put(&TTY_Rx_Buffer, '\n');
-          uint8_t odc = display_channel;
-          display_channel = DISPLAY_RFROUTER;
-          input_handle_func();
-          display_channel = odc;
+          input_handle_func(DISPLAY_RFROUTER);          // execute the command
         }
 
       } else {
@@ -231,7 +231,7 @@ rf_router_flush()
   if(--rf_nr_send_checks)
     rf_router_sendtime = ticks+3;
   else
-    rf_router_send();   // duration is more than one tick
+    rf_router_send(1);   // duration is more than one tick
 }
 
 #endif

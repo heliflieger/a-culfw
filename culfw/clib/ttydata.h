@@ -8,10 +8,10 @@ typedef struct _fntab {
   void (* const fn)(char *);
 } t_fntab;
 
-void analyze_ttydata(void);
+void analyze_ttydata(uint8_t channel);
 uint8_t callfn(char *buf);
 
-void (*input_handle_func)(void);
+void (*input_handle_func)(uint8_t channel);
 void (*output_flush_func)(void);
 
 extern rb_t TTY_Tx_Buffer;

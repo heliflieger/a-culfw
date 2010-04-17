@@ -8,7 +8,7 @@ void
 my_delay_us( uint16_t d )
 {
 #if 1
-  d<<=1;      
+  d<<=1;                // 4 cycles/loop, we are running 8MHz
   _delay_loop_2(d);    
 #else
   TIMSK1 = 0;           // No interrupt if counter is reached

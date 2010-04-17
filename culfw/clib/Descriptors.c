@@ -153,7 +153,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
                                Type: DTYPE_Endpoint},
       EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_OUT | CDC_RX_EPNUM),
       Attributes:             EP_TYPE_BULK,
-      EndpointSize:           TTY_BUFSIZE,
+      EndpointSize:           USB_BUFSIZE,
       PollingIntervalMS:      0x00
     },
           
@@ -163,7 +163,7 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
                                Type: DTYPE_Endpoint},
       EndpointAddress:        (ENDPOINT_DESCRIPTOR_DIR_IN | CDC_TX_EPNUM),
       Attributes:              EP_TYPE_BULK,
-      EndpointSize:            TTY_BUFSIZE,
+      EndpointSize:            USB_BUFSIZE,
       PollingIntervalMS:       0x00
     }
 };
@@ -189,7 +189,7 @@ USB_Descriptor_String_t ProductString PROGMEM =
   UnicodeString:    BOARD_ID_USTR
 };
 
-#ifdef BUSWARE_CUL
+#ifdef MULTI_FREQ_DEVICE
 USB_Descriptor_String_t ProductString433 PROGMEM =
 {
   Header:           {Size: USB_STRING_LEN(20),
@@ -235,7 +235,7 @@ bool USB_GetDescriptor (const uint16_t wValue,
           Size    = pgm_read_byte(&ManufacturerString.Header.Size);
           break;
         case 0x02:
-#ifdef BUSWARE_CUL
+#ifdef MULTI_FREQ_DEVICE
           if (!bit_is_set(PINB, PB6))
             Address = DESCRIPTOR_ADDRESS(ProductString433);
           else

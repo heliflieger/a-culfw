@@ -79,10 +79,12 @@ FastRF_Task(void)
       buf[i] = cc1100_sendbyte( 0 );
     CC1100_DEASSERT;
 
+    display_channel=DISPLAY_USB;
     uint8_t i;
     for(i=0; i<len; i++)
       DC(buf[i]);
     DNL();
+    display_channel=0xff;
   }
 
   fastrf_on = 1;

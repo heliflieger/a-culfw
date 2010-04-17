@@ -22,24 +22,17 @@
 #include "delay.h"
 #include "display.h"
 #include "fncollection.h"
-#include "led.h"
+#include "led.h"		// ledfunc
 #include "ringbuffer.h"
 #include "rf_receive.h"
-#include "rf_send.h"
+#include "rf_send.h"		// fs20send
 #include "ttydata.h"
-#include "fht.h"
-#include "fastrf.h"
-#include "rf_router.h"
-
-#ifdef CUL_V3
-#include "memory.h"
-#endif
+#include "fht.h"		// fhtsend
+#include "fastrf.h"		// fastrf_func
+#include "rf_router.h"		// rf_router_func
+#include "memory.h"		// getfreemem
 
 PROGMEM t_fntab fntab[] = {
-
-#ifdef CUL_V3
-  { 'm', getfreemem },
-#endif
 
   { 'B', prepare_boot },
   { 'C', ccreg },
@@ -56,6 +49,9 @@ PROGMEM t_fntab fntab[] = {
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
+#endif
+#ifdef CUL_V3
+  { 'm', getfreemem },
 #endif
   { 'l', ledfunc },
   { 't', gettime },
@@ -77,7 +73,11 @@ start_bootloader(void)
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
 
+#ifdef CUL_V3
+#define jump_to_bootloader ((void(*)(void))0x3800)
+#else
 #define jump_to_bootloader ((void(*)(void))0x1800)
+#endif
   jump_to_bootloader();
 }
 
@@ -94,6 +94,7 @@ main(void)
     ewb( EE_REQBL, 0 ); // clear flag
     start_bootloader();
   }
+
 
   // Setup the timers. Are needed for watchdog-reset
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250

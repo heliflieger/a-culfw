@@ -2,7 +2,7 @@
 #include "ttydata.h"
 #include <avr/pgmspace.h>
 
-void (*input_handle_func)(void);
+void (*input_handle_func)(uint8_t channel);
 
 
 rb_t TTY_Tx_Buffer;
@@ -30,10 +30,12 @@ callfn(char *buf)
 }
 
 void
-analyze_ttydata()
+analyze_ttydata(uint8_t channel)
 {
   static uint8_t cmdlen;
   uint8_t ucCommand;
+  uint8_t odc = display_channel;
+  display_channel = channel;
     
   while(TTY_Rx_Buffer.nbytes) {
 
@@ -47,7 +49,7 @@ analyze_ttydata()
       cmdbuf[cmdlen] = 0;
       if(!callfn(cmdbuf)) {
         DS_P(PSTR("? ("));
-        DC(cmdbuf[0]);
+        display_string(cmdbuf);
         DS_P(PSTR(" is unknown) Use one of"));
         callfn(0);
         DNL();
@@ -59,5 +61,6 @@ analyze_ttydata()
         cmdbuf[cmdlen++] = ucCommand;
     }
   }
+  display_channel = odc;
 }
 

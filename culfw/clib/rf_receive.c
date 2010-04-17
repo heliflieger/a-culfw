@@ -624,14 +624,12 @@ retry_sync:
         b->state = STATE_HMS;
 
 #ifdef HAS_RF_ROUTER
-      } else if(rf_router_id &&
+      } else if(rf_router_myid &&
                 check_rf_sync(hightime, lowtime) &&
                 check_rf_sync(b->zero.lowtime, b->zero.hightime)) {
+        //display_channel=DISPLAY_USB;
         //DC('-');
-        //DH2(b->zero.hightime);
-        //DH2(b->zero.lowtime);
-        //DH2(hightime);
-        //DH2(lowtime);
+        //display_channel=0xff;
         rf_router_status = RF_ROUTER_SYNC_RCVD;
         reset_input();
         return;

@@ -36,6 +36,9 @@ uint16_t credit_10ms;
 
 #ifdef HAS_RAWSEND
 
+#define MAX_SNDMSG 12
+#define MAX_SNDRAW 12
+
 static uint8_t zerohigh, zerolow, onehigh, onelow;
 #define TMUL(x) (x<<4)
 #define TDIV(x) (x>>4)
@@ -51,6 +54,9 @@ send_bit(uint8_t bit)
 }
 
 #else
+
+#define MAX_SNDMSG 6    // FS20: 4 or 5 + CRC, FHT: 5+CRC
+#define MAX_SNDRAW 7    // MAX_SNDMSG*9/8 (parity bit)
 
 static void
 send_bit(uint8_t bit)
@@ -118,7 +124,7 @@ abit(uint8_t b, uint8_t *obuf, uint8_t *obyp, uint8_t obi)
     obuf[oby] |= _BV(obi);
   if(obi-- == 0) {
     oby++;
-    if(oby < MAXMSG-1)
+    if(oby < MAX_SNDRAW)
       *obyp = oby;
     obi = 7; obuf[oby] = 0;
   }
@@ -129,7 +135,7 @@ void
 addParityAndSendData(uint8_t *hb, uint8_t hblen,
                 uint8_t startcs, uint8_t repeat)
 {
-  uint8_t iby, obuf[MAXMSG], oby;
+  uint8_t iby, obuf[MAX_SNDRAW], oby;
   int8_t ibi, obi;
 
   hb[hblen] = cksum1(startcs, hb, hblen);
@@ -161,8 +167,8 @@ addParityAndSendData(uint8_t *hb, uint8_t hblen,
 void
 addParityAndSend(char *in, uint8_t startcs, uint8_t repeat)
 {
-  uint8_t hb[MAXMSG], hblen;
-  hblen = fromhex(in+1, hb, MAXMSG-1);
+  uint8_t hb[MAX_SNDMSG], hblen;
+  hblen = fromhex(in+1, hb, MAX_SNDMSG-1);
   addParityAndSendData(hb, hblen, startcs, repeat);
 }
 

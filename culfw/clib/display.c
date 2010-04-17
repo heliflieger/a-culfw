@@ -29,6 +29,13 @@ uint8_t display_channel = 0;
 void
 display_char(char data)
 {
+#ifdef RFR_SHADOW
+  uint8_t buffer_free = 1;
+# define buffer_used() buffer_free=0
+#else
+# define buffer_free 1
+# define buffer_used()
+#endif
 
 #ifdef HAS_ETHERNET
   if(display_channel & DISPLAY_TCP)
@@ -42,6 +49,7 @@ display_char(char data)
     rb_put(&TTY_Tx_Buffer, data);
     if(data == '\n')
       CDC_Task();
+    buffer_used();
   }
 #endif
 
@@ -51,10 +59,10 @@ display_char(char data)
 #endif
 
 #ifdef HAS_RF_ROUTER
-  if(rf_router_router &&
+  if(rf_router_target &&
      (display_channel & DISPLAY_RFROUTER) &&
-     !(data == '\n' || data == '\r')) {
-    rb_put(&RFR_Buffer, data);
+     data != '\n' && buffer_free) {
+    rb_put(&RFR_Buffer, data == '\r' ? ';' : data);
     rf_router_sendtime = ticks+3; 
     rf_nr_send_checks = 2;
   }

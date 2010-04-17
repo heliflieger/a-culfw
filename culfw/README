@@ -49,15 +49,6 @@ Prerequisites
 Compile (optional)
 ==================
   Change into your device directory (e.g. Devices/CUL)
-
-  [Start CUL only section]
-  As the CUL has only 12kB of usable program memory (+4kB bootloader), and
-  culfw has too many features, we have to decide which ones to use by typing
-  "make conf1" oder "make conf2".
-  - "make conf1" will build a version without RFR_DEBUG (see below)
-  - "make conf2" will build a version without FHT_8v support
-  [End CUL only section]
-
   Type "make", which will output text like:
     Compiling C: CUL.c
     [...]
@@ -72,7 +63,7 @@ Install / Flash the firmware
          the battery, then the USB-Cable.
 
   A USB device "03eb:2ffa Atmel Corp." should appear.
-  Now execute following"make usbprogram", which will output text like:
+  Now execute "make usbprogram", which will output text like:
     dfu-programmer at90usb162 erase
     dfu-programmer at90usb162 flash CUL.hex
     Validating...
@@ -387,6 +378,8 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - Bit 5: RSSI: report RSSI value as an additional HEX byte after digested
                data or as a separate byte if Bit 3 is set too.
       - Bit 6: Report FHT protocol messages (ack, etc)
+      - Bit 7: CUL/CUN: Report raw RSSI data (a==weak ... p==strong signal)
+               CUR: Grafic representation: dark==weak ... light == stong signal
 
       Note: 00 disables radio reception, any other value initialize the radio
       chip and enable reception.
@@ -398,13 +391,13 @@ culfw<->PC Protocol (over USB or TCP/IP)
 
     x<pp> Change the (EEPROM) PA tables (power amplification for RF sending)
       <pp> is a one-byte hex value, valid values are 00 to 09, with following
-      values: the first 5 is -10/-5/0/5/10 dBm with PA ramping, the next 5 is
-      the same without PA ramping. If the value is outside this spec, then the
-      0dBm variant (02) will be used.
+      values: the first 5 is -10/-5/0/5/10 dBm without PA ramping, the next 5
+      is the same with PA ramping. If the value is outside this spec, then the
+      5dBm variant (03) will be used.
       Notes:
       - after changing the value (in the EEPROM) an X command (X21) will be
         necessary to write the EEPROM changes to the CC1101.
-      - The default CUL firmware has no PA ramping compiled in (see board.h)
+      - The default CUL_V2 firmware has no PA ramping compiled in (see board.h)
       Example: x03
 
     q

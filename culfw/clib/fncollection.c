@@ -246,7 +246,7 @@ prepare_boot(char *in)
 void
 version(char *unused)
 {
-#ifdef BUSWARE_CUL           // check 433MHz version marker
+#ifdef MULTI_FREQ_DEVICE     // check 433MHz version marker
   if (!bit_is_set(PINB, PB6))
     DS_P( PSTR("V " VERSION " " BOARD_ID_STR433) );
   else
