@@ -1,149 +1,216 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-   <LINK REL="SHORTCUT ICON" HREF="culfw.ico">
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-<title>Home of the CUL firmware culfw</title>
+<title>Home of culfw</title>
+
+  <style type="text/css">
+    body   { background-color: #FFFFE7;}
+    #left  { position:absolute; top:20px; left:20px; width:140px; }
+    #right { position:absolute; top:20px; left:180px; bottom:20px; right:10px; }
+    body>div#left { position:fixed; }
+    h3 {     color:#52865D; line-height:1.3;
+             margin-top:1.5em; font-family:Arial,Sans-serif; }
+    div#block { border:1px solid gray; background: #F8F8E0; padding:0.7em; }
+    div#dist { padding-top:0.3em; }
+    a {  color: #278727; }
+  </style>
+
 </head>
 
-<body style="background-color: white">
+
+<body>
+  <div id="left">
+    <img src="culfw.png">
+    <br>
+    <br>
+    <div id="block">
+      <b>Content:</b>
+      <div id="dist"></div>
+      <div id="dist"><a href="#Description">Description</a></div>
+      <div id="dist"><a href="#Hardware">Hardware</a></div>
+      <div id="dist"><a href="#Features">Features</a></div>
+      <div id="dist"><a href="#Installation">Installation</a></div>
+      <div id="dist"><a href="#Links">Links</a></div>
+      <div id="dist"><a href="#License">License</a></div>
+    </div>
+  </div>
+
+  <div id="right">
+    <a name="Description"></a>
+    <h3>Description</h3>
+    <ul>
+      culfw is a GPL'd firmware for the <a
+      href="http://shop.busware.de/advanced_search_result.php?keywords=CUL">CUL</a>
+      family of devices.<br><br>
+      Current Version: (as of 2010-04-17) is <a
+      href="http://www.koeniglich.de/culfw/culfw-1.37.tar.gz">1.37</a>.
+      See the <a href="CHANGED">CHANGED</a> file for current changes.<br>
+      <br>
+
+      culfw is used in conjunction with the CUL/CUN/CUR and a high level
+      software like <a href="/fhem/fhem.html">fhem</a> to automate some common
+      tasks in the household like switching lamps / shutters / heating / etc.
+      and to log events like temperature/humidity/power consumption.<br>
+      CUL is a device which is attached to the PC, making it capable to receive
+      and send 868MHz RF signals. culfw is the firmware which implements some
+      RF protocols on the CUL, and makes them useable by <a
+      href="/fhem/fhem.html">fhem</a>, which runs on the PC and coordinates all
+      the tasks.
+    </ul>
+
+    <a name="Hardware"></a>
+    <table><tr><td>
+      <h3>Hardware</h3>
+      <ul>
+        Following devices are known to work with culfw:
+        <ul>
+          <li>CUN (CC1101 USB Network, to the left)</li>
+          <li>CUR (CC1101 USB Remote, prototype, to the right)</li>
+          <li>CUL (CC1101 USB Light, at the bottom)</li>
+        </ul>
+
+        At the heart of the CUL family of devices is the Texas Instruments
+        CC1101 RF IC and an Atmel CPU. The radio interface is tuned for 868MHz
+        (or 433MHz). Both the CUN and the CUR have some oboard flash (2MB) for
+        local logging. The CUN has an enc28j60 Ethernet chip, the CUR a pcf8833
+        (130x130 pixel, 12bit) display controller.<br><br>
+
+        CPUs ( CPU-type / RAM / Program memory):<br><br>
+
+        CUL V1/V2: at90usb162 / 0.5 kB / 16 kB<br>
+        CUL V3: atmega32U4 / 2.5 kB / 32 kB<br>
+        CUR V1: at90usb128 / 4.0 kB / 128 kB<br>
+        CUR V2: at90usb64 / 2.0 kB / 64 kB<br>
+        CUN: at90usb64 / 2.0 kB / 64 kB<br>
+        <br>
+
+        From the program memory 4kB is used by the USB-Bootloader, and 4kB by
+        the LUFA USB library.
+      </ul>
+    </td><td
+      <img src="ccc.jpg"/>
+    </td></tr></table>
+
+    <a name="Features"></a>
+    <h3>Features</h2>
+    <ul>
+      <table><tr><td>
+      culfw supports following RF protocols:
+      <ul>
+        <li>FS20: send/receive<br>
+            There are numerous FS20 devices, AFAIK. all of them are fully
+            supported.</li>
+        <li>FHT: send/receive<br>
+            Communication to the FHT80b and directly to the FHT8v is
+            supported.</li>
+        <li>S300: receive<br>
+            Examples of such devices: S300TH, KS300-2</li>
+        <li>EM1000: receive<br>
+            Devices: EM1000FM, EM1000GZ, EM1000WZ</li>
+        <li>HMS: receive<br>
+            Devices: There are numerous HMS devices, AFAIK. all of them are
+            fully supported.</li>
+        <li>Hoermann: receive<br>
+            Some 868 Hoermann garage door openers.</li>
+      </ul>
+      <br>
+      When configured as an RFR (RF-Router) client, then a CUL plugged in a
+      wall socket can communicate via high-speed RF to the base, while
+      serving all the above protocols.<br>
+      </td><td
+        <img src="cul_rfr.jpg"/>
+      </td></tr></table>
+    </ul>
 
 
-<h1>culfw</h1>
-GPL'd firmware for the <a href="http://shop.busware.de/advanced_search_result.php?keywords=CUL">CUL</a> family of devices.
-Current Version: (as of 2009-10-23) is <a
-href="http://www.koeniglich.de/culfw/culfw-1.35.tar.gz">1.35</a>
-See the <a href="CHANGED">CHANGED</a> file for current changes.
+    <a name="Installation"></a>
+    <h3>Installation</h3>
+    <ul>
+      <h3>Step 1: flashing the firmware</h3>
+      Download the firmware (see the links below) and unpack it.
+      Change into your device directory (e.g. Devices/CUL)<br>
+      <ul>
+        <li>CUL/CUN: Insert the USB-Stick while pressing the micro-switch.</li>
+        <li>CUR: Remove Battery/USB. Put the device on a table with the jogdial
+            facing down. Press the case, until you hear the jogdial is pressed.
+            Insert the battery, then the USB-Cable.</li>
+      </ul>
+      <br>
+      OS specific instructions:
+      <ul>
+        <li>Linux:<br>
+          Install the package dfu-programmer, then execute "make
+          usbprogrammer".  After flashing the CUL, a new USB device should
+          appear: "03eb:204b Atmel Corp.". If not reinsert the device without
+          pressing the micro-switch.</li>
 
-<h2>Description</h2>
-<b>culfw</b> is used in conjunction with the CUL/CUN/CUR and a high level
-software like <a href="/fhem/fhem.html">fhem</a> to automate some common tasks
-in the household like switching lamps/shutters/heating/etc. and to log events
-like temperature/humidity/power consumption. CUL is a device which is attached
-to the PC, making it capable to receive and send 868MHz RF signals. culfw is
-the firmware which implements some RF protocols on the CUL, and makes them
-useable by <a href="/fhem/fhem.html">fhem</a>, which runs on the PC and
-coordinates all the tasks.
+        <li>Windows:<br>
+          See also <a href="http://groups.google.com/group/cul-fans/web/get-cul-running--windows">this</a>
+          link for details. Do no install any drivers. Get the Windows Flash
+          tool "FLIP" from Atmel, start it, detect the CUL and flash the file
+          CUL.hex to
+          it.</li>
+      </ul>
 
-<h2>Hardware</h2>
-<table><tr><td>
-Following devices are known to work with culfw:
-<ul>
-  <li>CUN (CC1101 USB Network, to the left)</li>
-  <li>CUR (CC1101 USB Remote, prototype, to the right)</li>
-  <li>CUL (CC1101 USB Light, at the bottom)</li>
-</ul>
+      <h3>Step 2: Using the device</h3>
+      <ul>
+        <li>Linux:<br>
+          The device should appear as /dev/ttyACM0 (check /var/log/messages).
+          To test it start "screen /dev/ttyACM0", and then type V<return>. The
+          version string should appear. To use the device in fhem, define it as
+          a CUL instance: "define MyCUL CUL /dev/ttyACM0 1234". See the fhem
+          documentation for details.</li>
 
-At the heart of the CUL family of devices is the Texas Instruments CC1101 RF IC
-and an Atmel CPU. The radio interface is tuned for 868MHz (or 433MHz). Both the
-CUN and the CUR have some oboard flash (2MB) for local logging. The CUN has an
-enc28j60 Ethernet chip, the CUR a pcf8833 (130x130 pixel, 12bit) display
-controller.
-<br>
+        <li>Windows:<br>
+          Right-click on the docs/MyUSB_USBtoSerial.inf file, and install
+          it.<br> Then install a virtual COM port: Locate the COM-port in the
+          device manager shown as "USB Virtual Serial Port (COMx)". Start
+          Hyperterminal, open a connection to COMx 9600,8,n,1.<br> Type
+          "V<return>". The string "V 1.0..." should appear. Type X01<return> to
+          enable the data reporting.  </li>
 
-</td><td
-<img src="ccc.jpg"/>
-</td></tr></table>
-
-<h2>Features</h2>
-culfw supports following RF protocols:
-<ul>
-  <li>FS20: send/receive<br>
-      There are numerous FS20 devices, AFAIK. all of them are fully
-      supported.</li>
-  <li>FHT: send/receive<br>
-      Communication to the FHT80b and directly to the FHT8v is supported.</li>
-  <li>S300: receive<br>
-      Examples of such devices: S300TH, KS300-2</li>
-  <li>EM1000: receive<br>
-      Devices: EM1000FM, EM1000GZ, EM1000WZ</li>
-  <li>HMS: receive<br>
-      Devices: There are numerous HMS devices, AFAIK. all of them are fully
-      supported.</li>
-  <li>Hoermann: receive<br>
-      Some 868 Hoermann garage door openers.</li>
-</ul>
-
-
-<h2>Installation</h2>
-<ul>
-  <h3>Step 1: flashing the firmware</h3>
-  Download the firmware (see the links below) and unpack it.  Change into your
-  device directory (e.g. CUL)<br>
-  <ul>
-    <li>CUL/CUN: Insert the USB-Stick while pressing the micro-switch.</li>
-    <li>CUR: Remove Battery/USB. Put the device on a table with the jogdial
-        facing down. Press the case, until you hear the jogdial is pressed.
-        Insert the battery, then the USB-Cable.</li>
-  </ul>
-
-  OS specific instructions:
-  <ul>
-    <li>Linux:<br>
-      Install the package dfu-programmer, then execute following commands:<pre>
-      dfu-programmer at90usb162 erase
-      dfu-programmer at90usb162 flash CUL.hex
-      dfu-programmer at90usb162 start</pre>
-      The last command will reset the device, a new USB device should appear:
-      "03eb:204b Atmel Corp.". If not reinsert the dvice without pressing
-      the micro-switch.</li>
-    <li>Windows:<br>
-      See also <a href="http://groups.google.com/group/cul-fans/web/get-cul-running--windows">this</a>
-      link for details. Do no install any drivers. Get the Windows Flash tool
-      "FLIP" from Atmel, start it, detect the CUL and flash the file CUL.hex to
-      it.</li>
-  </ul>
-
-  <h3>Step 2: Using the device</h3>
-  <ul>
-    <li>Linux:<br>
-      The device should appear as /dev/ttyACM0 (check /var/log/messages). To
-      test it start "screen /dev/ttyACM0", and then type V<return>. The version
-      string should appear. To use the device in fhem, define it as a CUL
-      instance: "define MyCUL CUL /dev/ttyACM0 1234". See the fhem
-      documentation for details.</li>
-    <li>Windows:<br>
-      Right-click on the docs/MyUSB_USBtoSerial.inf file, and install it.<br>
-      Then install a virtual COM port: Locate the COM-port in the device
-      manager shown as "USB Virtual Serial Port (COMx)". Start Hyperterminal,
-      open a connection to COMx 9600,8,n,1.<br>
-      Type "V<return>". The string "V 1.0..." should appear. Type X01<return>
-      to enable the data reporting.
-      </li>
-    <li>CUN over TCP/IP:<br>
-      Connect the device to a network with a DHCP server, and then telnet to
-      the assigned IP address with "telnet ip-adress 2323"</li>
+        <li>CUN over TCP/IP:<br>
+          Connect the device to a network with a DHCP server, and then telnet
+          to the assigned IP address with "telnet ip-adress 2323"</li>
+      </ul>
+      <br>
+      Read the <a href="http://www.koeniglich.de/culfw/README">README</a> file
+      for more details.</ul>
       
-  </ul> Read the <a href="http://www.koeniglich.de/culfw/README">README</a>
-      file for more details.  </ul>
-  
+    <a name="Links"></a>
+    <h3>Links:</h3>
+    <ul>
+      Hardware: <a href="http://www.busware.de">http://www.busware.de</a><br>
+      Source (and compiled firmware): <a
+            href="http://www.koeniglich.de/culfw/culfw-1.37.tar.gz">
+            http://www.koeniglich.de/culfw/culfw-1.37.tar.gz</a><br>
+      FAQ: <a href="http://www.koeniglich.de/culfw/faq.html">
+            http://www.koeniglich.de/culfw/faq.html</a><br>
+      README: <a href="http://www.koeniglich.de/culfw/README">
+            http://www.koeniglich.de/culfw/README</a><br>
+      Google-Group: <a href="http://groups.google.com/group/cul-fans">
+            http://groups.google.com/group/cul-fans</a><br>
+      CVS@berlios: <a href="http://developer.berlios.de/projects/culfw">
+            http://developer.berlios.de/projects/culfw</a><br>
+      "Making of" CUL V3: <a href="http://www.youtube.com/watch?v=HsNvnLwz6jQ">
+            http://www.youtube.com/watch?v=HsNvnLwz6jQ</a><br>
+      <br>
+    </ul>
 
-<h2>Links:</h2>
-<ul>
-  Hardware: <a href="http://www.busware.de">http://www.busware.de</a><br>
-  culfw (firmware): <a href="http://www.koeniglich.de/culfw/culfw-1.35.tar.gz">
-  	http://www.koeniglich.de/culfw/culfw-1.35.tar.gz</a><br>
-  FAQ: <a href="http://www.koeniglich.de/culfw/faq.html">
-  	http://www.koeniglich.de/culfw/faq.html</a><br>
-  README: <a href="http://www.koeniglich.de/culfw/README">
-  	http://www.koeniglich.de/culfw/README</a><br>
-  Google-Group: <a href="http://groups.google.com/group/cul-fans">
-  	http://groups.google.com/group/cul-fans</a><br>
-  CVS@berlios: <a href="http://developer.berlios.de/projects/culfw">
-  	http://developer.berlios.de/projects/culfw</a><br>
-  <br>
-</ul>
 
-
-<h2>License:</h2>
-<ul>
-  Copyright:<br>
-  <ul>
-    <li>Rudolf Koenig (r dot koenig at koeniglich dot de)</li>
-  </ul>
-  License: GPL (v2)<br>
-  Thanks to TOSTi for inspiration and numerous other people for help. <br>
+    <a name="License"></a>
+    <h3>License:</h3>
+    <ul>
+      Copyright:<br>
+      <ul>
+        <li>Rudolf Koenig (r dot koenig at koeniglich dot de)</li>
+      </ul>
+      License: GPL (v2)<br>
+      Thanks to TOSTi for inspiration and numerous other people for help. <br>
+    </ul>
+  </div>
 </body>
 
 </html>
