@@ -45,7 +45,8 @@
 #define FS20_CODE_OFF	0x00
 
 // The watchdog timer interrup occurs every 8s. 1hr are 450x8s.
-#define LONGTIMER_VAL 450
+// measurements resultest that the watchdog needs around 9s
+#define LONGTIMER_VAL 3600/9
 
 volatile uint8_t  oldSensorValue = 0;
 volatile uint16_t longTimerCnt = 0;
