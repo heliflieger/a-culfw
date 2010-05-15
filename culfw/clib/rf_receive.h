@@ -27,6 +27,7 @@ void set_txrestore(void);
 void tx_init(void);
 uint8_t rf_isreceiving(void);
 uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
+uint8_t cksum2(uint8_t *buf, uint8_t len);
 
 extern uint8_t tx_report;
 

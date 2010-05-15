@@ -31,6 +31,8 @@
 #define FS20_ZERO      400     //   400uS
 #define FS20_ONE       600     //   600uS
 #define FS20_PAUSE      10     // 10000mS
+#define EM_ONE         800     //   800uS
+#define EM_ZERO        400     //   400uS
 
 uint16_t credit_10ms;
 
@@ -202,4 +204,50 @@ rawsend(char *in)
   onelow   = hb[6];
   sendraw(hb+7, sync, nby, nbi, repeat, pause);
 }
+
+/*
+
+E0205E7000000000000
+
+*/
+
+void em_send(char *in) {
+     uint8_t iby, obuf[MAX_SNDRAW], oby;
+     int8_t  ibi, obi;
+     uint8_t hb[MAX_SNDMSG];
+
+     uint8_t hblen = fromhex(in+1, hb, MAX_SNDMSG-1);
+  
+     // EM is always 9 bytes payload!
+     if (hblen != 9) {
+//	  DS_P(PSTR("LENERR\r\n"));
+	  return;
+     }
+     
+     onehigh = zerohigh = zerolow = TDIV(EM_ZERO);
+     onelow  = TDIV(EM_ONE);
+
+     // calc checksum
+     hb[hblen] = cksum2( hb, hblen );
+     hblen++;
+
+     // Copy the message and add parity-bits
+     iby=oby=0;
+     ibi=obi=7;
+     obuf[oby] = 0;
+     
+     while(iby<hblen) {
+	  obi = abit(hb[iby] & _BV(7-ibi), obuf, &oby, obi);
+	  if(ibi-- == 0) {
+	       obi = abit(1, obuf, &oby, obi); // always 1
+	       ibi = 7; iby++;
+	  }
+     }
+     if(obi-- == 0) {                   // Trailing 0 bit: indicating EOM
+	  oby++; obi = 7;
+     }
+
+     sendraw(obuf, 12, oby, obi, 3, FS20_PAUSE);
+}
+
 #endif

@@ -39,6 +39,7 @@ PROGMEM t_fntab fntab[] = {
   { 'F', fs20send },
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
+  { TYPE_EM, em_send },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },

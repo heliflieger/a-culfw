@@ -69,7 +69,6 @@ static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime;
 static uint8_t hightime, lowtime;
 
-static uint8_t cksum2(uint8_t *buf, uint8_t len);
 static uint8_t cksum3(uint8_t *buf, uint8_t len);
 static void addbit(bucket_t *b, uint8_t bit);
 static void delbit(bucket_t *b);
@@ -127,7 +126,7 @@ cksum1(uint8_t s, uint8_t *buf, uint8_t len)    // FS20 / FHT
   return s;
 }
 
-static uint8_t
+uint8_t
 cksum2(uint8_t *buf, uint8_t len)               // EM
 {
   uint8_t s = 0;
