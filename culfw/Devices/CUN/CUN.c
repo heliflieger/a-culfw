@@ -44,6 +44,10 @@
 df_chip_t df;
 #endif
 
+#ifdef HAS_ASKSIN
+#include "rf_asksin.h"
+#endif
+
 PROGMEM t_fntab fntab[] = {
 
   { 'M', testmem },
@@ -53,6 +57,7 @@ PROGMEM t_fntab fntab[] = {
   { 'C', ccreg },
   { 'E', eth_func },
   { 'F', fs20send },
+  { 'M', em_send },
   { 'G', rawsend },
   { 'R', read_eeprom },
   { 'T', fhtsend },
@@ -180,6 +185,9 @@ main(void)
     Minute_Task();
     FastRF_Task();
     rf_router_task();
+#ifdef HAS_ASKSIN
+    rf_asksin_task();
+#endif
 #ifdef HAS_ETHERNET
     Ethernet_Task();
 #endif

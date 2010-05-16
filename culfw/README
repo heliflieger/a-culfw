@@ -190,6 +190,17 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - ee is the FS20 timespec. Note that cc must have the extension bit set.
       Example: F12340111
 
+    M<hex>
+      Send out an EM message. <hex> is a hex string of the following form:
+      ttaacc111122223333
+        tt:type 01=EM-1000s, 02=EM-100-EM, 03=1000GZ
+        aa:address, depending on the type above 01:01-04, 02:05-08, 03:09-12
+        cc:counter, will be incremented by one for each message
+        1111: cumulated value
+        2222: last value (Not set for type 2)
+        3333: top value  (Not set for type 2)
+      Example: M02054A140000000000
+
     l<hex>
       Set the led mode.
       - 00: Set LED off
@@ -389,6 +400,10 @@ culfw<->PC Protocol (over USB or TCP/IP)
       If <RR> is not specified, report the current value and the available
       time for sending RF (in 10 ms units)
 
+      Optionally <RR> might be 16bit (4digit hex - RRRR) giving additional 
+      function as:
+      - Bit 8: Enter AskSin-mode and report decoded messages 
+
     x<pp> Change the (EEPROM) PA tables (power amplification for RF sending)
       <pp> is a one-byte hex value, valid values are 00 to 09, with following
       values: the first 5 is -10/-5/0/5/10 dBm without PA ramping, the next 5
@@ -437,6 +452,15 @@ culfw<->PC Protocol (over USB or TCP/IP)
     For Hoermann Garage door openers:
       Rxxxxx
         Note: this protocol is not really understood.
+    For AskSin:
+      Allnnccttssssssddddddpp...
+        ll - length
+        nn - msg counter
+        cc - control byte
+        tt - msg type
+        ss - sender address
+        dd - destination address
+        pp - payload
 
     If bit 3 in the X command is set, then report raw data, even if it has a
     wrong checksum or parity. The format is:

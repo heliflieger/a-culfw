@@ -32,6 +32,10 @@
 #include "rf_router.h"		// rf_router_func
 #include "memory.h"		// getfreemem
 
+#ifdef HAS_ASKSIN
+#include "rf_asksin.h"
+#endif
+
 PROGMEM t_fntab fntab[] = {
 
   { 'B', prepare_boot },
@@ -39,7 +43,7 @@ PROGMEM t_fntab fntab[] = {
   { 'F', fs20send },
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
-  { TYPE_EM, em_send },
+  { 'M', em_send },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
@@ -134,6 +138,9 @@ main(void)
 #endif
 #ifdef HAS_RF_ROUTER
     rf_router_task();
+#endif
+#ifdef HAS_ASKSIN
+    rf_asksin_task();
 #endif
   }
 }

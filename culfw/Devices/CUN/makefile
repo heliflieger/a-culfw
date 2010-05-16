@@ -1,4 +1,5 @@
-MCU = at90usb1287
+MCU = at90usb1286
+#MCU = at90usb646
 BOARD  =
 F_CPU = 8000000
 FORMAT = ihex
@@ -19,6 +20,7 @@ SRC = $(TARGET).c                                                  \
 		../../clib/ringbuffer.c                               \
 		../../clib/rf_send.c                                  \
 		../../clib/rf_receive.c                               \
+		../../clib/rf_asksin.c                                \
 		../../clib/fht.c                                      \
 		../../clib/df.c                                       \
 		../../clib/qfs.c                                      \
@@ -129,7 +131,7 @@ MATH_LIB = -lm
 
 EXTRALIBDIRS = 
 
-
+#EXTMEMOPTS = 
 EXTMEMOPTS = -Wl,--defsym=__heap_start=0x802100,--defsym=__heap_end=0x80a0ff
 
 

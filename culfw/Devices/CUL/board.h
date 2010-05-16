@@ -24,6 +24,7 @@
 #  define FULL_CC1100_PA                // PROGMEM:  108b
 #  define HAS_RAWSEND                   // PROGMEM:  198b  RAM:  4b
 #  define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
+#  define HAS_ASKSIN
 #endif
 
 #ifdef CUL_V2
