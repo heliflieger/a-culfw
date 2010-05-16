@@ -7,6 +7,8 @@
 #include "rf_receive.h"
 #include "display.h"
 
+#include "rf_asksin.h"
+
 const uint8_t PROGMEM ASKSIN_CFG[50] = {
      0x00, 0x07,
      0x02, 0x06,
@@ -64,8 +66,8 @@ void rf_asksin_init(void) {
 }
 
 void rf_asksin_task(void) {
-     uint8_t enc[64];
-     uint8_t dec[64];
+     uint8_t enc[MAX_ASKSIN_MSG];
+     uint8_t dec[MAX_ASKSIN_MSG];
      uint8_t rssi;
      uint8_t l;
 
@@ -76,6 +78,9 @@ void rf_asksin_task(void) {
      if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
 
 	  enc[0] = cc1100_readReg( 0xbf ); // read len
+
+	  if (enc[0]>=MAX_ASKSIN_MSG)
+	       enc[0] = MAX_ASKSIN_MSG-1;
 	  
 	  CC1100_ASSERT;
 	  cc1100_sendbyte( 0xff );
@@ -133,6 +138,57 @@ void rf_asksin_task(void) {
      
 
 }
+
+void asksin_send(char *in) {
+     uint8_t enc[MAX_ASKSIN_MSG];
+     uint8_t dec[MAX_ASKSIN_MSG];
+     uint8_t l;
+
+     uint8_t hblen = fromhex(in+1, dec, MAX_ASKSIN_MSG-1);
+
+     if ((hblen-1) != dec[0]) {
+//	  DS_P(PSTR("LENERR\r\n"));
+	  return;
+     }
+
+     // in AskSin mode already?
+     if ((tx_report & 0x100) == 0) {
+	  rf_asksin_init();
+	  my_delay_ms(3);             // 3ms: Found by trial and error
+     }
+
+     ccStrobe(CC1100_SIDLE);
+     ccStrobe(CC1100_SFRX );
+     ccStrobe(CC1100_SFTX );
+
+     // "crypt"
+
+     enc[0] = dec[0];
+     enc[1] = (~dec[1]) ^ 0x89;
+
+     for (l = 2; l < dec[0]; l++)
+	  enc[l] = (enc[l-1] + 0xdc) ^ dec[l];
      
+     enc[l] = dec[l] ^ dec[2];
+
+     // send
+     CC1100_ASSERT;
+     cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
+
+     for(uint8_t i = 0; i < hblen; i++) {
+	  cc1100_sendbyte(enc[i]);
+     }
+
+     CC1100_DEASSERT;
+
+     ccStrobe( CC1100_SFRX  );
+     ccStrobe( CC1100_STX   );
+     
+     while( cc1100_readReg( CC1100_MARCSTATE ) != 1 )
+	  my_delay_ms(5);
+     
+     set_txrestore();
+}
+
 
 #endif

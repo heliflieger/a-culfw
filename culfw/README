@@ -201,6 +201,17 @@ culfw<->PC Protocol (over USB or TCP/IP)
         3333: top value  (Not set for type 2)
       Example: M02054A140000000000
 
+    A<hex>
+      Send out an AskSin message. <hex> is a hex string of the following form:
+      llnnccttssssssddddddpp...
+        ll - length
+        nn - msg counter
+        cc - control byte
+        tt - msg type
+        ss - sender address (3byte)
+        dd - destination address (3byte - 000000 for broadcast)
+        pp - payload...
+
     l<hex>
       Set the led mode.
       - 00: Set LED off

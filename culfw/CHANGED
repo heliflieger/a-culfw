@@ -1,5 +1,5 @@
 - CU*: EM message send support 
-- CU*: basic AskSin decode and dump support
+- CU*: basic AskSin receive, send and dump support
 
 Version 1.37 (2010-04-17)
 - CUL: size optimizations partly reversed (RFR was not working!)
