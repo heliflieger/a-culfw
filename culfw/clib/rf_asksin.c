@@ -11,8 +11,8 @@
 
 const uint8_t PROGMEM ASKSIN_CFG[50] = {
      0x00, 0x07,
-     0x02, 0x06,
-     0x03, 0x0D,
+     0x02, 0x2e,
+     0x03, 0x0d,
      0x04, 0xE9,
      0x05, 0xCA,
      0x07, 0x0C,
@@ -77,56 +77,64 @@ void rf_asksin_task(void) {
      // see if a CRC OK pkt has been arrived
      if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
 
-	  enc[0] = cc1100_readReg( 0xbf ); // read len
+	  enc[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
 
 	  if (enc[0]>=MAX_ASKSIN_MSG)
 	       enc[0] = MAX_ASKSIN_MSG-1;
 	  
 	  CC1100_ASSERT;
-	  cc1100_sendbyte( 0xff );
+	  cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
 	  
 	  for (uint8_t i=0; i<enc[0]; i++) {
 	       enc[i+1] = cc1100_sendbyte( 0 );
 	  }
 	  
 	  rssi = cc1100_sendbyte( 0 );
-
+	  
 	  CC1100_DEASSERT;
 
-/*
-	  if (rssi>=128)
-	       rssi -= 256;
-	  
-	  rssi /= 2;
-	  rssi -= 74;
-*/
-	  
+	  ccStrobe( CC1100_SFRX  );
+	  ccStrobe( CC1100_SIDLE );
+	  ccStrobe( CC1100_SNOP  );
+	  ccStrobe( CC1100_SRX   );
+
 	  dec[0] = enc[0];
 	  dec[1] = (~enc[1]) ^ 0x89;
-
+	  
 	  for (l = 2; l < dec[0]; l++)
 	       dec[l] = (enc[l-1] + 0xdc) ^ enc[l];
-
-	  dec[l] = enc[l] ^ dec[2];
-
-
-	  DC('A');
-     
-	  for (uint8_t i=0; i<=dec[0]; i++)
-	       DH2( dec[i] );
-
-	  if (tx_report & REP_RSSI)
-	       DH2(rssi);
 	  
-	  DNL();
+	  dec[l] = enc[l] ^ dec[2];
+	  
+	  
+	  if (tx_report & REP_BINTIME) {
+	       
+	       DC('a');
+	       for (uint8_t i=0; i<=dec[0]; i++)
+		    DC( dec[i] );
+	       
+	  } else {
+	       DC('A');
+	       
+	       for (uint8_t i=0; i<=dec[0]; i++)
+		    DH2( dec[i] );
+	       
+	       if (tx_report & REP_RSSI)
+		    DH2(rssi);
+	       
+	       DNL();
+	  }
 
-	  ccStrobe( CC1100_SFRX  );
+	  return;
+	  
      }
-     
+	  
+	  
      switch (cc1100_readReg( CC1100_MARCSTATE )) {
 	       
-	  // IDLE!
+	  // RX_OVERFLOW
      case 17:
+	  // IDLE
      case 1:
 	  ccStrobe( CC1100_SFRX  );
 	  ccStrobe( CC1100_SIDLE );
