@@ -3,8 +3,7 @@
 
 #define MAX_ASKSIN_MSG 64
 
-void rf_asksin_init(void);
 void rf_asksin_task(void);
-void asksin_send(char *in);
+void asksin_func(char *in);
 
 #endif

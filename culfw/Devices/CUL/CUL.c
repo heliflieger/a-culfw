@@ -42,7 +42,7 @@ PROGMEM t_fntab fntab[] = {
   { 'C', ccreg },
   { 'F', fs20send },
 #ifdef HAS_ASKSIN
-  { 'A', asksin_send },
+  { 'A', asksin_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },

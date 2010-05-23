@@ -118,6 +118,26 @@ culfw<->PC Protocol (over USB or TCP/IP)
        XX = 00  Charge with 500mA (YY=01) or 100mA (YY=00)
        XX = 01  Disable USB charging (YY=01) or enable it (YY=00)
 
+    A<func>[<hex>]
+      AskSin (aka BidCOS (R)) mode. 
+      <func> is one of:
+      - r
+        enable AskSin reception. Note: only AskSin messages will be received in
+        this mode. 
+      - s
+        Send out an AskSin message. <hex> is a hex string of the following
+        form: llnnccttssssssddddddpp...
+          ll - length
+          nn - msg counter
+          cc - control byte
+          tt - msg type
+          ss - sender address (3byte)
+          dd - destination address (3byte - 000000 for broadcast)
+          pp - payload...
+      - x
+        Disable AskSin mode. To enable reception of FS20 messages, an "X21" or
+        similar is needed.
+
     B<hex>
       Reboot device.
       If <hex> is not 00 enter bootloader mode (for flashing the device see the
@@ -200,17 +220,6 @@ culfw<->PC Protocol (over USB or TCP/IP)
         2222: last value (Not set for type 2)
         3333: top value  (Not set for type 2)
       Example: M02054A140000000000
-
-    A<hex>
-      Send out an AskSin message. <hex> is a hex string of the following form:
-      llnnccttssssssddddddpp...
-        ll - length
-        nn - msg counter
-        cc - control byte
-        tt - msg type
-        ss - sender address (3byte)
-        dd - destination address (3byte - 000000 for broadcast)
-        pp - payload...
 
     l<hex>
       Set the led mode.
@@ -410,10 +419,6 @@ culfw<->PC Protocol (over USB or TCP/IP)
 
       If <RR> is not specified, report the current value and the available
       time for sending RF (in 10 ms units)
-
-      Optionally <RR> might be 16bit (4digit hex - RRRR) giving additional 
-      function as:
-      - Bit 8: Enter AskSin-mode and report decoded messages 
 
     x<pp> Change the (EEPROM) PA tables (power amplification for RF sending)
       <pp> is a one-byte hex value, valid values are 00 to 09, with following

@@ -1,4 +1,5 @@
 #include "board.h"
+#ifdef HAS_FASTRF
 #include <string.h>
 #include <avr/pgmspace.h>
 #include "fastrf.h"
@@ -9,20 +10,7 @@
 #include "fncollection.h"
 #include "clock.h"
 
-#ifdef HAS_FASTRF
 uint8_t fastrf_on;
-
-void
-fastrf_mode(uint8_t on)
-{
-  if(on) {
-    ccInitChip(EE_FASTRF_CFG);
-    ccRX();
-    fastrf_on = 1;
-  } else {
-    fastrf_on = 0;
-  }
-}
 
 void
 fastrf_func(char *in)
@@ -30,7 +18,9 @@ fastrf_func(char *in)
   uint8_t len = strlen(in);
 
   if(in[1] == 'r') {                // Init
-    fastrf_mode(FASTRF_MODE_ON);
+    ccInitChip(EE_FASTRF_CFG);
+    ccRX();
+    fastrf_on = 1;
 
   } else if(in[1] == 's') {         // Send
 

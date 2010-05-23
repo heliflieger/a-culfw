@@ -18,11 +18,11 @@
 
 #ifdef CUL_V3
 #  define TTY_BUFSIZE           64      // RAM: TTY_BUFSIZE*4
-#  define FHTBUF_SIZE          174      //                 RAM: 74b
+#  define FHTBUF_SIZE          174      //                 RAM: 174b
 #  define RCV_BUCKETS            4      //                 RAM: 25b * bucket
 #  define RFR_DEBUG                     // PROGMEM:  354b  RAM: 14b
 #  define FULL_CC1100_PA                // PROGMEM:  108b
-#  define HAS_RAWSEND                   // PROGMEM:  198b  RAM:  4b
+#  define HAS_RAWSEND                   //
 #  define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #  define HAS_ASKSIN
 #endif
@@ -112,7 +112,5 @@
 #define LED_PIN                 PC4
 
 #endif
-
-
 
 #endif

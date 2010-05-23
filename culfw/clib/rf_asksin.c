@@ -7,6 +7,8 @@
 #include "rf_receive.h"
 #include "display.h"
 
+uint8_t asksin_on = 0;
+
 #include "rf_asksin.h"
 
 const uint8_t PROGMEM ASKSIN_CFG[50] = {
@@ -36,7 +38,9 @@ const uint8_t PROGMEM ASKSIN_CFG[50] = {
      0xff
 };
 
-void rf_asksin_init(void) {
+void
+rf_asksin_init(void)
+{
 
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -54,10 +58,11 @@ void rf_asksin_init(void) {
   // load configuration
   for (uint8_t i = 0; i<50; i += 2) {
        
-       if (pgm_read_byte( &ASKSIN_CFG[i] )>0x40)
-	    break;
+    if (pgm_read_byte( &ASKSIN_CFG[i] )>0x40)
+      break;
 
-       cc1100_writeReg( pgm_read_byte(&ASKSIN_CFG[i]), pgm_read_byte(&ASKSIN_CFG[i+1]) );
+    cc1100_writeReg( pgm_read_byte(&ASKSIN_CFG[i]),
+                     pgm_read_byte(&ASKSIN_CFG[i+1]) );
   }
   
   ccStrobe( CC1100_SCAL );
@@ -65,138 +70,160 @@ void rf_asksin_init(void) {
   my_delay_ms(1);
 }
 
-void rf_asksin_task(void) {
-     uint8_t enc[MAX_ASKSIN_MSG];
-     uint8_t dec[MAX_ASKSIN_MSG];
-     uint8_t rssi;
-     uint8_t l;
+void
+rf_asksin_task(void)
+{
+  uint8_t enc[MAX_ASKSIN_MSG];
+  uint8_t dec[MAX_ASKSIN_MSG];
+  uint8_t rssi;
+  uint8_t l;
 
-     if ((tx_report & 0x100) == 0)
-	  return;
+  if(!asksin_on)
+    return;
 
-     // see if a CRC OK pkt has been arrived
-     if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
+  // see if a CRC OK pkt has been arrived
+  if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
 
-	  enc[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
+    enc[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
 
-	  if (enc[0]>=MAX_ASKSIN_MSG)
-	       enc[0] = MAX_ASKSIN_MSG-1;
-	  
-	  CC1100_ASSERT;
-	  cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
-	  
-	  for (uint8_t i=0; i<enc[0]; i++) {
-	       enc[i+1] = cc1100_sendbyte( 0 );
-	  }
-	  
-	  rssi = cc1100_sendbyte( 0 );
-	  
-	  CC1100_DEASSERT;
+    if (enc[0]>=MAX_ASKSIN_MSG)
+         enc[0] = MAX_ASKSIN_MSG-1;
+    
+    CC1100_ASSERT;
+    cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
+    
+    for (uint8_t i=0; i<enc[0]; i++) {
+         enc[i+1] = cc1100_sendbyte( 0 );
+    }
+    
+    rssi = cc1100_sendbyte( 0 );
+    
+    CC1100_DEASSERT;
 
-	  ccStrobe( CC1100_SFRX  );
-	  ccStrobe( CC1100_SIDLE );
-	  ccStrobe( CC1100_SNOP  );
-	  ccStrobe( CC1100_SRX   );
+    ccStrobe( CC1100_SFRX  );
+    ccStrobe( CC1100_SIDLE );
+    ccStrobe( CC1100_SNOP  );
+    ccStrobe( CC1100_SRX   );
 
-	  dec[0] = enc[0];
-	  dec[1] = (~enc[1]) ^ 0x89;
-	  
-	  for (l = 2; l < dec[0]; l++)
-	       dec[l] = (enc[l-1] + 0xdc) ^ enc[l];
-	  
-	  dec[l] = enc[l] ^ dec[2];
-	  
-	  
-	  if (tx_report & REP_BINTIME) {
-	       
-	       DC('a');
-	       for (uint8_t i=0; i<=dec[0]; i++)
-		    DC( dec[i] );
-	       
-	  } else {
-	       DC('A');
-	       
-	       for (uint8_t i=0; i<=dec[0]; i++)
-		    DH2( dec[i] );
-	       
-	       if (tx_report & REP_RSSI)
-		    DH2(rssi);
-	       
-	       DNL();
-	  }
+    dec[0] = enc[0];
+    dec[1] = (~enc[1]) ^ 0x89;
+    
+    for (l = 2; l < dec[0]; l++)
+         dec[l] = (enc[l-1] + 0xdc) ^ enc[l];
+    
+    dec[l] = enc[l] ^ dec[2];
+    
+    
+    if (tx_report & REP_BINTIME) {
+      
+      DC('a');
+      for (uint8_t i=0; i<=dec[0]; i++)
+      DC( dec[i] );
+         
+    } else {
+      DC('A');
+      
+      for (uint8_t i=0; i<=dec[0]; i++)
+        DH2( dec[i] );
+      
+      if (tx_report & REP_RSSI)
+        DH2(rssi);
+      
+      DNL();
+    }
 
-	  return;
-	  
-     }
-	  
-	  
-     switch (cc1100_readReg( CC1100_MARCSTATE )) {
-	       
-	  // RX_OVERFLOW
-     case 17:
-	  // IDLE
-     case 1:
-	  ccStrobe( CC1100_SFRX  );
-	  ccStrobe( CC1100_SIDLE );
-	  ccStrobe( CC1100_SNOP  );
-	  ccStrobe( CC1100_SRX   );
-	  break;
-	  
-     }
-     
+    return;
+       
+  }
+       
+       
+  switch (cc1100_readReg( CC1100_MARCSTATE )) {
+            
+       // RX_OVERFLOW
+  case 17:
+       // IDLE
+  case 1:
+    ccStrobe( CC1100_SFRX  );
+    ccStrobe( CC1100_SIDLE );
+    ccStrobe( CC1100_SNOP  );
+    ccStrobe( CC1100_SRX   );
+    break;
+       
+  }
 
 }
 
-void asksin_send(char *in) {
-     uint8_t enc[MAX_ASKSIN_MSG];
-     uint8_t dec[MAX_ASKSIN_MSG];
-     uint8_t l;
+void
+asksin_send(char *in)
+{
+  uint8_t enc[MAX_ASKSIN_MSG];
+  uint8_t dec[MAX_ASKSIN_MSG];
+  uint8_t l;
 
-     uint8_t hblen = fromhex(in+1, dec, MAX_ASKSIN_MSG-1);
+  uint8_t hblen = fromhex(in+1, dec, MAX_ASKSIN_MSG-1);
 
-     if ((hblen-1) != dec[0]) {
-//	  DS_P(PSTR("LENERR\r\n"));
-	  return;
-     }
+  if ((hblen-1) != dec[0]) {
+//  DS_P(PSTR("LENERR\r\n"));
+    return;
+  }
 
-     // in AskSin mode already?
-     if ((tx_report & 0x100) == 0) {
-	  rf_asksin_init();
-	  my_delay_ms(3);             // 3ms: Found by trial and error
-     }
+  // in AskSin mode already?
+  if(!asksin_on) {
+    rf_asksin_init();
+    my_delay_ms(3);             // 3ms: Found by trial and error
+  }
 
-     ccStrobe(CC1100_SIDLE);
-     ccStrobe(CC1100_SFRX );
-     ccStrobe(CC1100_SFTX );
+  ccStrobe(CC1100_SIDLE);
+  ccStrobe(CC1100_SFRX );
+  ccStrobe(CC1100_SFTX );
 
-     // "crypt"
+  // "crypt"
 
-     enc[0] = dec[0];
-     enc[1] = (~dec[1]) ^ 0x89;
+  enc[0] = dec[0];
+  enc[1] = (~dec[1]) ^ 0x89;
 
-     for (l = 2; l < dec[0]; l++)
-	  enc[l] = (enc[l-1] + 0xdc) ^ dec[l];
-     
-     enc[l] = dec[l] ^ dec[2];
+  for (l = 2; l < dec[0]; l++)
+    enc[l] = (enc[l-1] + 0xdc) ^ dec[l];
+  
+  enc[l] = dec[l] ^ dec[2];
 
-     // send
-     CC1100_ASSERT;
-     cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
+  // send
+  CC1100_ASSERT;
+  cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
 
-     for(uint8_t i = 0; i < hblen; i++) {
-	  cc1100_sendbyte(enc[i]);
-     }
+  for(uint8_t i = 0; i < hblen; i++) {
+    cc1100_sendbyte(enc[i]);
+  }
 
-     CC1100_DEASSERT;
+  CC1100_DEASSERT;
 
-     ccStrobe( CC1100_SFRX  );
-     ccStrobe( CC1100_STX   );
-     
-     while( cc1100_readReg( CC1100_MARCSTATE ) != 1 )
-	  my_delay_ms(5);
-     
-     set_txrestore();
+  ccStrobe( CC1100_SFRX  );
+  ccStrobe( CC1100_STX   );
+  
+  while( cc1100_readReg( CC1100_MARCSTATE ) != 1 )
+    my_delay_ms(5);
+  
+  if(asksin_on) {
+    ccRX();
+  } else {
+    set_txrestore();
+  }
 }
 
+void
+asksin_func(char *in)
+{
+  if(in[1] == 'r') {                // Reception on
+    rf_asksin_init();
+    asksin_on = 1;
+
+  } else if(in[1] == 's') {         // Send
+    asksin_send(in+1);
+
+  } else {                          // Off
+    asksin_on = 0;
+
+  }
+}
 
 #endif

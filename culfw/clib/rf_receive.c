@@ -50,7 +50,7 @@
 #define STATE_COLLECT 3
 #define STATE_HMS     4
 
-uint16_t tx_report;              // global verbose / output-filter
+uint8_t tx_report;              // global verbose / output-filter
 
 typedef struct {
   uint8_t hightime, lowtime;
@@ -97,14 +97,7 @@ tx_init(void)
 void
 set_txrestore()
 {
-  if(tx_report>0xff) {
-    set_ccoff();
-
-#ifdef HAS_ASKSIN
-    rf_asksin_init();
-#endif
-
-  } else if(tx_report) {
+  if(tx_report) {
     set_ccon();
     ccRX();
 
@@ -117,34 +110,14 @@ set_txrestore()
 void
 set_txreport(char *in)
 {
-  uint8_t b;
-
   if(in[1] == 0) {              // Report Value
-
-    if(tx_report>0xff)
-      DH2(tx_report>>8);
-
-    DH2(tx_report&0xff);
+    DH2(tx_report);
     DU(credit_10ms, 5);
     DNL();
     return;
   }
 
-  // one or two bytes?
-  if(in[2] == 0 || in[3] == 0) {
-       // one
-       fromhex(in+1, &b, 1);
-       tx_report = b;
-
-  } else {
-       // two bytes 
-
-       fromhex(in+3, &b, 1);
-       tx_report = b;
-       fromhex(in+1, &b, 1);
-       tx_report |= (uint16_t)(b<<8);
-  }
-
+  fromhex(in+1, &tx_report, 1);
   set_txrestore();
 }
 

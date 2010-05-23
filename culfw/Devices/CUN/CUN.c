@@ -79,7 +79,7 @@ PROGMEM t_fntab fntab[] = {
   { 'w', write_file },
 #endif
 #ifdef HAS_ASKSIN
-  { 'A', asksin_send },
+  { 'A', asksin_func },
 #endif
 
   { 0, 0 },
