@@ -124,6 +124,8 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - r
         enable AskSin reception. Note: only AskSin messages will be received in
         this mode. 
+	Data is reported in hex. If bit 4 was set in previous X cmd (i.e. X10)
+        reported data is binary.
       - s
         Send out an AskSin message. <hex> is a hex string of the following
         form: llnnccttssssssddddddpp...
@@ -477,6 +479,8 @@ culfw<->PC Protocol (over USB or TCP/IP)
         ss - sender address
         dd - destination address
         pp - payload
+
+	(for binary data lower case 'a' is prepend)
 
     If bit 3 in the X command is set, then report raw data, even if it has a
     wrong checksum or parity. The format is:
