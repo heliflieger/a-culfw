@@ -55,7 +55,8 @@ sub setup_device {
   $heap->{console}->put("Press ^D to stop.");
   $heap->{console}->get("Ready: ");
 
-  $heap->{port_wheel}->put( 'X0111' );
+  $heap->{port_wheel}->put( 'X10' );
+  $heap->{port_wheel}->put( 'Ar' );
 }
 
 sub got_message {
