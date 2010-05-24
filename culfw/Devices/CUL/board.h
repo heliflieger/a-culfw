@@ -25,6 +25,7 @@
 #  define HAS_RAWSEND                   //
 #  define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #  define HAS_ASKSIN
+#  define HAS_ESA
 #endif
 
 #ifdef CUL_V2

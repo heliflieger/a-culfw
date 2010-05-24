@@ -466,6 +466,8 @@ culfw<->PC Protocol (over USB or TCP/IP)
         Data must be read backwards
     For HMS:
       Hxxxxxxxxxxxx
+    For ESA2000:
+      Sxxxxxxxxxxxx
     For Hoermann Garage door openers:
       Rxxxxx
         Note: this protocol is not really understood.

@@ -1,6 +1,8 @@
+- CU*: ESA2000 rx support (CULV3 only)
+
 Version 1.38 (2010-05-23)
-- CU*: EM message send support 
-- CU*: basic AskSin receive, send and dump support
+- CU*: EM message send support (CULV3 only)
+- CU*: basic AskSin receive, send and dump support (CULV3 only)
 - CU*: 8v handling rewrite (alexanders model for fast update in multiple rooms)
 
 Version 1.37 (2010-04-17)

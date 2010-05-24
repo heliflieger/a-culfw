@@ -101,6 +101,7 @@
 #define HAS_RAWSEND                     // PROGMEM:  198b     RAM:  4b
 #define HAS_FASTRF                      // PROGMEM:  362+106  RAM:  1b
 #define HAS_ASKSIN
+#define HAS_ESA
 
 #define BUSWARE_CUN
 

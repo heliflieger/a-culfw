@@ -49,6 +49,7 @@
 #define STATE_SYNC    2
 #define STATE_COLLECT 3
 #define STATE_HMS     4
+#define STATE_ESA     5
 
 uint8_t tx_report;              // global verbose / output-filter
 
@@ -279,6 +280,50 @@ analyze_hms(bucket_t *b)
   return 1;
 }
 
+#ifdef HAS_ESA
+uint8_t
+analyze_esa(bucket_t *b)
+{
+  input_t in;
+  in.byte = 0;
+  in.bit = 7;
+  in.data = b->data;
+
+  oby = 0;
+
+  if (b->state != STATE_ESA)
+       return 0;
+
+  if( (b->byteidx*8 + (7-b->bitidx)) != 144 )
+       return 0;
+
+  uint8_t salt = 0x89;
+  uint16_t crc = 0xf00f;
+  
+  for (oby = 0; oby < 15; oby++) {
+  
+       uint8_t byte = getbits(&in, 8, 1);
+     
+       crc += byte;
+    
+       obuf[oby] = byte ^ salt;
+       salt = byte + 0x24;
+       
+  }
+  
+  obuf[oby] = getbits(&in, 8, 1);
+  crc += obuf[oby];
+  obuf[oby++] ^= 0xff;
+
+  crc -= (getbits(&in, 8, 1)<<8);
+  crc -= getbits(&in, 8, 1);
+
+  if (crc) 
+       return 0;
+
+  return 1;
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////
 void
@@ -318,7 +363,12 @@ RfAnalyze_Task(void)
 
   b = bucket_array + bucket_out;
 
-  if(analyze(b, TYPE_FS20)) {
+#ifdef HAS_ESA
+  if(analyze_esa(b))
+    datatype = TYPE_ESA;
+#endif
+
+  if(!datatype && analyze(b, TYPE_FS20)) {
     oby--;                                  // Separate the checksum byte
     if(cksum1(6, obuf, oby) == obuf[oby]) {
       datatype = TYPE_FS20;
@@ -580,10 +630,25 @@ ISR(CC1100_INTVECT)
     }
   }
 
+#ifdef HAS_ESA
+  if (b->state == STATE_ESA) {
+    if(c < TSCALE(375))
+      return;
+    if(c > TSCALE(625)) {
+      reset_input();
+      return;
+    }
+  }
+#endif
+
   //////////////////
   // Falling edge
   if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
-    if(b->state == STATE_HMS) {
+    if( (b->state == STATE_HMS)
+#ifdef HAS_ESA
+     || (b->state == STATE_ESA) 
+#endif
+    ) {
       addbit(b, 1);
       TCNT1 = 0;
     }
@@ -594,7 +659,11 @@ ISR(CC1100_INTVECT)
 
   lowtime = c-hightime;
   TCNT1 = 0;                          // restart timer
-  if(b->state == STATE_HMS) {
+  if( (b->state == STATE_HMS)
+#ifdef HAS_ESA
+     || (b->state == STATE_ESA) 
+#endif
+  ) {
     addbit(b, 0);
     return;
   }
@@ -624,10 +693,18 @@ retry_sync:
 
     } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
 
-      if (b->sync >= 12 &&
-          (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
+      OCR1A = SILENCE;
+
+      if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
         b->state = STATE_HMS;
 
+#ifdef HAS_ESA
+      } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
+        b->state = STATE_ESA;
+	
+	OCR1A = 1000;
+	
+#endif
 #ifdef HAS_RF_ROUTER
       } else if(rf_router_myid &&
                 check_rf_sync(hightime, lowtime) &&
@@ -651,7 +728,6 @@ retry_sync:
       b->bitidx  = 7;
       b->data[0] = 0;
 
-      OCR1A = SILENCE;
       TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
 
     } else {                            // too few sync bits

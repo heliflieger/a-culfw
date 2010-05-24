@@ -9,6 +9,7 @@
 #define TYPE_FS20    'F'
 #define TYPE_KS300   'K'
 #define TYPE_HRM     'R'        // Hoermann
+#define TYPE_ESA     'S'
 
 #define REP_KNOWN    _BV(0)
 #define REP_REPEATED _BV(1)
@@ -20,7 +21,11 @@
 #define REP_LCDMON   _BV(7)
 
 /* public prototypes */
+#ifdef HAS_ESA
+#define MAXMSG 20               // ESA messages
+#else
 #define MAXMSG 12               // EMEM messages
+#endif
 
 void set_txreport(char *in);
 void set_txrestore(void);
