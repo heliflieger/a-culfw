@@ -274,14 +274,14 @@ culfw<->PC Protocol (over USB or TCP/IP)
 
     THHHHCCOOAA
       FHT commands
-      - HHHH FHT80b housecode
-      - CC   FHT80b: command, FHT8v:Valve address, 00-08
+      - HHHH FHT80b (or 8v) housecode
+      - CC   FHT80b: command
       - OO   FHT80b: origin (CUL:77 or FHT:67), FHT8v: Command
       - AA   Command argument
       Store the message in the FHT80b or FHT8v buffer, and communicate with the
       corresponding 80b/8v when the timeslot arrives. 8v commands are specified
-      by setting HHHH to the "own" housecode. For command details see
-      fhem/FHEM/11_FHT.pm
+      by setting HHHH to one of the "own" housecodes. See also the FHT_8v
+      section below.
 
       Special control commands for the CUL:
       - T01<HHHH>
@@ -441,8 +441,7 @@ culfw<->PC Protocol (over USB or TCP/IP)
       Example:
     z -> ? (z is unknown) Use one of B C F R T V W X e f l t x
 
-
-
+  
   culfw -> PC:
   ------------
     The CUL reports following data (as a HEX string, uppercase):
@@ -497,6 +496,41 @@ culfw<->PC Protocol (over USB or TCP/IP)
     NNNN   Raw data with parity/checksum, without sync.
 
 
+  FHT_8v
+  ------
+  The 80b is designed to control multiple 8v's in one room. It is possible to
+  have up to 8 different 8v values, but only one value is sent every 2 minutes,
+  it takes 16 minutes to set 8 different values.
+
+  We optimize culfw to control 8v's in different rooms, for this purpose we
+  need to update them faster (idea and first implementation by Alexander).
+
+  For this purpose up to eight different "own" house codes are used: The first
+  valve gets the house code directly.  Subsequent valves get the house code
+  increased by 0x0100. Values for each valve are sent directly one after the
+  other, but only once. The device ID is forced be be 0x01 at each valve.
+
+  Setup a connection between the cul and an 8v:
+  - T011234 (set HC to 1234)
+      Press the 8v button for 3 seconds, it will beep twice
+  - T123400A610 (sets value for first valve to 6%)
+  - T1234012f00 (pairs first valve, 8v will beep once, antenna will blink till
+                 first reception of the offset value entered before)
+  - T10 (check 8v buffer, should tell 00:2610)
+  - T11 (check 8v countdown timer)
+  - T123400A620 (change value for first valve to 13%)
+
+  - T133400A610 (set value for second valve to 6%. Pair as described before)
+  - T10 (check 8v buffer, should tell 00:2620 01:2610)
+
+  Sync consumes a lot of rf-time and it can be easily disturbed, so we try to
+  reduce the "normal" 2 minute (115+x) interval by remembering the last
+  interval in higher level software, and schedule a sync with a smaller runtime
+  at the correct time. Note: the argument must be odd, and it is measured in
+  0.5 seconds.
+  - T1234002C21 (Sync for 0x21 == dec 33 == 15 seconds)
+
+
   CUR Menu
   --------
     To define a menu on the CUR, follow this HOWTO:
@@ -525,7 +559,7 @@ Notes
 
 - Repeat-filter
   The FS20 protocol sends each message 3 times. The firmware filters optionally
-  (See Command X bit 3) repeated messages.
+  (See Command X bit 1) repeated messages.
 
 - cc1100 settings. See cc1100.h / official PDF from TI  for details.
   - Change receiver sensitivity / target amplitude
@@ -569,7 +603,6 @@ Notes
 TODO/Known BUGS:
 ==========
   - CU* Setting time sometimes changes the date too
-  - CU* rf_router: fhem module, execute cmd, test
   - CU* FS20 dim commands do not repeat.
   - CUR Xfer&Display plots from fhem
   - CUR fhem MENU/files creation support

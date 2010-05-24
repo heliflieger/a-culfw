@@ -29,6 +29,9 @@ extern uint8_t fht80b_state;
 
 #define FHT_CSUM_START   12
 
+#define FHT_8V_NUM         8    // Needs 2 byte per 8v. For sync must by <14
+#define FHT_8V_DISABLED 0xff
+
 
 
 #endif

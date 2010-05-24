@@ -11,16 +11,31 @@
 #include "cc1100.h"
 
 // We have two different work models:
+
 // 1. Control the FHT80b. In this mode we have to wait for a message from the
 //    FHT80b, and then send all buffered messages to it, with a strange
 //    ask/reply protocol.
+
 // 2. Control the valves directly (8v mode). In this mode we have to send every
 //    115+x second a message to the valves. Some messages (e.g. pair) are sent
 //    directly. This mode is activated when we receive an actuator message for
 //    our own housecode.
+//    The 80b is designed to control multiple 8v's in one room. It is possible
+//    to have up to 8 different 8v values, but only one value is sent every 2
+//    minutes, it takes 16 minutes to set 8 different values.  We optimize
+//    culfw to control 8v's in different rooms, for this purpose we need to
+//    update them faster (idea and first implementation by Alexander).  For
+//    this purpose up to eight different "own" house codes are used: The first
+//    valve gets the house code directly.  Subsequent valves get the house code
+//    increased by 0x0100. Values for each valve are sent directly one after
+//    the other, but only once.
 
 
-uint8_t fht_hc0, fht_hc1; // Our housecode. The first byte for 80b communication
+
+// Our housecode. The first byte for 80b communication, both together for
+// direct 8v controlling
+uint8_t fht_hc0, fht_hc1;
+
 
 
 #ifdef HAS_FHT_80b
@@ -45,11 +60,31 @@ static void    fht80b_reset_state(void);
 
 #endif 
 
+
 #ifdef HAS_FHT_8v
+
 uint16_t fht8v_timeout;
-uint8_t fht8v_buf[18], fht8v_idx;
-uint8_t fht8v_insync, fht8v_ctsync;
+uint8_t fht8v_buf[2*FHT_8V_NUM];
+uint8_t fht8v_ctsync;
+#define FHT8V_CMD_SET  0x26
+#define FHT8V_CMD_SYNC 0x2c
+#define FHT8V_CMD_PAIR 0x2f
+
 #endif
+
+static void
+display_buf(uint8_t ptr[])
+{
+  if(!(tx_report & REP_FHTPROTO))
+    return;
+
+  DC('T');
+  for(uint8_t i = 0; i < 5; i++)
+    DH2(ptr[i]);
+  if(tx_report & REP_RSSI)
+    DH2(250);
+  DNL();
+}
 
 void
 fht_init(void)
@@ -57,8 +92,8 @@ fht_init(void)
   fht_hc0 = erb(EE_FHTID);
   fht_hc1 = erb(EE_FHTID+1);
 #ifdef HAS_FHT_8v
-  for(uint8_t i = 0; i < 18; i++)
-    fht8v_buf[i] = 0xff;
+  for(uint8_t i = 0; i < FHT_8V_NUM; i++)
+    fht8v_buf[2*i] = FHT_8V_DISABLED;
 #endif
 
 #ifdef HAS_FHT_80b
@@ -96,25 +131,25 @@ fhtsend(char *in)
 #endif
 
 #ifdef HAS_FHT_8v
-    } else if(hb[0] == 0x10) {           // Return the 8v buffer
+    } else if(hb[0] == 0x10) {         // Return the 8v buffer
 
-      uint8_t na=0, v, i = 8;
-      do {
-        if((v = fht8v_buf[2*i]) == 0xff)
+      uint8_t na=0;
+      for(int i = 0; i < FHT_8V_NUM; i++) {
+        if(fht8v_buf[2*i] == FHT_8V_DISABLED)
           continue;
         if(na)
           DC(' ');
         DH2(i);
         DC(':');
-        DH2(v);
+        DH2(fht8v_buf[2*i]);
         DH2(fht8v_buf[2*i+1]);
         na++;
-      } while(i--);
+      }
 
       if(na==0)
         DS_P( PSTR("N/A") );
 
-    } else if(hb[0] == 0x11) {           // Return the next 8v timeout
+    } else if(hb[0] == 0x11) {         // Return the next 8v timeout
       DH2(fht8v_timeout/125);
 #endif
 
@@ -124,22 +159,28 @@ fhtsend(char *in)
   } else {
 
 #ifdef HAS_FHT_8v
-    if(hb[0]==fht_hc0 &&
+    if(hb[0]>=fht_hc0 &&
+       hb[0]< fht_hc0+FHT_8V_NUM &&
        hb[1]==fht_hc1) {                 // FHT8v mode commands
 
-      if(hb[3] == 0x2f) {
+      if(hb[3] == FHT8V_CMD_PAIR) {
         addParityAndSend(in, FHT_CSUM_START, 2);
 
-      } else if(hb[3] == 0x2c) {         // start syncprocess
-        fht8v_insync = 1;
-        fht8v_ctsync = 0xf3;
+      } else if(hb[3] == FHT8V_CMD_SYNC){// start syncprocess for _all_ 8v's
+        fht8v_ctsync = hb[4];            // use it to shorten the sync-time
         fht8v_timeout=1;
 
-      } else {                           // Store the rest
-
-        fht8v_idx = (hb[2] < 9 ? hb[2] : 0);
-        fht8v_buf[fht8v_idx*2  ] = hb[3];// Command or 0xff for disable this
-        fht8v_buf[fht8v_idx*2+1] = hb[4];// slot (valve)
+        // Cheating on the 1%
+        uint8_t cnt = 0;
+        for(uint8_t i = 0 ; i < FHT_8V_NUM; i++ )
+          if(fht8v_buf[2*i] != FHT_8V_DISABLED )
+            cnt++;
+        credit_10ms += (4*fht8v_ctsync);   // should be 3.75 = 75ms / 2 / 10
+        
+      } else {                           // Valve position
+        uint8_t idx = (hb[0]-fht_hc0)*2;
+        fht8v_buf[idx  ] = hb[3];        // Command or 0xff for disable this
+        fht8v_buf[idx+1] = hb[4];        // slot (valve)
 
       }
       return;
@@ -159,54 +200,48 @@ fhtsend(char *in)
 void
 fht8v_timer(void)
 {
-  uint8_t hb[6];
+  uint8_t hb[6], i;
 
-  hb[0] = fht_hc0;
   hb[1] = fht_hc1;
+  hb[2] = 0;                             // Valve idx
 
-  if (fht8v_insync == 1) {
-    hb[2] = 0;
-    hb[3] = 0x2c;
+  if(fht8v_ctsync) {                     // Count down in 1sec steps
+    fht8v_timeout = (fht8v_ctsync == 3) ? 3*125 : 125;
 
-    if(fht8v_ctsync > 1){
+  } else {
+    fht8v_timeout = (125*(230+(fht_hc1&0x7)))>>1;
+
+  }
+
+  for(i = 0 ; i < FHT_8V_NUM; i++ ) {
+    if(fht8v_buf[2*i] == FHT_8V_DISABLED )
+      continue;
+    hb[0] = fht_hc0+i;
+    if(fht8v_ctsync) {
+      hb[3] = FHT8V_CMD_SYNC;
       hb[4] = fht8v_ctsync;
-      fht8v_ctsync -=2;
-      fht8v_timeout = 125;
-      addParityAndSendData(hb, 5, FHT_CSUM_START, 1);
-      return;
-    }
-    if(fht8v_ctsync == 1){                // sleep 2 more seconds
-      fht8v_ctsync--;
-      fht8v_timeout = 250;
-      return;
-    }
-    if(fht8v_ctsync == 0){                // send broadcast
-      fht8v_insync = 0;
-      hb[3] = 0x26;
-      hb[4] = 0x00;
-      fht8v_timeout = (125*(230+(fht_hc1&0x7)))>>1;
-      addParityAndSendData(hb, 5, FHT_CSUM_START, 2);
-      return;
-    }
-  }
 
-  fht8v_timeout = (125*(230+(fht_hc1&0x7)))>>1;
-
-  uint8_t i = fht8v_idx;
-  for(;;) {
-    if((hb[3] = fht8v_buf[2*i]) != 0xff) {
-      hb[2] = i;
+    } else {
+      hb[3] = fht8v_buf[2*i  ];
       hb[4] = fht8v_buf[2*i+1];
-      addParityAndSendData(hb, 5, FHT_CSUM_START, 2);
-      fht8v_idx = (fht8v_idx+1)%9;        // Next time start with the next slot
-      break;
+
     }
-    i = (i+1)%9;
-    if(i == fht8v_idx) {               
-      fht8v_idx = (fht8v_idx+1)%9;
-      break;
-    }
+    addParityAndSendData(hb, 5, FHT_CSUM_START, 1);
+    display_buf(hb);
+
   }
+
+  if(fht8v_ctsync) {
+    if(fht8v_ctsync == 3) {
+      fht8v_ctsync = 0;
+
+    } else {
+      fht8v_ctsync -= 2;
+
+    }
+
+  }
+
 }
 #endif
 
@@ -236,14 +271,7 @@ fht80b_sendpacket(void)
   addParityAndSendData(fht80b_out, 5, FHT_CSUM_START, 1);
   ccRX();                               // reception might be lost due to LOVF
 
-  if(tx_report & REP_FHTPROTO) {
-    DC('T');
-    for(uint8_t i = 0; i < 5; i++)
-      DH2(fht80b_out[i]);
-    if(tx_report & REP_RSSI)
-      DH2(250);
-    DNL();
-  }
+  display_buf(fht80b_out);
 }
 
 static void
