@@ -4,18 +4,19 @@
 #include <util/delay.h>
 #include "cc1100.h"
 
-#define NO_FREQ433 1
+// #define FREQ433 1
 
-const uint8_t CC1100_PA[8] = {
-     0x00,
-     0x32,
-     0x38,
-     0x3f,
-     0x3f,
-     0x3f,
-     0x3f,
-     0x3f
+#define PATABLE_LEN 5
+
+const uint8_t CC1100_PA[PATABLE_LEN] = {
+  0x27,   //-10 dBm	0
+  0x67,   // -5 dBm 	1
+  0x50,   //  0 dBm	2
+  0x81,   //  5 dBm	3
+  0xC2,   // 10 dBm	4
 };
+
+#define PATABLE_INDEX 4
 
 const uint8_t CC1100_CFG[0x2f] = {
   //PROGMEM prog_uint8_t CC1100_CFG[0x29] = {
@@ -36,11 +37,11 @@ const uint8_t CC1100_CFG[0x2f] = {
 
 #ifdef FREQ433
      0x10, // 0D FREQ2 x    Fcarrier = Fosc/65536*(FREQ2.FREQ1.FREQ0)
-     0xb0, // 0E FREQ1 x    If Fcarrier = 868.36MHz => Fxosc = 26MHz, 
-     0x71, // 0F FREQ0 x
+     0xa9, // 0E FREQ1 x    Fcarrier= Value * 26MHz/65536 => 433.249 MHz corresponds to 10A9D6,
+     0xd6, // 0F FREQ0 x
 #else
      0x21, // 0D FREQ2 x    Fcarrier = Fosc/65536*(FREQ2.FREQ1.FREQ0)
-     0x65, // 0E FREQ1 x    If Fcarrier = 868.36MHz => Fxosc = 26MHz, 
+     0x65, // 0E FREQ1 x    If Fcarrier = 868.36MHz => Fxosc = 26MHz,
      0xe8, // 0F FREQ0 x
 #endif
 
@@ -64,15 +65,14 @@ const uint8_t CC1100_CFG[0x2f] = {
      0x6B, // 1F WOREVT0
      0xF8, // 20 WORCTRL    Wake on radio control
      0x56, // 21 FREND1 x   Default
-     0x17, // 22 FREND0 x   PA Table index (for xmit): 0/7 -> PA: 00/3f
-     //0x11, // 22 FREND0 x   No PA Ramping
+     0x11, // 22 FREND0 x   No PA Ramping, select #1 from PATABLE
      0xE9, // 23 FSCAL3 x   Freqency Synthesizer Calibration
      0x2A, // 24 FSCAL2 x
      0x00, // 25 FSCAL1 x
      0x1F, // 26 FSCAL0 x
      0x41, // 27 RCCTRL1
      0x00, // 28 RCCTRL0
-     /*        
+     /*
      0x59, // 29 FSTEST x
      0x7F, // 30 PTEST
      0x3F, // 31 AGCTST
@@ -91,11 +91,11 @@ uint8_t cc1100_sendbyte(uint8_t data) {
      USISR = _BV( USIOIF );
 
      do {
-	  
-	  USICR = _BV( USIWM0 ) | _BV(USICS1) | _BV(USICLK) | _BV(USITC); 
-	  
+
+	  USICR = _BV( USIWM0 ) | _BV(USICS1) | _BV(USICLK) | _BV(USITC);
+
      } while (!bit_is_set(USISR, USIOIF));
-     
+
      return USIDR;
 }
 
@@ -105,9 +105,9 @@ uint8_t cc1100_read(uint8_t data) {
 
      cc1100_sendbyte( data );
      uint8_t temp = cc1100_sendbyte( 0xaa );
-     
+
      CC1100_DEASSERT;
-     
+
      return temp;
 }
 
@@ -120,7 +120,7 @@ void ccStrobe(uint8_t strobe) {
      CC1100_ASSERT;
      cc1100_sendbyte( strobe );
      CC1100_DEASSERT;
-     
+
 }
 
 
@@ -133,7 +133,7 @@ void ccStrobe(uint8_t strobe) {
 void ccResetChip(void) {
 
 //     printf_P( PSTR("Reset CC1100 chip ...\r\n" ) );
-     
+
      // Toggle chip select signal
      CC1100_DEASSERT;
      _delay_us(30);
@@ -141,7 +141,7 @@ void ccResetChip(void) {
      _delay_us(30);
      CC1100_DEASSERT;
      _delay_us(45);
-     
+
      // Send SRES command
      ccStrobe( CC1100_SRES );
 
@@ -154,17 +154,17 @@ void ccResetChip(void) {
      for (uint8_t i = 0;i<0x29;i++) {
 	  cc1100_sendbyte( CC1100_CFG[i] );
      }
-     
+
      CC1100_DEASSERT;
 
      // setup PA table
      CC1100_ASSERT;
      cc1100_sendbyte( CC1100_PATABLE | CC1100_WRITE_BURST );
 
-     for (uint8_t i = 0;i<8;i++) {
-	  cc1100_sendbyte( CC1100_PA[i] );
+     for (uint8_t i= 0; i< PATABLE_LEN;i++) {
+	  cc1100_sendbyte( i==1 ? CC1100_PA[PATABLE_INDEX] : 0 );
      }
-     
+
      CC1100_DEASSERT;
 
      ccStrobe( CC1100_SCAL );
@@ -175,7 +175,7 @@ void ccInitChip(void) {
 //     printf_P( PSTR("Init CC1100 chip ...\r\n" ) );
 
      SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
-     
+
      CC1100_DEASSERT;
 
      ccResetChip();
