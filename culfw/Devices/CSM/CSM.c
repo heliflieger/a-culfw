@@ -29,13 +29,22 @@
 #include "fastrf.h"
 #include "rf_router.h"
 
+#ifdef HAS_ASKSIN
+#include "rf_asksin.h"
+#endif
+
 PROGMEM t_fntab fntab[] = {
 
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
+  { 'M', em_send },
+  { 'S', esa_send },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
@@ -75,16 +84,25 @@ int
 main(void)
 {
   wdt_disable();
+
+#ifdef CSMV4
+
+  OSCCAL = 0x9a;
+
+  LED_DDR  |= _BV( LED_ON_PIN );
+  LED_PORT |= _BV( LED_ON_PIN );
+
+#endif
+
+//  while(1);
+
   led_init();
   LED_ON();
 
   spi_init();
 
-
-//  eeprom_factory_reset("xx");
-  eeprom_init();
-
-//  while(1);
+  eeprom_factory_reset("xx");
+//  eeprom_init();
 
   led_mode = 2;
 
