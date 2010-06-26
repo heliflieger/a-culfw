@@ -27,6 +27,8 @@ following RF protocols are supported:
 - EM
 - KS300/S300TH
 - HMS
+- ESA
+- ASKSIN (aka BidCos(R))
 
 Thanks to the MyUSB project (http://www.fourwalledcubicle.com/MyUSB.php, ) the
 device/firmware combination confirms to the Universal Serial Bus Communication
@@ -272,12 +274,15 @@ culfw<->PC Protocol (over USB or TCP/IP)
       If the CUR is connected via USB then only the display will be switched
       off.
 
-    THHHHCCOOAA
-      FHT commands
+    THHHHxxxxxx
+      FHT80b/FHT8v commands
+      FHT80b syntax: THHHHCCAA[CCAA[CCAA...]]
+      FHT8v  syntax: THHHHCCOOAA
       - HHHH FHT80b (or 8v) housecode
-      - CC   FHT80b: command
-      - OO   FHT80b: origin (CUL:77 or FHT:67), FHT8v: Command
-      - AA   Command argument
+      - CC   Command
+      - OO   Command origin (CUL:77 or FHT:67)
+      - AA   Argument
+
       Store the message in the FHT80b or FHT8v buffer, and communicate with the
       corresponding 80b/8v when the timeslot arrives. 8v commands are specified
       by setting HHHH to one of the "own" housecodes. See also the FHT_8v
