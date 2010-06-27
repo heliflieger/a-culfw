@@ -43,9 +43,10 @@ Prerequisites
   - dfu-programmer (0.4.4)
 
   If you want to modify the firmware:
-  - avr-libc       (1.6.2)
-  - binutils-avr   (2.18)
-  - gcc-avr        (4.3.0)
+  - avr-libc       (1.6.2 / 1.6.7)
+  - binutils-avr   (2.18 / 2.20)
+  - gcc-avr        (4.3.0 / 4.3.4)
+  Ubuntu: "apt-get install avr-libc" will install all three packages
 
 
 Compile (optional)

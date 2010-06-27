@@ -59,7 +59,7 @@ PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    0x65, // 0E FREQ1    *C4    65    
    0x6a, // 0F FREQ0    *EC    e8    
    0x55, // 10 MDMCFG4  *8C    55    bWidth 325kHz
-   0xe4, // 11 MDMCFG3  *22   *43    Drate:6000 ((256+228)*2^7)*26000000/2^28
+   0xe4, // 11 MDMCFG3  *22   *43    Drate:1500 ((256+228)*2^5)*26000000/2^28
    0x30, // 12 MDMCFG2  *02   *B0    Modulation: ASK
    0x23, // 13 MDMCFG1  *22    23    
    0xb9, // 14 MDMCFG0  *F8    b9    ChannelSpace: 350kHz

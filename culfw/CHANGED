@@ -1,4 +1,6 @@
+Version 1.39 (2010-06-27)
 - CU*: ESA2000 rx support (CULV3 only)
+- CUL: small rfr tweaks.
 
 Version 1.38 (2010-05-23)
 - CU*: EM message send support (CULV3 only)

@@ -87,7 +87,7 @@ Minute_Task(void)
     fht80b_timer();
 #endif
 #ifdef HAS_RF_ROUTER
-  if(rf_router_sendtime == ticks)
+  if(rf_router_sendtime && --rf_router_sendtime == 0)
     rf_router_flush();
 #endif
 

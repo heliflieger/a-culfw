@@ -63,7 +63,7 @@ display_char(char data)
      (display_channel & DISPLAY_RFROUTER) &&
      data != '\n' && buffer_free) {
     rb_put(&RFR_Buffer, data == '\r' ? ';' : data);
-    rf_router_sendtime = ticks+3; 
+    rf_router_sendtime = 3; 
     rf_nr_send_checks = 2;
   }
 #endif

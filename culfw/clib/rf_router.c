@@ -18,7 +18,7 @@ uint8_t rf_router_status;
 uint8_t rf_router_myid;
 uint8_t rf_router_target;
 uint8_t rf_router_hsec;
-uint32_t rf_router_sendtime;
+uint8_t rf_router_sendtime; // relative ticks
 uint8_t  rf_nr_send_checks;
 
 #ifndef RFR_SHADOW
@@ -32,6 +32,14 @@ void rf_debug_out(uint8_t);
 uint16_t nr_t, nr_f, nr_e, nr_k, nr_h, nr_r, nr_plus;
 #endif
 
+void
+usbMsg(char *s)
+{
+  display_channel = DISPLAY_USB;
+  display_string(s);
+  DNL();
+  display_channel = 0xff;
+}
 
 void
 rf_router_init()
@@ -54,7 +62,7 @@ rf_router_func(char *in)
 #ifdef RFR_DEBUG 
   } else if(in[1] == 'd') {     // ud: Debug
     DH((uint16_t)ticks, 4); DC('.');
-    DH((uint16_t)rf_router_sendtime, 4);
+    DH2(rf_router_sendtime);
     DNL();
   } else if(in[1] == 's') {     // us: Statistics
     DH(nr_t,1); DC('.');
@@ -171,11 +179,6 @@ rf_router_task(void)
       while(--len)
         rb_put(&TTY_Rx_Buffer, cc1100_sendbyte(0));
       CC1100_DEASSERT;
-      //display_channel=DISPLAY_USB;
-      //TTY_Rx_Buffer.buf[TTY_Rx_Buffer.nbytes] = 0;
-      //display_string(TTY_Rx_Buffer.buf);
-      //DNL();
-      //display_channel=0xff;
     }
     set_txrestore();
     rf_router_status = RF_ROUTER_INACTIVE;
@@ -229,7 +232,7 @@ rf_router_flush()
   }
 
   if(--rf_nr_send_checks)
-    rf_router_sendtime = ticks+3;
+    rf_router_sendtime = 3;
   else
     rf_router_send(1);   // duration is more than one tick
 }

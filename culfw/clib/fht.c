@@ -72,8 +72,8 @@ uint8_t fht8v_ctsync;
 
 #endif
 
-static void
-display_buf(uint8_t ptr[])
+void
+fht_display_buf(uint8_t ptr[])
 {
   if(!(tx_report & REP_FHTPROTO))
     return;
@@ -227,7 +227,7 @@ fht8v_timer(void)
 
     }
     addParityAndSendData(hb, 5, FHT_CSUM_START, 1);
-    display_buf(hb);
+    fht_display_buf(hb);
 
   }
 
@@ -271,7 +271,7 @@ fht80b_sendpacket(void)
   addParityAndSendData(fht80b_out, 5, FHT_CSUM_START, 1);
   ccRX();                               // reception might be lost due to LOVF
 
-  display_buf(fht80b_out);
+  fht_display_buf(fht80b_out);
 }
 
 static void
