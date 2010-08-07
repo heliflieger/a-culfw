@@ -582,7 +582,7 @@ Notes
 
     Example: W1D06
     Notes:
-    - fhem users can set these values with "set CUL rAmpl 42 sens 8"
+    - fhem users can set these values with "set CUL rAmpl 42; set CUL sens 8"
     - R/W address (EEPROM) for the FS20/SlowRF Communication is = CC1101
       address+2, for the FastRF Communication is CC1101 address+55. See
       fncollection.h for other values.
@@ -591,9 +591,9 @@ Notes
      FREQ2(0D), FREQ1(0E), FREQ0(0F), Fosc = 26MHz
      Fcarrier = Fosc/65536*(FREQ2.FREQ1.FREQ0)
 
-     Example: W0F21, W1065, W11E8 (868.35MHz, default)
+     Example: W0F21, W1065, W11E8 (868.35MHz)
               W0F21, W1062, W1176 (868.00MHz)
-    Note: fhem users can set it with "set CUL freq 868.3"
+    Note: fhem users can set it with "set CUL freq 868.3" (868.3 is default)
 
   - Change channel bandwidth
     MDMCFG4 (10). CHANBW_E (bits 7:6), CHANBW_M (bits 5:4)
