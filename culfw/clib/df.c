@@ -1,3 +1,5 @@
+#ifdef HAS_FS
+
 /* vim:fdm=marker ts=4 et ai
  * {{{
  *
@@ -235,3 +237,4 @@ void df_wait(df_chip_t chip)
 
 } /* }}} */
 
+#endif

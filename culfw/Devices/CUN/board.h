@@ -54,7 +54,8 @@
   #define ENC28J60_SPI_MISO       SPI_MISO
   #define ENC28J60_SPI_SS         SPI_SS
 
-  #define HAS_FS                  1
+// if you have external FLASH memory ...
+//  #define HAS_FS                  1
   #define DF_DDR                  DDRD
   #define DF_PORT                 PORTD 
   #define DF_CS                   PD3
