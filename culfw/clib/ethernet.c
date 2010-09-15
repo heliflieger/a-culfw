@@ -83,7 +83,7 @@ ethernet_reset(void)
   buf[2] = 'o'; strcpy_P(buf+3, PSTR("00"));            write_eeprom(buf);//GMT
 
   // Generate a "unique" MAC address from the unique serial number
-  buf[2] = 'm'; strcpy_P(buf+3, PSTR("000425"));        // Atmel MAC Range
+  buf[2] = 'm'; strcpy_P(buf+3, PSTR("A45055"));        // busware.de OUI range
 #define bsbg boot_signature_byte_get
   tohex(bsbg(0x0e)+bsbg(0x0f), (uint8_t*)buf+9);
   tohex(bsbg(0x10)+bsbg(0x11), (uint8_t*)buf+11);
