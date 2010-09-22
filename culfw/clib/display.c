@@ -18,9 +18,7 @@
 #ifdef HAS_ETHERNET
 #include "tcplink.h"
 #endif
-#ifdef HAS_FS
 uint8_t log_enabled = 0;
-#endif
 
 uint8_t display_channel = 0;
 

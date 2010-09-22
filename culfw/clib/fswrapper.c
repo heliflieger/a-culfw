@@ -102,11 +102,13 @@ write_file(char *in)
     return;
   }
 
+#ifdef HAS_FS
   if(fromhex(in+1, hb, 4) != 4) {
     log_enabled = hb[0];
     ewb(EE_LOGENABLED, log_enabled);
     return;
   }
+#endif
 
   filesize = ((uint32_t)hb[0]<<24)|
              ((uint32_t)hb[1]<<16)|
