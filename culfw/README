@@ -122,11 +122,11 @@ culfw<->PC Protocol (over USB or TCP/IP)
        XX = 01  Disable USB charging (YY=01) or enable it (YY=00)
 
     A<func>[<hex>]
-      AskSin (aka BidCOS (R)) mode. 
+      AskSin (aka BidCOS (R)) mode.
       <func> is one of:
       - r
         enable AskSin reception. Note: only AskSin messages will be received in
-        this mode. 
+        this mode.
 	Data is reported in hex. If bit 4 was set in previous X cmd (i.e. X10)
         reported data is binary.
       - s
@@ -180,7 +180,12 @@ culfw<->PC Protocol (over USB or TCP/IP)
     E<x> eth debugging
       (CUN only)
       - c
-        Print out the currently configured IP & MAC Adress.
+        Print out the currently configured IP & MAC address.
+        The IP address may be different from what you configured with Wia
+        if DHCP is enabled. 0.0.0.0 is shown if no IP address is set, e.g.
+        when DHCP is enabled but the network cable is unplugged or CUN
+        could not get an IP address over LAN. Note that the IP address
+        that you configured with Wia is disregarded if DHCP is enabled.
 
       - d
         increase the debug level. Meaning of the levels
@@ -254,8 +259,15 @@ culfw<->PC Protocol (over USB or TCP/IP)
       See fncollection.h for more details.
       Example: R00 -> 63
 
-      For the additional CUN-only settings see the corresponding W (write
-      eeprom) section.
+      Additional CUN-only commands:
+        Rim - MAC Address
+        Rid - DHCP enabled flag
+        Ria - IPV4 Address
+        Rig - IPV4 gateway
+        Rin - IPV4 network mask
+        Rip - tcplink port
+        RiN - NTP sever
+        Rio - GMT offset
 
     r<filename>
       (CUR/CUN)
@@ -447,7 +459,7 @@ culfw<->PC Protocol (over USB or TCP/IP)
       Example:
     z -> ? (z is unknown) Use one of B C F R T V W X e f l t x
 
-  
+
   culfw -> PC:
   ------------
     The CUL reports following data (as a HEX string, uppercase):
@@ -608,8 +620,45 @@ Notes
     MARCSTATE: C35 -> 01 (Idle), 13 (RX)
 
 
-TODO/Known BUGS:
-==========
+Sample CUN setup
+================
+
+This section describes how to setup CUN for ethernet access with the following
+settings:
+
+DCHP client:		off
+IP address/netmask:	192.168.31.126/255.255.255.0
+Gateway:		192.168.31.1
+NTP server:		192.168.31.2
+Time zone offset:	GMT+2
+
+Connect CUN to your PC via USB. On Linux a device /dev/ttyACM0 will appear (on
+subsequent experiments, the device may be named /dev/ttyACM1, /dev/ttyACM2 and
+so forth). Use screen /dev/ttyACM1 to talk to CUN. Enter the following commands:
+
+V			output version, e.g. V 1.39 CUN
+Wid00			disable DHCP
+Rid
+Wia192.168.31.126	set IP address
+Ria
+Wig192.168.31.1		set gateway
+Rig
+Win255.255.255.0	set netmask
+Rin
+WiN192.168.31.2		set NTP server
+RiN
+Wio02			set time zone offset
+Rio
+En			request time from NTP server
+c03			show date and timeslot
+
+The Ri commands read back what you've just written to eeprom.
+
+Reboot CUN and connect to it via telnet 192.168.31.126 2323.
+
+
+TODO/Known BUGS
+===============
   - CU* Setting time sometimes changes the date too
   - CU* FS20 dim commands do not repeat.
   - CUR Xfer&Display plots from fhem
