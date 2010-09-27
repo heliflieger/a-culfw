@@ -14,7 +14,9 @@ my $fname;
 my @stack;
 sub checkstack($);
 
-while(int(@ARGV)) {
+die("Usage: perl tools/stack.pl `find . -name \*.lst`\n") if(!@ARGV);
+
+while(@ARGV) {
   my $fname = shift @ARGV;
   open(FH, $fname) || die("$fname: $!\n");
   $fname = "";
