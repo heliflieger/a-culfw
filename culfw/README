@@ -47,6 +47,7 @@ Prerequisites
   - binutils-avr   (2.18 / 2.20)
   - gcc-avr        (4.3.0 / 4.3.4)
   Ubuntu: "apt-get install avr-libc" will install all three packages
+  OSX: port install avr-gcc avr-libc dfu-programmer
 
 
 Compile (optional)
@@ -210,6 +211,7 @@ culfw<->PC Protocol (over USB or TCP/IP)
       First switch both devices to fastrf mode with "fr", then send data:
       fs<data>, e.g. fsHallo
       Reset to "SlowRF": fx, followed by X21
+      It can be used to "sniff" RFR packets
 
     F<hex>
       Send out an FS20 message. <hex> is a hex string of the following form:
@@ -219,6 +221,21 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - cc is the FS20 command
       - ee is the FS20 timespec. Note that cc must have the extension bit set.
       Example: F12340111
+
+    GssNnprHHLLhhllDDDD...
+      Send raw data, only if HAS_RAWSEND is enabled.
+      - Everything after the command G is hex.
+      - ss Number of sync bits. Sync is always 0, followed by exactly one 1-bit.
+      - N  Number of data bytes (exclusive the last byte if it is not complete)
+      - n  Number of bits in the last byte
+      - p  Number of ms pause between repeats
+      - r  Number of repeats (e.g. FS20: 3)
+      - HH High-Time for the 0-bit, Unit is 16us (!)
+      - LL Low- Time for the 0-bit, Unit is 16us (!)
+      - hh High-Time for the 1-bit, Unit is 16us (!)
+      - ll Low- Time for the 1-bit, Unit is 16us (!)
+      - DDDDD... Databytes
+      See also X04
 
     M<hex>
       Send out an EM message. <hex> is a hex string of the following form:
