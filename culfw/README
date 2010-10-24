@@ -328,6 +328,8 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - T02
         Return the FHT80b buffer. FHT80b commands are queued in the internal
         buffer, which has place for 14 to 31 messages.
+	A command is removed from the buffer after CUL has received the
+	acknowledgement from FHT80b.
       - T03
         Return the size of the remaining FHT80b buffer (bytes, hex).
       - T10
