@@ -32,6 +32,10 @@
 #include "tcplink.h"
 #include "ntp.h"
 #include "memory.h"
+#include "onewire.h"
+
+/* ADDED BY OD */
+#include "i2cmaster.h"
 
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
@@ -57,7 +61,9 @@ PROGMEM t_fntab fntab[] = {
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
-
+  
+  { 'O', onewire_func },
+  
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -154,6 +160,11 @@ main(void)
 
   ethernet_init();
 
+//Added by OD
+  i2c_init();
+//Added by OD
+
+    
   LED_OFF();
 
   sei();

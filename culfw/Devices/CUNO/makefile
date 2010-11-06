@@ -35,9 +35,10 @@ SRC = $(TARGET).c                                                    \
 		../../avr-uip/uip/uip-neighbor.c                      \
 		../../avr-uip/apps/dhcpc/dhcpc.c                      \
 		../../clib/ntp.c                                      \
-		../../clib/spi.c                                     \
-
-
+		../../clib/spi.c                                      \
+		../../clib/twimaster.c                                \
+		../../clib/onewire.c                                  \
+		
 OPT = s
 DEBUG = dwarf-2
 EXTRAINCDIRS = ../.. ../../clib ../../avr-uip ../../avr-uip/uip
@@ -104,7 +105,7 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
 
 AVRDUDE_PROGRAMMER = avr109
-AVRDUDE_PORT = /dev/ttyACM0 -b 38400 
+AVRDUDE_PORT = COM6 -b 38400 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
