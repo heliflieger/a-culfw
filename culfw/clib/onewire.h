@@ -65,47 +65,25 @@ void onewire_WriteBit(unsigned char data);
 void onewire_WriteByte(unsigned char data);
 unsigned char onewire_ReadByte(void);
 unsigned char onewire_ReadBit(void);
-unsigned char onewire_Triplet(unsigned char dir);
+
 void onewire_FullSearch(void);
 unsigned char docrc8(unsigned char value);
-
 void onewire_SearchReset(void);
 int onewire_Search(void);
 void onewire_ReadROMCodes(void);
 
 void onewire_ParasitePowerOn(void);
 
-
 void onewire_ReadTemperature(void);
-
 
 void onewire_func(char *);
 
-void ds2482Init(void);
-void ds2482Reset(void);
+int ds2482Init(void);
+int ds2482Reset(void);
 unsigned char ds2482SendCmd(unsigned char cmd);
 unsigned char ds2482SendCmdArg(unsigned char cmd, unsigned char arg);
-unsigned char ds2482BusTriplet(unsigned char dir);
 
 unsigned char i2cMasterSend(unsigned char deviceAddr, unsigned char length, unsigned char* data);
 unsigned char i2cMasterReceive(unsigned char deviceAddr, unsigned char length, unsigned char* data);
-
-/*
-//! Initialize the DS2482 chip
-//	returns:
-//	0 if successful
-//	non-zero if unsuccessful (chip not present)
-u08 ds2482Init(u08 i2cAddr);
-u08 ds2482Reset(u08 i2cAddr);
-u08 ds2482SendCmd(u08 cmd);
-u08 ds2482SendCmdArg(u08 cmd, u08 arg);
-u08 ds2482BusyWait(void);
-u08 ds2482BusReset(void);
-u08 ds2482BusTransferBit(u08 bit);
-u08 ds2482BusTriplet(u08 dir);
-u08 ds2482BusLevel(void);
-void ds2482BusWriteByte(u08 data);
-u08 ds2482BusReadByte(void);
-*/
 
 #endif
