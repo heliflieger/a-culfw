@@ -54,17 +54,30 @@
 #define DS2482_READPTR_CSR	0xD2	//< DS2482 Channel Selection Register
 #define DS2482_READPTR_CR	0xC3	//< DS2482 Configuration Register
 
+#define DS2482_TRUE 1
+#define DS2482_FALSE 0
 
 // functions
 
 unsigned char onewire_BusyWait(void);
-unsigned char onewire_BusReset(void);
-void onewire_BusWriteByte(unsigned char data);
-unsigned char onewire_BusReadByte(void);
+int onewire_Reset(void);
+void onewire_WriteBit(unsigned char data);
+void onewire_WriteByte(unsigned char data);
+unsigned char onewire_ReadByte(void);
+unsigned char onewire_ReadBit(void);
+unsigned char onewire_Triplet(unsigned char dir);
+void onewire_FullSearch(void);
+unsigned char docrc8(unsigned char value);
 
-void onewire_ReadROMCode(void);
-void onewire_ReadTemperature(void);
+void onewire_SearchReset(void);
+int onewire_Search(void);
+void onewire_ReadROMCodes(void);
+
 void onewire_ParasitePowerOn(void);
+
+
+void onewire_ReadTemperature(void);
+
 
 void onewire_func(char *);
 
@@ -72,6 +85,7 @@ void ds2482Init(void);
 void ds2482Reset(void);
 unsigned char ds2482SendCmd(unsigned char cmd);
 unsigned char ds2482SendCmdArg(unsigned char cmd, unsigned char arg);
+unsigned char ds2482BusTriplet(unsigned char dir);
 
 unsigned char i2cMasterSend(unsigned char deviceAddr, unsigned char length, unsigned char* data);
 unsigned char i2cMasterReceive(unsigned char deviceAddr, unsigned char length, unsigned char* data);
