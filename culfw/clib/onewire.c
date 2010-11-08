@@ -50,6 +50,9 @@ onewire_Reset(void)
 	ds2482SendCmd(DS2482_CMD_1WRS);
 	// wait for bus reset to finish, and get status
 	status = onewire_BusyWait();
+	// return Short Detected
+	if (status & DS2482_STATUS_SD)
+		return 2;
 	// return state of the presence bit
 	if (status & DS2482_STATUS_PPD) {
 		return 1;
@@ -295,7 +298,6 @@ int onewire_Search(void)
    return search_result;
 }
 
-
 //--------------------------------------------------------------------------
 // Calculate the CRC8 of the byte value provided with the current 
 // global 'crc8' value. 
@@ -311,6 +313,10 @@ unsigned char docrc8(unsigned char value)
 }
 
 
+//--------------------------------------------------------------------------
+// Reads the RomCodes of found Devices from the RAM-Table 
+// Output: index:aaaaaaaaaaaaaaaa     example: 1:D500123456789a28
+//
 void 
 onewire_ReadROMCodes(void)
 {
@@ -360,23 +366,33 @@ onewire_ReadTemperature(void)
 
 
 
+//--------------------------------------------------------------------------
+// Main OneWire User-Function 
+// interpretes the User-Command and calls right function
+//
 void
 onewire_func(char *in)
 {
   if(in[1] == 'i') {
-    ds2482Init();
-
+    if (ds2482Init()) {
+ 	   	DC('O'); DC('K');
+	   	DNL();
+    } else {
+      DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d'); DC(' '); DC('I'); DC('2'); DC('C');
+      DNL();
+    }
   } else if(in[1] == 'r') {
 		  if (in[2] == 'm') {
-		  	ds2482Reset();
+		  	if (ds2482Reset()) {
+		 	   	DC('O'); DC('K');
+	  		 	DNL();
+    		} else {
+      		DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d'); DC(' '); DC('I'); DC('2'); DC('C');
+      		DNL();
+    		}
       } else if(in[2] == 'b') { 
-      	if (onewire_Reset()) {
-					DC('D'); DC(':'); DC(' '); DC('1');
- 	  			DNL();
-				} else {
-					DC('D'); DC(':'); DC(' '); DC('0');
- 	  			DNL();		
-				}
+      	DU(onewire_Reset(), 0);
+  			DNL();		
       }
   } else if(in[1] == 'c') {
   			onewire_ReadROMCodes();   	
@@ -386,24 +402,17 @@ onewire_func(char *in)
   			onewire_ParasitePowerOn();   	
   } else if(in[1] == 'f') {
   			onewire_FullSearch();   	
-  } /*else if(in[1] == 'd') {
-    eth_debug = (eth_debug+1) & 0x3;
-    DH2(eth_debug);
-    DNL();
-
-  } else if(in[1] == 'n') {
-    ntp_sendpacket();
-
-  }*/
+  } 
 }
 
 
-
+//--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
 // DS2482 Command functions
 // These functions are used to address the DS2482 directly (via I2C)
 // The idea is to send Commands and Commands with arguments
 
-void
+int
 ds2482Init(void)
 {
 	unsigned char ret;
@@ -412,23 +421,22 @@ ds2482Init(void)
    if ( ret ) {
       /* failed to issue start condition, possibly no device found */
       i2c_stop(); //release bus, as this has failed
-      DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d'); DC(' '); DC('I'); DC('2'); DC('C');
-      DNL();
+      return 0;
    } else {
-   	i2c_stop(); //release bus, as this was just an initialization
-   	DC('O'); DC('K');
-   	DNL();
+   		i2c_stop(); //release bus, as this was just an initialization
+			return 1;
   }
 }
 
-void
+int
 ds2482Reset(void)
 {
 	unsigned char ret;
 	ret = ds2482SendCmd(DS2482_CMD_DRST);
 	if (ret == I2C_OK) {
-		 DC('O'); DC('K');
- 	   DNL();
+		return 1;
+	} else {
+		return 0;
 	}
 }
 
@@ -476,7 +484,7 @@ ds2482SendCmdArg(unsigned char cmd, unsigned char arg)
 	return (I2C_OK);
 }
 
-
+//--------------------------------------------------------------------------
 // I2C Send & Receive functions 
 // send and receives data of a well defined length via the I2C bus to a specified device
 // Handling of specific devices on the I2C bus is done above here (DS2482)
