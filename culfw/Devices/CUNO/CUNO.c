@@ -34,7 +34,6 @@
 #include "memory.h"
 #include "onewire.h"
 
-/* ADDED BY OD */
 #include "i2cmaster.h"
 
 #ifdef HAS_ASKSIN
@@ -61,9 +60,9 @@ PROGMEM t_fntab fntab[] = {
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
-  
+#ifdef HAS_ONEWIRE  
   { 'O', onewire_func },
-  
+#endif  
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -132,6 +131,17 @@ main(void)
 //    start_bootloader();
 //  }
 
+
+// Setup OneWire and make a full search at the beginning (takes some time)
+#ifdef HAS_ONEWIRE
+  i2c_init();
+  if (ds2482Init()) {
+  	if (onewire_Reset() == 1) 
+  		 onewire_FullSearch();
+ }
+#endif
+
+
   // Setup the timers. Are needed for watchdog-reset
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250
   TCCR0B = _BV(CS02);
@@ -159,11 +169,6 @@ main(void)
 #endif
 
   ethernet_init();
-
-//Added by OD
-  i2c_init();
-//Added by OD
-
     
   LED_OFF();
 
