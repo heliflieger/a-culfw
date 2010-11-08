@@ -75,6 +75,7 @@
 #define UART_BAUD_RATE          38400
 #define HAS_ETHERNET            1   
 #define HAS_NTP                 1   
+#define HAS_ONEWIRE						  10		// OneWire Device Buffer, RAM: 20 * 8 Byte 
 
 #define TTY_BUFSIZE             512
 
