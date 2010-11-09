@@ -1,7 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
-#define HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
+//#define HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
 #define HAS_FHT_80b                     // PROGMEM: 1158b, RAM:  5b
 
 #undef  FULL_CC1100_PA                  // PROGMEM:  108b

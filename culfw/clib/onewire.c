@@ -31,8 +31,13 @@ static unsigned char dscrc_table[] = {
       116, 42,200,150, 21, 75,169,247,182,232, 10, 84,215,137,107, 53};
 
 // Buffer for OnwWire Bus Devices
+#ifdef HAS_ONEWIRE
 unsigned char ROM_CODES[HAS_ONEWIRE * 8 * (sizeof (unsigned char))];
+#else
+unsigned char ROM_CODES[8 * (sizeof (unsigned char))];
+#endif
 int onewire_connecteddevices;
+int onewire_conversionrunning;
 
 // Search states for the onewire_Search
 int LastDiscrepancy;
@@ -82,7 +87,7 @@ onewire_WriteBit(unsigned char data)
 	// wait for DS2482 to be ready
 	onewire_BusyWait();
 	// send 1WSB command
-	ds2482SendCmdArg(DS2482_CMD_1WSB, data?0xFF:0x7F);
+	ds2482SendCmdArg(DS2482_CMD_1WSB, data?0x80:0x00);
 	//Wait for Bus to finish
 	onewire_BusyWait();
 }
@@ -94,7 +99,8 @@ onewire_WriteByte(unsigned char data)
 	// wait for DS2482 to be ready
 	onewire_BusyWait();
 	// send 1WWB command
-	ds2482SendCmdArg(DS2482_CMD_1WWB, data);	// Wait to finish;
+	ds2482SendCmdArg(DS2482_CMD_1WWB, data);	
+	// Wait to finish;
 	onewire_BusyWait();
 }
 
@@ -129,14 +135,35 @@ onewire_ReadBit(void)
 }
 
 void 
-onewire_ParasitePowerOn(void)
+onewire_MatchRom(unsigned char* romaddress)
 {
-  onewire_Reset();
-  onewire_WriteByte(0xCC); //Skip ROM
-  onewire_WriteByte(0x44); // Start Conversion
+	onewire_Reset();
+  onewire_WriteByte(0x55); // Start RomMatch
+  onewire_WriteByte(romaddress[7]);
+  onewire_WriteByte(romaddress[6]);
+  onewire_WriteByte(romaddress[5]);
+  onewire_WriteByte(romaddress[4]);
+  onewire_WriteByte(romaddress[3]);
+  onewire_WriteByte(romaddress[2]);
+  onewire_WriteByte(romaddress[1]);
+  onewire_WriteByte(romaddress[0]);
 }
 
+void 
+onewire_StartConversion(void)
+{
+	// wait for DS2482 to be ready
+	onewire_BusyWait();
+	//Write Conversion Command
+  onewire_WriteByte(0x44); // Start Conversion
+  // wait for DS2482 to finish
+	onewire_BusyWait();
+}
 
+//--------------------------------------------------------------------------
+// Performs a full OneWire search
+//        until all devices have been found, or MAX_DEVICES is reached
+//
 void onewire_FullSearch(void)
 {
 	onewire_SearchReset();
@@ -147,26 +174,27 @@ void onewire_FullSearch(void)
 			DeviceCounter++;
   		DNL();
 		}
-		while (onewire_Search());
+		while (onewire_Search() && (DeviceCounter < (HAS_ONEWIRE+1)));
 	}
 	onewire_connecteddevices = DeviceCounter;
 	DC('D'); DC(':');DU(onewire_connecteddevices, 2);DNL();
 }
-
 //--------------------------------------------------------------------------
 // Resets the OneWire Search Function, so that the next search will start
 //        with the first device again
-//
 void onewire_SearchReset(void)
 {
-   // reset the search state
-   LastDiscrepancy = 0;
-   LastDeviceFlag = DS2482_FALSE;
-   LastFamilyDiscrepancy = 0;
-   DeviceCounter = 0;
+	int i;
+  // reset the search state
+  LastDiscrepancy = 0;
+  LastDeviceFlag = DS2482_FALSE;
+  LastFamilyDiscrepancy = 0;
+  DeviceCounter = 0;
+  
+  for (i=0;i<(HAS_ONEWIRE * 8);i++) {
+  	ROM_CODES[i] = 0;
+  }
 }
-
-
 //--------------------------------------------------------------------------
 // The 'onewire_Search' function does a general search. This function
 // continues from the previous search state. The search state
@@ -182,7 +210,7 @@ int onewire_Search(void)
 {
    int id_bit_number;
    int last_zero, rom_byte_number, search_result;
-   int id_bit, cmp_id_bit;
+   unsigned char id_bit, cmp_id_bit;
    unsigned char rom_byte_mask, search_direction;
 
    // initialize for search
@@ -243,7 +271,6 @@ int onewire_Search(void)
                      LastFamilyDiscrepancy = last_zero;
                }
             }
-
             // set or clear the bit in the ROM byte rom_byte_number
             // with mask rom_byte_mask
             if (search_direction == 1)
@@ -280,6 +307,9 @@ int onewire_Search(void)
          // check for last device
          if (LastDiscrepancy == 0)
             LastDeviceFlag = DS2482_TRUE;
+				 // check for last family group
+				 if (LastFamilyDiscrepancy == LastDiscrepancy)
+				 	  LastFamilyDiscrepancy = 0;
 
          search_result = DS2482_TRUE;
       }
@@ -288,7 +318,7 @@ int onewire_Search(void)
    // if no device found then reset counters so next
    // 'search' will be like a first
 
-   if (!search_result || (ROM_CODES[DeviceCounter*8] == 0))
+   if (!search_result || (!ROM_CODES[DeviceCounter*8]))
    {
       LastDiscrepancy = 0;
       LastDeviceFlag = DS2482_FALSE;
@@ -341,9 +371,6 @@ onewire_ReadTemperature(void)
   int k;
   int temp;
   
-  onewire_Reset();
-  
-  onewire_WriteByte(0xCC); // Skip ROM
   onewire_WriteByte(0xBE); // Read Scratch Pad
   for (k=0;k<9;k++){get[k]=onewire_ReadByte();}
   //printf("\n ScratchPAD DATA = %X%X%X%X%X\n",get[8],get[7],get[6],get[5],get[4],get[3],get[2],get[1],get[0]);
@@ -373,6 +400,9 @@ onewire_ReadTemperature(void)
 void
 onewire_func(char *in)
 {
+  unsigned char byteword;
+  unsigned char romaddress[8];
+
   if(in[1] == 'i') {
     if (ds2482Init()) {
  	   	DC('O'); DC('K');
@@ -381,7 +411,7 @@ onewire_func(char *in)
       DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d'); DC(' '); DC('I'); DC('2'); DC('C');
       DNL();
     }
-  } else if(in[1] == 'r') {
+  } else if(in[1] == 'R') {
 		  if (in[2] == 'm') {
 		  	if (ds2482Reset()) {
 		 	   	DC('O'); DC('K');
@@ -391,15 +421,42 @@ onewire_func(char *in)
       		DNL();
     		}
       } else if(in[2] == 'b') { 
-      	DU(onewire_Reset(), 0);
+      	DC('O'); DC('K'); DC(':'); DU(onewire_Reset(), 0);
   			DNL();		
       }
-  } else if(in[1] == 'c') {
+  } else if(in[1] == 'c') {							//Read RomCodes from Tabel
   			onewire_ReadROMCodes();   	
+  } else if(in[1] == 'r') {							//Read Command
+		  if (in[2] == 'b') {								// -b Read Bit from Bus
+		  	DU(onewire_ReadBit(), 0);
+	  		DNL();
+    	} else if(in[2] == 'B') { 				// -B Read Byte from Bus
+      		DH2(onewire_ReadByte());
+      		DNL();
+    	} else if(in[2] == 'S') { 				// -S Read Full ScratchPad from Device
+    	}
+  } else if(in[1] == 'w') {							//Write Command
+		  if (in[2] == 'b') {								// -b Write Bit to Bus
+     		fromhex (in+3, &byteword, 1);
+     		if (byteword)
+     			byteword = 1;
+     		else
+     			byteword = 0;
+  		  //DC('W'); DC('b'); DC(':');DH2(byteword); DNL();    		// Debug output of Bit to write
+     		onewire_WriteBit(byteword);
+    	} else if(in[2] == 'B') { 				// -B Write Byte to Bus
+     		fromhex (in+3, &byteword, 1);
+  		  //DC('W'); DC('B'); DC(':');DH2(byteword); DNL();    		// Debug output of Byte to write
+     		onewire_WriteByte(byteword);
+    	} 
+  } else if(in[1] == 'm') {
+  		fromhex (in+2, romaddress, 8);
+			DC('m');DC(':');DH2(romaddress[0]);DH2(romaddress[1]);DH2(romaddress[2]);DH2(romaddress[3]);DH2(romaddress[4]);DH2(romaddress[5]);DH2(romaddress[6]);DH2(romaddress[7]);DNL();
+			onewire_MatchRom(romaddress);
   } else if(in[1] == 't') {
   			onewire_ReadTemperature();   	
-  } else if(in[1] == 'p') {
-  			onewire_ParasitePowerOn();   	
+  } else if(in[1] == 'C') {
+  			onewire_StartConversion();   	
   } else if(in[1] == 'f') {
   			onewire_FullSearch();   	
   } 

@@ -65,6 +65,8 @@ void onewire_WriteBit(unsigned char data);
 void onewire_WriteByte(unsigned char data);
 unsigned char onewire_ReadByte(void);
 unsigned char onewire_ReadBit(void);
+void onewire_StartConversion(void);
+void onewire_MatchRom(unsigned char*);
 
 void onewire_FullSearch(void);
 unsigned char docrc8(unsigned char value);
@@ -72,7 +74,6 @@ void onewire_SearchReset(void);
 int onewire_Search(void);
 void onewire_ReadROMCodes(void);
 
-void onewire_ParasitePowerOn(void);
 
 void onewire_ReadTemperature(void);
 
