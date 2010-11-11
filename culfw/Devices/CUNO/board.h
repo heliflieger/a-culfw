@@ -1,7 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
-//#define HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
+#define HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
 #define HAS_FHT_80b                     // PROGMEM: 1158b, RAM:  5b
 
 #undef  FULL_CC1100_PA                  // PROGMEM:  108b
@@ -75,7 +75,7 @@
 #define UART_BAUD_RATE          38400
 #define HAS_ETHERNET            1   
 #define HAS_NTP                 1   
-#define HAS_ONEWIRE						  10		// OneWire Device Buffer, RAM: 20 * 8 Byte 
+#define HAS_ONEWIRE						  10		// OneWire Device Buffer, RAM: 10 * 8 Byte 
 
 #define TTY_BUFSIZE             512
 
