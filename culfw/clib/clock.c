@@ -19,6 +19,9 @@
 #endif
 #include "rf_router.h"                  // rf_router_flush();
 #include "ntp.h"
+#ifdef HAS_ONEWIRE
+#include "onewire.h"
+#endif
 
 uint32_t ticks;
 
@@ -91,6 +94,13 @@ Minute_Task(void)
     rf_router_flush();
 #endif
 
+// OneWire hSec-Task 
+// Check if a running conversion is done
+// if HMS Emulation is on, and the Minute timer has expired
+#ifdef HAS_ONEWIRE
+	onewire_HsecTask ();
+#endif
+
   if(clock_hsec++ < 125)     // Note: this can skip some hsecs
     return;
   clock_hsec = 0;
@@ -101,6 +111,11 @@ Minute_Task(void)
   // one second, 1% duty cycle, 10ms resolution => this is simple ;-)
   if (credit_10ms < MAX_CREDIT)
     credit_10ms += 1;
+
+// if HMS Emulation is on, check the HMS timer
+#ifdef HAS_ONEWIRE
+	onewire_SecTask ();
+#endif
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)
   if(joy_inactive < 255)
