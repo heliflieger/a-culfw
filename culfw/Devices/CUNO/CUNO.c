@@ -135,10 +135,8 @@ main(void)
 // Setup OneWire and make a full search at the beginning (takes some time)
 #ifdef HAS_ONEWIRE
   i2c_init();
-  if (ds2482Init()) {
-  	if (onewire_Reset() == 1) 
-  		 onewire_FullSearch();
- }
+	onewire_Init();
+	onewire_FullSearch();
 #endif
 
 

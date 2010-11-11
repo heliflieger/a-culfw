@@ -59,6 +59,11 @@
 
 // functions
 
+void onewire_Init(void);
+
+void onewire_HsecTask (void) ;
+void onewire_SecTask (void);
+
 unsigned char onewire_BusyWait(void);
 int onewire_Reset(void);
 void onewire_WriteBit(unsigned char data);
@@ -66,8 +71,9 @@ void onewire_WriteByte(unsigned char data);
 unsigned char onewire_ReadByte(void);
 unsigned char onewire_ReadBit(void);
 void onewire_StartConversion(void);
+int onewire_CheckConversionRunning(void);
+int onewire_CheckAllConversionsRunning(void);
 void onewire_MatchRom(unsigned char*);
-
 void onewire_FullSearch(void);
 unsigned char docrc8(unsigned char value);
 void onewire_SearchReset(void);

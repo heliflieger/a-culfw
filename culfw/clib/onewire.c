@@ -32,12 +32,19 @@ static unsigned char dscrc_table[] = {
 
 // Buffer for OnwWire Bus Devices
 #ifdef HAS_ONEWIRE
-unsigned char ROM_CODES[HAS_ONEWIRE * 8 * (sizeof (unsigned char))];
+unsigned char ROM_CODES[HAS_ONEWIRE * 8];
 #else
-unsigned char ROM_CODES[8 * (sizeof (unsigned char))];
+unsigned char ROM_CODES[8];
 #endif
 int onewire_connecteddevices;
 int onewire_conversionrunning;
+int onewire_allconversionsrunning;
+int onewire_allconversiontimer;
+int onewire_hmsemulation;
+int onewire_hmsemulationstate;
+int onewire_hmsemulationtimer;
+int onewire_hmsemulationinterval;
+int onewire_hmsemulationdevicecounter;
 
 // Search states for the onewire_Search
 int LastDiscrepancy;
@@ -47,10 +54,140 @@ int DeviceCounter;
 unsigned char crc8;
 
 
+void 
+onewire_Init(void) 
+{
+	onewire_hmsemulationinterval = 120;		//Resets also the HMS-Emulation Interval to xx Seconds
+ 	onewire_hmsemulation = 0;							//Resets also HMS-Emulation to OFF
+	onewire_allconversionsrunning = 0;
+	onewire_allconversiontimer = 0;
+	onewire_conversionrunning = 0;
+	onewire_hmsemulationstate = 0;
+	onewire_hmsemulationtimer = onewire_hmsemulationinterval;
+	onewire_SearchReset();
+	if (ds2482Init()) {
+  	if (onewire_Reset() == 1) 
+  		 onewire_FullSearch();
+ }
+}
+
+void 
+onewire_HsecTask (void) 
+{	
+	if (onewire_conversionrunning) {
+		if (onewire_ReadByte() & DS2482_STATUS_DIR)
+			onewire_conversionrunning = 0;
+	}
+	if (onewire_allconversionsrunning) {
+		onewire_allconversiontimer--;
+		if (onewire_allconversiontimer == 0)
+			onewire_allconversionsrunning = 0;
+	}
+	if (onewire_hmsemulation && !onewire_hmsemulationtimer) { //HMS-Emulation & timer has exipered
+		if (onewire_hmsemulationstate == 0) {										//First step for HMS Emulaion: Start all conversions
+			// Reset the bus
+			onewire_Reset();
+			//Skip ROMs to start ALL conversions
+  		onewire_WriteByte(0xCC); // Skip ROMs
+			//Write Conversion Command
+  		onewire_WriteByte(0x44); // Start Conversion
+  		// wait for DS2482 to finish
+			onewire_BusyWait();
+			//Set Marker for Conversion running
+			onewire_allconversionsrunning = 1;
+			onewire_allconversiontimer = 7;												//It takes ~750ms to finish all conversions: 125msec timer * 6
+			onewire_hmsemulationstate = 1;
+			onewire_hmsemulationdevicecounter = 0;
+		} else if (onewire_hmsemulationstate == 1) {								// Conversions have been started already
+				if (!onewire_allconversionsrunning) {										// Are all conversions already done ?
+					//Start to read out the things, but one-by-one in turns
+					if (onewire_hmsemulationdevicecounter < onewire_connecteddevices) {		// go through all connected devices
+						//Chek if this device is a Temp-Sensor	//Family: 28h - 18B20; 10h - 18S20
+						if ((ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) | (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16)) {	
+							//Match ROM
+							onewire_Reset();
+  						onewire_WriteByte(0x55); // Start RomMatch
+  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8]);
+  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 1]);
+  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 2]);
+  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 3]);
+  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 4]);
+  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 5]);
+  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 6]);
+  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 7]);
+  						onewire_hmsemulationstate = 2;
+						} else
+							onewire_hmsemulationdevicecounter++;
+					} else {		//We are done with emulation Reset Timer + Vars
+						onewire_hmsemulationtimer= onewire_hmsemulationinterval;
+						onewire_hmsemulationstate = 0;
+						onewire_hmsemulationdevicecounter = 0;
+					}
+				}
+		} else if (onewire_hmsemulationstate == 2) {							//MatchRom for selected Temp-Sensor has been done
+			//Read Scratchpad for selected Device
+		  char get[10];
+		  int temp;
+  
+ 			onewire_WriteByte(0xBE); // Read Scratch Pad
+ 			for (int k=0;k<9;k++){get[k]=onewire_ReadByte();}
+ 			if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) {		//DS18B20
+ 				DC('H');
+ 				if (get[1] & 0x80) //Negative
+ 					temp = (~(get[1] *256 + get[0]-1));
+ 				else
+ 					temp = (get[1] *256 + get[0]);
+ 				DC('F');DC('0');DH2(onewire_hmsemulationdevicecounter+1); //Write HMS Device ID
+ 				if (get[1] & 0x80) //Negative Temp
+ 					DC('8');
+ 				else
+	 				DC('0'); //Sign-Bit (needs to be 8 for negative
+ 				DC('1'); //HMS Type (only Temp)
+ 				DU((temp/16) % 10,0);	//Temp under 10 degs
+ 				DU(((temp%16)*625)/1000,0);	// Degrees below 1	
+ 				DC('0');
+ 				DU((temp/16)/10,0);
+ 				DC('0');DC('0');DC('F');DC('F');											//Humidity & RSSI
+ 			} else if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16) {		//DS18S20
+ 				DC('H');
+				if (get[1] & 0x80) //Negative
+ 					temp = (~(get[0]-1));		//Ones Complement if negative
+ 				else
+	 				temp = (get[0]);
+ 				DC('F');DC('0');DH2(onewire_hmsemulationdevicecounter+1); //Write HMS Device ID
+ 				if (get[1] & 0x80) //Negative Temp
+ 					DC('8');
+ 				else
+	 				DC('0'); //Sign-Bit (needs to be 8 for negative
+ 				DC('1'); //HMS Type (only Temp)
+ 				DU((temp/2) % 10,0);	//Temp under 10 degs
+ 				DU(((temp & 0x01)*5),0);	// Degrees below 1	
+ 				DC('0');
+ 				DU((temp/2)/10,0);
+ 				DC('0');DC('0');DC('F');DC('F');											//Humidity & RSSI
+ 			}
+ 			onewire_hmsemulationdevicecounter++;										//Done with this sensor, go to the next
+ 			onewire_hmsemulationstate = 1;
+ 			DNL();
+		}
+	}
+}
+
+void
+onewire_SecTask (void)
+{
+	if (onewire_hmsemulation) {
+		if (onewire_hmsemulationtimer)
+			onewire_hmsemulationtimer--;
+	}
+}
+
 int
 onewire_Reset(void)
 {
 	unsigned char status;
+	//Make sure that any Conversion is stopped & ignored
+	onewire_conversionrunning = 0;
 	// send 1-Wire bus reset command
 	ds2482SendCmd(DS2482_CMD_1WRS);
 	// wait for bus reset to finish, and get status
@@ -108,6 +245,7 @@ unsigned char
 onewire_ReadByte(void)
 {
 	unsigned char data;
+
 	// wait for DS2482 to be ready
 	onewire_BusyWait();
 	// send 1WRB command
@@ -137,6 +275,7 @@ onewire_ReadBit(void)
 void 
 onewire_MatchRom(unsigned char* romaddress)
 {
+	//Start
 	onewire_Reset();
   onewire_WriteByte(0x55); // Start RomMatch
   onewire_WriteByte(romaddress[7]);
@@ -158,7 +297,30 @@ onewire_StartConversion(void)
   onewire_WriteByte(0x44); // Start Conversion
   // wait for DS2482 to finish
 	onewire_BusyWait();
+	//Set Marker for Conversion running
+	onewire_conversionrunning = 1;
 }
+
+int
+onewire_CheckConversionRunning(void)
+{
+	//Check Marker for Conversion running
+	if (onewire_conversionrunning)
+		return 1;
+	else
+		return 0;	
+}
+
+int
+onewire_CheckAllConversionsRunning(void)
+{
+	//Check Marker for Conversion running
+	if (onewire_allconversionsrunning)
+		return 1;
+	else
+		return 0;	
+}
+
 
 //--------------------------------------------------------------------------
 // Performs a full OneWire search
@@ -166,6 +328,7 @@ onewire_StartConversion(void)
 //
 void onewire_FullSearch(void)
 {
+	//Start Search
 	onewire_SearchReset();
   if (onewire_Search()) {
  		do
@@ -174,7 +337,7 @@ void onewire_FullSearch(void)
 			DeviceCounter++;
   		DNL();
 		}
-		while (onewire_Search() && (DeviceCounter < (HAS_ONEWIRE+1)));
+		while (onewire_Search() && (DeviceCounter < (HAS_ONEWIRE)));
 	}
 	onewire_connecteddevices = DeviceCounter;
 	DC('D'); DC(':');DU(onewire_connecteddevices, 2);DNL();
@@ -190,6 +353,7 @@ void onewire_SearchReset(void)
   LastDeviceFlag = DS2482_FALSE;
   LastFamilyDiscrepancy = 0;
   DeviceCounter = 0;
+  onewire_connecteddevices = 0;
   
   for (i=0;i<(HAS_ONEWIRE * 8);i++) {
   	ROM_CODES[i] = 0;
@@ -211,14 +375,16 @@ int onewire_Search(void)
    int id_bit_number;
    int last_zero, rom_byte_number, search_result;
    unsigned char id_bit, cmp_id_bit;
-   unsigned char rom_byte_mask, search_direction;
+   unsigned char rom_byte_mask;
+   unsigned char search_direction;
 
    // initialize for search
    id_bit_number = 1;
    last_zero = 0;
    rom_byte_number = 0;
    rom_byte_mask = 1;
-   search_result = DS2482_FALSE;
+   search_direction = 0;
+   search_result = DS2482_TRUE;
    crc8 = 0;
 
    // if the last call was not the last one
@@ -238,11 +404,13 @@ int onewire_Search(void)
       onewire_WriteByte(0xF0);
 
       // loop to do the search
+ 
       do
       {
          // read a bit and its complement
          id_bit = onewire_ReadBit();
          cmp_id_bit = onewire_ReadBit();
+
          // check for no devices on 1-wire
          if ((id_bit == 1) && (cmp_id_bit == 1))
             break;
@@ -271,6 +439,7 @@ int onewire_Search(void)
                      LastFamilyDiscrepancy = last_zero;
                }
             }
+
             // set or clear the bit in the ROM byte rom_byte_number
             // with mask rom_byte_mask
             if (search_direction == 1)
@@ -404,13 +573,9 @@ onewire_func(char *in)
   unsigned char romaddress[8];
 
   if(in[1] == 'i') {
-    if (ds2482Init()) {
- 	   	DC('O'); DC('K');
-	   	DNL();
-    } else {
-      DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d'); DC(' '); DC('I'); DC('2'); DC('C');
-      DNL();
-    }
+		onewire_Init();
+		DC('O'); DC('K');
+  	DNL();
   } else if(in[1] == 'R') {
 		  if (in[2] == 'm') {
 		  	if (ds2482Reset()) {
@@ -453,13 +618,49 @@ onewire_func(char *in)
   		fromhex (in+2, romaddress, 8);
 			DC('m');DC(':');DH2(romaddress[0]);DH2(romaddress[1]);DH2(romaddress[2]);DH2(romaddress[3]);DH2(romaddress[4]);DH2(romaddress[5]);DH2(romaddress[6]);DH2(romaddress[7]);DNL();
 			onewire_MatchRom(romaddress);
+  } else if(in[1] == 'H') {
+  		if (in[2] == 'o') {					
+	  		onewire_allconversionsrunning = 0;
+				onewire_allconversiontimer = 0;
+				onewire_hmsemulationstate = 0;
+				onewire_hmsemulationtimer = onewire_hmsemulationinterval;
+  			if (onewire_hmsemulation) {
+					onewire_hmsemulation = 0;
+					DC('O');DC('F');DC('F');DNL();
+				} else {
+					onewire_hmsemulation = 1;
+					//DO an initial Conversion, as the sensors need a first round
+					// Reset the bus 
+					onewire_Reset();
+					//Skip ROMs to start ALL conversions
+  				onewire_WriteByte(0xCC); // Skip ROMs
+					//Write Conversion Command
+  				onewire_WriteByte(0x44); // Start Conversion
+  				// wait for DS2482 to finish
+					onewire_BusyWait();
+					DC('O');DC('N');DNL();
+				}
+			} else  if (in[2] == 't') {					
+				fromdec (in+3, (uint8_t *)&onewire_hmsemulationinterval);
+			}
   } else if(in[1] == 't') {
-  			onewire_ReadTemperature();   	
+  		onewire_ReadTemperature();   	
   } else if(in[1] == 'C') {
+  		if (in[2] == 's') {					
   			onewire_StartConversion();   	
+  		} else if(in[2] == 'r') {
+  			DU(onewire_CheckConversionRunning(),0); DNL();
+  		} else if(in[2] == 'a') {
+  			if (onewire_hmsemulation) {	
+  				DU(onewire_CheckAllConversionsRunning(),0); DNL();
+  			} else {
+  				DC('0');DNL();
+  			}
+  		}
   } else if(in[1] == 'f') {
-  			onewire_FullSearch();   	
-  } 
+  			//onewire_FullSearch();   	
+ 			  onewire_FullSearch();
+  }   
 }
 
 
