@@ -16,6 +16,10 @@ the can be used for low-power wireless communication in the 868 band.
 - The CUN (CC110x USB Network) is a device with following features: CC1101 /
   AT90USB1287 / Ethernet interface / 16Mbit flash / 256Kbit SRAM / MicroSD
 
+- The CUNO (CC110x USB Network) is a device with following features: CC1101 /
+  ATMega m644 cpu / Ethernet interface / 16Mbit flash / 256Kbit SRAM / 
+  OneWire Bus-Master DS2482 
+
 - The CSM (CC110x Serial Module) is a device you talk to a serial way using a
   host system with an USART available.
   I/O lines are 3.3V or 5V safe - ATMEGA88/168/328(P)
@@ -29,6 +33,8 @@ following RF protocols are supported:
 - HMS
 - ESA
 - ASKSIN (aka BidCos(R))
+
+Additional CUNO supports the basic OneWire Protocol through the DS4282
 
 Thanks to the MyUSB project (http://www.fourwalledcubicle.com/MyUSB.php, ) the
 device/firmware combination confirms to the Universal Serial Bus Communication
@@ -76,6 +82,10 @@ Install / Flash the firmware
   The last command will reset the device, a new USB device should appear:
   "03eb:204b Atmel Corp.". If not try to reinsert the CUL without pressing
   the micro-switch.
+  
+  For CUNO you need AVR-DUDE as programmer through USB
+  In the Makefile of CUNO you will find the target "program". There you can 
+  configure the COM-Port/serial Device by which CUNO is connected
 
 Quick Test:
 ===========
@@ -94,8 +104,13 @@ Quick Test:
     directory. Locate the COM-port in the device manager shown as
     "USB Virtual Serial Port (COMx)". Start Hyperterminal, open a connection
     to COMx 9600,8,n,1.
+    
+    For CUNO: Install a virtual COM port, use MCP2200.inf from the docs
+    directory. Locate the COM-port in the device manager shown as
+    "USB Virtual Serial Port (COMx)". Start Hyperterminal, open a connection
+    to COMx 38400,8,n,1.
 
-  CUN: Connect the device to a network with a DHCP server, and then telnet to
+  CUN/CUNO: Connect the device to a network with a DHCP server, and then telnet to
   the assigned address with "telnet <ip-adress> 2323"
 
   Type "V<return>". The string "V 1..." should appear. Type X21<return> to
@@ -253,6 +268,60 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - 00: Set LED off
       - 01: Set LED on
       - 02: The LED will blink once a second
+
+    O<func> OneWire Command-Set
+      (CUNO only)
+      <func> is one of the following:
+      - i  - Initialize OneWire Sub-System; Reset HMS-Emulation & Timers
+      
+      - R<func>	   Reset Routines:
+      	-b	- Reset OneWire Bus; Returns:
+      					0 - No Device connected
+      					1 - One or more Devices connected
+      					2 - Short detected on OneWire Bus
+      	-m	- Reset OneWire Master (DS2482-Chip); Returns:
+      					OK - Chip Resetted
+      					FAILED I2C - DS2482 Chip can't be reached via I2C internal Bus
+      					
+      - c  - Returns list of found RomCodes for OneWire Devices 
+      			 (based on OneWire FullSearch, performed during boot, or with 
+      			  Of-Command)
+      			 Output: 1:aabbccddeeffgghh  where a-h are Hex-Values: 64Bit Address
+      						   2:aabbccddeeffgghh 
+      						   
+      - w<func>    Write Routines
+        -b<hex> - Write one BIT to the OneWire Bus; <hex>: 00, or >00 otherwise
+        -B<hex> - Write one BYTE to the OneWire Bus; <hex>:dd Hex-Value of Data
+
+      - r<func>    Read Routines
+        -b			 - Read one BIT from the OneWire Bus; Return: 
+        					  <hex>: 00, or 01 otherwise
+        -B 			 - Read one BYTE from the OneWire Bus; Return:
+                    <hex>:dd Hex-Value of Data
+        
+      - m<hex> - MatchRom Code to select Device; <hex>:64-Bit Address in 8xHEX
+      
+      - H<func>   HMS Emulation Routines for Temp-Sensors (DS18B20 & DS18S20)
+        -o        - Toggle HMS-Emulation on/off; Returns: ON / OFF
+        				    Based on found RomCodes an HMS Emulation will be done for 
+        				    OW-Temp-Sensors DS18B20 & DS18S20
+        -t<dec>   - Set Time-Interval for HMS-emulated Reporting
+                    <dec>: Seconds in decimal: 0-255
+                    default: 120s
+                   
+      -C<func>    Sensor-Conversion Routines
+       -s         - Start Asynchronous Conversion for a selected Sensor (MatchRom)
+       -r         - Checks if an asynchronous conversion is still running; Returns:
+                    1 - Conversion still running
+                    0 - Conversion finished
+       -a         - Checks if Conversion Slot for ALL Sensors is still running;
+                    This is used for HMS-Emulation, as all Sensors go to conversion
+                    at the same time; Returns:
+                    1 - Conversion still running
+                    0 - Conversion finished
+                    
+       -f     - Start a new RomCode Full Search on the OW-Bus
+      	
 
     P<hex><filename>
       (CUR only)
