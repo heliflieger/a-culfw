@@ -424,7 +424,10 @@ int onewire_Search(void)
                // if this discrepancy if before the Last Discrepancy
                // on a previous next then pick the same as last time
                if (id_bit_number < LastDiscrepancy)
-                  search_direction = ((ROM_CODES[DeviceCounter*8 + rom_byte_number] & rom_byte_mask) > 0);
+               	  if (DeviceCounter > 0)
+                  	search_direction = ((ROM_CODES[(DeviceCounter-1)*8 + rom_byte_number] & rom_byte_mask) > 0);
+                  else 
+                  	search_direction = 0 ;
                else
                   // if equal to last pick 1, if not then pick 0
                   search_direction = (id_bit_number == LastDiscrepancy);
