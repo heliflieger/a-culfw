@@ -6,7 +6,7 @@ License: GPL v2
 These gadgets all feature one or more CC1101 transceiver and an Atmel MCU, so
 the can be used for low-power wireless communication in the 868 band.
 
-- The CUL (CC110x USB Light) has one CC1101 and an AT90USB162 MCU.
+- The CUL (CC110x USB Light) has one CC1101 and an AT90USB162/ATMEGA32U4 MCU.
   See http://busware.de/tiki-index.php?page=CUL for details and on how to buy
   it.
 
@@ -16,13 +16,12 @@ the can be used for low-power wireless communication in the 868 band.
 - The CUN (CC110x USB Network) is a device with following features: CC1101 /
   AT90USB1287 / Ethernet interface / 16Mbit flash / 256Kbit SRAM / MicroSD
 
-- The CUNO (CC110x USB Network) is a device with following features: CC1101 /
-  ATMega m644 cpu / Ethernet interface / 16Mbit flash / 256Kbit SRAM / 
-  OneWire Bus-Master DS2482 
-
 - The CSM (CC110x Serial Module) is a device you talk to a serial way using a
-  host system with an USART available.
-  I/O lines are 3.3V or 5V safe - ATMEGA88/168/328(P)
+  host system with an USART available. 1.8V-3.3V - CC1101 / ATMEGA324/644/1284(P)
+
+- The CUNO (CC110x USB Network OneWire) is a device with following features: 
+  CSM == CC1101+ATMega m644/m1284 cpu / Ethernet interface w/ PoE / ACM-USB bridge / 
+  OneWire Bus-Master DS2482 / MicroSD
 
 This firmware makes it possible to use these devices with fhem. Right now the
 following RF protocols are supported:
