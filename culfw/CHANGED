@@ -1,3 +1,6 @@
+Version 1.40 (2010-11-11)
+- CUNO: OneWire support
+
 Version 1.39 (2010-06-27)
 - CU*: ESA2000 rx support (CULV3 only)
 - CUL: small rfr tweaks.
