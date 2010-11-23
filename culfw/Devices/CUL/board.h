@@ -35,6 +35,20 @@
 #  define RFR_SHADOW                    // PROGMEM: 10b    RAM: -(TTY_BUFSIZE+3)
 #endif
 
+#ifdef CUL_V2_HM
+#  define TTY_BUFSIZE           48
+#  define FHTBUF_SIZE           74
+#  define RCV_BUCKETS            2 
+#  define RFR_SHADOW                    // PROGMEM: 10b    RAM: -(TTY_BUFSIZE+3)
+#  undef  HAS_FHT_80b
+#  undef  HAS_FHT_8v
+#  define HAS_ASKSIN
+#  undef  BOARD_ID_STR
+#  define BOARD_ID_STR            "CUL_HM"
+#  undef  BOARD_ID_USTR
+#  define BOARD_ID_USTR           L"CUL_HM"
+#endif
+
 // No features to define below
 
 #include <avr/io.h>

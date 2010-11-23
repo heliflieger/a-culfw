@@ -44,8 +44,8 @@
       culfw is a GPL'd firmware for the <a
       href="http://shop.busware.de/advanced_search_result.php?keywords=CUL">CUL</a>
       family of devices.<br><br>
-      Current Version: (as of 2010-09-27) is <a
-      href="http://www.koeniglich.de/culfw/culfw-1.39.tar.gz">1.39</a>.
+      Current Version: (as of 2010-11-23) is <a
+      href="http://www.koeniglich.de/culfw/culfw-1.40.tar.gz">1.40</a>.
       See the <a href="CHANGED">CHANGED</a> file for current changes.<br>
       <br>
 
@@ -66,9 +66,10 @@
       <ul>
         Following devices are known to work with culfw:
         <ul>
-          <li>CUN (CC1101 USB Network, to the left)</li>
-          <li>CUR (CC1101 USB Remote, prototype, to the right)</li>
           <li>CUL (CC1101 USB Light, at the bottom)</li>
+          <li>CUN (CC1101 USB Network, to the left)</li>
+          <li>CUNO (CC1101 USB Network + OneWire, similar to the CUN)</li>
+          <li>CUR (CC1101 USB Remote, prototype, to the right)</li>
         </ul>
 
         At the heart of the CUL family of devices is the Texas Instruments
@@ -81,9 +82,10 @@
 
         CUL V1/V2: at90usb162 / 0.5 kB / 16 kB<br>
         CUL V3: atmega32U4 / 2.5 kB / 32 kB<br>
+        CUN: at90usb64 / 2.0 kB / 64 kB<br>
+        CUNO: atmega644p / 2.0 kB / 64 kB<br>
         CUR V1: at90usb128 / 4.0 kB / 128 kB<br>
         CUR V2: at90usb64 / 2.0 kB / 64 kB<br>
-        CUN: at90usb64 / 2.0 kB / 64 kB<br>
         <br>
 
         From the program memory 4kB is used by the USB-Bootloader, and 4kB by
@@ -99,26 +101,34 @@
       <table><tr><td>
       culfw supports following RF protocols:
       <ul>
-        <li>FS20: send/receive<br>
-            There are numerous FS20 devices, AFAIK. all of them are fully
-            supported.</li>
-        <li>FHT: send/receive<br>
-            Communication to the FHT80b and directly to the FHT8v is
-            supported.</li>
-        <li>S300: receive<br>
-            Examples of such devices: S300TH, KS300-2</li>
-        <li>EM1000: receive<br>
-            Devices: EM1000FM, EM1000GZ, EM1000WZ</li>
-        <li>HMS: receive<br>
-            Devices: There are numerous HMS devices, AFAIK. all of them are
-            fully supported.</li>
-        <li>Hoermann: receive<br>
-            Some 868 Hoermann garage door openers.</li>
+        <li>
+        "SlowRF" mode (1kHz datarate, AM)
+          <ul>
+          <li>FS20: send/receive<br>
+              There are numerous FS20 devices, AFAIK. all of them are fully
+              supported.</li>
+          <li>FHT: send/receive<br>
+              Communication to the FHT80b and directly to the FHT8v is
+              supported.</li>
+          <li>S300: receive<br>
+              Examples of such devices: S300TH, KS300-2</li>
+          <li>EM1000: receive<br>
+              Devices: EM1000FM, EM1000GZ, EM1000WZ</li>
+          <li>HMS: receive<br>
+              Devices: There are numerous HMS devices, AFAIK. all of them are
+              fully supported.</li>
+          <li>Hoermann: receive<br>
+              Some 868 Hoermann garage door openers.</li>
+          </ul>
+          <br>
+        <li>
+        BidCos(R) in the "AskSin" mode (20kHz datarate, FM). HomeMatic(R)
+        Wireless devices use this protocol.
       </ul>
       <br>
-      When configured as an RFR (RF-Router) client, then a CUL plugged in a
+      When configured as an RFR (RF-Router) client, then a CUL plugged into a
       wall socket can communicate via high-speed RF to the base, while
-      serving all the above protocols.<br>
+      serving all the SlowRF protocols.<br>
       </td><td
         <img src="cul_rfr.jpg"/>
       </td></tr></table>
@@ -132,27 +142,26 @@
       Download the firmware (see the links below) and unpack it.
       Change into your device directory (e.g. Devices/CUL)<br>
       <ul>
-        <li>CUL/CUN: Insert the USB-Stick while pressing the micro-switch.</li>
-        <li>CUR: Remove Battery/USB. Put the device on a table with the jogdial
-            facing down. Press the case, until you hear the jogdial is pressed.
-            Insert the battery, then the USB-Cable.</li>
-      </ul>
-      <br>
-      OS specific instructions:
-      <ul>
-        <li>Linux:<br>
-          Install the package dfu-programmer, then execute "make
-          usbprogrammer".  After flashing the CUL, a new USB device should
-          appear: "03eb:204b Atmel Corp.". If not reinsert the device without
-          pressing the micro-switch.</li>
+      <li>Insert the device into the USB slot while pressing the
+          micro-switch.</li>
+      <li>CUL/CUN @ Linux or OSX:<br>
+        Install the package dfu-programmer, then execute "make
+        usbprogram".  After flashing the CUL, a new USB device should
+        appear: "03eb:204b Atmel Corp.". If not reinsert the device without
+        pressing the micro-switch.</li>
 
-        <li>Windows:<br>
-          See also <a href="http://groups.google.com/group/cul-fans/web/get-cul-running--windows">this</a>
-          link for details. Do no install any drivers. Get the Windows Flash
-          tool "FLIP" from Atmel, start it, detect the CUL and flash the file
-          CUL.hex to
-          it.</li>
+      <li>CUL/CUN @ Windows:<br>
+        See also <a href="http://groups.google.com/group/cul-fans/web/get-cul-running--windows">this</a>
+        link for details. Do no install any drivers. Get the Windows Flash
+        tool "FLIP" from Atmel, start it, detect the CUL and flash the file
+        CUL.hex to it.</li>
+
+      <li>CUNO:<br>
+        Install the package avrdude and check the makefile for the correct port
+        (look for AVRDUDE_PORT). Then execute "make usbprogram". 
+        </li>
       </ul>
+
 
       <h3>Step 2: Using the device</h3>
       <ul>

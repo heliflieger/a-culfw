@@ -17,11 +17,11 @@ the can be used for low-power wireless communication in the 868 band.
   AT90USB1287 / Ethernet interface / 16Mbit flash / 256Kbit SRAM / MicroSD
 
 - The CSM (CC110x Serial Module) is a device you talk to a serial way using a
-  host system with an USART available. 1.8V-3.3V - CC1101 / ATMEGA324/644/1284(P)
+  host system with an USART available. 1.8V-3.3V, CC1101 / ATMEGA324/644/1284(P)
 
 - The CUNO (CC110x USB Network OneWire) is a device with following features: 
-  CSM == CC1101+ATMega m644/m1284 cpu / Ethernet interface w/ PoE / ACM-USB bridge / 
-  OneWire Bus-Master DS2482 / MicroSD
+  CSM == CC1101+ATMega m644/m1284 cpu / Ethernet interface w/ PoE /
+  ACM-USB bridge / OneWire Bus-Master DS2482 / MicroSD
 
 This firmware makes it possible to use these devices with fhem. Right now the
 following RF protocols are supported:
@@ -33,7 +33,7 @@ following RF protocols are supported:
 - ESA
 - ASKSIN (aka BidCos(R))
 
-Additional CUNO supports the basic OneWire Protocol through the DS4282
+Additionally CUNO supports the basic OneWire Protocol through the DS4282
 
 Thanks to the MyUSB project (http://www.fourwalledcubicle.com/MyUSB.php, ) the
 device/firmware combination confirms to the Universal Serial Bus Communication
@@ -45,17 +45,21 @@ Prerequisites
 =============
   You'll need following packets to install the firmware (in paranthesis is the
   version of the corresponding packet for my installation):
-  - dfu-programmer (0.4.4)
+  CUL/CUN/CUR
+  - dfu-programmer (0.4.4) on Linux
+    flip on Windows
+  CUNO
+  - avrdude (5.10)
 
   If you want to modify the firmware:
   - avr-libc       (1.6.2 / 1.6.7)
   - binutils-avr   (2.18 / 2.20)
   - gcc-avr        (4.3.0 / 4.3.4)
+
   Ubuntu: "apt-get install avr-libc" will install all three packages
-  OSX: port install avr-gcc avr-libc dfu-programmer
-  
-  CUNO: additional you need "avrdude" for flashing the device. For Windows it's 
-    part of WINAVR, for Linux you can usually "apt-get" it via above commands.
+  OSX: install CrossPack-AVR (version 20100115 works for me).
+       dfu-programmer came with the ports pckage.
+  Windows: avrdude is part of WINAVR.
 
 
 Compile (optional)
@@ -70,30 +74,23 @@ Install / Flash the firmware
 ============================
   Change into your device directory (e.g. Devices/CUL)
   - CUL/CUN: Insert the USB-Stick while pressing the micro-switch on the back.
-  - CUR: Remove Battery/USB. Put the device on a table with the jogdial facing
-         down. Press the case, until you hear the jogdial is pressed. Insert
-         the battery, then the USB-Cable.
+    A USB device "03eb:2ffa Atmel Corp." should appear.
+    Now execute "make usbprogram", which will output text like:
+      dfu-programmer at90usb162 erase
+      dfu-programmer at90usb162 flash CUL.hex
+      Validating...
+      6312 bytes used (51.37%)
+      dfu-programmer at90usb162 start
+    The last command will reset the device, a new USB device should appear:
+    "03eb:204b Atmel Corp.". If not try to reinsert the CUL without pressing
+    the micro-switch.
 
-  A USB device "03eb:2ffa Atmel Corp." should appear.
-  Now execute "make usbprogram", which will output text like:
-    dfu-programmer at90usb162 erase
-    dfu-programmer at90usb162 flash CUL.hex
-    Validating...
-    6312 bytes used (51.37%)
-    dfu-programmer at90usb162 start
-  The last command will reset the device, a new USB device should appear:
-  "03eb:204b Atmel Corp.". If not try to reinsert the CUL without pressing
-  the micro-switch.
-
-  ATTENTION: CUNO  
-  For CUNO you need AVRDUDE as programmer through USB. The dfu-programmer will
-    NOT work for CUNO.
-  In the Makefile of CUNO (Device-Directory for CUNO) you will find the target
-    "program". There you can configure the COM-Port/serial device by which 
-    CUNO is connected (/dev/ttyACM0, or COMx).
-  When those seetings are correct you can flash CUNO as follows:
-  - Insert the USB-Cable while pressing the micro-switch on the back.
-  - Now execute "make program" and you will see how avrdude programms the flash.
+  - CUNO:
+    - configure the COM-Port/serial device by which CUNO will be connected
+      (/dev/ttyACM0, or COMx) in the file Devices/CUNO/makefile, look for
+      AVRDUDE_PORT
+    - insert the USB-Cable while pressing the micro-switch on the back.
+    - execute "make program"
 
 Quick Test:
 ===========

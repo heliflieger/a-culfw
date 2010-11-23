@@ -1,3 +1,4 @@
+#include <board.h>
 #ifdef HAS_FS
 
 /* vim:fdm=marker ts=4 et ai

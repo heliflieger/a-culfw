@@ -93,6 +93,7 @@ OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 all:
 	make TARGET=CUL_V2 MCU=at90usb162 mostly_clean build size
 	make TARGET=CUL_V3 MCU=atmega32u4 mostly_clean build size
+	make TARGET=CUL_V2_HM MCU=at90usb162 mostly_clean build size
 
 build: elf hex eep lss sym
 
@@ -111,7 +112,7 @@ size:
 
 
 usbprogram:
-	@echo 'use "make usbprogram_v2" or "make usbprogram_v3"'
+	@echo 'specify one of usbprogram_v2, usbprogram_v3 or usbprogram_v2_hm'
 
 usbprogram_v3: TARGET=CUL_V3
 usbprogram_v3: MCU=atmega32u4
@@ -120,6 +121,11 @@ usbprogram_v3: do_usbprogram
 usbprogram_v2: TARGET=CUL_V2
 usbprogram_v2: MCU=at90usb162
 usbprogram_v2: do_usbprogram
+
+usbprogram_v2_hm: TARGET=CUL_V2_HM
+usbprogram_v2_hm: MCU=at90usb162
+usbprogram_v2_hm: do_usbprogram
+
 
 do_usbprogram:
 	dfu-programmer $(MCU) erase || true

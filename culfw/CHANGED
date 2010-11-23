@@ -1,5 +1,6 @@
 Version 1.40 (2010-11-11)
 - CUNO: OneWire support
+- CUL:  CUL_V2_HM.hex vor the CULV1/V2 devices
 
 Version 1.39 (2010-06-27)
 - CU*: ESA2000 rx support (CULV3 only)
