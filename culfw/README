@@ -679,6 +679,12 @@ Notes
 - Repeat-filter
   The FS20 protocol sends each message 3 times. The firmware filters optionally
   (See Command X bit 1) repeated messages.
+  
+- CUNO via USB
+  The USB-Bridge of CUNO operates on 38400 Baud. This means, that you have to
+  assign this speed to the port in your host OS.
+  Typically you use CUNO via /dev/ttyACM0@38400.
+  This sets the speed to 38400 on the port.
 
 - cc1100 settings. See cc1100.h / official PDF from TI  for details.
   - Change receiver sensitivity / target amplitude
@@ -733,7 +739,8 @@ Time zone offset:	GMT+2
 
 Connect CUN to your PC via USB. On Linux a device /dev/ttyACM0 will appear (on
 subsequent experiments, the device may be named /dev/ttyACM1, /dev/ttyACM2 and
-so forth). Use screen /dev/ttyACM1 to talk to CUN. Enter the following commands:
+so forth). Use screen /dev/ttyACM1 to talk to CUN and screen /dev/ttyACM1@38400 
+for CUNO. Enter the following commands:
 
 V			output version, e.g. V 1.39 CUN
 Wid00			disable DHCP
