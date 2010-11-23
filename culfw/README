@@ -54,7 +54,7 @@ Prerequisites
   Ubuntu: "apt-get install avr-libc" will install all three packages
   OSX: port install avr-gcc avr-libc dfu-programmer
   
-  CUNO: additional you need AVR-DUDE for flashing the device. For Windows it's 
+  CUNO: additional you need "avrdude" for flashing the device. For Windows it's 
     part of WINAVR, for Linux you can usually "apt-get" it via above commands.
 
 
@@ -86,14 +86,14 @@ Install / Flash the firmware
   the micro-switch.
 
   ATTENTION: CUNO  
-  For CUNO you need AVR-DUDE as programmer through USB. The dfu-programmer will
+  For CUNO you need AVRDUDE as programmer through USB. The dfu-programmer will
     NOT work for CUNO.
   In the Makefile of CUNO (Device-Directory for CUNO) you will find the target
-    "program". There you can configure the COM-Port/serial Device by which 
-    CUNO is connected.
+    "program". There you can configure the COM-Port/serial device by which 
+    CUNO is connected (/dev/ttyACM0, or COMx).
   When those seetings are correct you can flash CUNO as follows:
   - Insert the USB-Cable while pressing the micro-switch on the back.
-  Now execute "make program" and you will see how AVR-DUDE programms the flash.
+  - Now execute "make program" and you will see how avrdude programms the flash.
 
 Quick Test:
 ===========
@@ -107,7 +107,7 @@ Quick Test:
     Connect to the device e.g. with "screen /dev/ttyACM0".
     
     CUNO:
-    Connect to the device e.g. with "screen /dev/ttyACM0@3844".
+    Connect to the device e.g. with "screen /dev/ttyACM0@38400".
 
   Windows
   =======
