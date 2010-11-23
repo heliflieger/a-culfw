@@ -53,6 +53,9 @@ Prerequisites
   - gcc-avr        (4.3.0 / 4.3.4)
   Ubuntu: "apt-get install avr-libc" will install all three packages
   OSX: port install avr-gcc avr-libc dfu-programmer
+  
+  CUNO: additional you need AVR-DUDE for flashing the device. For Windows it's 
+    part of WINAVR, for Linux you can usually "apt-get" it via above commands.
 
 
 Compile (optional)
@@ -81,10 +84,16 @@ Install / Flash the firmware
   The last command will reset the device, a new USB device should appear:
   "03eb:204b Atmel Corp.". If not try to reinsert the CUL without pressing
   the micro-switch.
-  
-  For CUNO you need AVR-DUDE as programmer through USB
-  In the Makefile of CUNO you will find the target "program". There you can 
-  configure the COM-Port/serial Device by which CUNO is connected
+
+  ATTENTION: CUNO  
+  For CUNO you need AVR-DUDE as programmer through USB. The dfu-programmer will
+    NOT work for CUNO.
+  In the Makefile of CUNO (Device-Directory for CUNO) you will find the target
+    "program". There you can configure the COM-Port/serial Device by which 
+    CUNO is connected.
+  When those seetings are correct you can flash CUNO as follows:
+  - Insert the USB-Cable while pressing the micro-switch on the back.
+  Now execute "make program" and you will see how AVR-DUDE programms the flash.
 
 Quick Test:
 ===========
@@ -96,6 +105,9 @@ Quick Test:
     "usbserial vendor=0x03eb product=0x204b" to modprobe.conf.
 
     Connect to the device e.g. with "screen /dev/ttyACM0".
+    
+    CUNO:
+    Connect to the device e.g. with "screen /dev/ttyACM0@3844".
 
   Windows
   =======
@@ -707,8 +719,8 @@ Notes
     MARCSTATE: C35 -> 01 (Idle), 13 (RX)
 
 
-Sample CUN setup
-================
+Sample CUN(O) setup
+====================
 
 This section describes how to setup CUN for ethernet access with the following
 settings:
