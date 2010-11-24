@@ -90,7 +90,7 @@ Install / Flash the firmware
       (/dev/ttyACM0, or COMx) in the file Devices/CUNO/makefile, look for
       AVRDUDE_PORT
     - insert the USB-Cable while pressing the micro-switch on the back.
-    - execute "make program"
+    - execute "make usbprogram"
 
 Quick Test:
 ===========
