@@ -225,7 +225,7 @@ gccversion :
 	@$(CC) --version
 
 
-program: $(TARGET).hex $(TARGET).eep
+usbprogram: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
 ispprogram: $(TARGET).hex $(TARGET).eep
