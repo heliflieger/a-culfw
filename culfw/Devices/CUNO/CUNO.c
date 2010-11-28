@@ -185,6 +185,9 @@ main(void)
 #ifdef HAS_RF_ROUTER
     rf_router_task();
 #endif
+#ifdef HAS_ASKSIN
+    rf_asksin_task();
+#endif
 #ifdef HAS_ETHERNET
     Ethernet_Task();
 #endif
