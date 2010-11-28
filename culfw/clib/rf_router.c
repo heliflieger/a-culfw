@@ -12,7 +12,6 @@
 #include "ringbuffer.h"
 #include "ttydata.h"
 #include "fht.h"
-#include "cdc.h"
 
 uint8_t rf_router_status;
 uint8_t rf_router_myid;
