@@ -1,7 +1,8 @@
+#include "board.h"
+#ifdef HAS_ONEWIRE
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/boot.h>
-#include "board.h"
 
 #include "fncollection.h"
 #include "stringfunc.h"
@@ -31,11 +32,7 @@ static unsigned char dscrc_table[] = {
       116, 42,200,150, 21, 75,169,247,182,232, 10, 84,215,137,107, 53};
 
 // Buffer for OnwWire Bus Devices
-#ifdef HAS_ONEWIRE
 unsigned char ROM_CODES[HAS_ONEWIRE * 8];
-#else
-unsigned char ROM_CODES[8];
-#endif
 int onewire_connecteddevices;
 int onewire_conversionrunning;
 int onewire_allconversionsrunning;
@@ -801,3 +798,5 @@ i2cMasterReceive(unsigned char deviceAddr, unsigned char length, unsigned char *
       return I2C_OK;
 		}
 }
+
+#endif
