@@ -18,6 +18,9 @@
 #ifdef HAS_ETHERNET
 #include "tcplink.h"
 #endif
+#ifdef HAS_DOGM
+#include "dogm16x.h"
+#endif
 uint8_t log_enabled = 0;
 
 uint8_t display_channel = 0;
@@ -38,6 +41,11 @@ display_char(char data)
 #ifdef HAS_ETHERNET
   if(display_channel & DISPLAY_TCP)
     tcp_putchar( data );
+#endif
+
+#ifdef HAS_DOGM
+  if(display_channel & DISPLAY_DOGM)
+    dogm_putchar( data );
 #endif
 
 #ifdef HAS_USB

@@ -23,6 +23,11 @@
 #include "onewire.h"
 #endif
 
+#ifdef HAS_IRRX
+#include "ir.h"
+uint8_t ir_ticks = 0;
+#endif
+
 uint32_t ticks;
 
 // count & compute in the interrupt, else long runnning tasks would block
@@ -30,7 +35,20 @@ uint32_t ticks;
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
 
-  ticks++;
+#ifdef HAS_IRRX
+
+     ir_sample(); // call IR sample handler
+
+     // if IRRX is compiled in, timer runs 125x faster ...
+     if (ir_ticks++<125)
+	  return;
+
+     ir_ticks = 0;
+
+#endif
+
+     // 125Hz
+     ticks++; 
 
 #ifdef HAS_NTP
   ntp_hsec++;

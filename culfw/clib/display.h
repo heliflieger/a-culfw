@@ -28,6 +28,7 @@ extern uint8_t log_enabled;
 #define DISPLAY_LCD      (1<<1)
 #define DISPLAY_TCP      (1<<2)
 #define DISPLAY_RFROUTER (1<<3)
+#define DISPLAY_DOGM     (1<<4)
 
 
 #endif

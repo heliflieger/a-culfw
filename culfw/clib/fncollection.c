@@ -1,5 +1,6 @@
 #include <avr/eeprom.h>
 #include <avr/wdt.h>
+#include <avr/interrupt.h>
 
 #include "board.h"
 #include "display.h"
@@ -239,7 +240,9 @@ prepare_boot(char *in)
 
 
   TIMSK0 = 0;                // Disable the clock which resets the watchdog
-  wdt_enable(WDTO_15MS);     // Make sure the watchdog is running 
+  cli();
+  
+  wdt_enable(WDTO_15MS);       // Make sure the watchdog is running 
   while (1);                 // go to bed, the wathchdog will take us to reset
 }
 

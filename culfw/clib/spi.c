@@ -12,8 +12,13 @@ spi_init(void)
   SPI_DDR  |= (_BV(SPI_MOSI) | _BV(SPI_SCLK) | _BV(SPI_SS));
   SPI_DDR  &= ~_BV(SPI_MISO);
   
-  SPCR = (_BV(MSTR) | _BV(SPE));
+#ifdef HAS_DOGM
+  SPCR = _BV(MSTR) | _BV(SPE) | _BV( SPR0 );
+#else
+  SPCR  = _BV(MSTR) | _BV(SPE);
   SPSR |= _BV(SPI2X);
+#endif
+
 }
 
 uint8_t
