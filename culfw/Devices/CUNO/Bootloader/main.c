@@ -44,13 +44,17 @@
 */
 // tabsize: 4
 
+#include <avr/eeprom.h>
+#define EE_OSCCAL  (uint8_t*)E2END
+#define EE_OSCCALX (uint8_t*)(E2END-1)
+
 /* MCU frequency */
 #ifndef F_CPU
 #define F_CPU 8000000
 #endif
 
 /* UART Baudrate */
-// #define BAUDRATE 9600
+//#define BAUDRATE 9600
 //#define BAUDRATE 19200
 #define BAUDRATE 38400
 //#define BAUDRATE 115200
@@ -66,7 +70,7 @@
    which is the "correct" value for a bootloader.
    avrdude may only detect the part-code for ISP */
 #define DEVTYPE     DEVTYPE_BOOT
-// #define DEVTYPE     DEVTYPE_ISP
+//#define DEVTYPE     DEVTYPE_ISP
 
 /*
  * Pin "STARTPIN" on port "STARTPORT" in this port has to grounded
@@ -186,7 +190,7 @@ static void sendchar(uint8_t data)
 
 static uint8_t recvchar(void)
 {
-	while (!(UART_STATUS & (1<<UART_RXREADY)));
+       while (!(UART_STATUS & (1<<UART_RXREADY)));
 	return UART_DATA;
 }
 
@@ -194,8 +198,9 @@ static inline void eraseFlash(void)
 {
 	// erase only main section (bootloader protection)
 	uint32_t addr = 0;
+	boot_spm_busy_wait();
 	while (APP_END > addr) {
-		boot_page_erase(addr);		// Perform page erase
+		boot_page_erase_safe(addr);		// Perform page erase
 		boot_spm_busy_wait();		// Wait until the memory is erased.
 		addr += SPM_PAGESIZE;
 	}
@@ -219,6 +224,8 @@ static inline uint16_t writeFlashPage(uint16_t waddr, pagebuf_t size)
 	uint16_t data;
 	uint8_t *tmp = gBuffer;
 
+	boot_spm_busy_wait();
+
 	do {
 		data = *tmp++;
 		data |= *tmp++ << 8;
@@ -228,7 +235,7 @@ static inline uint16_t writeFlashPage(uint16_t waddr, pagebuf_t size)
 		size -= 2;			// Reduce number of bytes to write by two
 	} while (size);				// Loop until all bytes written
 
-	boot_page_write(pagestart);
+	boot_page_write_safe(pagestart);
 	boot_spm_busy_wait();
 	boot_rww_enable();		// Re-enable the RWW section
 
@@ -254,6 +261,8 @@ static inline uint16_t readFlashPage(uint16_t waddr, pagebuf_t size)
 {
 	uint32_t baddr = (uint32_t)waddr<<1;
 	uint16_t data;
+
+	boot_spm_busy_wait();
 
 	do {
 #ifndef READ_PROTECT_BOOTLOADER
@@ -331,17 +340,116 @@ static void send_boot(void)
 
 static void (*jump_to_app)(void) = 0x0000;
 
+void display_hex(uint16_t h, int8_t pad) {
+     char buf[5];
+     char *s;
+     
+     int8_t i=5;
+     
+     buf[--i] = 0;
+     do {
+	  uint8_t m = h%16;
+	  buf[--i] = (m < 10 ? '0'+m : 'A'+m-10);
+	  h /= 16;
+	  pad--;
+     } while(h);
+     
+     while(--pad >= 0 && i > 0)
+	  buf[--i] = '0';
+
+
+     s = buf+i;
+     
+     while(*s)
+	  sendchar(*s++);
+}
+
+void ucal( void ) {
+     uint16_t to;
+     uint16_t res = 0xffff;
+
+     // aiming for 208 / 0xD0 in res
+
+     UART_CTRL &= ~_BV(RXEN0); // RX off!
+
+     TCCR1A = 0;
+     TCCR1B = _BV(CS10);         
+
+     // Wait for high ...
+     while ( !(PIND & _BV( PD0 )) );
+
+     while (1) {
+	  
+	  TCNT1 = 0;
+	  to = 0;
+	  
+	  // High/Idle?
+	  while ( PIND & _BV( PD0 )) {
+
+	       // check Timeout
+	       if (TCNT1>60000) {
+		    TCNT1 = 0;
+		    if (to++>100)
+			 goto end;
+	       }
+	       
+	  };
+	  
+	  TCNT1  = 0;
+	  
+	  // Low! a bit
+	  while ( !(PIND & _BV( PD0 )) ) {
+	  }
+	  
+	  if (TCNT1<res)
+	       res = TCNT1;
+	  
+     }
+     
+	  
+ end:
+
+     UART_CTRL |= _BV(RXEN0); // RX back on!
+
+     display_hex( OSCCAL, 2 );
+     sendchar( ' ' );
+
+     if (res<207) {
+	  OSCCAL++;
+     } else if (res>209) 
+	  OSCCAL--;
+
+     eeprom_busy_wait();
+     eeprom_write_byte(EE_OSCCALX, OSCCAL^0xff);
+     eeprom_busy_wait();
+     eeprom_write_byte(EE_OSCCAL, OSCCAL);
+     eeprom_busy_wait();
+
+     display_hex( res, 4 );
+     sendchar( ' ' );
+     display_hex( OSCCAL, 2 );
+
+     sendchar('\r'); sendchar('\n');
+
+     TCCR1B = 0;         
+}
+
+
 int main(void)
 {
 	uint16_t address = 0;
 	uint8_t device = 0, val;
 
-//	OSCCAL = 0xb0;
-
+	// read cal byte ...
+	eeprom_busy_wait();
+	val = eeprom_read_byte(EE_OSCCAL);
+	if ((val^0xff) == eeprom_read_byte(EE_OSCCALX)) {
+	     OSCCAL = val;
+	}
+	
 	// LEDs
 	DDRA  |= 3;
 	PORTA |= 1;
-	
 
 #ifdef DISABLE_WDT_AT_STARTUP
 #ifdef WDT_OFF_SPECIAL
@@ -443,10 +551,14 @@ int main(void)
 #error "Select START_ condition for bootloader in main.c"
 #endif
 
-	PORTA |= 3;
+	PORTA |= 1;
 
 	for(;;) {
+
+		PORTA |= 2;
 		val = recvchar();
+		PORTA &= ~2;
+
 		// Autoincrement?
 		if (val == 'a') {
 			sendchar('Y');			// Autoincrement is quicker
@@ -568,6 +680,22 @@ int main(void)
 		// Return software identifier
 		} else if (val == 'S') {
 			send_boot();
+
+		// perform 38400 calibration
+		} else if (val == 'C') {
+			ucal();
+
+		// Return OSCCAL values
+		} else if (val == 'c') {
+		     display_hex( OSCCAL, 2 );
+		     sendchar( ' ' );
+		     display_hex( eeprom_read_byte(EE_OSCCALX), 2 );
+		     eeprom_busy_wait();
+		     sendchar( ' ' );
+		     display_hex( eeprom_read_byte(EE_OSCCAL), 2 );
+		     eeprom_busy_wait();
+		     
+		     sendchar('\r');
 
 		// Return Software Version
 		} else if (val == 'V') {
