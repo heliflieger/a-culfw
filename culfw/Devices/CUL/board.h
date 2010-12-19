@@ -36,13 +36,13 @@
 #endif
 
 #ifdef CUL_V2_HM
-#  define TTY_BUFSIZE           48
-#  define FHTBUF_SIZE           74
+#  define HAS_ASKSIN
+#  define TTY_BUFSIZE           64
 #  define RCV_BUCKETS            2 
-#  define RFR_SHADOW                    // PROGMEM: 10b    RAM: -(TTY_BUFSIZE+3)
+#  undef  HAS_RF_ROUTER
 #  undef  HAS_FHT_80b
 #  undef  HAS_FHT_8v
-#  define HAS_ASKSIN
+#  define FHTBUF_SIZE            0
 #  undef  BOARD_ID_STR
 #  define BOARD_ID_STR            "CUL_HM"
 #  undef  BOARD_ID_USTR
