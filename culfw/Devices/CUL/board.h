@@ -26,6 +26,7 @@
 #  define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #  define HAS_ASKSIN
 #  define HAS_ESA
+#  define HAS_INTERTECHNO
 #endif
 
 #ifdef CUL_V2
