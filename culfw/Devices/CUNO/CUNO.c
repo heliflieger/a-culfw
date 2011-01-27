@@ -40,6 +40,7 @@
 #include "rf_asksin.h"
 #endif
 
+
 PROGMEM t_fntab fntab[] = {
 
   { 'm', getfreemem },
@@ -47,6 +48,9 @@ PROGMEM t_fntab fntab[] = {
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
 #endif
@@ -141,7 +145,8 @@ main(void)
 
 
   // Setup the timers. Are needed for watchdog-reset
-  OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250
+
+  OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz
   TCCR0B = _BV(CS02);
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);
