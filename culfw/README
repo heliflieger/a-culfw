@@ -151,7 +151,7 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - r
         enable AskSin reception. Note: only AskSin messages will be received in
         this mode.
-	Data is reported in hex. If bit 4 was set in previous X cmd (i.e. X10)
+	      Data is reported in hex. If bit 4 was set in previous X cmd (i.e. X10)
         reported data is binary.
       - s
         Send out an AskSin message. <hex> is a hex string of the following
@@ -244,6 +244,24 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - cc is the FS20 command
       - ee is the FS20 timespec. Note that cc must have the extension bit set.
       Example: F12340111
+
+	  i<func> InterTechno Command-Set
+      InterTechno (R) mode.
+      <func> is one of:
+      - t<dez>
+        Sets the time in us (mikroseconds) for a single wave-puls
+        typical values are: 360-470
+        Default: 420 (good for most InterTechno compatible Devices)
+      - sr<dez>
+        Sets the number of repetition for the InterTechno Command.
+        The command needs to be sent several times, as the receivers are
+        comparing several receptions.
+        Default: 6
+        Note: Some discounter versions are toggling too much, then reduce to ~4
+      - s<AAAAAAAAAAAA>  Note: 12-Address/Data Bits
+      	Sends an InterTechno command
+      	A-Address/Data Bit is Tri-State
+      	0 /1/F (float) (see Notes at the end)
 
     GssNnprHHLLhhllDDDD...
       Send raw data, only if HAS_RAWSEND is enabled.
@@ -666,7 +684,38 @@ culfw<->PC Protocol (over USB or TCP/IP)
 
 Notes
 =====
-
+- InterTechno(R) - 433.92 Mhz
+  The basic protocol is a 12-Bit Tri-State Protocol. As the transceivers
+  for this protocol can handle 3 states the different versions of IT-Switches 
+  are putting those Bits either to Ground(0), to VCC (1) or leaving them 
+  open(Float). 
+  The original InterTechno(R) Switch knows ONLY 0 & F, but many
+  discounter variants are also using 1 & F or 1 & 0 or even all
+  three states 0/1/F.
+  The DIP-Switches on the Device determines the address (usually the
+  first 8-10 Bits) and the last two bits are for switching.
+  The original IT-Switch has 8-Bit Address (0/F) then 0F (Bit 9/10)
+  and 11 (ON) or 10 (OFF) for bits 11/12.
+  
+  IT uses Codes for Addresses: (Addresses are LSB..MSB)
+    House         Device 
+   A  0000         1   0000
+   B  F000         2   F000
+   C  0F00         3   0F00
+   ..  ..          ..
+   N  F0FF         14  F0FF
+   O  0FFF         15  0FFF
+   P  FFFF         16  FFFF
+  
+  For Switching Bit 11/12 are needed (either 11/10 or 11/00) depending
+  on the Brand of the Switch.
+  Bit 9/10 are either part of a non-IT Address (discounter) or are fixed
+  (0F for IT, 00/11 or any combination for other brands)
+   
+  The Wave consists of a Base-Peak of around 400us but as most of them
+  are using cheap crystals it may vary (therefore it can be adjusted).
+  420us seems to fit the most so far.
+  
 - 1% LIMIT
   The firmware respects the 1% limit for this band, i.e. only 160 FS20
   messages per hour will be sent. See the second number returned by the "X"

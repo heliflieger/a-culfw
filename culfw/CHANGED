@@ -1,3 +1,7 @@
+Version 1.41 (2011-01-27)
+- CUNO: InterTechno(R) Protocol for sending IT-Datagrams, 433MHz 
+- CUL:  InterTechno(R) Protocol for sending IT-Datagrams, 433MHz CUL_V3.hex 
+
 Version 1.40 (2010-11-11)
 - CUNO: OneWire support
 - CUL:  CUL_V2_HM.hex vor the CULV1/V2 devices
