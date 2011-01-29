@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2010 Frank Meyer - frank(at)fli4l.de
  *
- * $Id: irmpconfig.h,v 1.1 2010-12-15 23:36:45 tostmann Exp $
+ * $Id: irmpconfig.h,v 1.2 2011-01-29 14:48:12 tostmann Exp $
  *
  * ATMEGA88 @ 8 MHz
  *
@@ -73,10 +73,10 @@
 
 #else                                                   // AVR:
 
-#define IRMP_PORT                               PORTD
-#define IRMP_DDR                                DDRD
-#define IRMP_PIN                                PIND
-#define IRMP_BIT                                3       // use PB6 as IR input on AVR
+#define IRMP_PORT                               PORTB
+#define IRMP_DDR                                DDRB
+#define IRMP_PIN                                PINB
+#define IRMP_BIT                                0       // use PB0 as IR input on AVR
 
 #define input(x)                                ((x) & (1 << IRMP_BIT))
 #endif
