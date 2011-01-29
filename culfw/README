@@ -18,6 +18,7 @@ the can be used for low-power wireless communication in the 868 band.
 
 - The CSM (CC110x Serial Module) is a device you talk to a serial way using a
   host system with an USART available. 1.8V-3.3V, CC1101 / ATMEGA324/644/1284(P)
+  used in: CUNO, TuxRadio
 
 - The CUNO (CC110x USB Network OneWire) is a device with following features: 
   CSM == CC1101+ATMega m644/m1284 cpu / Ethernet interface w/ PoE /
@@ -91,6 +92,9 @@ Install / Flash the firmware
       AVRDUDE_PORT
     - insert the USB-Cable while pressing the micro-switch on the back.
     - execute "make usbprogram"
+
+  - TuxRadio:
+    - see README in Devices/TuxRadio directory
 
 Quick Test:
 ===========
@@ -201,6 +205,17 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - 09/0A: Insert a new line at the bottom/top of the screen,
                scrolling the rest.
 
+    D<cmd><data>
+      3x16 character LCD display access, where <cmd> is:
+      - c
+        clear display: Dc
+      - t<pos><text>
+        write text with <pos> two digits hex: Dt10Hallo (beginning of line 2)
+      - b<value>
+        set contrast to <value> (two hex digits): Db33
+      - C<byte>
+        send native controlbye - see displays manual
+
     E<x> eth debugging
       (CUN only)
       - c
@@ -277,6 +292,11 @@ culfw<->PC Protocol (over USB or TCP/IP)
       - ll Low- Time for the 1-bit, Unit is 16us (!)
       - DDDDD... Databytes
       See also X04
+
+    I<cmd><data> - Infrared Rx/Tx 
+      <cmd> is one of:
+      - r<mode>
+	enables IR reception (mode: 00-off / 01-on / 02-on, no repeating messages)
 
     M<hex>
       Send out an EM message. <hex> is a hex string of the following form:
