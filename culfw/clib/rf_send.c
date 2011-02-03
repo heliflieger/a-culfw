@@ -128,6 +128,10 @@ it_func(char *in)
 			} else {
 	
 			LED_ON();
+      #ifdef HAS_IRRX	//Block IR-Reception & Interrupts during this time
+        cli();
+      #endif
+			
 		  if(!cc_on)
 		    set_ccon();
 	  	ccTX();                       // Enable TX 
@@ -156,6 +160,10 @@ it_func(char *in)
 	  	} else {
 		    ccStrobe(CC1100_SIDLE);
 		  }
+
+      #ifdef HAS_IRRX	//Enable IR-Reception & Interrupts again
+        sei();
+      #endif 
 	
 		  LED_OFF();
 	
@@ -194,6 +202,11 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   credit_10ms -= sum;
 
   LED_ON();
+
+  #ifdef HAS_IRRX	//Block IR-Reception & Interrupts during this time
+    cli();
+  #endif
+
   if(!cc_on)
     set_ccon();
   ccTX();                       // Enable TX 
@@ -218,7 +231,11 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   } else {
     ccStrobe(CC1100_SIDLE);
   }
-
+  
+  #ifdef HAS_IRRX	//Enable IR-Reception & Interrupts again
+    sei();
+  #endif 
+	
   LED_OFF();
 }
 
