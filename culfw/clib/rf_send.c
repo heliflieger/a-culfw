@@ -34,6 +34,7 @@
   #define FS20_PAUSE      10     // 10000mS
   #define EM_ONE         768     //   800uS
   #define EM_ZERO        368     //   400uS
+  uint8_t rf_send_active = 0;
 #else
   #define FS20_ZERO      400     //   400uS
   #define FS20_ONE       600     //   600uS
@@ -145,8 +146,12 @@ it_func(char *in)
 			} else {
 	
 			LED_ON();
+
+      #ifdef HAS_IRRX //Blockout IR_Reception for the moment
+      rf_send_active = 1;
+      #endif
 			
-		  if(!cc_on)
+      if(!cc_on)
 		    set_ccon();
 	  	ccTX();                       // Enable TX 
 	
@@ -174,6 +179,10 @@ it_func(char *in)
 	  	} else {
 		    ccStrobe(CC1100_SIDLE);
 		  }
+
+      #ifdef HAS_IRRX //Activate IR_Reception again
+      rf_send_active = 0;
+      #endif		  
 
 		  LED_OFF();
 	
@@ -205,13 +214,17 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   // 12*800+1200+nbyte*(8*1000)+(bits*1000)+800+10000 
   // message len is < (nbyte+2)*repeat in 10ms units.
   int8_t i, j, sum = (nbyte+2)*repeat;
-//  if (credit_10ms < sum) {
-//    DS_P(PSTR("LOVF\r\n"));
-//    return;
-//  }
-//  credit_10ms -= sum;
+  if (credit_10ms < sum) {
+    DS_P(PSTR("LOVF\r\n"));
+    return;
+  }
+  credit_10ms -= sum;
 
   LED_ON();
+
+  #ifdef HAS_IRRX //Blockout IR_Reception for the moment
+  rf_send_active = 1;
+  #endif
 
   if(!cc_on)
     set_ccon();
@@ -237,7 +250,11 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   } else {
     ccStrobe(CC1100_SIDLE);
   }
-	
+
+  #ifdef HAS_IRRX //Activate IR_Reception again
+  rf_send_active = 0;
+  #endif
+
   LED_OFF();
 }
 
