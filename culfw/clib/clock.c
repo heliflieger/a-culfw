@@ -37,7 +37,8 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 
 #ifdef HAS_IRRX
 
-     ir_sample(); // call IR sample handler
+		 if (!rf_send_active) //If NO RF_Send in Progress
+       ir_sample(); // call IR sample handler
 
      // if IRRX is compiled in, timer runs 125x faster ...
      if (ir_ticks++<125)
