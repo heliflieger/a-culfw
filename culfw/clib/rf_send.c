@@ -26,13 +26,23 @@
 // KS300 NULL  854us high, 366us low
 // KS300 ONE:  366us high, 854us low
 
-#define FS20_ZERO      400     //   400uS
-#define FS20_ONE       600     //   600uS
-#define FS20_ZERO      400     //   400uS
-#define FS20_ONE       600     //   600uS
-#define FS20_PAUSE      10     // 10000mS
-#define EM_ONE         800     //   800uS
-#define EM_ZERO        400     //   400uS
+#ifdef HAS_IRRX //If using IR the system is delayed. Therefore the timings need to be shorter
+  #define FS20_ZERO      368     //   400uS
+  #define FS20_ONE       568     //   600uS
+  #define FS20_ZERO      368     //   400uS
+  #define FS20_ONE       568     //   600uS
+  #define FS20_PAUSE      10     // 10000mS
+  #define EM_ONE         768     //   800uS
+  #define EM_ZERO        368     //   400uS
+#else
+  #define FS20_ZERO      400     //   400uS
+  #define FS20_ONE       600     //   600uS
+  #define FS20_ZERO      400     //   400uS
+  #define FS20_ONE       600     //   600uS
+  #define FS20_PAUSE      10     // 10000mS
+  #define EM_ONE         800     //   800uS
+  #define EM_ZERO        400     //   400uS
+#endif
 
 uint16_t credit_10ms;
 
@@ -74,7 +84,11 @@ send_bit(uint8_t bit)
 
 #ifdef HAS_INTERTECHNO
 // InterTechno /////////
+#ifdef HAS_IRRX //If using IR the system is delayed. Therefore the timings need to be shorter
+uint16_t it_interval = 388;
+#else
 uint16_t it_interval = 420;
+#endif
 uint8_t it_repetition = 6;
 
 static void
@@ -121,6 +135,9 @@ it_func(char *in)
 	if (in[1] == 't') {
 			fromdec (in+2, (uint8_t *)&it_interval);
 			DU(it_interval,0); DNL();
+			#ifdef HAS_IRRX //If using IR the system is delayed. Therefore the timings need to be shorter
+			it_interval = it_interval - 32;
+			#endif
 	} else if (in[1] == 's') {
 			if (in[2] == 'r') {
 				fromdec (in+3, &it_repetition);
@@ -128,9 +145,6 @@ it_func(char *in)
 			} else {
 	
 			LED_ON();
-      #ifdef HAS_IRRX	//Block IR-Reception & Interrupts during this time
-        cli();
-      #endif
 			
 		  if(!cc_on)
 		    set_ccon();
@@ -161,10 +175,6 @@ it_func(char *in)
 		    ccStrobe(CC1100_SIDLE);
 		  }
 
-      #ifdef HAS_IRRX	//Enable IR-Reception & Interrupts again
-        sei();
-      #endif 
-	
 		  LED_OFF();
 	
 			DC('i');DC('s');
@@ -195,17 +205,13 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   // 12*800+1200+nbyte*(8*1000)+(bits*1000)+800+10000 
   // message len is < (nbyte+2)*repeat in 10ms units.
   int8_t i, j, sum = (nbyte+2)*repeat;
-  if (credit_10ms < sum) {
-    DS_P(PSTR("LOVF\r\n"));
-    return;
-  }
-  credit_10ms -= sum;
+//  if (credit_10ms < sum) {
+//    DS_P(PSTR("LOVF\r\n"));
+//    return;
+//  }
+//  credit_10ms -= sum;
 
   LED_ON();
-
-  #ifdef HAS_IRRX	//Block IR-Reception & Interrupts during this time
-    cli();
-  #endif
 
   if(!cc_on)
     set_ccon();
@@ -231,10 +237,6 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   } else {
     ccStrobe(CC1100_SIDLE);
   }
-  
-  #ifdef HAS_IRRX	//Enable IR-Reception & Interrupts again
-    sei();
-  #endif 
 	
   LED_OFF();
 }
@@ -322,6 +324,12 @@ rawsend(char *in)
   zerolow  = hb[4];
   onehigh  = hb[5];
   onelow   = hb[6];
+  #ifdef HAS_IRRX	//If using IR the system is delayed. Therefore the timings need to be shorter
+    onehigh=onehigh-2;
+    zerohigh=zerohigh-2;
+    onelow=onelow-2;
+    zerolow=zerolow-2;
+  #endif  
   sendraw(hb+7, sync, nby, nbi, repeat, pause);
 }
 
