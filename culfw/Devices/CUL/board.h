@@ -48,6 +48,7 @@
 #  define BOARD_ID_STR            "CUL_HM"
 #  undef  BOARD_ID_USTR
 #  define BOARD_ID_USTR           L"CUL_HM"
+#  define HAS_INTERTECHNO
 #endif
 
 // No features to define below
