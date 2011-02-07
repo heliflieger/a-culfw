@@ -26,6 +26,7 @@
 #ifdef HAS_IRRX
 #include "ir.h"
 uint8_t ir_ticks = 0;
+uint8_t ir_ticks_thrd = 0;
 #endif
 
 uint32_t ticks;
@@ -37,13 +38,12 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 
 #ifdef HAS_IRRX
 
-		 if (!rf_send_active) //If NO RF_Send in Progress
-       ir_sample(); // call IR sample handler
+     ir_sample(); // call IR sample handler
 
-     // if IRRX is compiled in, timer runs 125x faster ...
-     if (ir_ticks++<125)
-	  return;
-
+     // if IRRX is compiled in, timer runs 125x faster ... 
+     if (ir_ticks++<125) 
+       return;
+       
      ir_ticks = 0;
 
 #endif
