@@ -13,9 +13,6 @@ void addParityAndSendData(uint8_t *hb, uint8_t hblen,
 
 
 extern uint16_t credit_10ms;
-#ifdef HAS_IRRX
-extern uint8_t rf_send_active;
-#endif
 #define MAX_CREDIT 900       // max 9 seconds burst / 25% of the hourly budget
 
 #endif
