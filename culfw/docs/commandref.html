@@ -1,0 +1,1181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>culfw reference</title>
+  <style type="text/css">
+    body   { background-color: #FFFFE7;}
+    #left  { position:absolute; top:20px; left:20px; width:140px; }
+    #right { position:absolute; top:20px; left:180px; bottom:20px; right:10px; }
+    body>div#left { position:fixed; }
+    h2,h3,h4 {     color:#52865D; line-height:1.3;
+             margin-top:1.5em; font-family:Arial,Sans-serif; }
+    div#block { border:1px solid gray; background: #F8F8E0; padding:0.7em; }
+    div#dist { padding-top:0.3em; }
+    a {  color: #278727; }
+  </style>
+</head>
+
+
+<body>
+
+  <div id="left">
+    <img src="culfw.png">
+    <h3>culfw<br>reference</h3>
+  </div>
+  <div id="right">
+
+<h3>Contents</h3>
+<ul>
+  <a href="#intro">Introduction</a><br>
+  <a href="#flashing">Compiling and flashing</a><br>
+  <a href="#protocol1">Protocol Part 1 (culfw configuration)</a><br>
+  Commands:
+  <ul>
+    <a href="#cmd_A">A</a>
+    <a href="#cmd_a">a</a>
+    <a href="#cmd_B">B</a>
+    <a href="#cmd_C">C</a>
+    <a href="#cmd_c">c</a>
+    <a href="#cmd_D">D</a>
+    <a href="#cmd_d">d</a>
+    <a href="#cmd_E">E</a>
+    <a href="#cmd_e">e</a>
+    <a href="#cmd_F">F</a>
+    <a href="#cmd_f">f</a>
+    <a href="#cmd_G">G</a>
+    <a href="#cmd_I">I</a>
+    <a href="#cmd_i">i</a>
+    <a href="#cmd_M">M</a>
+    <a href="#cmd_l">l</a>
+    <a href="#cmd_O">O</a>
+    <a href="#cmd_P">P</a>
+    <a href="#cmd_q">q</a>
+    <a href="#cmd_R">R</a>
+    <a href="#cmd_s">s</a>
+    <a href="#cmd_T">T</a>
+    <a href="#cmd_t">t</a>
+    <a href="#cmd_u">u</a>
+    <a href="#cmd_V">V</a>
+    <a href="#cmd_W">W</a>
+    <a href="#cmd_w">w</a>
+    <a href="#cmd_X">X</a>
+  </ul>
+  <a href="#protocol2">Protocol Part 2 (radio messages)</a><br>
+  <a href="#FHT_8v">FHT_8v</a><br>
+  <a href="#CUR_Menu">CUR Menu</a>
+  <a href="#intertechno">InterTechno</a>
+  <a href="#cc1100">CC1100 settings</a>
+  <a href="#cuno_setup">Sample CUN(O) setup</a>
+  <a name="#misc">Misc. notes</a>
+  <a name="todo">TODO/Known BUGS</a>
+</ul>
+
+
+<a name="intro"></a>
+<h3>Introduction</h3>
+<ul>
+  <br>culfw</b> is an open source (GPL V2) firmware for different busware.de
+  gadgets.<br><br> These gadgets all feature a CC1101 transceiver and an Atmel
+  MCU, which is used for low-power wireless communication in the 868 or 433 MHz
+  band.  See <a href="http://busware.de">busware.de</a> for details and on how
+  to buy them.<br><br> Supported device types:
+
+  <ul>
+  <li>The CUL (Cc1101 Usb Light)
+    <br>Following models are known:
+    <ul>
+    <li>CUL_V1 (AT90USB162: 0.5 kByte RAM, 16 kByte Program memory, 0.5 kByte EEPROM)
+    <li>CUL_V2 (AT90USB162: 0.5 kByte RAM, 16 kByte Program memory, 0.5 kByte EEPROM)
+    <li>CUL_V3 (ATMEGA32U4: 2.5 kByte RAM, 32 kByte Program memory, 1.0 kByte EEPROM)
+    <li>CUL_V4 (ATMEGA32U2: 1.0 kByte RAM, 32 kByte Program memory, 1.0 kByte EEPROM)
+    </ul>
+    There is also a 433MHz version of the CUL available.
+    <br><br>
+
+  <li>The CUR (Cc1101 Usb Remote) is a device with following features: CC1101 /
+    AT90USB646 / 16Mbit flash / 128x128 color display / 5-way jogdial / Battery.
+    It is a prototype device, and it has extensive culfw support.
+    <br><br>
+
+  <li>The CUN (Cc110x Usb Network) is a device with following features: CC1101 /
+    AT90USB1287 / Ethernet interface / 16Mbit flash / 256Kbit SRAM / MicroSD
+    <br><br>
+
+  <li>The CSM (Cc110x Serial Module) talks via a serial line (1.8-3.3V) instead
+    of USB with the host system. CC1101 / ATMEGA324/644/1284(P) used in: CUNO,
+    TuxRadio
+    <br><br>
+
+  <li>The CUNO (Cc110x Usb Network Onewire) is a device with following features: 
+    CSM == CC1101+ATMega m644/m1284 cpu / Ethernet interface w/ PoE /
+    ACM-USB bridge / OneWire Bus-Master DS2482 / MicroSD
+    <br><br>
+
+  </ul>
+
+  This firmware makes it possible to use these devices with fhem. Currently the
+  following RF protocols are supported:
+  <ul>
+    <li> FS20
+    <li> FHT
+    <li> EM
+    <li> KS300/S300TH
+    <li> HMS
+    <li> ESA
+    <li> ASKSIN (aka BidCos(R))
+    <li> basic OneWire Protocol through the DS4282 (CUNO only)
+  </ul>
+  <br>
+  In the culfw package there are pre-built .hex files ready for flashing the
+  device, for the casual user there is no need to install the compiler suite.
+  Note that especially the CUL_V2 .hex files do not contain all features due to
+  the restricted program memory available on this hardware.  <br> <br>
+
+
+  Thanks to the MyUSB project (http://www.fourwalledcubicle.com/MyUSB.php, ) the
+  device/firmware combination confirms to the Universal Serial Bus Communication
+  Device Class Abstract Control Model (USB CDC ACM) specification, so it can be
+  used out of the box with a lot of operating systems.
+</ul>
+
+
+<a name="flashing"></a>
+<h3>Compiling and Flashing</h3>
+<ul>
+  <h4>Prerequisites</h4>
+  You'll need following packets to flash (i.e. install) the firmware:<br>
+  <ul>
+  <li>CUL/CUN/CUR<br>
+     - dfu-programmer on Linux or OSX<br>
+     - flip on Windows<br>
+  <li>CUNO/CSM<br>
+    - avrdude
+  </ul>
+  <br>
+
+  If you want to modify the firmware:<br>
+  <ul>
+  <li> avr-libc
+  <li> binutils-avr
+  <li> gcc-avr
+  </ul>
+  <br>
+
+  Ubuntu: "apt-get install avr-libc" will install all three packages<br>
+  OSX: use CrossPack-AVR, and the dfu-programmer from the ports package.<br>
+  Windows: avrdude is part of WINAVR.<br>
+  <br>
+
+
+  <h4>Compile (optional)</h4>
+  Change into your device directory (e.g. culf/Devices/CUL)<br>
+  Type "make", which will output text like:<br>
+  <ul>
+    Compiling C: CUL.c<br>
+    [...]<br>
+  </ul>
+
+
+  <h4>Install / Flash the firmware</h4>
+  Change into your device directory (e.g. Devices/CUL)
+  <br><br>
+  <ul>
+  <li>CUL/CUN: Insert the USB-Stick while pressing the micro-switch on the back:
+    a USB device "03eb:2ffa Atmel Corp." should appear.<br>
+    Now execute "make usbprogram", which will output text like:<br>
+    <ul>
+      dfu-programmer at90usb162 erase<br>
+      dfu-programmer at90usb162 flash CUL.hex<br>
+      Validating...<br>
+      6312 bytes used (51.37%)<br>
+      dfu-programmer at90usb162 start<br>
+    </ul>
+    The last command will reset the device, a new USB device should appear:
+    "03eb:204b Atmel Corp.". If not try to reinsert the CUL without pressing
+    the micro-switch.
+    <br><br>
+
+  <li> CUNO:
+    configure the COM-Port/serial device by which CUNO will be connected
+    (/dev/ttyACM0, or COMx) in the file Devices/CUNO/makefile, look for
+    AVRDUDE_PORT<br>
+    insert the USB-Cable while pressing the micro-switch on the back.<br>
+    execute "make usbprogram"
+    <br><br>
+
+  <li> TuxRadio: see README in Devices/TuxRadio directory
+    <br><br>
+  </ul>
+
+  <h4>Quick Test</h4>
+  USB Device @ OS/X
+    <ul>
+    You'll see a device /dev/cu.usbmodemf...., depending on the USB port on the
+    host.<br>
+    Start a terminal window and connect to the device with "screen /dev/cu.usbmodemf....".<br>
+    You can temirnate screen with &lt;Ctrl&gt;&lt;A&gt; :quit&lt;return&gt;
+    </ul>
+    <br><br>
+  USB Device @ Linux
+    <ul>
+    Hopefully you see a device /dev/ttyACM0 (if you use a newer kernel, which
+    loads the cdc_acm kernel module), or a /dev/ttyUSB0 (if your kernel uses
+    usbserial). For usbserial kernel you may need to add the module options
+    "usbserial vendor=0x03eb product=0x204b" to modprobe.conf.
+    <br><br>
+    Connect to the device e.g. with "screen /dev/ttyACM0".
+    <br><br>
+    CUNO: Connect to the device e.g. with "screen /dev/ttyACM0@38400".
+    </ul>
+    <br><br>
+
+  USB Device @ Windows
+    <ul>
+    Install a virtual COM port, use MyUSB_USBtoSerial.inf from the docs
+    directory. Locate the COM-port in the device manager shown as
+    "USB Virtual Serial Port (COMx)". Start Hyperterminal, open a connection
+    to COMx 9600,8,n,1.<br><br>
+    
+    For CUNO: Install a virtual COM port, use MCP2200.inf from the docs
+    directory. Locate the COM-port in the device manager shown as
+    "USB Virtual Serial Port (COMx)". Start Hyperterminal, open a connection
+    to COMx 38400,8,n,1.<br><br>
+    </ul>
+
+  CUN/CUNO: Connect the device to a network with a DHCP server, and then telnet to
+  the assigned address with "telnet &lt;ip-adress&gt; 2323"
+  <br><br>
+
+  After you connected to the device with screen, hyperterminal or telnet:<br>
+  Type "V<return>". The string "V 1..." should appear. Type X21<return> to
+  enable the RF data reporting.
+</ul>
+
+
+<a name="protocol1"></a>
+<h3>Protocol Part 1 (culfw configuration)</h3>
+<ul>
+  The data is ASCII (i.e. human readable) with cr/nl as a message terminator.
+
+    The first byte is the command (case significant), the rest ist command
+    dependent, usually a hex string, case insignificant.  Commands are _not_
+    echoed.  Following commands are available (alphabetic list):<br>
+    <br>
+
+    <a name="cmd_A"></a>
+    A&lt;func&gt;[&lt;hex&gt;]
+    <ul>
+      AskSin (aka BidCOS (R)) mode.  &lt;func&gt; is one of:
+      <ul>
+      <li> r<br>
+        enable AskSin reception. Note: only AskSin messages will be received in
+        this mode. Data is reported in hex. If bit 4 was set in previous X cmd
+        (i.e. X10) reported data is binary.
+      <li> s<br>
+        Send out an AskSin message. &lt;hex&gt; is a hex string of the following
+        form: llnnccttssssssddddddpp...
+        <ul>
+          ll - length<br>
+          nn - msg counter<br>
+          cc - control byte<br>
+          tt - msg type<br>
+          ss - sender address (3byte)<br>
+          dd - destination address (3byte - 000000 for broadcast)<br>
+          pp - payload...<br>
+        </ul>
+      <li> x<br>
+        Disable AskSin mode. To enable reception of FS20 messages, an "X21" or
+        similar is needed.
+      </ul>
+    </ul><br><br>
+
+    <a name="cmd_a"></a>
+    a&lt;XX&gt;[&lt;YY&gt;]
+    <ul>
+      (CUR only)<br>
+      If no YY is specified:<br>
+      Display the battery state:<br>
+      <ul>
+        XX = 01  raw reading<br>
+        XX = 00  reading transformed into %, taking nonlinearity into account<br>
+      </ul>
+      If both XX and YY is specified (CURV3 only):<br>
+      <ul>
+        XX = 00  Charge with 500mA (YY=01) or 100mA (YY=00)<br>
+        XX = 01  Disable USB charging (YY=01) or enable it (YY=00)<br>
+      </ul>
+    </ul><br>
+
+    <a name="cmd_B"></a>
+    B&lt;hex&gt;
+    <ul>
+      Reboot device.<br>
+      If &lt;hex&gt; is not 00 enter bootloader mode (for flashing the device see the
+      flashing section above)
+    </ul><br><br>
+
+    <a name="cmd_C"></a>
+    C&lt;reg&gt;
+    <ul>
+      &lt;reg&gt; is a (two digit) hex number: return the value of the cc1101
+      register. &lt;reg&gt;=99 dumps the first 48 registers.<br>
+      Example: C35 -&gt; C35 = 0x0D / 13
+    </ul><br><br>
+
+    <a name="cmd_c"></a>
+    c&lt;hex&gt;
+    <ul>
+      (CUR/CUN )
+      Read/set the clock: either the RTC chip (CUR only) or the internal NTP
+      counter (CUN only). If hex is 01, then display the date, if it is 02 the
+      time, if it is 03, then both date and time. If the length of hex is 6,
+      then the RTC will be set to YYMMDDHHmmSS. Data is written BCD, i.e
+      December is written as 12 and not as 0C. The RTC version of the clock
+      may be set partially: if hex is 6 characters long (converted to 3 bytes)
+      then only the time part will be set. This is not applicable to NTP.
+    </ul><br><br>
+
+    <a name="cmd_D"></a>
+    D&lt;cmd&gt;&lt;data&gt;
+    <ul>
+      (TuxRadio) 3x16 character LCD display access, where &lt;cmd&gt; is:
+      <ul>
+      <li> c<br>
+        clear display: Dc
+      <li> t&lt;pos&gt;&lt;text&gt;<br>
+        write text with &lt;pos&gt; two digits hex: Dt10Hallo (beginning of line 2)
+      <li> b&lt;value&gt;<br>
+        set contrast to &lt;value&gt; (two hex digits): Db33
+      <li> C&lt;byte&gt;<br>
+        send native controlbye - see display manual
+      </ul>
+    </ul><br><br>
+
+    <a name="cmd_d"></a>
+    d&lt;hex&gt;data
+    <ul>
+      (CUR only)
+      Choose the sub-function with the first two bytes (hex):
+      <ul>
+      <li> FF: LCD control, the next 3 bytes (6 chars) are:
+        <ul>
+        <li> LCD on (01) / on+cls (02) / off (00) / don't change (FF)
+        <li> contrast: set directly (00-FE) / read from eeprom (FC) /
+                    increase (FE) / decrease (FD) / don't change (FF)
+        <li> brightness: set directly (00-FE) / read from eeprom (FC) /
+                    increase (FE) / decrease (FD) / don't change (FF)
+        </ul>
+      <li> 00: Set the title to the string following the 00
+      <li> 01-08: Set the "body" lines 01-08 the the text
+      <li> 09/0A: Insert a new line at the bottom/top of the screen,
+               scrolling the rest.
+      </ul>
+    </ul><br><br>
+
+    <a name="cmd_E"></a>
+    E&lt;x&gt;
+    <ul>
+      (CUN only) eth debugging
+      <ul>
+      <li> c<br>
+        Print out the currently configured IP & MAC address.
+        The IP address may be different from what you configured with Wia
+        if DHCP is enabled. 0.0.0.0 is shown if no IP address is set, e.g.
+        when DHCP is enabled but the network cable is unplugged or CUN
+        could not get an IP address over LAN. Note that the IP address
+        that you configured with Wia is disregarded if DHCP is enabled.
+
+      <li> d<br>
+        increase the debug level. Meaning of the levels
+        1: application debugging, e.g. the NTP module will display the time
+        2: print ETH header (mac adress + ETH frametype)
+        3: dump whole ethernet packet.
+
+      <li> i<br>
+        Reinitialize the ethernet subsystem, restart DHCP & NTP
+
+      <li> n<br>
+        Request an NTP update
+      </ul>
+    </ul><br><br>
+
+    <a name="cmd_e"></a>
+    e
+    <ul>
+      EEPROM / factory reset.<br>
+      resets all eeprom values. e causes a reboot to activate all changes.
+      "ex" will reset the eeprom values without a reboot, this is for internal
+      use only.
+    </ul><br><br>
+
+
+    <a name="cmd_F"></a>
+    F&lt;hex&gt;
+    <ul>
+      Send out an FS20 message. &lt;hex&gt; is a hex string of the following form:<br>
+      hhhhaacc or hhhhaaccee, where
+      <ul>
+      <li> hhhh is the FS20 housecode,
+      <li> aa is the FS20 device address,
+      <li> cc is the FS20 command
+      <li> ee is the FS20 timespec. Note that cc must have the extension bit set.
+      </ul>
+      Example: F12340111
+    </ul><br><br>
+
+    <a name="cmd_f"></a>
+    f&lt;type&gt;[&lt;data&gt;]
+    <ul>
+      "fast" (250kBaud) rf txmit via CC1101 packet handling.<br>
+      First switch both devices to fastrf mode with "fr", then send data:
+      fs&lt;data&gt;, e.g. fsHallo<br>
+      Reset to "SlowRF": fx, followed by X21<br>
+      It can be used to "sniff" RFR packets
+    </ul><br><br>
+
+    <a name="cmd_G"></a>
+    GssNnprHHLLhhllDDDD...
+    <ul>
+      Send raw data, only if HAS_RAWSEND is enabled.
+      <ul>
+      <li>Everything after the command G is hex.
+      <li>ss Number of sync bits. Sync is always 0, followed by exactly one 1-bit.
+      <li>N  Number of data bytes (exclusive the last byte if it is not complete)
+      <li>n  Number of bits in the last byte
+      <li>p  Number of ms pause between repeats
+      <li>r  Number of repeats (e.g. FS20: 3)
+      <li>HH High-Time for the 0-bit, Unit is 16us (!)
+      <li>LL Low- Time for the 0-bit, Unit is 16us (!)
+      <li>hh High-Time for the 1-bit, Unit is 16us (!)
+      <li>ll Low- Time for the 1-bit, Unit is 16us (!)
+      <li>DDDDD... Databytes
+      </ul>
+      See also X04
+    </ul><br><br>
+
+    <a name="cmd_I"></a>
+    I&lt;cmd&gt;&lt;data&gt; - Infrared Rx/Tx 
+    <ul>
+      &lt;cmd&gt; is one of:
+      <ul>
+      <li>r&lt;mode&gt;<br>
+	enables IR reception (mode: 00-off / 01-on / 02-on, no repeating messages)
+      </ul>
+    </ul><br><br>
+
+    <a name="cmd_i"></a>
+    i&lt;func&gt;
+    <ul>
+      InterTechno (R) mode.<br>
+      &lt;func&gt; is one of:
+      <ul>
+      <li> t&lt;dez&gt;<br>
+        Sets the time in us (microseconds) for a single wave-puls
+        typical values are: 360-470
+        Default: 420 (good for most InterTechno compatible Devices)
+      <li> sr&lt;dez&gt;<br>
+        Sets the number of repetition for the InterTechno Command.
+        The command needs to be sent several times, as the receivers are
+        comparing several receptions.
+        Default: 6
+        Note: Some discounter versions are toggling too much, then reduce to ~4
+      <li> s&lt;AAAAAAAAAAAA&gt;  Note: 12-Address/Data Bits<br>
+      	Sends an InterTechno command
+      	A-Address/Data Bit is Tri-State
+      	0 /1/F (float) (see Notes at the end)
+      </ul>
+    </ul><br><br>
+
+
+    <a name="cmd_M"></a>
+    M&lt;hex&gt;
+    <ul>
+      Send out an EM message. &lt;hex&gt; is a hex string of the following form:
+      ttaacc111122223333
+      <ul>
+      <li>tt:type 01=EM-1000s, 02=EM-100-EM, 03=1000GZ
+      <li>aa:address, depending on the type above 01:01-04, 02:05-08, 03:09-12
+      <li>cc:counter, will be incremented by one for each message
+      <li>1111: cumulated value
+      <li>2222: last value (Not set for type 2)
+      <li>3333: top value  (Not set for type 2)
+      </ul>
+      Example: M02054A140000000000
+    </ul><br><br>
+
+    <a name="cmd_l"></a>
+    l&lt;hex&gt;
+    <ul>
+      Set the led mode.
+      - 00: Set LED off
+      - 01: Set LED on
+      - 02: The LED will blink once a second
+    </ul><br><br>
+
+    <a name="cmd_O"></a>
+    O&lt;func&gt; OneWire Command-Set
+    <ul>
+      (CUNO only)
+      &lt;func&gt; is one of the following:
+      <li> i  - Initialize OneWire Sub-System; Reset HMS-Emulation & Timers
+      
+      <li> R&lt;func&gt;	   Reset Routines:
+        <ul>
+      	<li>b - Reset OneWire Bus; Returns:
+          <ul>
+          <li>0 - No Device connected
+          <li>1 - One or more Devices connected
+          <li>2 - Short detected on OneWire Bus
+          </ul>
+      	<li>m - Reset OneWire Master (DS2482-Chip); Returns:
+          <ul>
+      	  <li>OK - Chip Resetted
+      	  <li>FAILED I2C - DS2482 Chip can't be reached via I2C internal Bus
+          </ul>
+        </ul>
+
+      <li> c  - Returns list of found RomCodes for OneWire Devices 
+      	(based on OneWire FullSearch, performed during boot, or with Of-Command)<br>
+        Output: 1:aabbccddeeffgghh  where a-h are Hex-Values: 64Bit Address<br>
+      	        2:aabbccddeeffgghh 
+      						   
+      <li> w&lt;func&gt;    Write Routines
+        <ul>
+        <li>b&lt;hex&gt; - Write one BIT to the OneWire Bus; &lt;hex&gt;: 00, or &gt;00 otherwise
+        <li>B&lt;hex&gt; - Write one BYTE to the OneWire Bus; &lt;hex&gt;:dd Hex-Value of Data
+        </ul>
+
+      <li> r&lt;func&gt;    Read Routines
+        <ul>
+        <li>b - Read one BIT from the OneWire Bus; Return: &lt;hex&gt;: 00, or 01 otherwise
+        <li>B - Read one BYTE from the OneWire Bus; Return: &lt;hex&gt;:dd Hex-Value of Data
+        </ul>
+      <li> m&lt;hex&gt; - MatchRom Code to select Device; &lt;hex&gt;:64-Bit Address in 8xHEX
+      
+      <li> H&lt;func&gt;   HMS Emulation Routines for Temp-Sensors (DS18B20 & DS18S20)
+      <ul>
+        <li>o - Toggle HMS-Emulation on/off; Returns: ON / OFF<br>
+                Based on found RomCodes an HMS Emulation will be done for 
+                OW-Temp-Sensors DS18B20 & DS18S20
+        <li>t&lt;dec&gt;   - Set Time-Interval for HMS-emulated Reporting<br>
+                &lt;dec&gt;: Seconds in decimal: 0-255
+                default: 120s
+      </ul>
+                   
+      <li>C&lt;func&gt; Sensor-Conversion Routines
+      <ul>
+       <li>s - Start Asynchronous Conversion for a selected Sensor (MatchRom)
+       <li>r - Checks if an asynchronous conversion is still running; Returns:
+           <ul>
+           <li>1 - Conversion still running
+           <li>0 - Conversion finished
+           </ul>
+       <li>a - Checks if Conversion Slot for ALL Sensors is still running;<br>
+               This is used for HMS-Emulation, as all Sensors go to conversion
+               at the same time; Returns:
+            <ul>
+            <li>1 - Conversion still running
+            <li>0 - Conversion finished
+            </ul>
+       <li>f - Start a new RomCode Full Search on the OW-Bus
+       </ul>
+    </ul><br><br>
+      	
+
+    <a name="cmd_P"></a>
+    P&lt;hex&gt;&lt;filename&gt;
+    <ul>
+      (CUR only)
+      Display a picture. The hex part consists of 4 bytes (x,y,w,h), and the
+      file contains the data in a 12bit per pixel format. Use
+      fonts/pgm2fourbit.pl with the raw option to convert raw PPM files into
+      the needed format, and tools/cur_file.pl to upload the file
+    </ul><br><br>
+
+    <a name="cmd_q"></a>
+    q
+    <ul>
+      Terminate the TCP/IP session (CUN only)
+    </ul><br><br>
+
+
+    <a name="cmd_R"></a>
+    R&lt;AA&gt; or R&lt;AAAA&gt;
+    <ul>
+      Read eeprom (i.e. "saved configuration") byte. Arguments: one or two
+      byte hex address &lt;AA&gt; or &lt;AAAA&gt;<br>
+      Adress-Slots:
+      <ul>
+      <li> 0x00 - 0x01<br>
+        Eeprom magic bytes
+      <li> 0x02 - 0x2A<br>
+        Configuration registers foe "SlowRF" as described in the "Table 37: "SPI Address
+        space" of the CC1101 datasheet (Version SWRS061C).  Note: all EEPROM
+        Values have an offset of 2.
+      <li> 0x2B - 0x32<br>
+        CC1101 PA Table (8 bytes).
+      </ul>
+      See fncollection.h for more details.<br>
+      Example: R00 -&gt; 63
+      <br><br>
+
+      Additional CUN-only commands:
+      <ul>
+      <li>Rim - MAC Address
+      <li>Rid - DHCP enabled flag
+      <li>Ria - IPV4 Address
+      <li>Rig - IPV4 gateway
+      <li>Rin - IPV4 network mask
+      <li>Rip - tcplink port
+      <li>RiN - NTP sever
+      <li>Rio - GMT offset
+      </ul>
+    </ul><br><br>
+
+    r&lt;filename&gt;
+    <ul>
+      (CUR/CUN)
+      Display the file &lt;filename&gt; from the builtin 2MB flash.  First the length
+      of the file, (hex 8 byte+nl) is written to the output, then the body of
+      the file.  Use "." as filename to get a listing of the current files with
+      length.<br>
+      Use the program cur_file from the tools directory to read a file, e.g.:<br>
+        perl cur_file.pl -r MENU /dev/ttyACM0<br>
+      NOTE: No fhem/screen must be connected to the CUR while reading/writing
+    </ul><br><br>
+
+    <a name="cmd_s"></a>
+    s&lt;hex&gt;
+    <ul>
+      (CUR only)
+      sleeptime. Switch everything off after &lt;hex&gt; seconds of joystick
+      inactivity. An instant sleep is achieved by pressing the joystick.
+      00 disables sleep.
+      If the CUR is connected via USB then only the display will be switched
+      off.
+    </ul><br><br>
+
+    <a name="cmd_T"></a>
+    THHHHxxxxxx
+    <ul>
+      FHT80b/FHT8v commands<br>
+      FHT80b syntax: THHHHCCAA[CCAA[CCAA...]]<br>
+      FHT8v  syntax: THHHHCCOOAA<br>
+      <ul>
+      <li>HHHH FHT80b (or 8v) housecode
+      <li>CC   Command
+      <li>OO   Command origin (CUL:77 or FHT:67)
+      <li>AA   Argument
+      </ul>
+      <br>
+
+      Store the message in the FHT80b or FHT8v buffer, and communicate with the
+      corresponding 80b/8v when the timeslot arrives. 8v commands are specified
+      by setting HHHH to one of the "own" housecodes. See also the FHT_8v
+      section below.
+      <br><br>
+
+      Special control commands:<br>
+      <ul>
+      <li>T01&lt;HHHH&gt;<br>
+        Set the "own" housecode to HHHH. The first byte will be used as the FHZ
+        code in in FHT80b mode. This command will also clear all buffers.
+        Note: if HHHH is 0000, then FHT80b communication is switched off.
+      <li>T01
+        Return the own housecode (hex)
+      <li>T02<br>
+        Return the FHT80b buffer. FHT80b commands are queued in the internal
+        buffer, which has place for 14 to 31 messages.
+	A command is removed from the buffer after CUL has received the
+	acknowledgement from FHT80b.
+      <li>T03<br>
+        Return the size of the remaining FHT80b buffer (bytes, hex).
+      <li>T10<br>
+        Return the FHT8v buffer. There is one value per 8v address.
+      <li>T11<br>
+        Return the time till the next 8v timeslot (seconds, hex)
+      </ul>
+    </ul><br><br>
+
+    <a name="cmd_t"></a>
+    t
+    <ul>
+      Output the time since boot (uptime). The output is a hex number,
+      resolution is 1/125 sec. An overflow occures every 397 days.
+    </ul><br><br>
+
+    <a name="cmd_u"></a>
+    u&lt;data&gt;
+    <ul>
+      RF_ROUTER functionality<br>
+      A CUL can work as a router, by sending/receiving data to/from a remote
+      CUL via RF. So it is possible to extend the range by plugging additional
+      CULs into the socket, and configure them to send their data to the
+      local (i.e. PC-connected) CUL.
+      <ul>
+      <li>u (without parameter)<br>
+        Display the own and the router id, both one byte hex.
+      <li>uiRRBB<br>
+        Set the own/rfr id, and the base id (the id of the CUL connected to
+        fhem).
+        If RR is not 00, the RF_ROUTER functionality is enabled.
+        If BB is not 00, the RF reception is enabled at start (X21) and all
+        received messages (FS20/FHT/etc) are relayed to the CUL with id BB.
+        Messages arrive on the base CUL (with id BB) with the prefix BBRRU see
+        the exampe below.
+      <li>uRRBB&lt;message&gt;<br>
+        Send &lt;message&gt; to the CUL with ID &lt;RR&gt; from the sender BB.
+        &lt;message&gt; will be executed as a local command on the remote CUL.
+        Answers will be sent (only!) to the configured router and not the
+        BB id specified in this command.
+      <li>ud (if compiled with RFR_DEBUG)<br>
+        display the current ticks, and the ticks for the scheduled rf_router
+        answer. Used to check if rf_router is working
+      <li>us (if compiled with RFR_DEBUG)<br>
+        Statistics: Number of sent messages in categories. The categories are:
+        F.T.E.K.H.x.#, x beeing the rest and # the number of delayed
+        transmissions due to current rf reception. All numbers are 16bit
+        counters.
+      </ul>
+
+      Example:
+      <ul>
+      <li>ui0601 (configure remote CUL)
+      <li>ui0100 (configure local CUL)
+      <li>u0601V -&gt; 0106UV 1.34 CUL868
+      <li>u0601C35 -&gt; 0106UC35 = 0D / 13
+      </ul>
+    </ul><br><br>
+
+    <a name="cmd_V"></a>
+    V
+    <ul>
+      Print the firmware version.
+      Example: V -&gt; V 1.30 CUL868
+    </ul><br><br>
+
+
+    <a name="cmd_W"></a>
+    W&lt;AA&gt;&lt;DD&gt; or W&lt;AAAA&gt;&lt;DD&gt;
+    <ul>
+      Write eeprom (i.e configuration) byte.  Arguments: one or two-byte hex
+      address &lt;AAAA&gt; followed by one byte hex data &lt;DD&gt;.
+      See R above for address (AAAA) explanation.<br>
+      Example: W1D06
+      <br><br>
+      Additional CUN-only commands:
+      <ul>
+      <li>Wim - MAC Address
+      <li>Wid - DHCP enabled flag
+      <li>Wia - IPV4 Address
+      <li>Wig - IPV4 gateway
+      <li>Win - IPV4 network mask
+      <li>Wip - tcplink port
+      <li>WiN - NTP sever
+      <li>Wio - GMT offset</li>
+      Notes:
+        <ul>
+        <li>Factory reset: use DHCP, port 2323, NTP-Server = Router, GMT offset:0
+        <li>Everything becomes active only after a reboot.
+        <li>MAC adress is written as hex, with optional semicolon
+        <li>IP4 adresses are written in decimal with dot separator
+        <li>port is written in decimal
+        <li>if the NTP server is 0.0.0.0 (default), then the router is used as
+          an NTP server.
+        <li>the GMT offset is specified as a hex number, and is a signed value:
+          ff==-1, fe==-2, etc
+        <li>factory reset will re-initialize this data, with a unique MAC address
+        <li>If DHCP is enabled, the left (orange RX/TX) led blinks till a valid
+          DHCP adress is received.
+        <br>
+        Example:<br>
+          Wim01:02:03:04:05:06<br>
+          Wia192.168.0.1<br>
+          Wio02<br>
+        </ul>
+      </ul>
+    </ul><br><br>
+
+
+    <a name="cmd_w"></a>
+    w&lt;length&gt;&lt;filename&gt;
+    <ul>
+      (CUR/CUN)
+      write the file named &lt;filename&gt; to the 2MB onboard flash. Length is hex,
+      8 bytes.  The command must be followed by length bytes of data, which
+      will be written to the local file.  If length is FFFFFFFF, then the file
+      will be deleted.<br>
+      Use the program cur_file.pl from the tools directory to write a file,
+      e.g.:<ul>
+        perl cur_file.pl -w MENU /dev/ttyACM0
+      </ul>
+      NOTE: _NO_ fhem/screen must be connected to the CUR while reading/writing<br>
+      Special control commands for the CUL:
+      <ul>
+      <li>w01 enables event logging to the file Syslog.0, w00 disables it.
+        Factory reset is disabled, as writing to the log is relatively slow,
+        and the CUN/CUR may skip RF messages.
+      <li>wformat will reformat the flash (== writes the superblock)
+      </ul>
+    </ul><br><br>
+
+
+    <a name="cmd_X"></a>
+    X&lt;RR&gt;
+    <ul>
+      Enable data reporting for SlowRF (i.e. 1kHz data rate)<br>
+      &lt;RR&gt; is a one-byte hex value, with following bits (bit 0 is the LSB bit):
+      <ul>
+      <li>Bit 0: Report known messages (parity & checksum ok), with type prefix.
+      <li>Bit 1: Report each of the (repeated) packets of a message
+      <li>Bit 2: Report detailed data, even with wrong parity / checksum.
+      <li>Bit 3: Monitor mode: output an r on a risings edge and 'f' on a falling
+                 edge. Output a '.' at the end of the message (no signal for
+                 4msec).
+      <li>Bit 4: Timing: in monitor mode output one additional byte of the
+                 internal microsecond timer, divided by 16. This is binary!
+      <li>Bit 5: RSSI: report RSSI value as an additional HEX byte after digested
+                 data or as a separate byte if Bit 3 is set too.
+      <li>Bit 6: Report FHT protocol messages (ack, etc)
+      <li>Bit 7: CUL/CUN: Report raw RSSI data (a==weak ... p==strong signal)
+               CUR: Grafic representation: dark==weak ... light == stong signal
+      </ul>
+      <br>
+      Note: 00 disables radio reception, any other value initializes the radio
+      chip and enables reception. Default is 00: do not report anything, radio
+      chip is uninitialized.<br>
+      Example: X01 (normal reporting, no RSSI) or X67 (debugging)
+      <br><br>
+      If &lt;RR&gt; is not specified, report the current value and the available
+      time for sending RF (in 10 ms units)
+    </ul><br><br>
+
+    x&lt;pp&gt; Change the (EEPROM) PA tables (power amplification for RF sending)
+    <ul>
+      &lt;pp&gt; is a one-byte hex value, valid values are 00 to 09, with following
+      values: the first 5 is -10/-5/0/5/10 dBm with PA ramping, the next 5 is
+      the same without PA ramping. If the value is outside this spec, then the
+      5dBm variant (03) will be used.
+      <br>
+      Notes:
+      <ul>
+      <li> after changing the value (in the EEPROM) an X command (X21) will be
+        necessary to write the EEPROM changes to the CC1101.
+      <li> The default CUL_V2 firmware has no PA ramping compiled in (see board.h)
+      <li> The CUL itself cannot receive data sent with PA ramping, FS devices
+           have no problem receiving such data.
+      </ul>
+      Example: x03
+    </ul><br><br>
+
+    Unknown commands
+    <ul>
+      Prints the "help", the list of supported commands<br>
+      Example:<ul>
+      z<br>
+      ? (z is unknown) Use one of B C F R T V W X e f l t x
+      </ul>
+    </ul><br><br>
+</ul>
+
+
+<a name="protocol2"></a>
+<h3>Protocol Part 2 (radio messages)</h3>
+    <ul>
+    The CUL reports following data (as a HEX string, uppercase):<br><br>
+
+    <li>For FS20:<br>
+      Fhhhhaacc or Fhhhhaaccee, explanation see the <a href="#cmd_F">command F</a> above
+      <br><br>
+
+    <li>For FHT:<br>
+      ThhhhNNNNNN<br>
+      As this part is quite complex, for an explanation look into the 11_FHT.pm fhem module.
+      <br><br>
+
+    <li>For EM:<br>
+      Ettaacc111122223333
+      <ul>
+      <li>tt:type 01=EM-1000s, 02=EM-100-EM, 03=1000GZ
+      <li>aa:address, depending on the type above 01:01-04, 02:05-08, 03:09-12
+      <li>cc:counter, will be incremented by one for each message
+      <li>1111: cumulated value
+      <li>2222: last value (Not set for type 2)
+      <li>3333: top value  (Not set for type 2)
+      </ul>
+      <br><br>
+
+    <li>For KS300:<br>
+      KFFTTTHWHWWRRFR<br>
+        Data must be read backwards
+      <br><br>
+
+    <li>For S300TH:<br>
+      KaaTTHTHH<br>
+        Data must be read backwards
+      <br><br>
+
+    <li>For HMS:<br>
+      Hxxxxxxxxxxxx
+      <br><br>
+
+    <li>For ESA2000:<br>
+      Sxxxxxxxxxxxx
+      <br><br>
+
+    <li>For Hoermann Garage door openers:<br>
+      Rxxxxx<br>
+        Note: this protocol is not really understood.
+      <br><br>
+
+    <li>For AskSin:<br>
+      allnnccttssssssddddddpp...<br>
+      Allnnccttssssssddddddpp...<br>
+      <ul>
+      <li>ll - length
+      <li>nn - msg counter
+      <li>cc - control byte
+      <li>tt - msg type
+      <li>ss - sender address
+      <li>dd - destination address
+      <li>pp - payload
+      </ul>
+      (for binary data lower case 'a' is prepended)
+
+    <br><br>
+    If bit 3 in the X command is set, then report raw data, even if it has a
+    wrong checksum or parity. The format is:<ul>
+    <br>
+      p State zhi zlo ohi olo NSync NByte Nbit [RSSI] NNNN
+      <br>
+      <br>
+      <li>State  Internal state of the state machine
+      <li>zhi    avg. high-time of the zero bit
+      <li>zlo    avg. low- time of the zero bit
+      <li>ohi    avg. high-time of the one bit
+      <li>olo    avg. low- time of the one bit
+      <li>Nsync  Number of 0 sync bits
+      <li>Nbyte  Number of whole bytes received
+      <li>Nbit   Number of bits (last partial byte)
+      <li>RSSI   RSSI, if the RSSI bit is set, see X cmd
+      <li>NNNN   Raw data with parity/checksum, without sync.
+    </ul>
+    </ul>
+
+
+<a name="FHT_8v"></a>
+<h3>FHT_8v</h3>
+  <ul>
+  The 80b is designed to control multiple 8v's in one room. It is possible to
+  have up to 8 different 8v values, but only one value is sent every 2 minutes,
+  it takes 16 minutes to set 8 different values.
+  <br><br>
+
+  We optimize culfw to control 8v's in different rooms, for this purpose we
+  need to update them faster (idea and first implementation by Alexander).
+  <br><br>
+
+  For this purpose up to eight different "own" house codes are used: The first
+  valve gets the house code directly.  Subsequent valves get the house code
+  increased by 0x0100. Values for each valve are sent directly one after the
+  other, but only once. The device ID is forced be be 0x01 at each valve.
+  <br><br>
+
+  Setup a connection between the cul and an 8v:
+  <ul>
+  <li> T011234 (set HC to 1234)<br>
+       Press the 8v button for 3 seconds, it will beep twice
+  <li> T123400A610 (sets value for first valve to 6%)
+  <li> T1234012f00 (pairs first valve, 8v will beep once, antenna will blink till
+       first reception of the offset value entered before)
+  <li> T10 (check 8v buffer, should tell 00:2610)
+  <li> T11 (check 8v countdown timer)
+  <li> T123400A620 (change value for first valve to 13%)
+  <li> T133400A610 (set value for second valve to 6%. Pair as described before)
+  <li> T10 (check 8v buffer, should tell 00:2620 01:2610)
+  </ul>
+
+  Sync consumes a lot of rf-time and it can be easily disturbed, so we try to
+  reduce the "normal" 2 minute (115+x) interval by remembering the last
+  interval in higher level software, and schedule a sync with a smaller runtime
+  at the correct time. Note: the argument must be odd, and it is measured in
+  0.5 seconds.<br>
+  - T1234002C21 (Sync for 0x21 == dec 33 == 15 seconds)
+  </ul>
+
+
+<a name="CUR_Menu"></a>
+<h3>CUR Menu</h3>
+<ul>
+  To define a menu on the CUR, follow this HOWTO:
+  <ul>
+    <li> create a fhem xml-list with<br>
+        fhem.pl fhemhost:7072 xmllist &gt; fhem.xmllist
+    <li> convert the template and the fhem listing into a CUR MENU file:<br>
+        perl xmllist2curmenu.pl fhem.xmllist CUR.menu.template &gt; MENU
+    <li> write the MENU file to the CUR:<br>
+        perl cur_file.pl -w MENU /dev/ttyACM0<br>
+      NOTE: The CUR must be in the X00 mode (default after reboot), and no
+      fhem/screen should be connected to it.
+    <li> switch the CUR display on by pressing the joystick.
+    <li> To have a nice logo on the first screen, upload it to the CUR:<br>
+        cd fonts<br>
+        perl ../tools/cur_file.pl -w house2_58x60  /dev/ttyACM0
+  </ul>
+</ul>
+
+<a name="intertechno"></a>
+<h3>InterTechno(R) - 433.92 Mhz</h3>
+<ul>
+  The basic protocol is a 12-Bit Tri-State Protocol. As the transceivers
+  for this protocol can handle 3 states the different versions of IT-Switches 
+  are putting those Bits either to Ground(0), to VCC (1) or leaving them 
+  open(Float). <br>
+  The original InterTechno(R) Switch knows ONLY 0 &amp; F, but many
+  discounter variants are also using 1 &amp; F or 1 &amp; 0 or even all
+  three states 0/1/F.<br>
+  The DIP-Switches on the Device determines the address (usually the
+  first 8-10 Bits) and the last two bits are for switching.<br>
+  The original IT-Switch has 8-Bit Address (0/F) then 0F (Bit 9/10)
+  and 11 (ON) or 10 (OFF) for bits 11/12.<br>
+  <br>
+  IT uses Codes for Addresses: (Addresses are LSB..MSB)<pre>
+    House         Device
+   A  0000         1   0000
+   B  F000         2   F000
+   C  0F00         3   0F00
+   ..  ..          ..
+   N  F0FF         14  F0FF
+   O  0FFF         15  0FFF
+   P  FFFF         16  FFFF</pre>
+  
+  For Switching Bit 11/12 are needed (either 11/10 or 11/00) depending
+  on the Brand of the Switch.<br>
+  Bit 9/10 are either part of a non-IT Address (discounter) or are fixed
+  (0F for IT, 00/11 or any combination for other brands)<br>
+   <br>
+  The Wave consists of a Base-Peak of around 400us but as most of them
+  are using cheap crystals it may vary (therefore it can be adjusted).
+  420us seems to fit the most so far.<br>
+  </ul>
+</ul>
+  
+<a name="cc1100"></a>
+<h3>CC1100 settings</h3>
+ <ul>
+  See the culf/cc1100.h or the official PDF from TI  for details.
+  <br><br>
+  <li> Change receiver sensitivity / target amplitude<br>
+    <ul>
+    <li>AGCCTRL2 (0x1B), bits 2:0, target amplitude:<br>
+        0:24dB, 1:27dB, 2:30dB, 3:33dB, 4:36dB, 5:38dB, 6:40dB, 7:42dB<br>
+        Default value: C1B -&gt; 07 (42dB).<br>
+    <li>AGCCTRL0 (0x1D), bits 1:0, decision boundery<br>
+        0:4dB, 1:8dB, 2:12dB, 3:16dB<br>
+        Default value: C1D -&gt; 91 (8db)<br>
+    </ul>
+    Example: W1D06<br>
+    Notes:
+      <ul>
+      <li> fhem users can set these values with "set CUL rAmpl 42; set CUL sens 8"
+      <li> R/W address (EEPROM) for the FS20/SlowRF Communication is = CC1101
+          address+2, for the FastRF Communication is CC1101 address+55. See
+          fncollection.h for other values.
+      </ul>
+    <br>
+
+  <li>Change frequency<br>
+     FREQ2(0D), FREQ1(0E), FREQ0(0F), Fosc = 26MHz<br>
+     Fcarrier = Fosc/65536*(FREQ2.FREQ1.FREQ0)<br>
+     <br>
+     Example: W0F21, W1065, W11E8 (868.35MHz)<br>
+              W0F21, W1062, W1176 (868.00MHz)<br>
+    Note: fhem users can set it with "set CUL freq 868.3" (868.3 is default)<br>
+    <br>
+
+  <li>Change channel bandwidth
+    MDMCFG4 (10). CHANBW_E (bits 7:6), CHANBW_M (bits 5:4)<br>
+    BWchannel =  Fosc/(8 * (4+CHANBW_M) * 2 ^ CHANBW_E)<br>
+    Example: W1255 (325KHz, default)<br>
+             W1245 (406KHz)<br>
+             W1235 (464KHz)<br>
+    Note: fhem users can set it with "set CUL bWidth 325"<br>
+    <br>
+
+  <li>Read-Only-Registers:<br>
+    RSSI:    : C34 -&gt; 217 (217-256-74 = -113 dBm)<br>
+    MARCSTATE: C35 -&gt; 01 (Idle), 13 (RX)<br>
+</ul>
+
+
+<a name="cuno_setup"></a>
+<h3>Sample CUN(O) setup</h3>
+<ul>
+  This section describes how to setup CUN for ethernet access with the following
+  settings:<pre>
+  DCHP client:		off
+  IP address/netmask:	192.168.31.126/255.255.255.0
+  Gateway:		192.168.31.1
+  NTP server:		192.168.31.2
+  Time zone offset:	GMT+2</pre>
+
+  Connect CUN to your PC via USB. On Linux a device /dev/ttyACM0 will appear (on
+  subsequent experiments, the device may be named /dev/ttyACM1, /dev/ttyACM2 and
+  so forth). Use screen /dev/ttyACM1 to talk to CUN and screen /dev/ttyACM1@38400 
+  for CUNO. Enter the following commands:<br><pre>
+  V                     output version, e.g. V 1.39 CUN
+  Wid00                 disable DHCP
+  Rid
+  Wia192.168.31.126     set IP address
+  Ria
+  Wig192.168.31.1       set gateway
+  Rig
+  Win255.255.255.0      set netmask
+  Rin
+  WiN192.168.31.2       set NTP server
+  RiN
+  Wio02                 set time zone offset
+  Rio
+  En                    request time from NTP server
+  c03                   show date and timeslot
+  </pre>
+
+  The Ri commands read back what you've just written to eeprom.<br><br>
+
+  Reboot CUN and connect to it via telnet 192.168.31.126 2323.
+</ul>
+
+<a name="misc"></a>
+<h3>Misc. notes</h3>
+  <ul>
+  <li> 1% LIMIT<br>
+    The firmware respects the 1% limit for this band, i.e. only 160 FS20
+    messages per hour will be sent. See the second number returned by the "X"
+    command for the remaining send-time (in 10 ms units). This time is updated
+    once a second.
+    <br><br>
+
+  <li> Repeat-filter<br>
+    The FS20 protocol sends each message 3 times. The firmware filters optionally
+    (See Command X bit 1) repeated messages.
+    <br><br>
+    
+  <li> CUNO via USB<br>
+    The USB-Bridge of CUNO operates on 38400 Baud. This means, that you have to
+    assign this speed to the port in your host OS.<br>
+    Typically you use CUNO via /dev/ttyACM0@38400.<br>
+    This sets the speed to 38400 on the port.
+  </ul>
+
+<a name="todo"></a>
+<h3>TODO/Known BUGS</h3>
+  <ul>
+  <li>Setting the FHT time sometimes changes the date too
+  <li>FS20 dim commands should not repeat.
+  </ul>
+
+</div>
+</body>
+</html>
