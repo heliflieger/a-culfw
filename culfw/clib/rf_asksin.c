@@ -7,7 +7,7 @@
 #include "rf_receive.h"
 #include "display.h"
 
-uint8_t asksin_on = 0;
+static uint8_t asksin_on = 0;
 
 #include "rf_asksin.h"
 

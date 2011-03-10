@@ -1,5 +1,5 @@
-#MCU = at90usb1286
-MCU = at90usb646
+MCU = at90usb1286
+#MCU = at90usb646
 BOARD  =
 F_CPU = 8000000
 FORMAT = ihex

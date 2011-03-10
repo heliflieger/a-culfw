@@ -30,8 +30,10 @@
 #include "fht.h"		// fhtsend
 #include "fastrf.h"		// fastrf_func
 #include "rf_router.h"		// rf_router_func
-#include "memory.h"		// getfreemem
 
+#ifdef HAS_MEMFN
+#include "memory.h"		// getfreemem
+#endif
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
 #endif
@@ -61,7 +63,7 @@ PROGMEM t_fntab fntab[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
-#ifdef CUL_V3
+#ifdef HAS_MEMFN
   { 'm', getfreemem },
 #endif
   { 'l', ledfunc },
@@ -84,10 +86,11 @@ start_bootloader(void)
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
 
-#ifdef CUL_V3
-#define jump_to_bootloader ((void(*)(void))0x3800)
-#else
-#define jump_to_bootloader ((void(*)(void))0x1800)
+#if defined(CUL_V3) || defined(CUL_V4)
+#  define jump_to_bootloader ((void(*)(void))0x3800)
+#endif
+#if defined(CUL_V2)
+#  define jump_to_bootloader ((void(*)(void))0x1800)
 #endif
   jump_to_bootloader();
 }

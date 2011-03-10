@@ -371,6 +371,7 @@ fht_hook(uint8_t *fht_in)
   inb = (fht80b_ldata ? fht80b_ldata :
                                 __LPM(fht80b_state_tbl+fht80b_state));
 
+
   // We frequently loose the FHT_CAN_XMIT msg from the FHT
   // so skip this state if the next msg comes in.
   if(inb == FHT_CAN_XMIT && fi2 == FHT_CAN_RCV) {
