@@ -1,0 +1,150 @@
+**************************************************
+CPM Tiny Action Framework
+by Dr. Boris Neubert  2011  omega at online dot de
+**************************************************
+
+----------
+1. SUMMARY
+----------
+
+This CPM Tiny Action Framework is intended to ease the development of firmware
+for the CPM module from busware (see
+http://www.busware.de/tiki-index.php?page=CPM).
+
+It is for simple boards with one switch (key), one LED, and one or more inputs.
+The programmer only has to 
+1) specify the pinning and 
+2) fill in some code for the event handlers (actions). 
+There are actions available for notification of pin changes, key presses (short
+or long), and timeouts.
+
+----------
+2. CREDITS
+----------
+
+This work is a merger of several prio firmware projects from Dirk Tostmann,
+Boris Neubert and Maz Rashid. For instance see CPM-BS and
+CPM-Gardenabodenfeuchtesensor.
+
+--------------
+3. DEVELOPMENT
+--------------
+
+--- A. STARTING A NEW PROJECT
+
+1. Create a directory below CPM.
+2. Copy the files from template to that directory.
+3. Rename the target in line 79 of the makefile. Do not touch the rest of the
+   makefile.
+
+
+--- B. FITTING board.h TO YOUR BOARD
+
+It is assumed that your board has one user LED and one user switch (key).
+Configure how they are connected to the CPM. Definitions start with LED_ and SW_
+respectively.
+
+In some designs, the user LED is connected to PA3. PA3 is also used for
+communication between the ATTiny84 and the CC1100. Make sure not to switch the
+LED on or off during reception or transmission as this breaks the communication.
+
+MASK0 is used to enable the pin change interrupt. Please define the PCINTx for
+the pins that should trigger an interrupt when changed.
+
+WDCORR is the correction factor for the internal watchdog timer clock. In most
+cases the watchdog triggers somewhat later than 8 seconds after power down.
+705/600 is the multiplier to define how much longer it takes. Do not put in
+brackets (see lib/util.c for the reason)!
+
+CLOCKTIMEOUT is the time in seconds after which action_timeout is triggered.
+NOTICE: The watchdog mechanism leads to fluctuations of about 5 to 10 seconds in
+10 minutes. It cannot be used to precisely trigger an action after a specified
+time.
+
+KEYTIMEOUT is the time in milliseconds after which a key press is detected as a
+long key press.
+
+
+--- C. WRITING THE CORE ROUTINES
+
+Simply fill in the stubs in actions.c.
+
+action_getconfig()	triggered once at firmware startup
+
+action_timeout()	triggered when CLOCKTIMEOUT seconds have elapsed since
+			the previous action
+
+action_keypresshort()	triggered when the switch is pressed for less than
+			KEYTIMEOUT milliseconds
+
+action_keypresslong()	triggered when the switch is pressed for KEYTIMEOUT
+			milliseconds or more
+
+action_pinchanged()	triggered, when one of the input pins changed as defined
+			in MASK0 (except for the one the switch is connected to
+			since this is handled by the key press actions).
+
+
+--- D. COMPILING AND FLASHING
+
+It is strongly recommended to do a
+
+  make clean
+
+before the first compile because the library files could have been
+compiled with different board settings recently.
+
+Compile with 
+
+  make 
+
+and flash with 
+
+  make program
+
+For flashing, avrdude should be installed. Please have a look at the
+avrdude-specific options in the makefile and adjust them to your needs.
+
+--------------
+4. DESCRIPTION
+--------------
+
+--- lib/main.c
+
+Upon startup of the firmware, main() from lib/main.c is executed. It does some
+initialization, makes the LED blink 5 times, and enters the main loop. The main
+loop checks for key presses, pin changes and timeouts and triggers the
+corresponding actions. If done, it sends the devices (MCU and CC1101) to sleep.
+The MCU is woken by pin changes (including key presses) or by a timeout of the 8
+second watchdog. 
+
+--- lib/util.c
+
+This file contains some utility functions that can be used in your project. The
+most notable are:
+
+void led_blink (uint8_t n): makes the LED blink as often as specified in the
+argument
+
+void fs20_sendCommand (uint16_t housecode, uint8_t button, uint8_t cmd): sends
+an FS20 command
+
+void fs20_sendValue (uint16_t housecode, uint8_t sensor, uint8_t flags, uint16_t
+value): sends an FS20 value (sensor protocol)
+
+An example for FS20 reception can be found in the SS project in
+actions.c, function action_keypresslong().
+
+
+---------------------
+5. CONCLUDING REMARKS
+---------------------
+
+- It is worthwhile having a glance at the other projects.
+- Project SS is an example how FS20 data for configuration of housecode and
+  button can be received.
+- You are encouraged to amend the CPM Development Toolkit, but make sure not to
+  break existing projects.
+
+
+(end of document)
