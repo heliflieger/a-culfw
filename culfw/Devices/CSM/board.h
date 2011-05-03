@@ -12,6 +12,8 @@
 #undef  HAS_LONGMSG                     // CUR support     RAM: 20b
 
 #define CSMV4
+//#define TUXRAIL
+//#define TUXRADIO
 
 #ifdef CSMV4
 #define SPI_PORT		PORTB
@@ -37,9 +39,17 @@
 #define CC1100_ISC		ISC00
 #define CC1100_EICR             EICRA
 
+#ifdef TUXRAIL
+#define LED_DDR                 DDRD
+#define LED_PORT                PORTD
+#define LED_PIN                 4
+#else
 #define LED_DDR                 DDRA
 #define LED_PORT                PORTA
 #define LED_PIN                 1
+#endif
+#define LED_ON_DDR              DDRA
+#define LED_ON_PORT             PORTA
 #define LED_ON_PIN              0
 
 #define USART_RX_vect           USART0_RX_vect
@@ -53,6 +63,20 @@
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #define HAS_ASKSIN
 #define HAS_ESA
+
+#ifdef TUXRADIO
+#define HAS_DOGM
+#define DOGM_RS_DDR             DDRA
+#define DOGM_RS_PORT            PORTA
+#define DOGM_RS_PIN             4
+#define DOGM_CS_DDR             DDRA
+#define DOGM_CS_PORT            PORTA
+#define DOGM_CS_PIN             5
+
+#define HAS_IRRX
+#define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
+
+#endif
 
 #else
 
@@ -118,7 +142,7 @@
 #define HAS_UART                1
 #define UART_BAUD_RATE          38400
 
-#define TTY_BUFSIZE             512
+#define TTY_BUFSIZE             128
 
 #define BUSWARE_CSM
 

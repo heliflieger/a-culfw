@@ -5,6 +5,9 @@ FORMAT = ihex
 TARGET = CSM
 OBJDIR = .
 
+VERS=1.42-6
+DATE=$(shell date +%Y-%m-%d)
+DESTDIR=culfw-s0logger.$(VERS)
 
 SRC = $(TARGET).c                                                    \
 		../../clib/cc1100.c                                  \
@@ -20,9 +23,13 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_router.c                               \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
+		../../clib/memory.c                                  \
 		../../clib/serial.c                                  \
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
+#		../../clib/dogm16x.c                                 \
+#		../../clib/ir.c                                      \
+#		../../clib/irmp.c                                    \
 
 
 OPT = s
@@ -89,6 +96,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
+AVRDUDE_NO_VERIFY = -V
 
 AVRDUDE_PROGRAMMER = jtagmkII
 AVRDUDE_PORT = usb
@@ -221,6 +229,21 @@ usbprogram: $(TARGET).hex
 	dfu-programmer $(MCU) erase || true
 	dfu-programmer $(MCU) flash $(TARGET).hex
 	dfu-programmer $(MCU) start
+
+deb: $(TARGET).hex
+	echo $(PWD)
+	rm -rf .f $(DESTDIR) *.deb
+	mkdir -p .f/boot
+	cp -r DEBIAN .f/
+	rm -fr .f/DEBIAN/CVS
+	cp $(TARGET).hex .f/boot/culfw-s0logger.hex
+	find .f -type f -print | xargs perl -pi -e 's/=VERS=/$(VERS)/g;s/=DATE=/$(DATE)/g'
+	chown -R root:root .f
+	mv .f $(DESTDIR)
+	dpkg-deb --build $(DESTDIR)
+	rm -rf $(DESTDIR)
+	scp $(DESTDIR).deb busware.de:/srv/ftp/debian/dists/tuxrail2/main/
+	@echo run /root/update_apt.sh
 
 
 gdb-config: 
