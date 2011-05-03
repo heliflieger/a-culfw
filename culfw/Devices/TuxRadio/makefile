@@ -5,6 +5,9 @@ FORMAT = ihex
 TARGET = CSM
 OBJDIR = .
 
+VERS=1.42-2
+DATE=$(shell date +%Y-%m-%d)
+DESTDIR=culfw-tuxradio.$(VERS)
 
 SRC = $(TARGET).c                                                    \
 		../../clib/cc1100.c                                  \
@@ -230,6 +233,20 @@ usbprogram: $(TARGET).hex
 	dfu-programmer $(MCU) erase || true
 	dfu-programmer $(MCU) flash $(TARGET).hex
 	dfu-programmer $(MCU) start
+
+deb: $(TARGET).hex
+	echo $(PWD)
+	rm -rf .f $(DESTDIR) *.deb
+	mkdir -p .f/tmp
+	cp -r DEBIAN .f/
+	rm -fr .f/DEBIAN/CVS
+	cp $(TARGET).hex .f/tmp/CSM-tuxradio.hex	
+	find .f -type f -print |\
+		xargs perl -pi -e 's/=VERS=/$(VERS)/g;s/=DATE=/$(DATE)/g'
+	chown -R root:root .f
+	mv .f $(DESTDIR)
+	dpkg-deb --build $(DESTDIR)
+	rm -rf $(DESTDIR)
 
 gdb-config: 
 	@$(REMOVE) $(GDBINIT_FILE)

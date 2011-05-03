@@ -42,10 +42,10 @@
 ## MCU = atmega162
 ## MCU = atmega169
 ## MCU = atmega32
-MCU = atmega324p
+## MCU = atmega324p
 ## MCU = atmega64
 ## MCU = atmega644
-## MCU = atmega644p
+MCU = atmega644p
 ## MCU = atmega128
 ## MCU = at90can128
 
@@ -408,7 +408,7 @@ endif
 AVRDUDE_PROGRAMMER = stk500v2
 AVRDUDE_PORT = /dev/ttyUSB0    # programmer connected to serial device
 
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
+AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex -U flash:w:../CSM.hex
 #AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 
 
