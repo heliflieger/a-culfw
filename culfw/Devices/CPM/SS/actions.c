@@ -25,8 +25,10 @@ void fs20_sendsensor(void) {
   #define SENSOR_PORT		PINA
   #define SENSOR_DDR		DDRA
   #define SENSOR_PIN		PA1
-  // SW is input, activate internal pullup resistor
-  #define SENSOR_INIT()		SENSOR_DDR&=~_BV(SENSOR_PIN);SENSOR_PORT|=_BV(SENSOR_PIN);
+  // Sensor is input, activate internal pullup resistor
+  // #define SENSOR_INIT()		SENSOR_DDR&=~_BV(SENSOR_PIN);SENSOR_PORT|=_BV(SENSOR_PIN);
+  // Sensor is input, no internal pullup resistor
+  #define SENSOR_INIT()		SENSOR_DDR&=~_BV(SENSOR_PIN);
   #define SENSOR_STATE() 	(!bit_is_set(SENSOR_PORT,SENSOR_PIN))
   
   // initialize sensor
