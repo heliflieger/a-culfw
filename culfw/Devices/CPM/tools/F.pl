@@ -23,12 +23,21 @@ while(<STDIN>) {
   if(/^FA5CEAA...../) {
     my $d= substr $_, 8, 3;
     my $r= hex $d;
-    printf("%3s   %4dcm\n", $d, $r);
+    printf("***** USF distance= %4dcm\n", $r);
+  } elsif(/^FA5CEAB...../) {
+    my $h= substr $_, 8, 3;
+    my $r= hex $h;
+    printf("***** PS height= %4dcm\n", $r);
+  } elsif(/^FA5CEAC...../) {
+    my $h= substr $_, 9, 2;
+    my $cmd= substr $_, 7, 2;
+    my $r= hex $h;
+    printf("***** PS command %2s height= %4dcm\n", $cmd, $r);
   } elsif(/^F........../) {
     my $housecode= substr $_, 1, 4;
     my $button= substr $_, 5, 2;
     my $cmd= substr $_, 7, 2;
     my $arg= substr $_, 9, 2;
-    printf("housecode %4s button %2s command %2s argument %2s\n", $housecode, $button, $cmd, $arg);
+    printf("***** FS20\nhousecode %4s button %2s command %2s argument %2s\n", $housecode, $button, $cmd, $arg);
   }
 }

@@ -58,8 +58,21 @@ hardware_init (void)
    */
   PCMSK0 = MASK0;	/* pcint0 + 1 aktivieren */
 
+
+#ifdef USE_TIMER
+  disable_wdi();
+  // enable timer interrupt
+  // start Timer0: 0.008s = 250*256/8MHz
+  OCR0A  = 250;           // count from 0 to 250
+  TCCR0B = _BV(CS02);     // bit mask 100: Prescaler= 256
+  TCCR0A = _BV(WGM01);    // wave form generation mode 01
+  TIMSK0 = _BV(OCIE0A);   // Timer 0 Output Compare A Match Interrupt Enable
+#else
   // enable watchdog interrupt
   enable_wdi ();
+#endif
+  
+  sei();
   
   // CC1100 subsystem
   ccInitChip ();
@@ -113,17 +126,25 @@ get_keypress(uint16_t longduration) {
  */
 
 /*
+ * disable watchdog timer interrupt
+ */
+void
+disable_wdi(void) {
+  // disable watchdog
+  MCUSR &= ~_BV (WDRF);
+  WDTCSR |= _BV (WDCE) | _BV (WDE);
+  WDTCSR &= ~_BV (WDE);
+}
+  
+
+/*
  * enable watchdog timer interrupt
  */
 void
 enable_wdi (void)
 {
   // see p44 in ATtiny84 manual
-
-  // disable watchdog
-  MCUSR &= ~_BV (WDRF);
-  WDTCSR |= _BV (WDCE) | _BV (WDE);
-  WDTCSR &= ~_BV (WDE);
+  disable_wdi();
   
   // configure watchdog
   // 8.0 sec
@@ -139,7 +160,6 @@ enable_wdi (void)
   WDTCSR |= _BV(WDP2) | _BV(WDP1); WDTCSR &= ~ ( _BV(WDP3) | _BV(WDP0) );
   */
   // enable watchdog timeout interrupt
-  sei ();
   WDTCSR |= _BV (WDIE);
 }
 
@@ -235,9 +255,21 @@ fs20_sendValues (uint16_t housecode, uint8_t sensor,
  */
 
 volatile uint32_t clock;	// in seconds
+volatile uint32_t ticks;	// in 125ths of a second
 
 void reset_clock(void) {
     clock= 0;
+    ticks= 0;
+}
+
+uint32_t tick_tick(void) {
+    // 125 ticks per second
+    ticks++;
+    if(ticks>= 125) {
+	clock++; 
+	ticks= 0;
+    }
+    return ticks;
 }
 
 uint32_t tick_clock(void) {
@@ -245,5 +277,5 @@ uint32_t tick_clock(void) {
 }
 
 uint32_t get_clock(void) {
-    return clock*WDCORR;
+    return clock*TIMERCORR;
 }

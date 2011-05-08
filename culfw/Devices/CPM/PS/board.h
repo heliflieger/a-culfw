@@ -59,9 +59,17 @@
  * Globals
  */
 
-// Watchdog timer correction
+// If USE_TIMER is defined the power down/watchdog mechanism is disabled.
+// This leads to a sufficient accuracy if commands need to be send out
+// in fixed intervals. Do not forget to calibrate the timing mechanism 
+// for your device by adjusting TIMERCORR below.
+#define USE_TIMER 1
+
+// timer correction
 // the 8s watchdog wakes up every 9.3 seconds approximately
-#define WDCORR 700/600
+// #define TIMERCORR 700/600
+// the internal oscillator gains about 610 seconds instead of 600
+#define TIMERCORR 101587/100000
 
 // time in seconds after which action_timeout is triggered, 1800s= 30min
 #define CLOCKTIMEOUT	(600)

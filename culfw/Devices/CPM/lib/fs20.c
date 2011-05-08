@@ -1021,6 +1021,10 @@ fs20_send (uint8_t data[], uint8_t len)
   SET_BIT (TIMSK1, OCIE1B);
 }
 
+uint8_t fs20_busy(void) {
+  return (ad.state>=100);
+}
+
 /*
 
 0000000000001

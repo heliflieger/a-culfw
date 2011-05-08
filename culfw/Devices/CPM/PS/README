@@ -1,0 +1,263 @@
+*********************************************
+
+PRESSURE SENSOR firmware
+
+Boris Neubert 2011
+omega at online dot de
+
+licensed under the GNU general public license
+http://www.gnu.org/copyleft/gpl.html
+
+*********************************************
+
+----------
+1. Summary
+----------
+
+The PS firmware is designed for the pressure sensor hardware as described on the
+page http://neubert-volmar.de/Hausautomation/PS. The pressure sensor determines
+the water level in a tank and sends it periodically in the FS20 sensor format. 
+
+-----------------------
+2. Firmware description
+-----------------------
+
+The firmware employs the CPM Tiny Action Framework (see ../README).
+
+The hardware layout is as follows (see board.h):
+- user LED between PB0 and VDD
+- key between PA1 and GND
+- use timer/no powersaving
+
+The following actions are implemented:
+
+action_getconfig()	reads configuration from EEPROM
+action_timeout()	sends measured values every 10 minutes
+action_shortkeypress()	sends measured values on keypress
+action_longkeypress()	enters configuration mode (see below)
+
+At the heart of the firmware lies the function fs20_sendsensordata() in
+actions.c. It sends the water level (PS mode) and the distance (USF emulation,
+see below). The water level is determined as follows:
+
+The pressure p in the tube relative to the ambient pressure is
+
+  p= rho*g*h
+
+with the density of water, rho= 1000kg/m^3, the constant g= 9,80665 N/kg and the
+height of the water column above the end of the tube. The output transfer
+function of the pressure sensor is 
+
+  Vout= Vs*(a*p+b) 
+
+with the output voltage Vout, the source voltage Vs, and the constants a=
+0.09/kPa and b= 0.04. Vout is measured at pin PA1/ADC1 with Vs as reference
+voltage at pin PA0/AREF. The result read from the ADC is divided by 1024 to
+obtain Vout in terms of Vs:
+
+  Vout= x*Vs
+
+Solving for h yields the following equation
+
+  h= m*x+n
+
+with some constants m (HSCALE in source code) and n (HOFFSET in source code).
+
+m and n need to be configured (see below). They are determined as follows:
+measure x for two given heights, e.g. x1 for h1 and x2 for h2. Then m=
+(h2-h1)/(x2-x1) and n= h1-m*x1.
+
+----------------
+3. USF emulation
+----------------
+
+The pressure sensor is intended to be compatible to the USF1000 fill level
+meter. The USF1000 measures the fill level of a tank by means of ultrasound. The
+ultrasound sensor is fixed at a point above the water level. We have
+
+H: the water level for a full tank 
+O: the distance (offset) of the sensor from the water level for a full tank
+
+The distance d of the emulated USF1000 sensor from the actual water level is
+
+  d= H+O-h
+
+Notice: if you want to reuse the USF1000E receiver to display the measured
+results the datagrams need to be sent out exactly every 1800 seconds. You can
+only achieve that accuracy if you do not use the internal oscillator of the
+ATTiny84 but an external 8MHz crystal. This is yet untested.
+
+Do not forget to adjust TIMERCORR in board.h in that case. A FS20 datagram
+should be sent out every 600 seconds. Monitor what your device does with the
+default value 610/600. If T is the time passed for sending out 6 datagrams,
+replace the numerator of TIMERCORR by T/3600*610. 
+
+Example: it takes T= 3624 seconds for 6 datagrams to be sent. The define
+TIMERCORR as 614/600.
+
+If you need higher accuracy then expand the fraction, e.g. to 6141/6000. 
+
+-----------
+4. Datagram
+-----------
+
+The PS firmware sends FS20 sensor datagrams. They have the following form:
+
+81 0C 04 ?? 01 01 A0 01 A5 CE AA 00 cc xx
+
+81: 		begin of FS20/FHT communication
+0C: 		remaining length of datagram (12 bytes)
+04: 		type of datagram
+??: 		checksum
+01 01 A0 01: 	FS20 fix sequence, always 01 01 A0 01
+A5 CE: 		FS20 housecode, always A5CE
+A?: 		FS20 command, AA for USF1000 sensor messages, AB for PS sensor
+messages
+00:		always 00
+cc:		code, always 20
+xx:		measured distance (USF1000 message)/length (PS message) in cm
+
+If you use a culfw-enabled device (CUL, CUN, CUNO etc.) for reception the
+messages read
+
+  FA5CEA?20xx??
+
+Example:
+
+  FA5CEAA2064??		USF1000 message: distance d= 100cm
+  FA5CEAB2032??		PS message: height (water level) h= 50cm
+
+The USF1000 sensor messages can be received with the USF module of fhem, see
+http://fhem.de/commandref.html#USF1000
+
+-------------------------
+5. Compiling and flashing
+-------------------------
+
+A. FUSES
+--------
+
+The fuses of ATTiny84 need to be set as follows:
+
+ --- Int. RC Osc. 8 MHz; Start-up time PWRDWN/RESET: 6 CK/14 CK + 64ms;
+     [CKSEL=0010 SUT=10]
+ OFF Clock output on PORTB2; [CKOUT=0]
+ OFF Divide clock by 8 internally; [CKDIV8=0]
+ --- Brown-out detection disabled; [BODLEVEL=111]
+ OFF Preserve EEPROM memory through the Chip Erase cycle; [EESAVE=0]
+ OFF Watch-dog Timer always on; [WDTON=0]
+ ON  Serial program downloading (SPI) enabled; [SPIEN=0]
+ OFF Debug Wire enable; [DWEN=0]
+ OFF Reset Disabled (Enable PB3 as i/o pin); [RSTDISBL=0]
+ OFF Self Programming enable; [SELFPRGEN=0]
+
+Under linux, you can use avrdude to do so:
+
+/usr/bin/avrdude -p t84 -P /dev/ttyS0 -c stk500v2 -U lfuse:w:0xe2:m -U
+hfuse:w:0xdf:m -U efuse:w:0xff:m
+
+For your convenience please use the script ../tools/CPM-fuser.sh
+
+B. COMPILATION
+--------------
+
+Pleas run
+
+  make clean && make
+
+even if there is already an executable in your directory and you did not compile
+it yourself! You never know what's in...
+
+C. FLASHING
+-----------
+
+Set your ISP programmer's target voltage to 3V!
+
+Connect your ISP programmer to the pressure sensor and do
+
+  make program
+
+That's it.
+
+-----------------------
+6. Function description
+-----------------------
+
+On startup the user LED will blink three times. The device will send a USF1000
+and a PS sensor message every ten minutes. You can force a transmission by a
+short key press. The timer is then restarted and the next transmission will
+occur ten minutes later. If you want to configure the device (see below) you
+need to press the key for at least five seconds. The LED goes on. After you
+release the button the device enters configuration mode and the user LED will
+frantically blink. If a FS20 datagram with house code A5CE and button AC is
+received it is evaluated as below. The device returns to normal operation if no
+datagram is received within 30 seconds.
+
+----------------
+7. Configuration
+----------------
+
+Configuration is accomplished by sending extended FS20 messages to the device. 
+The configuration channel is (house code, button)= (A5CE, AC). There are four
+commands:
+
+cc	description
+----------------------------------------------
+3C	set USF offset in centimeters
+3D	set USF height in centimeters
+3E	set calibration point 1 in centimeters
+3F	set calibration point 2 in centimeters
+
+Raw FS20 messages can be send as F-commands with the aid of culfw:
+
+  FA5CEACccxx
+
+If you use fhem please type
+
+  set MyCulFWDevice raw FA5CEACccxx
+
+with MyCulFWDevice replaced by the name of your CUL, CUN, CUNO etc., the command
+cc and the value xx in hexadecimal representation.
+
+We employ the following notation:
+
+H	level of water column over ground in centimeters for full tank
+O	distance of emulated USF receiver over water surface for full tank
+h1	level of water column over ground in centimeters at calibration point 1
+h2	level of water column over ground in centimeters at calibration point 2
+
+1. Set the level of the water column over ground in centimeters for a full tank:
+
+  FA5CEAC3Dxx
+
+2. Set the distance of the emulated ultrasound receiver over the water surface
+for a full tank:
+
+  FA5CEAC3Cxx
+
+3. Remove the free end of rubber hose from the tank. This corresponds to the
+situation h1= 0cm. Set the first calibration point:
+
+  FA5CEAC3E00
+
+4. Submerge the free end of the rubber hose into the tank such that it reaches
+the botton. Measure the water level h2 over ground in centimeters. Set the
+second calibration point:
+
+  FA5CEAC3Fxx
+
+Now your done!
+
+Example:
+- Maximum water level: H= 95cm (hex 5F)
+- Emulated USF offset: O= 50cm (hex 3C)
+- Calibration point 1: h1= 0cm (hex 00)
+- Calibration point 2: h2= 70cm (approximately three quarters full) (hex 46)
+- F-commands:
+  FA5CEAC3D5F
+  FA5CEAC3C3C
+  FA5CEAC3E00
+  FA5CEAC3F46
+
+
+(end of document)

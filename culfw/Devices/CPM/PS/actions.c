@@ -8,139 +8,286 @@
 #include <avr/eeprom.h>
 #include "math.h"
 
-#define FS20_CODE_ON	0x11
-#define FS20_CODE_OFF	0x00
+// magic word
+#define MAGIC			0x2011
 
-uint16_t measure(void) {
+// offsets in the EEPROM
+#define CFG_OFFSET_MAGIC	0x0000
+#define CFG_OFFSET_HSCALE	0x0002
+#define CFG_OFFSET_HOFFSET	0x0004
+#define CFG_OFFSET_USFOFFSET	0x0006
+#define CFG_OFFSET_USFHEIGHT	0x0007
 
-	uint8_t lo, hi;
-  	// start conversion
-	ADCSRA |= _BV(ADSC);
-	// wait for ADC to finish
-	while ( bit_is_set(ADCSRA, ADSC) ); // wait for converter to finish
-     	// ADCL must be read first, to ensure contents belong to same conversion
-     	lo= ADCL;
-     	hi= ADCH;
-     	return (hi << 8 | lo);
-}
+// fix house code
+#define HOUSECODE 		(0xa5ce)
 
+// for USF1000 emulation
+#define BUTTON_DISTANCE 	(0xaa)
 
-uint16_t get_voltage(void) {
+// for PS
+#define BUTTON_HEIGHT		(0xab)
 
-	uint16_t result= 0;
-	
-     	CLEAR_BIT( DDRA,  PA0 );
-     	CLEAR_BIT( PORTA, PA0 );
-     	CLEAR_BIT( DDRA,  PA2 );
-     	CLEAR_BIT( PORTA, PA2 );
+// for commands
+#define BUTTON_COMMAND		(0xac)
 
-	// disable ADC
-     	ADCSRA &= ~_BV(ADEN);
+// extension bit set
+#define COMMAND_USFOFFSET	(0x3c)
+#define COMMAND_USFHEIGHT	(0x3d)
+#define COMMAND_HCALIB1		(0x3e)
+#define COMMAND_HCALIB2		(0x3f)
 
-     	// External voltage reference at PA0 (AREF) pin. See ATTiny84 manual p. 145
-	// measure ADC2
-     	ADMUX |= _BV(REFS0) | _BV(MUX1); 
-	ADMUX &= ~_BV(REFS1) & ~_BV(MUX0) & ~_BV(MUX2) & ~_BV(MUX3) & ~_BV(MUX4) & ~_BV(MUX5);
-	
-	// Vcc as ref
-     	//ADMUX |= _BV(MUX1); 
-	//ADMUX &= ~_BV(REFS1) & ~_BV(REFS0) & ~_BV(MUX0) & ~_BV(MUX2) & ~_BV(MUX3) & ~_BV(MUX4) & ~_BV(MUX5);
+// pressure sensor calibration default values
+#define HSCALE_DEFAULT (1.133)
+#define HOFFSET_DEFAULT (0.04532)
 
+// USF1000 emulation (in meters) default values
+#define USFOFFSET_DEFAULT (0.50)
+#define USFHEIGHT_DEFAULT (1.00)
 
-	// 1.1V as ref
-	//ADMUX |= _BV(REFS1) | _BV(MUX1); 
-	//ADMUX &= ~_BV(REFS0) & ~_BV(MUX0) & ~_BV(MUX2) & ~_BV(MUX3) & ~_BV(MUX4) & ~_BV(MUX5);
+// USF1000 emulation
+float usfoffset;
+float usfheight;
 
-	// right adjusted 10bit result in ADCH/ADCL
-	ADCSRB &= ~_BV(ADLAR);
+// the formula to calculate the height is
+//	h= hscale*x + hoffset
+float hscale;
+float hoffset;
 
-	// Auto Trigger Disable
-	ADCSRA &= ~_BV(ADATE);
-
-	// Interrupt Disable
-	ADCSRA &= ~_BV(ADIE);
-
-	// Internal RC Oscillator runs at 8 MHz.
-	// maximum resolution if clock frequencz between 50kHz and 200kHz
-	// prescaler division factor= 64 gives 8MHz/64= 125kHz
-	ADCSRA |= _BV(ADPS2) | _BV(ADPS1);
-	ADCSRA &= ~_BV(ADPS0);
-
-	// enable ADC
-	ADCSRA |= _BV(ADEN);
-	
-	result= measure(); // throw away
-	result= (measure()+measure()+measure()+measure()) >> 2;
-
-	// disable ADC
-     	ADCSRA &= ~_BV(ADEN);
-
-	// 10bit right-adjusted
-     	return result;
-
-	
-}
-
- 
+// this is for calibration
+float hcalib1= 0.0; float xcalib1= 0.04;
+float hcalib2= 1.0; float xcalib2= 0.94;
 
 /*
- * 
+ * save hscale and hoffset to EEPROM
  */
-void fs20_sendsensor(void) {
-  
-  
-  /*
-   * MPX5010 Transfer Function
-   * Vout= Vs x f(P) or f(P)= Vout/Vs
-   * with f(P)= (0.09/kPa x P + 0.04)       +-5,0%Vfss (0..85 degrees Celsius)
-   * P= (f(P) - 0.04) / 0.09/kPa
-   */
-  // f(P)
-  float fP= get_voltage()/1024.0;
-  float P=  (fP - (FOFFSET)-(CORR1))/(FSCALE); // pressure in kPa
-  if(P< 0.0) { P= 0.0; }
-  
-  #ifdef SEND_PRESSURE
-  // P= 0..10 
-  uint8_t result= round(P*10.0); // hPa 0..100
-  #else
-  uint8_t result= (USFOFFSET)+(USFHEIGHT)-round(P*9.8066*(CORR2));
-  #endif
-
-  // 
-  // send command
-  fs20_sendValue(HOUSECODE, BUTTON, 0, result);
-  // fiddling with the LED breaks the transfer in cases
-  // when the LED is connected to PA2! 
-  _delay_ms(250); // wait some time for transfer to finish
-  // a powerdown might break the transfer!
-
+void set_hconfig(float scale, float offset) {
+  hscale= scale;
+  hoffset= offset;
+  // we store 
+  //	hscale * 1000
+  //	hoffset * 100000
+  set_config_word(CFG_OFFSET_HSCALE, round(hscale*1000.0));
+  set_config_word(CFG_OFFSET_HOFFSET, round(hoffset*100000.0));
 }
 
+/*
+ * save usfoffset and usfheight
+ */
+
+void set_usfconfig(float offset, float height) {
+  usfoffset= offset;
+  usfheight= height;
+  // we store 
+  //	usfoffset * 100
+  //	usfheight * 100
+  set_config_byte(CFG_OFFSET_USFOFFSET, round(usfoffset*100.0));
+  set_config_byte(CFG_OFFSET_USFHEIGHT, round(usfheight*100.0));
+}
+  
+/*
+ * retrieve hscale and hoffset from EEPROM
+ */
+void get_config(void) {
+  if(get_config_word(CFG_OFFSET_MAGIC)==MAGIC) {
+    hscale= get_config_word(CFG_OFFSET_HSCALE)/1000.0;
+    hoffset= get_config_word(CFG_OFFSET_HOFFSET)/100000.0;
+    usfoffset= get_config_byte(CFG_OFFSET_USFOFFSET)/100.0;
+    usfheight= get_config_byte(CFG_OFFSET_USFHEIGHT)/100.0;
+  } else {
+    set_config_word(CFG_OFFSET_MAGIC, MAGIC);
+    set_hconfig(HSCALE_DEFAULT, HOFFSET_DEFAULT);
+    set_usfconfig(USFOFFSET_DEFAULT, USFHEIGHT_DEFAULT);
+  }
+}
+
+/*
+ * retrieve result from ADC once (result is 1024*Vout/Vs)
+ */
+uint16_t measure(void) {
+
+  uint8_t lo, hi;
+  // start conversion
+  ADCSRA |= _BV(ADSC);
+  // wait for ADC to finish
+  while ( bit_is_set(ADCSRA, ADSC) ); // wait for converter to finish
+  // ADCL must be read first, to ensure contents belong to same conversion
+  lo= ADCL;
+  hi= ADCH;
+  return (hi << 8 | lo);
+}
+
+/*
+ * measure voltage (result is x= Vout/Vs)
+ */
+float get_voltage(void) {
+
+  uint16_t result= 0;
+  
+  CLEAR_BIT( DDRA,  PA0 );
+  CLEAR_BIT( PORTA, PA0 );
+  CLEAR_BIT( DDRA,  PA2 );
+  CLEAR_BIT( PORTA, PA2 );
+
+  // disable ADC
+  ADCSRA &= ~_BV(ADEN);
+
+  // External voltage reference at PA0 (AREF) pin. See ATTiny84 manual p. 145
+  // measure ADC2
+  ADMUX |= _BV(REFS0) | _BV(MUX1); 
+  ADMUX &= ~_BV(REFS1) & ~_BV(MUX0) & ~_BV(MUX2) & ~_BV(MUX3) & ~_BV(MUX4) & ~_BV(MUX5);
+  
+  // Vcc as ref
+  //ADMUX |= _BV(MUX1); 
+  //ADMUX &= ~_BV(REFS1) & ~_BV(REFS0) & ~_BV(MUX0) & ~_BV(MUX2) & ~_BV(MUX3) & ~_BV(MUX4) & ~_BV(MUX5);
+
+
+  // 1.1V as ref
+  //ADMUX |= _BV(REFS1) | _BV(MUX1); 
+  //ADMUX &= ~_BV(REFS0) & ~_BV(MUX0) & ~_BV(MUX2) & ~_BV(MUX3) & ~_BV(MUX4) & ~_BV(MUX5);
+
+  // right adjusted 10bit result in ADCH/ADCL
+  ADCSRB &= ~_BV(ADLAR);
+
+  // Auto Trigger Disable
+  ADCSRA &= ~_BV(ADATE);
+
+  // Interrupt Disable
+  ADCSRA &= ~_BV(ADIE);
+
+  // Internal RC Oscillator runs at 8 MHz.
+  // maximum resolution if clock frequencz between 50kHz and 200kHz
+  // prescaler division factor= 64 gives 8MHz/64= 125kHz
+  ADCSRA |= _BV(ADPS2) | _BV(ADPS1);
+  ADCSRA &= ~_BV(ADPS0);
+
+  // enable ADC
+  ADCSRA |= _BV(ADEN);
+  
+  result= measure(); // throw away
+  // average over 4 values
+  result= (measure()+measure()+measure()+measure()) >> 2;
+
+  // disable ADC
+  ADCSRA &= ~_BV(ADEN);
+
+  // Vout/Vs as 10bit right-adjusted integer
+  return result/1024.0;
+}
+
+/*
+ * get height of water over ground in meters
+ */
+float get_height(void) {
+  // for details see documentation
+  float h= hscale*get_voltage()+hoffset;
+  if(h<0.0) h= 0.0;
+  return h;
+}
+
+/*
+ * get simulated distance of ultrasound sensor in meters for
+ * USF1000 compatibility 
+ */
+float get_distance(float height) {
+  return usfoffset+usfheight-height;
+}
+
+
+/*
+ * send sensor data
+ */
+void fs20_sendsensordata(void) {
+  float height= get_height();
+  float distance= get_distance(height);
+  // send in centimeters
+  fs20_sendValue(HOUSECODE, BUTTON_HEIGHT, 0, round(height*100.0));
+  while(fs20_busy());
+  fs20_sendValue(HOUSECODE, BUTTON_DISTANCE, 0, round(distance*100.0));
+  while(fs20_busy());
+  // wait for transfer to finish since a powerdown might break the transfer!
+}
+
+
+/*
+ * recalibrate
+ */
+void recalibrate(void) {
+  float scale= (hcalib2-hcalib1)/(xcalib2-xcalib1);
+  float offset= hcalib1-scale*xcalib1;
+  set_hconfig(scale, offset);
+  fs20_sendsensordata();
+}
+ 
+/*
+ * remote configuration facility
+ */
+void fs20_configuration(void) {
+  
+  ccInitChip();
+  
+  fs20_resetbuffer();
+  fs20_rxon();
+
+  fstelegram_t t;
+  t.type = 'U'; // undefined
+  uint16_t rxtimeout = 300; // wait 300*100ms= 30s for reception
+
+  // wait for next telegram
+  // exit if button pressed or timeout occured
+  while(!fs20_readFS20Telegram(&t) && (rxtimeout--)>0) {
+    _delay_ms(100);
+    if(LED_PIN!=PA3) LED_TOGGLE(); // do not touch pin for CC1100 communication
+  }
+  fs20_idle();
+
+  // evaluate the result
+  if(t.type=='F')   {
+    if((t.housecode==HOUSECODE) && (t.button==BUTTON_COMMAND)) {
+      led_blink(3); // blink for confirmation
+      switch(t.cmd) {
+	case COMMAND_HCALIB1:
+	  xcalib1= get_voltage();
+	  hcalib1= t.data[0]/100.0;
+	  recalibrate();
+	  break;
+	case COMMAND_HCALIB2:
+	  xcalib2= get_voltage();
+	  hcalib2= t.data[0]/100.0;
+	  recalibrate();
+	  break;
+	case COMMAND_USFOFFSET:
+	  // we receive ufsoffset in centimeters
+	  set_usfconfig(t.data[0]/100.0, usfheight);
+	  fs20_sendsensordata();
+	  break;
+	case COMMAND_USFHEIGHT:
+	  // we receive usfheight in centimenters
+	  set_usfconfig(usfoffset, t.data[0]/100.0);
+	  fs20_sendsensordata();
+	  break;
+      }
+    }
+  }   
+}
 
 /*
  * 
  */
 void action_getconfig(void) {
-  // intentionally left blank
+  get_config();
 }
 
 void action_keypressshort(void) {
-  /*for(uint8_t i= 0; i< 10; i++) {
-    fs20_sendsensor();
-    _delay_ms(1000);
-  }
-  */
-  fs20_sendsensor();
+  fs20_sendsensordata();
   reset_clock();
 }
 
 void action_keypresslong(void) {
-  // intentionally left blank
+  fs20_configuration();
 }
 
 void action_timeout(void) {
-  fs20_sendsensor();
+  fs20_sendsensordata();
 }
 
 void action_pinchanged(void) {

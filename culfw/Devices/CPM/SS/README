@@ -1,0 +1,129 @@
+*********************************************
+
+STATUS SENSOR firmware
+
+Boris Neubert 2011
+omega at online dot de
+
+licensed under the GNU general public license
+http://www.gnu.org/copyleft/gpl.html
+
+*********************************************
+
+----------
+1. Summary
+----------
+
+The SS firmware is designed for monitoring the status of a switch. A hardware
+application is described on the page http://neubert-volmar.de/Hausautomation/SS.
+The status sensor determines the status of a switch (on or off) and sends it in
+the FS20 sensor format periodically as well as ad hoc on changes. 
+
+-----------------------
+2. Firmware description
+-----------------------
+
+The firmware employs the CPM Tiny Action Framework (see ../README).
+
+The hardware layout is as follows (see board.h):
+- user LED between PA3 and VDD (shared with CS)
+- key between PA0 and GND
+- monitor pin level changes of PA3
+- use powersaving
+
+The following actions are implemented:
+
+action_getconfig()	reads configuration from EEPROM
+action_timeout()	sends measured values every 15 minutes
+action_pinchanged()	sends measured values on status change
+action_shortkeypress()	sends measured values on keypress
+action_longkeypress()	enters configuration mode (see below)
+
+At the heart of the firmware lies the function fs20_sendsensor() in
+actions.c. It sends the status of the switch 
+
+ON:  PA1 is shorted to GND
+OFF: PA1 is open (external pullup resistor needed!)
+
+as FS20 message on air.
+
+-------------------------
+3. Compiling and flashing
+-------------------------
+
+A. FUSES
+--------
+
+The fuses of ATTiny84 need to be set as follows:
+
+ --- Int. RC Osc. 8 MHz; Start-up time PWRDWN/RESET: 6 CK/14 CK + 64ms;
+     [CKSEL=0010 SUT=10]
+ OFF Clock output on PORTB2; [CKOUT=0]
+ OFF Divide clock by 8 internally; [CKDIV8=0]
+ --- Brown-out detection disabled; [BODLEVEL=111]
+ OFF Preserve EEPROM memory through the Chip Erase cycle; [EESAVE=0]
+ OFF Watch-dog Timer always on; [WDTON=0]
+ ON  Serial program downloading (SPI) enabled; [SPIEN=0]
+ OFF Debug Wire enable; [DWEN=0]
+ OFF Reset Disabled (Enable PB3 as i/o pin); [RSTDISBL=0]
+ OFF Self Programming enable; [SELFPRGEN=0]
+
+Under linux, you can use avrdude to do so:
+
+/usr/bin/avrdude -p t84 -P /dev/ttyS0 -c stk500v2 -U lfuse:w:0xe2:m -U
+hfuse:w:0xdf:m -U efuse:w:0xff:m
+
+For your convenience please use the script ../tools/CPM-fuser.sh
+
+B. COMPILATION
+--------------
+
+Pleas run
+
+  make clean && make
+
+even if there is already an executable in your directory and you did not compile
+it yourself! You never know what's in...
+
+C. FLASHING
+-----------
+
+Set your ISP programmer's target voltage to 3V!
+
+Connect your ISP programmer to the pressure sensor and do
+
+  make program
+
+That's it.
+
+-----------------------
+4. Function description
+-----------------------
+
+On startup the user LED will blink three times. 
+
+The device will send a FS20 ON or OFF message every 15 minutes. 
+
+You can force such a transmission by a short key press. A transmission is also
+forced when the status of the switch changes. In both cases the timer is
+restarted and the next transmission will occur 15 minutes later. 
+
+If you want to configure the device you need to press the key for at least five
+seconds. The LED goes on. After you release the button the device enters
+configuration mode and the user LED will be off. If a FS20 datagram is received
+the house code and button are taken from it and stored in the EEPROM. The SS
+device will use that house code and button for subsequent transmissions.
+
+Example:
+
+In fhem define a device
+
+  define MySwitch FS20 1234 56
+
+Enter the device's configuration mode and enter
+
+  set MySwitch on
+
+in fhem.
+
+(end of document)

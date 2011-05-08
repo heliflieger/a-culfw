@@ -7,6 +7,7 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
+#include <avr/power.h> // prescaler
 #include "board.h"
 #include "config.h"
 #include "util.h"
@@ -19,33 +20,11 @@ volatile uint8_t pinchanged= 0;
 int
 main (void)
 {
-  SetSystemClockPrescaler (0);
-
-  hardware_init();
+  clock_prescale_set(clock_div_1); // 8 MHz
   reset_clock();
+  hardware_init();
   action_getconfig();
   led_blink(5);
-  
-  /*
-  // Sensor 
-  #define SENSOR_PORT		PINA
-  #define SENSOR_DDR		DDRA
-  #define SENSOR_PIN		PA1
-  // SW is input, activate internal pullup resistor
-  #define SENSOR_INIT()		SENSOR_DDR&=~_BV(SENSOR_PIN);SENSOR_PORT|=_BV(SENSOR_PIN);
-  #define SENSOR_STATE() 	(!bit_is_set(SENSOR_PORT,SENSOR_PIN))  
-  SENSOR_INIT();
-  while(1) {
-    if(SW_STATE()) {
-      LED_ON(); } else {
-	if(SENSOR_STATE()) {
-	  LED_ON(); } else {
-	  LED_OFF();
-	}
-      }
-  }  
-  */	  
-  
   
   while(1) {
     // every time the device wakes up it gets HERE
@@ -67,7 +46,9 @@ main (void)
 	action_keypresslong();
 	break;
     }
+#ifndef USE_TIMER
     power_down();
+#endif
   }
 }
 
@@ -87,6 +68,14 @@ ISR (PCINT1_vect)
 
 ISR (WATCHDOG_vect)
 {
-  // This interrupt service routine is called every TIMEOUT seconds (see utils.c)
+  // This interrupt service routine is called every WDTIMEOUT seconds (see utils.c)
   tick_clock();
 }
+
+// timer interrupt, see http://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html
+ISR(TIM0_COMPA_vect, ISR_BLOCK)
+{
+  // 125Hz
+  tick_tick();
+}
+

@@ -62,5 +62,6 @@ void fs20_resetbuffer (void);
 void fs20_send (uint8_t[], uint8_t len);
 
 uint8_t fs20_readFS20Telegram (fstelegram_t * t);
-
+uint8_t fs20_busy(void);
+  
 #endif

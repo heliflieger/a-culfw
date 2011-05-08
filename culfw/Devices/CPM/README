@@ -1,6 +1,11 @@
 **************************************************
+
 CPM Tiny Action Framework
 by Dr. Boris Neubert  2011  omega at online dot de
+
+licensed under the GNU general public license
+http://www.gnu.org/copyleft/gpl.html
+
 **************************************************
 
 ----------
@@ -23,7 +28,7 @@ or long), and timeouts.
 ----------
 
 This work is a merger of several prio firmware projects from Dirk Tostmann,
-Boris Neubert and Maz Rashid. For instance see CPM-BS and
+Boris Neubert and Maz Rashid and Rudolf König. For instance see CPM-BS and
 CPM-Gardenabodenfeuchtesensor.
 
 --------------
@@ -63,6 +68,9 @@ time.
 
 KEYTIMEOUT is the time in milliseconds after which a key press is detected as a
 long key press.
+
+If USE_TIMER is defined the watchdog/powerdone mechanism is deactived and
+instead a more precise internal timer interrupt driven clock mechanism is used.
 
 
 --- C. WRITING THE CORE ROUTINES
@@ -140,10 +148,11 @@ actions.c, function action_keypresslong().
 5. CONCLUDING REMARKS
 ---------------------
 
+- See tools for helper programs. Documentation is in their source codes.
 - It is worthwhile having a glance at the other projects.
 - Project SS is an example how FS20 data for configuration of housecode and
   button can be received.
-- You are encouraged to amend the CPM Development Toolkit, but make sure not to
+- You are encouraged to amend the CPM Tiny Action Framework, but make sure not to
   break existing projects.
 
 
