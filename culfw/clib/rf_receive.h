@@ -3,13 +3,13 @@
 
 
 #define TYPE_EM      'E'
-
 #define TYPE_HMS     'H'
 #define TYPE_FHT     'T'
 #define TYPE_FS20    'F'
 #define TYPE_KS300   'K'
 #define TYPE_HRM     'R'        // Hoermann
 #define TYPE_ESA     'S'
+#define TYPE_TX3     't'
 
 #define REP_KNOWN    _BV(0)
 #define REP_REPEATED _BV(1)

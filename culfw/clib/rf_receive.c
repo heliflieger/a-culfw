@@ -325,6 +325,38 @@ analyze_esa(bucket_t *b)
 }
 #endif
 
+uint8_t
+analyze_TX3(bucket_t *b)
+{
+  input_t in;
+  in.byte = 0;
+  in.bit = 7;
+  in.data = b->data;
+  uint8_t n, crc = 0;
+
+  if(b->byteidx != 4 || b->bitidx != 1 || b->sync != 4)
+    return 0;
+
+  for(oby = 0; oby < 4; oby++) {
+    if(oby == 0) {
+      n = 0x80 | getbits(&in, 7, 1);
+    } else {
+      n = getbits(&in, 8, 1);
+    }
+    crc = crc + (n>>4) + (n&0xf);
+    obuf[oby] = n;
+  }
+
+  obuf[oby] = getbits(&in, 7, 1) << 1;
+  crc = (crc + (obuf[oby]>>4)) & 0xF;
+  oby++;
+
+  if((crc >> 4) != 0 || (obuf[0]>>4) != 0xA)
+    return 0;
+
+  return 1;
+}
+
 //////////////////////////////////////////////////////////////////////
 void
 RfAnalyze_Task(void)
@@ -370,8 +402,14 @@ RfAnalyze_Task(void)
 
   if(!datatype && analyze(b, TYPE_FS20)) {
     oby--;                                  // Separate the checksum byte
-    if(cksum1(6, obuf, oby) == obuf[oby]) {
+    uint8_t fs_csum = cksum1(6,obuf,oby);
+    if(fs_csum == obuf[oby]) {
       datatype = TYPE_FS20;
+
+    } else if(fs_csum+1 == obuf[oby]) {     // Repeater
+      datatype = TYPE_FS20;
+      obuf[oby] = fs_csum;                  // do not report if we get both
+
     } else if(cksum1(12, obuf, oby) == obuf[oby]) {
       datatype = TYPE_FHT;
     } else {
@@ -387,6 +425,9 @@ RfAnalyze_Task(void)
 
   if(!datatype && analyze_hms(b))
     datatype = TYPE_HMS;
+
+  if(!datatype && analyze_TX3(b))
+    datatype = TYPE_TX3;
 
   if(!datatype) {
     // As there is no last rise, we have to add the last bit by hand

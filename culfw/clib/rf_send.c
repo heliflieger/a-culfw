@@ -26,13 +26,11 @@
 // KS300 NULL  854us high, 366us low
 // KS300 ONE:  366us high, 854us low
 
-  #define FS20_ZERO      400     //   400uS
-  #define FS20_ONE       600     //   600uS
-  #define FS20_ZERO      400     //   400uS
-  #define FS20_ONE       600     //   600uS
-  #define FS20_PAUSE      10     // 10000mS
-  #define EM_ONE         800     //   800uS
-  #define EM_ZERO        400     //   400uS
+#define FS20_ZERO      400     //   400uS
+#define FS20_ONE       600     //   600uS
+#define FS20_PAUSE      10     // 10000mS
+#define EM_ONE         800     //   800uS
+#define EM_ZERO        400     //   400uS
 
 uint16_t credit_10ms;
 
