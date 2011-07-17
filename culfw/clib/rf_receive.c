@@ -433,7 +433,7 @@ RfAnalyze_Task(void)
     datatype = TYPE_TX3;
 #endif
 
-  if(!datatype && oby >= 4) {
+  if(!datatype) {
     // As there is no last rise, we have to add the last bit by hand
     addbit(b, wave_equals(&b->one, hightime, b->one.lowtime));
     if(analyze(b, TYPE_KS300)) {
