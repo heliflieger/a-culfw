@@ -325,6 +325,7 @@ analyze_esa(bucket_t *b)
 }
 #endif
 
+#ifdef HAS_TX3
 uint8_t
 analyze_TX3(bucket_t *b)
 {
@@ -356,6 +357,7 @@ analyze_TX3(bucket_t *b)
 
   return 1;
 }
+#endif
 
 //////////////////////////////////////////////////////////////////////
 void
@@ -426,10 +428,12 @@ RfAnalyze_Task(void)
   if(!datatype && analyze_hms(b))
     datatype = TYPE_HMS;
 
-  if(!datatype && analyze_TX3(b))
+#ifdef HAS_TX3
+  if(!datatype && oby >= 4 && analyze_TX3(b))
     datatype = TYPE_TX3;
+#endif
 
-  if(!datatype) {
+  if(!datatype && oby >= 4) {
     // As there is no last rise, we have to add the last bit by hand
     addbit(b, wave_equals(&b->one, hightime, b->one.lowtime));
     if(analyze(b, TYPE_KS300)) {
