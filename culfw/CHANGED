@@ -1,5 +1,6 @@
 Version 1.43 (2011-06-25)
 - all:  FS20 repeater support.
+- all:  TX2/TX3 support
 
 Version 1.42 (2011-03-08)
 - CUL:  Version 4 port. Note: you need a current dfu-programmer to flash it.
