@@ -335,7 +335,7 @@ analyze_TX3(bucket_t *b)
   in.data = b->data;
   uint8_t n, crc = 0;
 
-  if(b->byteidx != 4 || b->bitidx != 1 || b->sync != 4)
+  if(b->byteidx != 4 || b->bitidx != 1)
     return 0;
 
   for(oby = 0; oby < 4; oby++) {
@@ -429,7 +429,7 @@ RfAnalyze_Task(void)
     datatype = TYPE_HMS;
 
 #ifdef HAS_TX3
-  if(!datatype && oby >= 4 && analyze_TX3(b))
+  if(!datatype && analyze_TX3(b))
     datatype = TYPE_TX3;
 #endif
 

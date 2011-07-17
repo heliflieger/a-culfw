@@ -36,6 +36,7 @@
 #  define FHTBUF_SIZE           74
 #  define RCV_BUCKETS            2 
 #  define RFR_SHADOW                    // PROGMEM: 10b    RAM: -(TTY_BUFSIZE+3)
+#  define HAS_TX3
 #endif
 
 #ifdef CUL_V2_HM
