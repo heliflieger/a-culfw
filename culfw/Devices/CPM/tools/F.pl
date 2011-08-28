@@ -21,13 +21,13 @@
 while(<STDIN>) {
   print $_;
   if(/^FA5CEAA...../) {
-    my $d= substr $_, 8, 3;
+    my $d= substr $_, 9, 2;
     my $r= hex $d;
-    printf("***** USF distance= %4dcm\n", $r);
+    printf("***** USF (%s) distance= %4dcm\n", $d, $r);
   } elsif(/^FA5CEAB...../) {
-    my $h= substr $_, 8, 3;
+    my $h= substr $_, 9, 2;
     my $r= hex $h;
-    printf("***** PS height= %4dcm\n", $r);
+    printf("***** PS (%s) height= %4dcm\n", $h, $r);
   } elsif(/^FA5CEAC...../) {
     my $h= substr $_, 9, 2;
     my $cmd= substr $_, 7, 2;

@@ -11,13 +11,6 @@
 // magic word
 #define MAGIC			0x2011
 
-// offsets in the EEPROM
-#define CFG_OFFSET_MAGIC	0x0000
-#define CFG_OFFSET_HSCALE	0x0002
-#define CFG_OFFSET_HOFFSET	0x0004
-#define CFG_OFFSET_USFOFFSET	0x0006
-#define CFG_OFFSET_USFHEIGHT	0x0007
-
 // fix house code
 #define HOUSECODE 		(0xa5ce)
 
@@ -30,7 +23,9 @@
 // for commands
 #define BUTTON_COMMAND		(0xac)
 
-// extension bit set
+// #define COMMAND_SENDSTATUS 	(0x17)
+
+// extension bit set (bit 5, 0x20)
 #define COMMAND_USFOFFSET	(0x3c)
 #define COMMAND_USFHEIGHT	(0x3d)
 #define COMMAND_HCALIB1		(0x3e)
@@ -43,6 +38,15 @@
 // USF1000 emulation (in meters) default values
 #define USFOFFSET_DEFAULT (0.50)
 #define USFHEIGHT_DEFAULT (1.00)
+
+// EEPROM variables
+uint16_t	cfgMagic	EEMEM;
+float		cfgHScale	EEMEM;
+float		cfgHOffset	EEMEM;
+float		cfgUSFOffset	EEMEM;
+float		cfgUSFHeight	EEMEM;
+uint8_t		cfgBlinker	EEMEM;
+
 
 // USF1000 emulation
 float usfoffset;
@@ -63,11 +67,8 @@ float hcalib2= 1.0; float xcalib2= 0.94;
 void set_hconfig(float scale, float offset) {
   hscale= scale;
   hoffset= offset;
-  // we store 
-  //	hscale * 1000
-  //	hoffset * 100000
-  set_config_word(CFG_OFFSET_HSCALE, round(hscale*1000.0));
-  set_config_word(CFG_OFFSET_HOFFSET, round(hoffset*100000.0));
+  set_config_float(&cfgHScale, hscale);
+  set_config_float(&cfgHOffset, hoffset);
 }
 
 /*
@@ -77,26 +78,23 @@ void set_hconfig(float scale, float offset) {
 void set_usfconfig(float offset, float height) {
   usfoffset= offset;
   usfheight= height;
-  // we store 
-  //	usfoffset * 100
-  //	usfheight * 100
-  set_config_byte(CFG_OFFSET_USFOFFSET, round(usfoffset*100.0));
-  set_config_byte(CFG_OFFSET_USFHEIGHT, round(usfheight*100.0));
+  set_config_float(&cfgUSFOffset, usfoffset);
+  set_config_float(&cfgUSFHeight, usfheight);
 }
   
 /*
- * retrieve hscale and hoffset from EEPROM
+ * retrieve hscale,hoffset,usfoffset and usfheight from  EEPROM
  */
 void get_config(void) {
-  if(get_config_word(CFG_OFFSET_MAGIC)==MAGIC) {
-    hscale= get_config_word(CFG_OFFSET_HSCALE)/1000.0;
-    hoffset= get_config_word(CFG_OFFSET_HOFFSET)/100000.0;
-    usfoffset= get_config_byte(CFG_OFFSET_USFOFFSET)/100.0;
-    usfheight= get_config_byte(CFG_OFFSET_USFHEIGHT)/100.0;
+  if(get_config_word(&cfgMagic)==MAGIC) {
+    hscale= get_config_float(&cfgHScale);
+    hoffset= get_config_float(&cfgHOffset);
+    usfoffset= get_config_float(&cfgUSFOffset);
+    usfheight= get_config_float(&cfgUSFHeight);
   } else {
-    set_config_word(CFG_OFFSET_MAGIC, MAGIC);
     set_hconfig(HSCALE_DEFAULT, HOFFSET_DEFAULT);
     set_usfconfig(USFOFFSET_DEFAULT, USFHEIGHT_DEFAULT);
+    set_config_word(&cfgMagic, MAGIC);
   }
 }
 
@@ -135,6 +133,8 @@ float get_voltage(void) {
   // measure ADC2
   ADMUX |= _BV(REFS0) | _BV(MUX1); 
   ADMUX &= ~_BV(REFS1) & ~_BV(MUX0) & ~_BV(MUX2) & ~_BV(MUX3) & ~_BV(MUX4) & ~_BV(MUX5);
+  
+  // two alternatives follow:
   
   // Vcc as ref
   //ADMUX |= _BV(MUX1); 
@@ -192,7 +192,6 @@ float get_distance(float height) {
   return usfoffset+usfheight-height;
 }
 
-
 /*
  * send sensor data
  */
@@ -207,7 +206,6 @@ void fs20_sendsensordata(void) {
   // wait for transfer to finish since a powerdown might break the transfer!
 }
 
-
 /*
  * recalibrate
  */
@@ -215,7 +213,6 @@ void recalibrate(void) {
   float scale= (hcalib2-hcalib1)/(xcalib2-xcalib1);
   float offset= hcalib1-scale*xcalib1;
   set_hconfig(scale, offset);
-  fs20_sendsensordata();
 }
  
 /*
@@ -258,12 +255,10 @@ void fs20_configuration(void) {
 	case COMMAND_USFOFFSET:
 	  // we receive ufsoffset in centimeters
 	  set_usfconfig(t.data[0]/100.0, usfheight);
-	  fs20_sendsensordata();
 	  break;
 	case COMMAND_USFHEIGHT:
 	  // we receive usfheight in centimenters
 	  set_usfconfig(usfoffset, t.data[0]/100.0);
-	  fs20_sendsensordata();
 	  break;
       }
     }

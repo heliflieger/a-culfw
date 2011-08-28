@@ -245,6 +245,25 @@ fs20_sendValues (uint16_t housecode, uint8_t sensor,
   fs20_send (data, 7);
 }
 
+void
+fs20_send3Values (uint16_t housecode, uint8_t sensor,
+	       uint16_t value1, uint16_t value2, uint16_t value3)
+{
+  ccInitChip();
+
+  uint8_t data[9];
+  data[0] = housecode >> 8;
+  data[1] = housecode & 0xff;
+  data[2] = sensor;
+  data[3] = value1 >> 8;
+  data[4] = value1 & 0xff;
+  data[5] = value2 >> 8;
+  data[6] = value2 & 0xff;
+  data[7] = value3 >> 8;
+  data[8] = value3 & 0xff;
+  fs20_send (data, 9);
+}
+
 
 /*
  * -----------------------------------------------------------------

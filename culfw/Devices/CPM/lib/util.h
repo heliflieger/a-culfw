@@ -16,6 +16,7 @@ void power_down (void);
 void fs20_sendCommand (uint16_t housecode, uint8_t button, uint8_t cmd);
 void fs20_sendValue (uint16_t housecode, uint8_t sensor, uint8_t flags, uint16_t value);
 void fs20_sendValues (uint16_t housecode, uint8_t sensor, uint16_t value1, uint16_t value2);
+void fs20_send3Values (uint16_t housecode, uint8_t sensor, uint16_t value1, uint16_t value2, uint16_t value3);
 void reset_clock(void);
 uint32_t tick_clock(void);
 uint32_t tick_tick(void);

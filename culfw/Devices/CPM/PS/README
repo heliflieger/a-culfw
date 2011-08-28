@@ -226,6 +226,9 @@ O	distance of emulated USF receiver over water surface for full tank
 h1	level of water column over ground in centimeters at calibration point 1
 h2	level of water column over ground in centimeters at calibration point 2
 
+Before sending each command, you need to press the button for at least five seconds
+to enter configuration mode,
+
 1. Set the level of the water column over ground in centimeters for a full tank:
 
   FA5CEAC3Dxx
@@ -250,14 +253,15 @@ Now your done!
 
 Example:
 - Maximum water level: H= 95cm (hex 5F)
-- Emulated USF offset: O= 50cm (hex 3C)
+- Emulated USF offset: O= 50cm (hex 32)
 - Calibration point 1: h1= 0cm (hex 00)
 - Calibration point 2: h2= 70cm (approximately three quarters full) (hex 46)
 - F-commands:
   FA5CEAC3D5F
-  FA5CEAC3C3C
+  FA5CEAC3C32
   FA5CEAC3E00
   FA5CEAC3F46
+
 
 
 (end of document)

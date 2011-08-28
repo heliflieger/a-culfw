@@ -10,8 +10,8 @@
 volatile uint16_t housecode;
 volatile uint8_t button;
 
-#define CFG_OFFSET_HOUSECODE    0x0000
-#define CFG_OFFSET_BUTTON	0x0002
+uint16_t	cfgOffsetHousecode	EEMEM;
+uint8_t		cfgOffsetButton		EEMEM;
 
 #define FS20_CODE_ON	0x11
 #define FS20_CODE_OFF	0x00
@@ -48,15 +48,15 @@ void fs20_sendsensor(void) {
 
 void fs20_getconfig(void) {
   // init variables from eeprom
-  housecode = get_config_word (CFG_OFFSET_HOUSECODE);
-  button = get_config_byte (CFG_OFFSET_BUTTON);
+  housecode = get_config_word(&cfgOffsetHousecode);
+  button = get_config_byte(&cfgOffsetButton);
 }
 
 void fs20_setconfig(uint16_t newhousecode, uint8_t newbutton) {
   housecode= newhousecode;
   button= newbutton;
-  set_config_word (CFG_OFFSET_HOUSECODE, housecode);
-  set_config_byte (CFG_OFFSET_BUTTON, button);
+  set_config_word (&cfgOffsetHousecode, housecode);
+  set_config_byte (&cfgOffsetButton, button);
 }
  
 void fs20_reception(void) {

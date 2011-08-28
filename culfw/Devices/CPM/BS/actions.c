@@ -10,10 +10,11 @@
 
 uint8_t sensor_number;  // 1..9
 
-#define CFG_OFS_SENSOR          0x010
+
+uint8_t	cfgSensor	EEMEM;
 
 void load_sensor_number(void) {
-        sensor_number= get_config_byte(CFG_OFS_SENSOR);
+        sensor_number= get_config_byte(&cfgSensor);
         if((sensor_number<1)||(sensor_number>9)) {
                 sensor_number= 1;
         }
@@ -21,7 +22,7 @@ void load_sensor_number(void) {
 
 // write sensor # to eeprom
 void save_sensor_number(void) {
-        set_config_byte(CFG_OFS_SENSOR, sensor_number);
+        set_config_byte(&cfgSensor, sensor_number);
 }
 
 // sensor number selection
