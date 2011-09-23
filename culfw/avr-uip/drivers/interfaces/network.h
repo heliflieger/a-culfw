@@ -20,4 +20,11 @@ void network_set_MAC(uint8_t* mac);
 /*Gets the MAC address of the device*/
 void network_get_MAC(uint8_t* mac);
 
+void ethernet_process(void);
+
+/*Sets the LED*/
+void network_set_led(uint16_t led);
+
+void interface_periodic(void);
+
 #endif /* __NETWORK_H__ */

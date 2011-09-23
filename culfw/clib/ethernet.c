@@ -12,11 +12,9 @@
 
 #include "uip_arp.h"
 #include "drivers/interfaces/network.h"
-#include "drivers/enc28j60/enc28j60.h"
 #include "apps/dhcpc/dhcpc.h"
 #include "delay.h"
 
-#define BUF ((struct uip_eth_hdr *)uip_buf)
 struct timer periodic_timer, arp_timer;
 static struct uip_eth_addr mac;       // static for dhcpc
 uint8_t eth_debug = 0;
@@ -57,7 +55,7 @@ ethernet_init(void)
   timer_set(&arp_timer, CLOCK_SECOND * 10);
 
   if(erb(EE_USE_DHCP)) {
-    enc28j60PhyWrite(PHLCON,0x4A6);// LED A: Link Status  LED B: Blink slow
+    network_set_led(0x4A6);// LED A: Link Status  LED B: Blink slow
     dhcpc_init(&mac);
     dhcp_state = PT_WAITING;
 
@@ -72,6 +70,7 @@ void
 ethernet_reset(void)
 {
   char buf[21];
+  uint16_t serial = 0;
 
   buf[1] = 'i';
   buf[2] = 'd'; strcpy_P(buf+3, PSTR("1"));             write_eeprom(buf);//DHCP
@@ -85,9 +84,19 @@ ethernet_reset(void)
   // Generate a "unique" MAC address from the unique serial number
   buf[2] = 'm'; strcpy_P(buf+3, PSTR("A45055"));        // busware.de OUI range
 #define bsbg boot_signature_byte_get
-  tohex(bsbg(0x0e)+bsbg(0x0f), (uint8_t*)buf+9);
-  tohex(bsbg(0x10)+bsbg(0x11), (uint8_t*)buf+11);
-  tohex(bsbg(0x12)+bsbg(0x13), (uint8_t*)buf+13);
+
+//  tohex(bsbg(0x0e)+bsbg(0x0f), (uint8_t*)buf+9);
+//  tohex(bsbg(0x10)+bsbg(0x11), (uint8_t*)buf+11);
+//  tohex(bsbg(0x12)+bsbg(0x13), (uint8_t*)buf+13);
+
+  for (uint8_t i = 0x00; i < 0x20; i++) 
+       serial += bsbg(i);
+
+  tohex(0, (uint8_t*)buf+9);
+  tohex((serial>>8) & 0xff, (uint8_t*)buf+11);
+  tohex(serial & 0xff, (uint8_t*)buf+13);
+
+  
   buf[15] = 0;
   write_eeprom(buf);
 }
@@ -159,63 +168,41 @@ dumppkt(void)
 }
 
 void
-Ethernet_Task(void)
-{
-  int i;
-  
-  uip_len = network_read();
+Ethernet_Task(void) {
+     int i;
 
-  if(uip_len > 0) {
+     ethernet_process();
+     
+     if(timer_expired(&periodic_timer)) {
+	  timer_reset(&periodic_timer);
+	  
+	  for(i = 0; i < UIP_CONNS; i++) {
+	       uip_periodic(i);
+	       if(uip_len > 0) {
+		    uip_arp_out();
+		    network_send();
+	       }
+	  }
+	  
+	  for(i = 0; i < UIP_UDP_CONNS; i++) {
+	       uip_udp_periodic(i);
+	       if(uip_len > 0) {
+		    uip_arp_out();
+		    network_send();
+	       }
+	  }
 
-    if(uip_len > MAX_FRAMELEN) {
-      ethernet_init();
-      return;
-    }
-      
-    if(eth_debug > 1)
-      dumppkt();
-
-    if(BUF->type == htons(UIP_ETHTYPE_IP)){
-      uip_arp_ipin();
-      uip_input();
-      if(uip_len > 0) {
-        uip_arp_out();
-        network_send();
-      }
-    } else if(BUF->type == htons(UIP_ETHTYPE_ARP)){
-      uip_arp_arpin();
-      if(uip_len > 0){
-        network_send();
-      }
-    }
-    
-  } else if(timer_expired(&periodic_timer)) {
-    timer_reset(&periodic_timer);
-    
-    for(i = 0; i < UIP_CONNS; i++) {
-      uip_periodic(i);
-      if(uip_len > 0) {
-        uip_arp_out();
-        network_send();
-      }
-    }
-    
-    for(i = 0; i < UIP_UDP_CONNS; i++) {
-      uip_udp_periodic(i);
-      if(uip_len > 0) {
-        uip_arp_out();
-        network_send();
-      }
-    }
-       
-    if(timer_expired(&arp_timer)) {
-      timer_reset(&arp_timer);
-      uip_arp_timer();
-         
-    }
-
-  }
-
+	  interface_periodic();
+	  
+     }
+     
+     
+     if(timer_expired(&arp_timer)) {
+	  timer_reset(&arp_timer);
+	  uip_arp_timer();
+	  
+     }
+     
 }
 
 void                             // EEPROM Read IP
@@ -238,7 +225,7 @@ ewip(const u16_t ip[2], uint8_t *addr)
 static void
 ip_initialized(void)
 {
-  enc28j60PhyWrite(PHLCON,0x476);// LED A: Link Status  LED B: TX/RX
+  network_set_led(0x476);// LED A: Link Status  LED B: TX/RX
   tcplink_init();
   ntp_init();
 }
@@ -267,8 +254,6 @@ set_eeprom_addr()
   erip(ipaddr, EE_IP4_NETMASK); uip_setnetmask(ipaddr);
   ip_initialized();
 }
-
-
 
 void
 tcp_appcall()

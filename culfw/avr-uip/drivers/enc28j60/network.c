@@ -1,8 +1,11 @@
 #include "board.h"
 #include "uip.h"
+#include "uip_arp.h"
 #include <avr/io.h>
 #include <util/delay.h>
 #include "enc28j60.h"
+
+#define BUF ((struct uip_eth_hdr *)uip_buf)
 
 unsigned int network_read(void){
 	uint16_t len;
@@ -51,3 +54,45 @@ void network_set_MAC(u08* macaddr)
 	enc28j60Write(MAADR0, *macaddr++);
 }
 
+void network_set_led(uint16_t led) {
+     enc28j60PhyWrite( PHLCON, led );
+}
+
+
+
+void ethernet_process(void) {
+     
+     uip_len = network_read();
+     
+     if(uip_len > 0) {
+	  
+	  if(uip_len > MAX_FRAMELEN) {
+	       ethernet_init();
+	       return;
+	  }
+      
+//    if(eth_debug > 1)
+//      dumppkt();
+
+	  if(BUF->type == htons(UIP_ETHTYPE_IP)){
+	       uip_arp_ipin();
+	       uip_input();
+	       if(uip_len > 0) {
+		    uip_arp_out();
+		    network_send();
+	       }
+
+	  } else if(BUF->type == htons(UIP_ETHTYPE_ARP)){
+
+	       uip_arp_arpin();
+	       if(uip_len > 0){
+		    network_send();
+	       }
+	  }
+	  
+     }
+
+}
+
+void interface_periodic(void) {
+}

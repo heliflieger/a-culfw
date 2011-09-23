@@ -28,7 +28,7 @@
  *
  * This file is part of the uIP TCP/IP stack
  *
- * @(#)$Id: dhcpc.c,v 1.4 2009-09-13 15:55:40 rudolfkoenig Exp $
+ * @(#)$Id: dhcpc.c,v 1.5 2011-09-23 23:19:15 tostmann Exp $
  */
 
 #include <stdio.h>
@@ -40,7 +40,6 @@
 #include "pt.h"
 #include "board.h"
 #include "drivers/interfaces/network.h"
-#include "drivers/enc28j60/enc28j60.h"
 #include "delay.h"
 #include "ethernet.h"
 

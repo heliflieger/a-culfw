@@ -26,6 +26,7 @@
 //#include "timer.h"	//Note have been replaced with _delay_us() as this is more convient
 
 #ifdef SPDR0
+#ifndef SPDR
 	#define SPDR	SPDR0
 	#define SPCR	SPCR0
 	#define SPSR	SPSR0
@@ -38,6 +39,7 @@
 	#define SPR1	SPR01
 	#define SPI2X	SPI2X0
 	#define SPE		SPE0
+#endif
 #endif
 
 // include configuration
