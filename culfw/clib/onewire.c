@@ -134,7 +134,12 @@ onewire_HsecTask (void)
  					temp = (~(get[1] *256 + get[0]-1));
  				else
  					temp = (get[1] *256 + get[0]);
+#ifdef OW_HMS_USE_SENSID
+				DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
+#else
  				DC('F');DC('0');DH2(onewire_hmsemulationdevicecounter+1); //Write HMS Device ID
+#endif
+				
  				if (get[1] & 0x80) //Negative Temp
  					DC('8');
  				else
@@ -151,7 +156,12 @@ onewire_HsecTask (void)
  					temp = (~(get[0]-1));		//Ones Complement if negative
  				else
 	 				temp = (get[0]);
+#ifdef OW_HMS_USE_SENSID
+				DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
+#else
  				DC('F');DC('0');DH2(onewire_hmsemulationdevicecounter+1); //Write HMS Device ID
+#endif
+
  				if (get[1] & 0x80) //Negative Temp
  					DC('8');
  				else
