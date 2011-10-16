@@ -23,7 +23,7 @@
 #include "onewire.h"
 #endif
 
-#ifdef HAS_IRRX
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
 #include "ir.h"
 uint8_t ir_ticks = 0;
 uint8_t ir_ticks_thrd = 0;
@@ -36,16 +36,22 @@ uint32_t ticks;
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
 
-#ifdef HAS_IRRX
-
+#ifdef HAS_IRTX     //IS IRTX defined ?
+         if (! ir_send_data() ) {   //If IR-Sending is in progress, don't receive
+         #ifdef HAS_IRRX  //IF also IRRX is define
+          ir_sample(); // call IR sample handler
+       #endif
+     }
+#elif defined (HAS_IRRX)
      ir_sample(); // call IR sample handler
+#endif
 
+#if defined (HAS_IRTX) || defined (HAS_IRRX)
      // if IRRX is compiled in, timer runs 125x faster ... 
      if (ir_ticks++<125) 
        return;
        
      ir_ticks = 0;
-
 #endif
 
      // 125Hz
@@ -117,7 +123,7 @@ Minute_Task(void)
 // Check if a running conversion is done
 // if HMS Emulation is on, and the Minute timer has expired
 #ifdef HAS_ONEWIRE
-	onewire_HsecTask ();
+    onewire_HsecTask ();
 #endif
 
   if(clock_hsec++ < 125)     // Note: this can skip some hsecs
@@ -133,7 +139,7 @@ Minute_Task(void)
 
 // if HMS Emulation is on, check the HMS timer
 #ifdef HAS_ONEWIRE
-	onewire_SecTask ();
+    onewire_SecTask ();
 #endif
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)

@@ -39,7 +39,7 @@
 #include "rf_asksin.h"
 #endif
 
-#ifdef HAS_IRRX
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
 #include "ir.h"
 #endif
 
@@ -57,7 +57,7 @@ PROGMEM t_fntab fntab[] = {
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
 #endif
-#ifdef HAS_IRRX
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
   { 'I', ir_func },
 #endif
 #ifdef HAS_RAWSEND
@@ -138,7 +138,7 @@ main(void)
 
   // Setup the timers. Are needed for watchdog-reset
 
-#ifdef HAS_IRRX
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
   ir_init();
   // IR uses highspeed TIMER0 for sampling 
   OCR0A  = 1;                              // Timer0: 0.008s = 8MHz/256/2   == 15625Hz

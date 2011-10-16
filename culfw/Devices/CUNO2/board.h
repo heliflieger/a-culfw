@@ -12,27 +12,27 @@
 #undef  HAS_LONGMSG                     // CUR support     RAM: 20b
 #undef  HAS_ONEWIRE                     // OneWire Support
 
-#define SPI_PORT		PORTB
-#define SPI_DDR			DDRB
-#define SPI_SS			4
-#define SPI_MISO		6
-#define SPI_MOSI		5
-#define SPI_SCLK		7
+#define SPI_PORT        PORTB
+#define SPI_DDR         DDRB
+#define SPI_SS          4
+#define SPI_MISO        6
+#define SPI_MOSI        5
+#define SPI_SCLK        7
 
-#define CC1100_CS_DDR		SPI_DDR
+#define CC1100_CS_DDR       SPI_DDR
 #define CC1100_CS_PORT          SPI_PORT
-#define CC1100_CS_PIN		SPI_SS
+#define CC1100_CS_PIN       SPI_SS
 
-#define CC1100_OUT_DDR		DDRB
+#define CC1100_OUT_DDR      DDRB
 #define CC1100_OUT_PORT         PORTB
 #define CC1100_OUT_PIN          1
 
-#define CC1100_IN_DDR		DDRB
+#define CC1100_IN_DDR       DDRB
 #define CC1100_IN_PORT          PINB
 #define CC1100_IN_PIN           2
-#define CC1100_INT		INT2
+#define CC1100_INT      INT2
 #define CC1100_INTVECT          INT2_vect
-#define CC1100_ISC		ISC20
+#define CC1100_ISC      ISC20
 #define CC1100_EICR             EICRA
 
 #define LED_DDR                 DDRB
@@ -69,8 +69,18 @@
 #define HAS_TX3
 #define HAS_INTERTECHNO
 
-#define HAS_IRRX
+#define HAS_IRRX                                //IR Receiption
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
+#define IRMP_PORT               PORTA
+#define IRMP_DDR                DDRA
+#define IRMP_PIN                PINA
+#define IRMP_BIT                2       // use PA2 as IR input on AVR
+
+#define HAS_IRTX                                //IR-Transmission
+#define IRSND_OCx               IRSND_OC2A          // use OC2A
+#ifndef F_INTERRUPTS            
+#define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
+#endif
 
 #define BOARD_ID_STR            "CUNO868"
 #define BOARD_ID_STR433         "CUNO433"
@@ -82,7 +92,7 @@
 #define HAS_ETHERNET            1   
 #define HAS_NTP                 1   
 
-#define HAS_ONEWIRE	        10		// OneWire Device Buffer, RAM: 10 * 8 Byte 
+#define HAS_ONEWIRE         10      // OneWire Device Buffer, RAM: 10 * 8 Byte 
 #define OW_HMS_USE_SENSID       1               // uses part of sensor id for HMS address emulation
 
 #define TTY_BUFSIZE             1024

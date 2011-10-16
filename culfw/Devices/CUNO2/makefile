@@ -5,48 +5,49 @@ FORMAT = ihex
 TARGET = CUNO2
 OBJDIR = .
 
-#		../../avr-uip/drivers/enc28j60/enc28j60.c             \
-#		../../avr-uip/drivers/enc28j60/network.c              \
+#       ../../avr-uip/drivers/enc28j60/enc28j60.c             \
+#       ../../avr-uip/drivers/enc28j60/network.c              \
 
-#		../../avr-uip/drivers/ethersex/enc28j60.c             \
-#		../../avr-uip/drivers/ethersex/network.c              \
+#       ../../avr-uip/drivers/ethersex/enc28j60.c             \
+#       ../../avr-uip/drivers/ethersex/network.c              \
 
 
 SRC = $(TARGET).c                                                    \
-		../../clib/cc1100.c                                  \
-		../../clib/clock.c                                   \
-		../../clib/delay.c                                   \
-		../../clib/display.c                                 \
-		../../clib/stringfunc.c                              \
-		../../clib/fncollection.c                            \
-		../../clib/ringbuffer.c                              \
-		../../clib/rf_send.c                                 \
-		../../clib/rf_asksin.c                               \
-		../../clib/rf_receive.c                              \
-		../../clib/rf_router.c                               \
-		../../clib/fht.c                                     \
-		../../clib/fastrf.c                                  \
-		../../clib/memory.c                                   \
-		../../clib/serial.c                                  \
-		../../clib/ttydata.c                                 \
-		../../clib/ethernet.c                                 \
-		../../clib/tcplink.c                                  \
-		../../avr-uip/drivers/ethersex/enc28j60.c             \
-		../../avr-uip/drivers/ethersex/network.c              \
-		../../avr-uip/uip/uip.c                               \
-		../../avr-uip/uip/uip_arp.c                           \
-		../../avr-uip/uip/uiplib.c                            \
-		../../avr-uip/uip/psock.c                             \
-		../../avr-uip/uip/timer.c                             \
-		../../avr-uip/uip/uip-neighbor.c                      \
-		../../avr-uip/apps/dhcpc/dhcpc.c                      \
-		../../clib/ntp.c                                      \
-		../../clib/spi.c                                      \
-		../../clib/twimaster.c                                \
-		../../clib/ir.c                                      \
-		../../clib/irmp.c                                    \
-		../../clib/onewire.c                                  \
-		
+        ../../clib/cc1100.c                                  \
+        ../../clib/clock.c                                   \
+        ../../clib/delay.c                                   \
+        ../../clib/display.c                                 \
+        ../../clib/stringfunc.c                              \
+        ../../clib/fncollection.c                            \
+        ../../clib/ringbuffer.c                              \
+        ../../clib/rf_send.c                                 \
+        ../../clib/rf_asksin.c                               \
+        ../../clib/rf_receive.c                              \
+        ../../clib/rf_router.c                               \
+        ../../clib/fht.c                                     \
+        ../../clib/fastrf.c                                  \
+        ../../clib/memory.c                                   \
+        ../../clib/serial.c                                  \
+        ../../clib/ttydata.c                                 \
+        ../../clib/ethernet.c                                 \
+        ../../clib/tcplink.c                                  \
+        ../../avr-uip/drivers/ethersex/enc28j60.c             \
+        ../../avr-uip/drivers/ethersex/network.c              \
+        ../../avr-uip/uip/uip.c                               \
+        ../../avr-uip/uip/uip_arp.c                           \
+        ../../avr-uip/uip/uiplib.c                            \
+        ../../avr-uip/uip/psock.c                             \
+        ../../avr-uip/uip/timer.c                             \
+        ../../avr-uip/uip/uip-neighbor.c                      \
+        ../../avr-uip/apps/dhcpc/dhcpc.c                      \
+        ../../clib/ntp.c                                      \
+        ../../clib/spi.c                                      \
+        ../../clib/twimaster.c                                \
+        ../../clib/ir.c                                      \
+        ../../clib/irmp.c                                    \
+        ../../clib/irsnd.c                                    \
+        ../../clib/onewire.c                                  \
+        
 OPT = s
 DEBUG = dwarf-2
 EXTRAINCDIRS = ../.. ../../clib ../../avr-uip ../../avr-uip/uip
@@ -113,7 +114,8 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
 
 AVRDUDE_PROGRAMMER = avr109
-AVRDUDE_PORT = /dev/ttyUSB1 -b 38400 
+#AVRDUDE_PORT = /dev/ttyUSB1 -b 38400 
+AVRDUDE_PORT = COM10 -b 38400 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
@@ -194,75 +196,75 @@ lib: $(LIBNAME)
 
 
 begin:
-	@echo
-	@echo $(MSG_BEGIN)
+    @echo
+    @echo $(MSG_BEGIN)
 
 end:
-	@echo $(MSG_END)
-	@echo
+    @echo $(MSG_END)
+    @echo
 
 
 HEXSIZE = $(SIZE) $(TARGET).hex
 ELFSIZE = $(SIZE) $(TARGET).elf
 
 sizebefore:
-	@if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); \
-	2>/dev/null; echo; fi
+    @if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); \
+    2>/dev/null; echo; fi
 
 sizeafter:
-	@if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_AFTER); $(ELFSIZE); \
-	2>/dev/null; echo; fi
+    @if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_AFTER); $(ELFSIZE); \
+    2>/dev/null; echo; fi
 
 checkhooks: build
-	@echo
-	@echo ------- Unhooked MyUSB Events -------
-	@$(shell) (grep -s '^Event.*MyUSB/.*\\.o' $(TARGET).map | \
-	           cut -d' ' -f1 | cut -d'_' -f2- | grep ".*") || \
-			   echo "(None)"
-	@echo ----- End Unhooked MyUSB Events -----
+    @echo
+    @echo ------- Unhooked MyUSB Events -------
+    @$(shell) (grep -s '^Event.*MyUSB/.*\\.o' $(TARGET).map | \
+               cut -d' ' -f1 | cut -d'_' -f2- | grep ".*") || \
+               echo "(None)"
+    @echo ----- End Unhooked MyUSB Events -----
 
 checklibmode:
-	@echo
-	@echo ----------- Library Mode -----------
-	@$(shell) ($(CC) $(ALL_CFLAGS) -E -dM - < /dev/null \
-	          | grep 'USB_\(DEVICE\|HOST\)_ONLY' | cut -d' ' -f2 | grep ".*") \
-	          || echo "No specific mode (both device and host mode allowable)."
-	@echo ------------------------------------
+    @echo
+    @echo ----------- Library Mode -----------
+    @$(shell) ($(CC) $(ALL_CFLAGS) -E -dM - < /dev/null \
+              | grep 'USB_\(DEVICE\|HOST\)_ONLY' | cut -d' ' -f2 | grep ".*") \
+              || echo "No specific mode (both device and host mode allowable)."
+    @echo ------------------------------------
 
 gccversion : 
-	@$(CC) --version
+    @$(CC) --version
 
 
 usbprogram: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+    $(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
 
 ispprogram: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) -p $(MCU) -P /dev/ttyUSB0 -c stk500v2 $(AVRDUDE_WRITE_FLASH) -U lfuse:w:0xde:m -U hfuse:w:0xd9:m
+    $(AVRDUDE) -p $(MCU) -P /dev/ttyUSB0 -c stk500v2 $(AVRDUDE_WRITE_FLASH) -U lfuse:w:0xde:m -U hfuse:w:0xd9:m
 
 gdb-config: 
-	@$(REMOVE) $(GDBINIT_FILE)
-	@echo define reset >> $(GDBINIT_FILE)
-	@echo SIGNAL SIGHUP >> $(GDBINIT_FILE)
-	@echo end >> $(GDBINIT_FILE)
-	@echo file $(TARGET).elf >> $(GDBINIT_FILE)
-	@echo target remote $(DEBUG_HOST):$(DEBUG_PORT)  >> $(GDBINIT_FILE)
+    @$(REMOVE) $(GDBINIT_FILE)
+    @echo define reset >> $(GDBINIT_FILE)
+    @echo SIGNAL SIGHUP >> $(GDBINIT_FILE)
+    @echo end >> $(GDBINIT_FILE)
+    @echo file $(TARGET).elf >> $(GDBINIT_FILE)
+    @echo target remote $(DEBUG_HOST):$(DEBUG_PORT)  >> $(GDBINIT_FILE)
 ifeq ($(DEBUG_BACKEND),simulavr)
-	@echo load  >> $(GDBINIT_FILE)
+    @echo load  >> $(GDBINIT_FILE)
 endif
-	@echo break main >> $(GDBINIT_FILE)
+    @echo break main >> $(GDBINIT_FILE)
 
 debug: gdb-config $(TARGET).elf
 ifeq ($(DEBUG_BACKEND), avarice)
-	@echo Starting AVaRICE - Press enter when "waiting to connect" message displays.
-	@$(WINSHELL) /c start avarice --jtag $(JTAG_DEV) --erase --program --file \
-	$(TARGET).elf $(DEBUG_HOST):$(DEBUG_PORT)
-	@$(WINSHELL) /c pause
+    @echo Starting AVaRICE - Press enter when "waiting to connect" message displays.
+    @$(WINSHELL) /c start avarice --jtag $(JTAG_DEV) --erase --program --file \
+    $(TARGET).elf $(DEBUG_HOST):$(DEBUG_PORT)
+    @$(WINSHELL) /c pause
 
 else
-	@$(WINSHELL) /c start simulavr --gdbserver --device $(MCU) --clock-freq \
-	$(DEBUG_MFREQ) --port $(DEBUG_PORT)
+    @$(WINSHELL) /c start simulavr --gdbserver --device $(MCU) --clock-freq \
+    $(DEBUG_MFREQ) --port $(DEBUG_PORT)
 endif
-	@$(WINSHELL) /c start avr-$(DEBUG_UI) --command=$(GDBINIT_FILE)
+    @$(WINSHELL) /c start avr-$(DEBUG_UI) --command=$(GDBINIT_FILE)
 
 
 
@@ -276,99 +278,99 @@ COFFCONVERT += --change-section-address .eeprom-0x810000
 
 
 coff: $(TARGET).elf
-	@echo
-	@echo $(MSG_COFF) $(TARGET).cof
-	$(COFFCONVERT) -O coff-avr $< $(TARGET).cof
+    @echo
+    @echo $(MSG_COFF) $(TARGET).cof
+    $(COFFCONVERT) -O coff-avr $< $(TARGET).cof
 
 
 extcoff: $(TARGET).elf
-	@echo
-	@echo $(MSG_EXTENDED_COFF) $(TARGET).cof
-	$(COFFCONVERT) -O coff-ext-avr $< $(TARGET).cof
+    @echo
+    @echo $(MSG_EXTENDED_COFF) $(TARGET).cof
+    $(COFFCONVERT) -O coff-ext-avr $< $(TARGET).cof
 
 
 
 %.hex: %.elf
-	@echo $(MSG_FLASH) $@
-	@$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@
+    @echo $(MSG_FLASH) $@
+    @$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@
 
 %.eep: %.elf
-	@echo $(MSG_EEPROM) $@
-	@-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	--change-section-lma .eeprom=0 --no-change-warnings -O $(FORMAT) $< $@ || exit 0
+    @echo $(MSG_EEPROM) $@
+    @-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
+    --change-section-lma .eeprom=0 --no-change-warnings -O $(FORMAT) $< $@ || exit 0
 
 %.lss: %.elf
-	@echo $(MSG_EXTENDED_LISTING) $@
-	@$(OBJDUMP) -h -z -S $< > $@
+    @echo $(MSG_EXTENDED_LISTING) $@
+    @$(OBJDUMP) -h -z -S $< > $@
 
 %.sym: %.elf
-	@echo $(MSG_SYMBOL_TABLE) $@
-	@$(NM) -n $< > $@
+    @echo $(MSG_SYMBOL_TABLE) $@
+    @$(NM) -n $< > $@
 
 
 
 .SECONDARY : $(TARGET).a
 .PRECIOUS : $(OBJ)
 %.a: $(OBJ)
-	@echo
-	@echo $(MSG_CREATING_LIBRARY) $@
-	$(AR) $@ $(OBJ)
+    @echo
+    @echo $(MSG_CREATING_LIBRARY) $@
+    $(AR) $@ $(OBJ)
 
 
 .SECONDARY : $(TARGET).elf
 .PRECIOUS : $(OBJ)
 %.elf: $(OBJ)
-	@echo $(MSG_LINKING) $@
-	@$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
+    @echo $(MSG_LINKING) $@
+    @$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
 
 
 $(OBJDIR)/%.o : %.c
-	@echo $(MSG_COMPILING) $<
-	@$(CC) -c $(ALL_CFLAGS) $< -o $@ 
+    @echo $(MSG_COMPILING) $<
+    @$(CC) -c $(ALL_CFLAGS) $< -o $@ 
 
 
 $(OBJDIR)/%.o : %.cpp
-	@echo
-	@echo $(MSG_COMPILING_CPP) $<
-	$(CC) -c $(ALL_CPPFLAGS) $< -o $@ 
+    @echo
+    @echo $(MSG_COMPILING_CPP) $<
+    $(CC) -c $(ALL_CPPFLAGS) $< -o $@ 
 
 
 %.s : %.c
-	$(CC) -S $(ALL_CFLAGS) $< -o $@
+    $(CC) -S $(ALL_CFLAGS) $< -o $@
 
 
 %.s : %.cpp
-	$(CC) -S $(ALL_CPPFLAGS) $< -o $@
+    $(CC) -S $(ALL_CPPFLAGS) $< -o $@
 
 
 $(OBJDIR)/%.o : %.S
-	@echo
-	@echo $(MSG_ASSEMBLING) $<
-	$(CC) -c $(ALL_ASFLAGS) $< -o $@
+    @echo
+    @echo $(MSG_ASSEMBLING) $<
+    $(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 
 %.i : %.c
-	$(CC) -E -mmcu=$(MCU) -I. $(CFLAGS) $< -o $@ 
+    $(CC) -E -mmcu=$(MCU) -I. $(CFLAGS) $< -o $@ 
 
 clean: clean_list clean_binary
 
 clean_binary:
-	@$(REMOVE) $(TARGET).hex
+    @$(REMOVE) $(TARGET).hex
 
 clean_list:
-	@echo $(MSG_CLEANING)
-	@$(REMOVE) $(TARGET).eep
-	@$(REMOVE) $(TARGET).cof
-	@$(REMOVE) $(TARGET).elf
-	@$(REMOVE) $(TARGET).map
-	@$(REMOVE) $(TARGET).sym
-	@$(REMOVE) $(TARGET).lss
-	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
-	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
-	@$(REMOVE) $(SRC:.c=.s)
-	@$(REMOVE) $(SRC:.c=.d)
-	@$(REMOVE) $(SRC:.c=.i)
-	@$(REMOVEDIR) .dep
+    @echo $(MSG_CLEANING)
+    @$(REMOVE) $(TARGET).eep
+    @$(REMOVE) $(TARGET).cof
+    @$(REMOVE) $(TARGET).elf
+    @$(REMOVE) $(TARGET).map
+    @$(REMOVE) $(TARGET).sym
+    @$(REMOVE) $(TARGET).lss
+    @$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
+    @$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
+    @$(REMOVE) $(SRC:.c=.s)
+    @$(REMOVE) $(SRC:.c=.d)
+    @$(REMOVE) $(SRC:.c=.i)
+    @$(REMOVEDIR) .dep
 
 
 $(shell mkdir $(OBJDIR) 2>/dev/null)
