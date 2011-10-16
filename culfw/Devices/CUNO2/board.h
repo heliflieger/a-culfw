@@ -93,7 +93,6 @@
 #define HAS_NTP                 1   
 
 #define HAS_ONEWIRE         10      // OneWire Device Buffer, RAM: 10 * 8 Byte 
-#define OW_HMS_USE_SENSID       1               // uses part of sensor id for HMS address emulation
 
 #define TTY_BUFSIZE             1024
 
