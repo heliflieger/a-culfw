@@ -54,236 +54,228 @@ unsigned char crc8;
 void 
 onewire_Init(void) 
 {
-	onewire_hmsemulationinterval = 120;		//Resets also the HMS-Emulation Interval to xx Seconds
- 	onewire_hmsemulation = 0;							//Resets also HMS-Emulation to OFF
-	onewire_allconversionsrunning = 0;
-	onewire_allconversiontimer = 0;
-	onewire_conversionrunning = 0;
-	onewire_hmsemulationstate = 0;
-	onewire_hmsemulationtimer = onewire_hmsemulationinterval;
-	onewire_SearchReset();
-	if (ds2482Init()) {
-  	if (onewire_Reset() == 1) 
-  		 onewire_FullSearch();
+    onewire_hmsemulationinterval = 120;     //Resets also the HMS-Emulation Interval to xx Seconds
+    onewire_hmsemulation = 0;                           //Resets also HMS-Emulation to OFF
+    onewire_allconversionsrunning = 0;
+    onewire_allconversiontimer = 0;
+    onewire_conversionrunning = 0;
+    onewire_hmsemulationstate = 0;
+    onewire_hmsemulationtimer = onewire_hmsemulationinterval;
+    onewire_SearchReset();
+    if (ds2482Init()) {
+    if (onewire_Reset() == 1) 
+         onewire_FullSearch();
  }
 }
 
 void 
 onewire_HsecTask (void) 
-{	
-	if (onewire_conversionrunning) {
-		if (onewire_ReadByte() & DS2482_STATUS_DIR)
-			onewire_conversionrunning = 0;
-	}
-	if (onewire_allconversionsrunning) {
-		onewire_allconversiontimer--;
-		if (onewire_allconversiontimer == 0)
-			onewire_allconversionsrunning = 0;
-	}
-	if (onewire_hmsemulation && !onewire_hmsemulationtimer) { //HMS-Emulation & timer has exipered
-		if (onewire_hmsemulationstate == 0) {										//First step for HMS Emulaion: Start all conversions
-			// Reset the bus
-			onewire_Reset();
-			//Skip ROMs to start ALL conversions
-  		onewire_WriteByte(0xCC); // Skip ROMs
-			//Write Conversion Command
-  		onewire_WriteByte(0x44); // Start Conversion
-  		// wait for DS2482 to finish
-			onewire_BusyWait();
-			//Set Marker for Conversion running
-			onewire_allconversionsrunning = 1;
-			onewire_allconversiontimer = 7;												//It takes ~750ms to finish all conversions: 125msec timer * 6
-			onewire_hmsemulationstate = 1;
-			onewire_hmsemulationdevicecounter = 0;
-		} else if (onewire_hmsemulationstate == 1) {								// Conversions have been started already
-				if (!onewire_allconversionsrunning) {										// Are all conversions already done ?
-					//Start to read out the things, but one-by-one in turns
-					if (onewire_hmsemulationdevicecounter < onewire_connecteddevices) {		// go through all connected devices
-						//Chek if this device is a Temp-Sensor	//Family: 28h - 18B20; 10h - 18S20
-						if ((ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) | (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16)) {	
-							//Match ROM
-							onewire_Reset();
-  						onewire_WriteByte(0x55); // Start RomMatch
-  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8]);
-  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 1]);
-  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 2]);
-  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 3]);
-  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 4]);
-  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 5]);
-  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 6]);
-  						onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 7]);
-  						onewire_hmsemulationstate = 2;
-						} else
-							onewire_hmsemulationdevicecounter++;
-					} else {		//We are done with emulation Reset Timer + Vars
-						onewire_hmsemulationtimer= onewire_hmsemulationinterval;
-						onewire_hmsemulationstate = 0;
-						onewire_hmsemulationdevicecounter = 0;
-					}
-				}
-		} else if (onewire_hmsemulationstate == 2) {							//MatchRom for selected Temp-Sensor has been done
-			//Read Scratchpad for selected Device
-		  char get[10];
-		  int temp;
+{   
+    if (onewire_conversionrunning) {
+        if (onewire_ReadByte() & DS2482_STATUS_DIR)
+            onewire_conversionrunning = 0;
+    }
+    if (onewire_allconversionsrunning) {
+        onewire_allconversiontimer--;
+        if (onewire_allconversiontimer == 0)
+            onewire_allconversionsrunning = 0;
+    }
+    if (onewire_hmsemulation && !onewire_hmsemulationtimer) { //HMS-Emulation & timer has exipered
+        if (onewire_hmsemulationstate == 0) {                                       //First step for HMS Emulaion: Start all conversions
+            // Reset the bus
+            onewire_Reset();
+            //Skip ROMs to start ALL conversions
+        onewire_WriteByte(0xCC); // Skip ROMs
+            //Write Conversion Command
+        onewire_WriteByte(0x44); // Start Conversion
+        // wait for DS2482 to finish
+            onewire_BusyWait();
+            //Set Marker for Conversion running
+            onewire_allconversionsrunning = 1;
+            onewire_allconversiontimer = 7;                                             //It takes ~750ms to finish all conversions: 125msec timer * 6
+            onewire_hmsemulationstate = 1;
+            onewire_hmsemulationdevicecounter = 0;
+        } else if (onewire_hmsemulationstate == 1) {                                // Conversions have been started already
+                if (!onewire_allconversionsrunning) {                                       // Are all conversions already done ?
+                    //Start to read out the things, but one-by-one in turns
+                    if (onewire_hmsemulationdevicecounter < onewire_connecteddevices) {     // go through all connected devices
+                        //Chek if this device is a Temp-Sensor  //Family: 28h - 18B20; 10h - 18S20
+                        if ((ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) | (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16)) {  
+                            //Match ROM
+                            onewire_Reset();
+                        onewire_WriteByte(0x55); // Start RomMatch
+                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8]);
+                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 1]);
+                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 2]);
+                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 3]);
+                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 4]);
+                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 5]);
+                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 6]);
+                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 7]);
+                        onewire_hmsemulationstate = 2;
+                        } else
+                            onewire_hmsemulationdevicecounter++;
+                    } else {        //We are done with emulation Reset Timer + Vars
+                        onewire_hmsemulationtimer= onewire_hmsemulationinterval;
+                        onewire_hmsemulationstate = 0;
+                        onewire_hmsemulationdevicecounter = 0;
+                    }
+                }
+        } else if (onewire_hmsemulationstate == 2) {                            //MatchRom for selected Temp-Sensor has been done
+            //Read Scratchpad for selected Device
+          char get[10];
+          int temp;
   
- 			onewire_WriteByte(0xBE); // Read Scratch Pad
- 			for (int k=0;k<9;k++){get[k]=onewire_ReadByte();}
- 			if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) {		//DS18B20
- 				DC('H');
- 				if (get[1] & 0x80) //Negative
- 					temp = (~(get[1] *256 + get[0]-1));
- 				else
- 					temp = (get[1] *256 + get[0]);
-#ifdef OW_HMS_USE_SENSID
-				DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
-#else
- 				DC('F');DC('0');DH2(onewire_hmsemulationdevicecounter+1); //Write HMS Device ID
-#endif
-				
- 				if (get[1] & 0x80) //Negative Temp
- 					DC('8');
- 				else
-	 				DC('0'); //Sign-Bit (needs to be 8 for negative
- 				DC('1'); //HMS Type (only Temp)
- 				DU((temp/16) % 10,0);	//Temp under 10 degs
- 				DU(((temp%16)*625)/1000,0);	// Degrees below 1	
- 				DC('0');
- 				DU((temp/16)/10,0);
- 				DC('0');DC('0');DC('F');DC('F');											//Humidity & RSSI
- 			} else if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16) {		//DS18S20
- 				DC('H');
-				if (get[1] & 0x80) //Negative
- 					temp = (~(get[0]-1));		//Ones Complement if negative
- 				else
-	 				temp = (get[0]);
-#ifdef OW_HMS_USE_SENSID
-				DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
-#else
- 				DC('F');DC('0');DH2(onewire_hmsemulationdevicecounter+1); //Write HMS Device ID
-#endif
+            onewire_WriteByte(0xBE); // Read Scratch Pad
+            for (int k=0;k<9;k++){get[k]=onewire_ReadByte();}
+            if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) {     //DS18B20
+                DC('H');
+                if (get[1] & 0x80) //Negative
+                    temp = (~(get[1] *256 + get[0]-1));
+                else
+                    temp = (get[1] *256 + get[0]);
+                DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
+            
+                if (get[1] & 0x80) //Negative Temp
+                    DC('8');
+                else
+                    DC('0'); //Sign-Bit (needs to be 8 for negative
+                DC('1'); //HMS Type (only Temp)
+                DU((temp/16) % 10,0);   //Temp under 10 degs
+                DU(((temp%16)*625)/1000,0); // Degrees below 1  
+                DC('0');
+                DU((temp/16)/10,0);
+                DC('0');DC('0');DC('F');DC('F');                                            //Humidity & RSSI
+            } else if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16) {      //DS18S20
+                DC('H');
+                if (get[1] & 0x80) //Negative
+                    temp = (~(get[0]-1));       //Ones Complement if negative
+                else
+                    temp = (get[0]);
+                DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
 
- 				if (get[1] & 0x80) //Negative Temp
- 					DC('8');
- 				else
-	 				DC('0'); //Sign-Bit (needs to be 8 for negative
- 				DC('1'); //HMS Type (only Temp)
- 				DU((temp/2) % 10,0);	//Temp under 10 degs
- 				DU(((temp & 0x01)*5),0);	// Degrees below 1	
- 				DC('0');
- 				DU((temp/2)/10,0);
- 				DC('0');DC('0');DC('F');DC('F');											//Humidity & RSSI
- 			}
- 			onewire_hmsemulationdevicecounter++;										//Done with this sensor, go to the next
- 			onewire_hmsemulationstate = 1;
- 			DNL();
-		}
-	}
+                if (get[1] & 0x80) //Negative Temp
+                    DC('8');
+                else
+                    DC('0'); //Sign-Bit (needs to be 8 for negative
+                DC('1'); //HMS Type (only Temp)
+                DU((temp/2) % 10,0);    //Temp under 10 degs
+                DU(((temp & 0x01)*5),0);    // Degrees below 1  
+                DC('0');
+                DU((temp/2)/10,0);
+                DC('0');DC('0');DC('F');DC('F');                                            //Humidity & RSSI
+            }
+            onewire_hmsemulationdevicecounter++;                                        //Done with this sensor, go to the next
+            onewire_hmsemulationstate = 1;
+            DNL();
+        }
+    }
 }
 
 void
 onewire_SecTask (void)
 {
-	if (onewire_hmsemulation) {
-		if (onewire_hmsemulationtimer)
-			onewire_hmsemulationtimer--;
-	}
+    if (onewire_hmsemulation) {
+        if (onewire_hmsemulationtimer)
+            onewire_hmsemulationtimer--;
+    }
 }
 
 int
 onewire_Reset(void)
 {
-	unsigned char status;
-	//Make sure that any Conversion is stopped & ignored
-	onewire_conversionrunning = 0;
-	// send 1-Wire bus reset command
-	ds2482SendCmd(DS2482_CMD_1WRS);
-	// wait for bus reset to finish, and get status
-	status = onewire_BusyWait();
-	// return Short Detected
-	if (status & DS2482_STATUS_SD)
-		return 2;
-	// return state of the presence bit
-	if (status & DS2482_STATUS_PPD) {
-		return 1;
-	} else {
-		return 0;	
-	}
+    unsigned char status;
+    //Make sure that any Conversion is stopped & ignored
+    onewire_conversionrunning = 0;
+    // send 1-Wire bus reset command
+    ds2482SendCmd(DS2482_CMD_1WRS);
+    // wait for bus reset to finish, and get status
+    status = onewire_BusyWait();
+    // return Short Detected
+    if (status & DS2482_STATUS_SD)
+        return 2;
+    // return state of the presence bit
+    if (status & DS2482_STATUS_PPD) {
+        return 1;
+    } else {
+        return 0;   
+    }
 }
  
 unsigned char 
 onewire_BusyWait(void)
 {
-	unsigned char status;
-	// set read pointer to status register
-	ds2482SendCmdArg(DS2482_CMD_SRP, DS2482_READPTR_SR);
-	// check status until busy bit is cleared
-	do
-	{
-		i2cMasterReceive(DS2482_I2C_ADDR, 1, &status);
-	} while(status & DS2482_STATUS_1WB);
-	// return the status register value
-	return status;
+    unsigned char status;
+    // set read pointer to status register
+    ds2482SendCmdArg(DS2482_CMD_SRP, DS2482_READPTR_SR);
+    // check status until busy bit is cleared
+    do
+    {
+        i2cMasterReceive(DS2482_I2C_ADDR, 1, &status);
+    } while(status & DS2482_STATUS_1WB);
+    // return the status register value
+    return status;
 }
 
 void
 onewire_WriteBit(unsigned char data)
 {
-	// wait for DS2482 to be ready
-	onewire_BusyWait();
-	// send 1WSB command
-	ds2482SendCmdArg(DS2482_CMD_1WSB, data?0x80:0x00);
-	//Wait for Bus to finish
-	onewire_BusyWait();
+    // wait for DS2482 to be ready
+    onewire_BusyWait();
+    // send 1WSB command
+    ds2482SendCmdArg(DS2482_CMD_1WSB, data?0x80:0x00);
+    //Wait for Bus to finish
+    onewire_BusyWait();
 }
 
 
 void 
 onewire_WriteByte(unsigned char data)
 {
-	// wait for DS2482 to be ready
-	onewire_BusyWait();
-	// send 1WWB command
-	ds2482SendCmdArg(DS2482_CMD_1WWB, data);	
-	// Wait to finish;
-	onewire_BusyWait();
+    // wait for DS2482 to be ready
+    onewire_BusyWait();
+    // send 1WWB command
+    ds2482SendCmdArg(DS2482_CMD_1WWB, data);    
+    // Wait to finish;
+    onewire_BusyWait();
 }
 
 unsigned char
 onewire_ReadByte(void)
 {
-	unsigned char data;
+    unsigned char data;
 
-	// wait for DS2482 to be ready
-	onewire_BusyWait();
-	// send 1WRB command
-	ds2482SendCmd(DS2482_CMD_1WRB);
-	// wait for read to finish
-	onewire_BusyWait();
-	// set read pointer to data register
-	ds2482SendCmdArg(DS2482_CMD_SRP, DS2482_READPTR_RDR);
-	// read data
-	i2cMasterReceive(DS2482_I2C_ADDR, 1, &data);
-	// return data
-	return data;
+    // wait for DS2482 to be ready
+    onewire_BusyWait();
+    // send 1WRB command
+    ds2482SendCmd(DS2482_CMD_1WRB);
+    // wait for read to finish
+    onewire_BusyWait();
+    // set read pointer to data register
+    ds2482SendCmdArg(DS2482_CMD_SRP, DS2482_READPTR_RDR);
+    // read data
+    i2cMasterReceive(DS2482_I2C_ADDR, 1, &data);
+    // return data
+    return data;
 }
 
 unsigned char
 onewire_ReadBit(void)
 {
-	//Activate Bit Operation and make TimeSlot
-	onewire_WriteBit(1);
-	//Read Status Register for Answer
-	if (onewire_BusyWait() & DS2482_STATUS_SBR)
-		return 1;
-	else
-		return 0;
+    //Activate Bit Operation and make TimeSlot
+    onewire_WriteBit(1);
+    //Read Status Register for Answer
+    if (onewire_BusyWait() & DS2482_STATUS_SBR)
+        return 1;
+    else
+        return 0;
 }
 
 void 
 onewire_MatchRom(unsigned char* romaddress)
 {
-	//Start
-	onewire_Reset();
+    //Start
+    onewire_Reset();
   onewire_WriteByte(0x55); // Start RomMatch
   onewire_WriteByte(romaddress[7]);
   onewire_WriteByte(romaddress[6]);
@@ -298,34 +290,34 @@ onewire_MatchRom(unsigned char* romaddress)
 void 
 onewire_StartConversion(void)
 {
-	// wait for DS2482 to be ready
-	onewire_BusyWait();
-	//Write Conversion Command
+    // wait for DS2482 to be ready
+    onewire_BusyWait();
+    //Write Conversion Command
   onewire_WriteByte(0x44); // Start Conversion
   // wait for DS2482 to finish
-	onewire_BusyWait();
-	//Set Marker for Conversion running
-	onewire_conversionrunning = 1;
+    onewire_BusyWait();
+    //Set Marker for Conversion running
+    onewire_conversionrunning = 1;
 }
 
 int
 onewire_CheckConversionRunning(void)
 {
-	//Check Marker for Conversion running
-	if (onewire_conversionrunning)
-		return 1;
-	else
-		return 0;	
+    //Check Marker for Conversion running
+    if (onewire_conversionrunning)
+        return 1;
+    else
+        return 0;   
 }
 
 int
 onewire_CheckAllConversionsRunning(void)
 {
-	//Check Marker for Conversion running
-	if (onewire_allconversionsrunning)
-		return 1;
-	else
-		return 0;	
+    //Check Marker for Conversion running
+    if (onewire_allconversionsrunning)
+        return 1;
+    else
+        return 0;   
 }
 
 
@@ -335,26 +327,26 @@ onewire_CheckAllConversionsRunning(void)
 //
 void onewire_FullSearch(void)
 {
-	//Start Search
-	onewire_SearchReset();
+    //Start Search
+    onewire_SearchReset();
   if (onewire_Search()) {
- 		do
-		{
-			DC('R'); DC(':'); DH2(ROM_CODES[DeviceCounter*8 + 7]);DH2(ROM_CODES[DeviceCounter*8 + 6]);DH2(ROM_CODES[DeviceCounter*8 + 5]);DH2(ROM_CODES[DeviceCounter*8 + 4]);DH2(ROM_CODES[DeviceCounter*8 + 3]);DH2(ROM_CODES[DeviceCounter*8 + 2]);DH2(ROM_CODES[DeviceCounter*8 + 1]);DH2(ROM_CODES[DeviceCounter*8 + 0]);
-			DeviceCounter++;
-  		DNL();
-		}
-		while (onewire_Search() && (DeviceCounter < (HAS_ONEWIRE)));
-	}
-	onewire_connecteddevices = DeviceCounter;
-	DC('D'); DC(':');DU(onewire_connecteddevices, 2);DNL();
+        do
+        {
+            DC('R'); DC(':'); DH2(ROM_CODES[DeviceCounter*8 + 7]);DH2(ROM_CODES[DeviceCounter*8 + 6]);DH2(ROM_CODES[DeviceCounter*8 + 5]);DH2(ROM_CODES[DeviceCounter*8 + 4]);DH2(ROM_CODES[DeviceCounter*8 + 3]);DH2(ROM_CODES[DeviceCounter*8 + 2]);DH2(ROM_CODES[DeviceCounter*8 + 1]);DH2(ROM_CODES[DeviceCounter*8 + 0]);
+            DeviceCounter++;
+        DNL();
+        }
+        while (onewire_Search() && (DeviceCounter < (HAS_ONEWIRE)));
+    }
+    onewire_connecteddevices = DeviceCounter;
+    DC('D'); DC(':');DU(onewire_connecteddevices, 2);DNL();
 }
 //--------------------------------------------------------------------------
 // Resets the OneWire Search Function, so that the next search will start
 //        with the first device again
 void onewire_SearchReset(void)
 {
-	int i;
+    int i;
   // reset the search state
   LastDiscrepancy = 0;
   LastDeviceFlag = DS2482_FALSE;
@@ -363,7 +355,7 @@ void onewire_SearchReset(void)
   onewire_connecteddevices = 0;
   
   for (i=0;i<(HAS_ONEWIRE * 8);i++) {
-  	ROM_CODES[i] = 0;
+    ROM_CODES[i] = 0;
   }
 }
 //--------------------------------------------------------------------------
@@ -431,10 +423,10 @@ int onewire_Search(void)
                // if this discrepancy if before the Last Discrepancy
                // on a previous next then pick the same as last time
                if (id_bit_number < LastDiscrepancy)
-               	  if (DeviceCounter > 0)
-                  	search_direction = ((ROM_CODES[(DeviceCounter-1)*8 + rom_byte_number] & rom_byte_mask) > 0);
+                  if (DeviceCounter > 0)
+                    search_direction = ((ROM_CODES[(DeviceCounter-1)*8 + rom_byte_number] & rom_byte_mask) > 0);
                   else 
-                  	search_direction = 0 ;
+                    search_direction = 0 ;
                else
                   // if equal to last pick 1, if not then pick 0
                   search_direction = (id_bit_number == LastDiscrepancy);
@@ -486,9 +478,9 @@ int onewire_Search(void)
          // check for last device
          if (LastDiscrepancy == 0)
             LastDeviceFlag = DS2482_TRUE;
-				 // check for last family group
-				 if (LastFamilyDiscrepancy == LastDiscrepancy)
-				 	  LastFamilyDiscrepancy = 0;
+                 // check for last family group
+                 if (LastFamilyDiscrepancy == LastDiscrepancy)
+                      LastFamilyDiscrepancy = 0;
 
          search_result = DS2482_TRUE;
       }
@@ -531,15 +523,15 @@ onewire_ReadROMCodes(void)
 {
   int i, n;
 
-	//We know, that we have done at least an initial Full OneWire Search
-	for (i=0;i<onewire_connecteddevices;i++)
-	{
-		DU(i+1,0);DC(':');
-	  for (n=8;n>0;n--){
-	  	DH2(ROM_CODES[i*8+(n-1)]);
-	  }
-	  DNL();
-	}
+    //We know, that we have done at least an initial Full OneWire Search
+    for (i=0;i<onewire_connecteddevices;i++)
+    {
+        DU(i+1,0);DC(':');
+      for (n=8;n>0;n--){
+        DH2(ROM_CODES[i*8+(n-1)]);
+      }
+      DNL();
+    }
 }
 
 
@@ -554,7 +546,7 @@ onewire_ReadTemperature(void)
   for (k=0;k<9;k++){get[k]=onewire_ReadByte();}
   //printf("\n ScratchPAD DATA = %X%X%X%X%X\n",get[8],get[7],get[6],get[5],get[4],get[3],get[2],get[1],get[0]);
 
-	temp = (get[1] *256 + get[0]) / 16;
+    temp = (get[1] *256 + get[0]) / 16;
 /*  
   temp = (get[1] << 8) + get[0];
   SignBit = get[1] & 0x80;  // test most sig bit 
@@ -564,9 +556,9 @@ onewire_ReadTemperature(void)
   }
 
   */
-  	
-	DC('T'); DC('e'); DC('m'); DC('p'); DC(':'); DC(' '); DU(get[0], 4); DU(get[1],4); DC(':'); DU(temp, 4); DC('C');
-	DNL();
+    
+    DC('T'); DC('e'); DC('m'); DC('p'); DC(':'); DC(' '); DU(get[0], 4); DU(get[1],4); DC(':'); DU(temp, 4); DC('C');
+    DNL();
   //printf( "\nTempC= %d degrees C\n", (int)temp_lsb ); // print temp. C
 }
 
@@ -583,93 +575,93 @@ onewire_func(char *in)
   unsigned char romaddress[8];
 
   if(in[1] == 'i') {
-		onewire_Init();
-		DC('O'); DC('K');
-  	DNL();
+        onewire_Init();
+        DC('O'); DC('K');
+    DNL();
   } else if(in[1] == 'R') {
-		  if (in[2] == 'm') {
-		  	if (ds2482Reset()) {
-		 	   	DC('O'); DC('K');
-	  		 	DNL();
-    		} else {
-      		DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d'); DC(' '); DC('I'); DC('2'); DC('C');
-      		DNL();
-    		}
+          if (in[2] == 'm') {
+            if (ds2482Reset()) {
+                DC('O'); DC('K');
+                DNL();
+            } else {
+            DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d'); DC(' '); DC('I'); DC('2'); DC('C');
+            DNL();
+            }
       } else if(in[2] == 'b') { 
-      	DC('O'); DC('K'); DC(':'); DU(onewire_Reset(), 0);
-  			DNL();		
+        DC('O'); DC('K'); DC(':'); DU(onewire_Reset(), 0);
+            DNL();      
       }
-  } else if(in[1] == 'c') {							//Read RomCodes from Tabel
-  			onewire_ReadROMCodes();   	
-  } else if(in[1] == 'r') {							//Read Command
-		  if (in[2] == 'b') {								// -b Read Bit from Bus
-		  	DU(onewire_ReadBit(), 0);
-	  		DNL();
-    	} else if(in[2] == 'B') { 				// -B Read Byte from Bus
-      		DH2(onewire_ReadByte());
-      		DNL();
-    	} else if(in[2] == 'S') { 				// -S Read Full ScratchPad from Device
-    	}
-  } else if(in[1] == 'w') {							//Write Command
-		  if (in[2] == 'b') {								// -b Write Bit to Bus
-     		fromhex (in+3, &byteword, 1);
-     		if (byteword)
-     			byteword = 1;
-     		else
-     			byteword = 0;
-  		  //DC('W'); DC('b'); DC(':');DH2(byteword); DNL();    		// Debug output of Bit to write
-     		onewire_WriteBit(byteword);
-    	} else if(in[2] == 'B') { 				// -B Write Byte to Bus
-     		fromhex (in+3, &byteword, 1);
-  		  //DC('W'); DC('B'); DC(':');DH2(byteword); DNL();    		// Debug output of Byte to write
-     		onewire_WriteByte(byteword);
-    	} 
+  } else if(in[1] == 'c') {                         //Read RomCodes from Tabel
+            onewire_ReadROMCodes();     
+  } else if(in[1] == 'r') {                         //Read Command
+          if (in[2] == 'b') {                               // -b Read Bit from Bus
+            DU(onewire_ReadBit(), 0);
+            DNL();
+        } else if(in[2] == 'B') {               // -B Read Byte from Bus
+            DH2(onewire_ReadByte());
+            DNL();
+        } else if(in[2] == 'S') {               // -S Read Full ScratchPad from Device
+        }
+  } else if(in[1] == 'w') {                         //Write Command
+          if (in[2] == 'b') {                               // -b Write Bit to Bus
+            fromhex (in+3, &byteword, 1);
+            if (byteword)
+                byteword = 1;
+            else
+                byteword = 0;
+          //DC('W'); DC('b'); DC(':');DH2(byteword); DNL();         // Debug output of Bit to write
+            onewire_WriteBit(byteword);
+        } else if(in[2] == 'B') {               // -B Write Byte to Bus
+            fromhex (in+3, &byteword, 1);
+          //DC('W'); DC('B'); DC(':');DH2(byteword); DNL();         // Debug output of Byte to write
+            onewire_WriteByte(byteword);
+        } 
   } else if(in[1] == 'm') {
-  		fromhex (in+2, romaddress, 8);
-			DC('m');DC(':');DH2(romaddress[0]);DH2(romaddress[1]);DH2(romaddress[2]);DH2(romaddress[3]);DH2(romaddress[4]);DH2(romaddress[5]);DH2(romaddress[6]);DH2(romaddress[7]);DNL();
-			onewire_MatchRom(romaddress);
+        fromhex (in+2, romaddress, 8);
+            DC('m');DC(':');DH2(romaddress[0]);DH2(romaddress[1]);DH2(romaddress[2]);DH2(romaddress[3]);DH2(romaddress[4]);DH2(romaddress[5]);DH2(romaddress[6]);DH2(romaddress[7]);DNL();
+            onewire_MatchRom(romaddress);
   } else if(in[1] == 'H') {
-  		if (in[2] == 'o') {					
-	  		onewire_allconversionsrunning = 0;
-				onewire_allconversiontimer = 0;
-				onewire_hmsemulationstate = 0;
-				onewire_hmsemulationtimer = onewire_hmsemulationinterval;
-  			if (onewire_hmsemulation) {
-					onewire_hmsemulation = 0;
-					DC('O');DC('F');DC('F');DNL();
-				} else {
-					onewire_hmsemulation = 1;
-					//DO an initial Conversion, as the sensors need a first round
-					// Reset the bus 
-					onewire_Reset();
-					//Skip ROMs to start ALL conversions
-  				onewire_WriteByte(0xCC); // Skip ROMs
-					//Write Conversion Command
-  				onewire_WriteByte(0x44); // Start Conversion
-  				// wait for DS2482 to finish
-					onewire_BusyWait();
-					DC('O');DC('N');DNL();
-				}
-			} else  if (in[2] == 't') {					
-				fromdec (in+3, (uint8_t *)&onewire_hmsemulationinterval);
-			}
+        if (in[2] == 'o') {                 
+            onewire_allconversionsrunning = 0;
+                onewire_allconversiontimer = 0;
+                onewire_hmsemulationstate = 0;
+                onewire_hmsemulationtimer = onewire_hmsemulationinterval;
+            if (onewire_hmsemulation) {
+                    onewire_hmsemulation = 0;
+                    DC('O');DC('F');DC('F');DNL();
+                } else {
+                    onewire_hmsemulation = 1;
+                    //DO an initial Conversion, as the sensors need a first round
+                    // Reset the bus 
+                    onewire_Reset();
+                    //Skip ROMs to start ALL conversions
+                onewire_WriteByte(0xCC); // Skip ROMs
+                    //Write Conversion Command
+                onewire_WriteByte(0x44); // Start Conversion
+                // wait for DS2482 to finish
+                    onewire_BusyWait();
+                    DC('O');DC('N');DNL();
+                }
+            } else  if (in[2] == 't') {                 
+                fromdec (in+3, (uint8_t *)&onewire_hmsemulationinterval);
+            }
   } else if(in[1] == 't') {
-  		onewire_ReadTemperature();   	
+        onewire_ReadTemperature();      
   } else if(in[1] == 'C') {
-  		if (in[2] == 's') {					
-  			onewire_StartConversion();   	
-  		} else if(in[2] == 'r') {
-  			DU(onewire_CheckConversionRunning(),0); DNL();
-  		} else if(in[2] == 'a') {
-  			if (onewire_hmsemulation) {	
-  				DU(onewire_CheckAllConversionsRunning(),0); DNL();
-  			} else {
-  				DC('0');DNL();
-  			}
-  		}
+        if (in[2] == 's') {                 
+            onewire_StartConversion();      
+        } else if(in[2] == 'r') {
+            DU(onewire_CheckConversionRunning(),0); DNL();
+        } else if(in[2] == 'a') {
+            if (onewire_hmsemulation) { 
+                DU(onewire_CheckAllConversionsRunning(),0); DNL();
+            } else {
+                DC('0');DNL();
+            }
+        }
   } else if(in[1] == 'f') {
-  			//onewire_FullSearch();   	
- 			  onewire_FullSearch();
+            //onewire_FullSearch();     
+              onewire_FullSearch();
   }   
 }
 
@@ -683,7 +675,7 @@ onewire_func(char *in)
 int
 ds2482Init(void)
 {
-	unsigned char ret;
+    unsigned char ret;
   //we know, that I2C is already initialized and running
    ret = i2c_start(DS2482_I2C_ADDR+I2C_WRITE);       // set device address and write mode  
    if ( ret ) {
@@ -691,65 +683,65 @@ ds2482Init(void)
       i2c_stop(); //release bus, as this has failed
       return 0;
    } else {
-   		i2c_stop(); //release bus, as this was just an initialization
-			return 1;
+        i2c_stop(); //release bus, as this was just an initialization
+            return 1;
   }
 }
 
 int
 ds2482Reset(void)
 {
-	unsigned char ret;
-	ret = ds2482SendCmd(DS2482_CMD_DRST);
-	if (ret == I2C_OK) {
-		return 1;
-	} else {
-		return 0;
-	}
+    unsigned char ret;
+    ret = ds2482SendCmd(DS2482_CMD_DRST);
+    if (ret == I2C_OK) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 unsigned char 
 ds2482SendCmd(unsigned char cmd)
 {
-	unsigned char data;
-	unsigned char i2cStat;
+    unsigned char data;
+    unsigned char i2cStat;
 
-	// send command
-	i2cStat = i2cMasterSend(DS2482_I2C_ADDR, 1, &cmd);
-	if(i2cStat == I2C_ERROR_NODEV)
-	{
+    // send command
+    i2cStat = i2cMasterSend(DS2482_I2C_ADDR, 1, &cmd);
+    if(i2cStat == I2C_ERROR_NODEV)
+    {
     DC('I'); DC('2'); DC('C'); DC(' '); DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d');
     DNL();
-		return i2cStat;
-	}
-	// check status
-	i2cMasterReceive(DS2482_I2C_ADDR, 1, &data);
-  //	rprintf("Cmd=0x%x  Status=0x%x\r\n", cmd, data);
-	return (I2C_OK);
+        return i2cStat;
+    }
+    // check status
+    i2cMasterReceive(DS2482_I2C_ADDR, 1, &data);
+  //    rprintf("Cmd=0x%x  Status=0x%x\r\n", cmd, data);
+    return (I2C_OK);
 }
 
 unsigned char 
 ds2482SendCmdArg(unsigned char cmd, unsigned char arg)
 {
-	unsigned char data[2];
-	unsigned char i2cStat;
+    unsigned char data[2];
+    unsigned char i2cStat;
 
-	// prepare command
-	data[0] = cmd;
-	data[1] = arg;
-	// send command
-	i2cStat = i2cMasterSend(DS2482_I2C_ADDR, 2, data);
-	if(i2cStat == I2C_ERROR_NODEV)
-	{
+    // prepare command
+    data[0] = cmd;
+    data[1] = arg;
+    // send command
+    i2cStat = i2cMasterSend(DS2482_I2C_ADDR, 2, data);
+    if(i2cStat == I2C_ERROR_NODEV)
+    {
     DC('I'); DC('2'); DC('C'); DC(' '); DC('F'); DC('a'); DC('i'); DC('l'); DC('e'); DC('d');
     DNL();
-		return i2cStat;
-	}
-	// check status
-	i2cMasterReceive(DS2482_I2C_ADDR, 1, data);
-	//	rprintf("Cmd=0x%x  Arg=0x%x  Status=0x%x\r\n", cmd, arg, data[0]);
+        return i2cStat;
+    }
+    // check status
+    i2cMasterReceive(DS2482_I2C_ADDR, 1, data);
+    //  rprintf("Cmd=0x%x  Arg=0x%x  Status=0x%x\r\n", cmd, arg, data[0]);
 
-	return (I2C_OK);
+    return (I2C_OK);
 }
 
 //--------------------------------------------------------------------------
@@ -760,8 +752,8 @@ ds2482SendCmdArg(unsigned char cmd, unsigned char arg)
 unsigned char 
 i2cMasterSend(unsigned char deviceAddr, unsigned char length, unsigned char* data)
 {
-	 unsigned char ret;
-	 
+     unsigned char ret;
+     
    ret = i2c_start(deviceAddr+I2C_WRITE);       // set device address and write mode  
    if ( ret ) {
       /* failed to issue start condition, possibly no device found */
@@ -778,15 +770,15 @@ i2cMasterSend(unsigned char deviceAddr, unsigned char length, unsigned char* dat
       }
       i2c_stop();  
       return I2C_OK;
-		}
+        }
 }
 
 unsigned char
 i2cMasterReceive(unsigned char deviceAddr, unsigned char length, unsigned char *data)
 {
-	 unsigned char ret;
-	 
-	 ret = i2c_start(deviceAddr+I2C_READ);       // set device address and write mode  
+     unsigned char ret;
+     
+     ret = i2c_start(deviceAddr+I2C_READ);       // set device address and write mode  
    if ( ret ) {
       /* failed to issue start condition, possibly no device found */
       i2c_stop(); //release bus, as this has failed
@@ -794,11 +786,11 @@ i2cMasterReceive(unsigned char deviceAddr, unsigned char length, unsigned char *
       DNL();
       return ret;
    } else {   
-   	
+    
       // accept receive data and ack it
       while(length > 1)
       {
-      	*data++ = i2c_readAck();   
+        *data++ = i2c_readAck();   
         // decrement length
         length--;
       }
@@ -806,7 +798,7 @@ i2cMasterReceive(unsigned char deviceAddr, unsigned char length, unsigned char *
       *data++ = i2c_readNak();   
       i2c_stop();  
       return I2C_OK;
-		}
+        }
 }
 
 #endif
