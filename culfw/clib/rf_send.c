@@ -78,107 +78,107 @@ uint8_t it_repetition = 6;
 static void
 send_IT_bit(uint8_t bit)
 {
-	if (bit == 1) {
-  	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval * 3);
- 	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval);
+    if (bit == 1) {
+    CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+    my_delay_us(it_interval * 3);
+      CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+      my_delay_us(it_interval);
 
-  	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval * 3);
- 	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval);
+    CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+    my_delay_us(it_interval * 3);
+      CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+      my_delay_us(it_interval);
   } else if (bit == 0) {
-  	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval);
- 	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval * 3);
+    CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+    my_delay_us(it_interval);
+      CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+      my_delay_us(it_interval * 3);
 
-  	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval);
- 	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval * 3);
+    CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+    my_delay_us(it_interval);
+      CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+      my_delay_us(it_interval * 3);
   } else {
-  	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval);
- 	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval * 3);
+    CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+    my_delay_us(it_interval);
+      CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+      my_delay_us(it_interval * 3);
 
-  	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval * 3);
- 	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval);  	
+    CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+    my_delay_us(it_interval * 3);
+      CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+      my_delay_us(it_interval);     
   }
 }
 
 void
 it_func(char *in)
 {
-	int8_t i, j, k;
-			
-	if (in[1] == 't') {
-			fromdec (in+2, (uint8_t *)&it_interval);
-			DU(it_interval,0); DNL();
-	} else if (in[1] == 's') {
-			if (in[2] == 'r') {
-				fromdec (in+3, &it_repetition);
-				DU(it_repetition,0); DNL();
-			} else {
-	
-			LED_ON();
+    int8_t i, j, k;
+            
+    if (in[1] == 't') {
+            fromdec (in+2, (uint8_t *)&it_interval);
+            DU(it_interval,0); DNL();
+    } else if (in[1] == 's') {
+            if (in[2] == 'r') {
+                fromdec (in+3, &it_repetition);
+                DU(it_repetition,0); DNL();
+            } else {
+    
+            LED_ON();
 
-      #ifdef HAS_IRRX //Blockout IR_Reception for the moment
+      #if defined (HAS_IRRX) || defined (HAS_IRTX) //Blockout IR_Reception for the moment
         cli(); 
       #endif
-			
+            
       if(!cc_on)
-		    set_ccon();
-	  	ccTX();                       // Enable TX 
-	
-		  for(i = 0; i < it_repetition; i++)  {
-			  for(j = 1; j < 13; j++)  {
-				  if(in[j+1] == '0') {
-						send_IT_bit(0);
-					} else if (in[j+1] == '1') {
-						send_IT_bit(1);
-					} else {
-						send_IT_bit(2);
-					}
-				}
-				// Sync-Bit
-			  CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-			  my_delay_us(it_interval);
-			  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-			  for(k = 0; k < 31; k++)  {
-				  my_delay_us(it_interval);
-				}
-		  } //Do it 3 Times
-	
-		  if(tx_report) {                               // Enable RX
-	  	  ccRX();
-	  	} else {
-		    ccStrobe(CC1100_SIDLE);
-		  }
+            set_ccon();
+        ccTX();                       // Enable TX 
+    
+          for(i = 0; i < it_repetition; i++)  {
+              for(j = 1; j < 13; j++)  {
+                  if(in[j+1] == '0') {
+                        send_IT_bit(0);
+                    } else if (in[j+1] == '1') {
+                        send_IT_bit(1);
+                    } else {
+                        send_IT_bit(2);
+                    }
+                }
+                // Sync-Bit
+              CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+              my_delay_us(it_interval);
+              CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+              for(k = 0; k < 31; k++)  {
+                  my_delay_us(it_interval);
+                }
+          } //Do it 3 Times
+    
+          if(tx_report) {                               // Enable RX
+          ccRX();
+        } else {
+            ccStrobe(CC1100_SIDLE);
+          }
 
-      #ifdef HAS_IRRX //Activate IR_Reception again
+      #if defined (HAS_IRRX) || defined (HAS_IRTX) //Activate IR_Reception again
         sei(); 
-      #endif		  
+      #endif          
 
-		  LED_OFF();
-	
-			DC('i');DC('s');
-		  for(j = 1; j < 13; j++)  {
-			 	if(in[j+1] == '0') {
-					DC('0');
-				} else if (in[j+1] == '1') {
-					DC('1');
-				} else {
-					DC('F');
-				}
-			}
-			DNL();
-		} //sending real data
-	} // send char ('s')
+          LED_OFF();
+    
+            DC('i');DC('s');
+          for(j = 1; j < 13; j++)  {
+                if(in[j+1] == '0') {
+                    DC('0');
+                } else if (in[j+1] == '1') {
+                    DC('1');
+                } else {
+                    DC('F');
+                }
+            }
+            DNL();
+        } //sending real data
+    } // send char ('s')
 }
 
 #endif
@@ -202,7 +202,7 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
 
   LED_ON();
 
-  #ifdef HAS_IRRX //Blockout IR_Reception for the moment
+  #if defined (HAS_IRRX) || defined (HAS_IRTX) //Blockout IR_Reception for the moment
     cli();
   #endif
 
@@ -231,7 +231,7 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
     ccStrobe(CC1100_SIDLE);
   }
 
-  #ifdef HAS_IRRX //Activate IR_Reception again
+  #if defined (HAS_IRRX) || defined (HAS_IRTX) //Activate IR_Reception again
     sei(); 
   #endif
 
