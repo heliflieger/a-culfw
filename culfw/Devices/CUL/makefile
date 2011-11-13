@@ -21,16 +21,16 @@ SRC =           CUL.c\
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
 		../../clib/memory.c                                  \
-                ../../lufa/Drivers/USB/LowLevel/DevChapter9.c        \
-                ../../lufa/Drivers/USB/LowLevel/Endpoint.c           \
-                ../../lufa/Drivers/USB/LowLevel/Host.c               \
-                ../../lufa/Drivers/USB/LowLevel/HostChapter9.c       \
-                ../../lufa/Drivers/USB/LowLevel/LowLevel.c           \
-                ../../lufa/Drivers/USB/LowLevel/Pipe.c               \
-                ../../lufa/Drivers/USB/HighLevel/Events.c            \
-                ../../lufa/Drivers/USB/HighLevel/USBInterrupt.c      \
-                ../../lufa/Drivers/USB/HighLevel/USBTask.c           \
-                ../../lufa/Drivers/USB/HighLevel/ConfigDescriptor.c  \
+		../../lufa/Drivers/USB/LowLevel/DevChapter9.c        \
+		../../lufa/Drivers/USB/LowLevel/Endpoint.c           \
+		../../lufa/Drivers/USB/LowLevel/Host.c               \
+		../../lufa/Drivers/USB/LowLevel/HostChapter9.c       \
+		../../lufa/Drivers/USB/LowLevel/LowLevel.c           \
+		../../lufa/Drivers/USB/LowLevel/Pipe.c               \
+		../../lufa/Drivers/USB/HighLevel/Events.c            \
+		../../lufa/Drivers/USB/HighLevel/USBInterrupt.c      \
+		../../lufa/Drivers/USB/HighLevel/USBTask.c           \
+		../../lufa/Drivers/USB/HighLevel/ConfigDescriptor.c  \
 
 
 LUFA_OPTS  = -D USE_NONSTANDARD_DESCRIPTOR_NAMES

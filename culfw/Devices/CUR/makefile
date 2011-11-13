@@ -35,16 +35,16 @@ SRC = $(TARGET).c                                                  \
 		../../clib/fastrf.c                                   \
 		../../clib/rf_router.c                                \
 		../../clib/twimaster.c                                \
-                ../../lufa/Drivers/USB/LowLevel/DevChapter9.c         \
-                ../../lufa/Drivers/USB/LowLevel/Endpoint.c            \
-                ../../lufa/Drivers/USB/LowLevel/Host.c                \
-                ../../lufa/Drivers/USB/LowLevel/HostChapter9.c        \
-                ../../lufa/Drivers/USB/LowLevel/LowLevel.c            \
-                ../../lufa/Drivers/USB/LowLevel/Pipe.c                \
-                ../../lufa/Drivers/USB/HighLevel/Events.c             \
-                ../../lufa/Drivers/USB/HighLevel/USBInterrupt.c       \
-                ../../lufa/Drivers/USB/HighLevel/USBTask.c            \
-                ../../lufa/Drivers/USB/HighLevel/ConfigDescriptor.c   \
+		../../lufa/Drivers/USB/LowLevel/DevChapter9.c         \
+		../../lufa/Drivers/USB/LowLevel/Endpoint.c            \
+		../../lufa/Drivers/USB/LowLevel/Host.c                \
+		../../lufa/Drivers/USB/LowLevel/HostChapter9.c        \
+		../../lufa/Drivers/USB/LowLevel/LowLevel.c            \
+		../../lufa/Drivers/USB/LowLevel/Pipe.c                \
+		../../lufa/Drivers/USB/HighLevel/Events.c             \
+		../../lufa/Drivers/USB/HighLevel/USBInterrupt.c       \
+		../../lufa/Drivers/USB/HighLevel/USBTask.c            \
+		../../lufa/Drivers/USB/HighLevel/ConfigDescriptor.c   \
 
 
 
