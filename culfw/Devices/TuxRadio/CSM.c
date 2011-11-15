@@ -63,7 +63,7 @@ PROGMEM t_fntab fntab[] = {
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
   { 'M', em_send },
-  { 'S', esa_send },
+//  { 'S', esa_send },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
