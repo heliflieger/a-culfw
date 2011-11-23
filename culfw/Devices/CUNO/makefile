@@ -25,8 +25,8 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ttydata.c                                 \
 		../../clib/ethernet.c                                 \
 		../../clib/tcplink.c                                  \
-		../../avr-uip/drivers/enc28j60/enc28j60.c             \
-		../../avr-uip/drivers/enc28j60/network.c              \
+		../../avr-uip/drivers/ethersex/enc28j60.c             \
+		../../avr-uip/drivers/ethersex/network.c              \
 		../../avr-uip/uip/uip.c                               \
 		../../avr-uip/uip/uip_arp.c                           \
 		../../avr-uip/uip/uiplib.c                            \
