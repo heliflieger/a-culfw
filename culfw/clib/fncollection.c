@@ -247,8 +247,16 @@ prepare_boot(char *in)
 }
 
 void
-version(char *unused)
+version(char *in)
 {
+#if defined(CUL_HW_REVISION)
+  if (in[1] == 'H') {
+    DS_P( PSTR(CUL_HW_REVISION) );
+    DNL();
+    return;
+  }
+#endif
+
 #ifdef MULTI_FREQ_DEVICE     // check 433MHz version marker
   if (!bit_is_set(PINB, PB6))
     DS_P( PSTR("V " VERSION " " BOARD_ID_STR433) );

@@ -140,4 +140,12 @@
 #  define LED_PIN               PC4
 #endif
 
+#if defined(CUL_V3)
+#  define CUL_HW_REVISION "CUL_V3"
+#elif defined(CUL_V4)
+#  define CUL_HW_REVISION "CUL_V4"
+#else
+//#  define CUL_HW_REVISION "CUL_V2"    // No more mem for this feature
+#endif
+
 #endif // __BOARD_H__
