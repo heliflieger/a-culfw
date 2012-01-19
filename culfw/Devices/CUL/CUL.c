@@ -100,7 +100,9 @@ main(void)
 {
   wdt_enable(WDTO_2S); 
   clock_prescale_set(clock_div_1);
-  PORTB |= _BV( PB6 ); // Pull 433MHz marker
+
+  MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
+  MARK915_PORT |= _BV( MARK915_BIT ); // Pull 915MHz marker
 
   // if we had been restarted by watchdog check the REQ BootLoader byte in the
   // EEPROM ...

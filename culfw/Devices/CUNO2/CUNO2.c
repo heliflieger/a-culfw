@@ -112,6 +112,9 @@ main(void)
   // un-reset ethernet
   ENC28J60_RESET_DDR  |= _BV( ENC28J60_RESET_BIT );
   ENC28J60_RESET_PORT |= _BV( ENC28J60_RESET_BIT );
+
+  MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
+  MARK915_PORT |= _BV( MARK915_BIT ); // Pull 915MHz marker
   
   led_init();
   LED_ON();
@@ -141,7 +144,7 @@ main(void)
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
   ir_init();
   // IR uses highspeed TIMER0 for sampling 
-  OCR0A  = 1;                              // Timer0: 0.008s = 8MHz/256/2   == 15625Hz
+  OCR0A  = 1;                              // Timer0: 0.008s = 8MHz/256/2   == 15625Hz Fac: 125
 #else
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz
 #endif

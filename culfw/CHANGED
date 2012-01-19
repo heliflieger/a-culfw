@@ -1,4 +1,7 @@
+- CU*: added support for new multifrequency hardware detection
+- CUNO2: bugfixed FHT8v timing
 - CUL: VH returns the hardware version for CUL_V3 and CUL_V4.
+
 
 Version 1.44 (2011-11-10)
 - CUNO2:new device directory

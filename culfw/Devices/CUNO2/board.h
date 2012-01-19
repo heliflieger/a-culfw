@@ -82,8 +82,17 @@
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
 #endif
 
+#define MULTI_FREQ_DEVICE       // available in multiple versions: 433MHz,868MHz,915MHz
 #define BOARD_ID_STR            "CUNO868"
 #define BOARD_ID_STR433         "CUNO433"
+#define BOARD_ID_STR915         "CUNO915"
+
+#define MARK433_PORT		PORTD
+#define MARK433_PIN		PIND	
+#define MARK433_BIT		5
+#define MARK915_PORT		PORTD
+#define MARK915_PIN		PIND
+#define MARK915_BIT		6
 
 #define HAS_XRAM                1
 

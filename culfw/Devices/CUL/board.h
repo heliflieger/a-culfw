@@ -148,4 +148,11 @@
 //#  define CUL_HW_REVISION "CUL_V2"    // No more mem for this feature
 #endif
 
+#define MARK433_PORT            PORTB
+#define MARK433_PIN             PINB
+#define MARK433_BIT             6
+#define MARK915_PORT            PORTB
+#define MARK915_PIN             PINB
+#define MARK915_BIT             5
+
 #endif // __BOARD_H__
