@@ -30,6 +30,7 @@ uint8_t ir_ticks_thrd = 0;
 #endif
 
 uint32_t ticks;
+uint8_t  clock_hsec;
 
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
@@ -48,7 +49,7 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 
 #if defined (HAS_IRTX) || defined (HAS_IRRX)
      // if IRRX is compiled in, timer runs 125x faster ... 
-     if (ir_ticks++<125) 
+     if (++ir_ticks<125) 
        return;
        
      ir_ticks = 0;
@@ -56,6 +57,8 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 
      // 125Hz
      ticks++; 
+     if(++clock_hsec>=125)  
+	  clock_hsec = 0;
 
 #ifdef HAS_NTP
   ntp_hsec++;
@@ -100,7 +103,7 @@ clock_time()
 void
 Minute_Task(void)
 {
-  static uint8_t last_tick, clock_hsec;
+  static uint8_t last_tick;
   if((uint8_t)ticks == last_tick)
     return;
   last_tick = (uint8_t)ticks;
@@ -126,9 +129,10 @@ Minute_Task(void)
     onewire_HsecTask ();
 #endif
 
-  if(clock_hsec++ < 125)     // Note: this can skip some hsecs
+  if(clock_hsec>0)     // Note: this can skip some hsecs
     return;
-  clock_hsec = 0;
+
+  // 1Hz
 
   if(led_mode & 2)
     LED_TOGGLE();
