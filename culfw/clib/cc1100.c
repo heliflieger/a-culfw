@@ -228,7 +228,7 @@ cc_factory_reset(void)
 
 #ifdef MULTI_FREQ_DEVICE
   // check 433MHz version marker and patch default frequency
-  if (!bit_is_set(PINB, PB6)) {
+  if (!bit_is_set(MARK433_PIN, MARK433_BIT)) {
     t = EE_CC1100_CFG + 0x0d;
     ewb(t++, 0x10);
     ewb(t++, 0xb0);

@@ -258,7 +258,7 @@ version(char *in)
 #endif
 
 #ifdef MULTI_FREQ_DEVICE     // check 433MHz version marker
-  if (!bit_is_set(PINB, PB6))
+  if (!bit_is_set(MARK433_PIN, MARK433_BIT))
     DS_P( PSTR("V " VERSION " " BOARD_ID_STR433) );
   else
 #endif
