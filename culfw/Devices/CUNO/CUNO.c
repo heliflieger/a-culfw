@@ -156,12 +156,12 @@ main(void)
 
   clock_prescale_set(clock_div_1);
 
-//  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
-//  wdt_enable(WDTO_2S);
+  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
+  wdt_enable(WDTO_2S);
 
   uart_init( UART_BAUD_SELECT_DOUBLE_SPEED(UART_BAUD_RATE,F_CPU) );
 
-//  fht_init();
+  fht_init();
   tx_init();
   input_handle_func = analyze_ttydata;
 #ifdef HAS_RF_ROUTER
