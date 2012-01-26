@@ -37,6 +37,9 @@
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
 #endif
+#ifdef HAS_INTERTECHNO
+#include "intertechno.h"
+#endif
 
 PROGMEM t_fntab fntab[] = {
 
