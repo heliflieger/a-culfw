@@ -7,9 +7,9 @@
 #include "rf_receive.h"
 #include "display.h"
 
-static uint8_t asksin_on = 0;
-
 #include "rf_asksin.h"
+
+uint8_t asksin_on = 0;
 
 const uint8_t PROGMEM ASKSIN_CFG[50] = {
      0x00, 0x07,
