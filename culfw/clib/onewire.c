@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/boot.h>
+#include <math.h>
 
 #include "fncollection.h"
 #include "stringfunc.h"
@@ -68,6 +69,23 @@ onewire_Init(void)
  }
 }
 
+double
+rndup(double n)//round up a float type and show one decimal place
+{
+      double t;
+      t=n-floor(n);
+      if (t>=0.5) {
+        n*=10;//where n is the multi-decimal float
+        n=ceil(n);
+        n/=10;
+      } else {
+        n*=10;//where n is the multi-decimal float
+        n=floor(n);
+        n/=10;
+      }
+      return n;
+}      
+
 void 
 onewire_HsecTask (void) 
 {   
@@ -81,7 +99,7 @@ onewire_HsecTask (void)
             onewire_allconversionsrunning = 0;
     }
     if (onewire_hmsemulation && !onewire_hmsemulationtimer) { //HMS-Emulation & timer has exipered
-        if (onewire_hmsemulationstate == 0) {                                       //First step for HMS Emulaion: Start all conversions
+        if (onewire_hmsemulationstate == 0) {                 //First step for HMS Emulaion: Start all conversions
             // Reset the bus
             onewire_Reset();
             //Skip ROMs to start ALL conversions
@@ -92,27 +110,27 @@ onewire_HsecTask (void)
             onewire_BusyWait();
             //Set Marker for Conversion running
             onewire_allconversionsrunning = 1;
-            onewire_allconversiontimer = 7;                                             //It takes ~750ms to finish all conversions: 125msec timer * 6
+            onewire_allconversiontimer = 7;                     //It takes ~750ms to finish all conversions: 125msec timer * 6
             onewire_hmsemulationstate = 1;
             onewire_hmsemulationdevicecounter = 0;
-        } else if (onewire_hmsemulationstate == 1) {                                // Conversions have been started already
-                if (!onewire_allconversionsrunning) {                                       // Are all conversions already done ?
+        } else if (onewire_hmsemulationstate == 1) {            // Conversions have been started already
+                if (!onewire_allconversionsrunning) {           // Are all conversions already done ?
                     //Start to read out the things, but one-by-one in turns
                     if (onewire_hmsemulationdevicecounter < onewire_connecteddevices) {     // go through all connected devices
-                        //Chek if this device is a Temp-Sensor  //Family: 28h - 18B20; 10h - 18S20
-                        if ((ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) | (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16)) {  
+                        //Chek if this device is a Temp-Sensor  				//Family: 28h - DS18B20; 10h - DS18S20; 22h - DS1822
+                        if ((ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 34) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16)) {  
                             //Match ROM
                             onewire_Reset();
-                        onewire_WriteByte(0x55); // Start RomMatch
-                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8]);
-                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 1]);
-                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 2]);
-                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 3]);
-                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 4]);
-                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 5]);
-                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 6]);
-                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 7]);
-                        onewire_hmsemulationstate = 2;
+		                        onewire_WriteByte(0x55); // Start RomMatch
+		                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8]);
+		                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 1]);
+		                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 2]);
+		                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 3]);
+		                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 4]);
+		                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 5]);
+		                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 6]);
+		                        onewire_WriteByte(ROM_CODES[onewire_hmsemulationdevicecounter*8 + 7]);
+		                        onewire_hmsemulationstate = 2;
                         } else
                             onewire_hmsemulationdevicecounter++;
                     } else {        //We are done with emulation Reset Timer + Vars
@@ -121,50 +139,51 @@ onewire_HsecTask (void)
                         onewire_hmsemulationdevicecounter = 0;
                     }
                 }
-        } else if (onewire_hmsemulationstate == 2) {                            //MatchRom for selected Temp-Sensor has been done
-            //Read Scratchpad for selected Device
+        } else if (onewire_hmsemulationstate == 2) {            //MatchRom for selected Temp-Sensor has been done
+            																										//Read Scratchpad for selected Device
           char get[10];
-          int temp;
+          int temp = 0;;
+          char sign = '0';
+          double tempf = 0.0;
   
             onewire_WriteByte(0xBE); // Read Scratch Pad
             for (int k=0;k<9;k++){get[k]=onewire_ReadByte();}
-            if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) {     //DS18B20
-                DC('H');
-                if (get[1] & 0x80) //Negative
-                    temp = (~(get[1] *256 + get[0]-1));
-                else
-                    temp = (get[1] *256 + get[0]);
-                DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
             
-                if (get[1] & 0x80) //Negative Temp
-                    DC('8');
-                else
-                    DC('0'); //Sign-Bit (needs to be 8 for negative
-                DC('1'); //HMS Type (only Temp)
-                DU((temp/16) % 10,0);   //Temp under 10 degs
-                DU(((temp%16)*625)/1000,0); // Degrees below 1  
-                DC('0');
-                DU((temp/16)/10,0);
-                DC('0');DC('0');DC('F');DC('F');                                            //Humidity & RSSI
-            } else if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16) {      //DS18S20
-                DC('H');
-                if (get[1] & 0x80) //Negative
-                    temp = (~(get[0]-1));       //Ones Complement if negative
-                else
-                    temp = (get[0]);
-                DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
-
-                if (get[1] & 0x80) //Negative Temp
-                    DC('8');
-                else
-                    DC('0'); //Sign-Bit (needs to be 8 for negative
-                DC('1'); //HMS Type (only Temp)
-                DU((temp/2) % 10,0);    //Temp under 10 degs
-                DU(((temp & 0x01)*5),0);    // Degrees below 1  
-                DC('0');
-                DU((temp/2)/10,0);
-                DC('0');DC('0');DC('F');DC('F');                                            //Humidity & RSSI
-            }
+            if ( (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 34) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16)) {
+							temp = (get[1] << 8) | get[0];
+							if ((get[1] & 0xF8) !=0 )  { 		//Negative Temp
+							   temp = (temp ^ 0xFFFF) +1;
+							   sign = '8';
+							}
+							if ( (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 34) ) { //DS18B20 and DS1822
+								tempf = ((double)(temp))/16.0;
+							} else {				// DS18S20
+								double count_per_c  = (double) get[7];
+								double count_remain = (double) get[6];
+								temp = (temp >> 1) & 0x7FFF;
+								tempf = (double)temp - 0.25 + ((count_per_c - count_remain)/ count_per_c);
+							}
+							tempf = rndup(tempf);
+							double fractpart, intpart;
+							fractpart = modf (tempf , &intpart);
+							
+							DC('H');
+							DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);
+							DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
+							DC(sign);//Sign-Bit (needs to be 8 for negative
+							DC('1'); //HMS Type (only Temp)
+							//Temp under 10 degs
+							sign  =  (char) ((((uint8_t) (intpart) % 10))&0x0F) + '0';
+							DC(sign);
+							//Degrees below 1  
+							sign = (char) ((uint8_t) (fractpart * 10)&0x0F) +'0';
+							DC(sign);
+							DC('0');
+							//Temp over 9 degs
+							sign =   (char)((uint8_t) (intpart / 10.0) &0x0F) +'0';  
+							DC(sign);
+							DC('0');DC('0');DC('F');DC('F');                                            //Humidity & RSSI
+	    			}
             onewire_hmsemulationdevicecounter++;                                        //Done with this sensor, go to the next
             onewire_hmsemulationstate = 1;
             DNL();
