@@ -43,10 +43,11 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ntp.c                                      \
 		../../clib/spi.c                                      \
 		../../clib/twimaster.c                                \
-		../../clib/ir.c                                      \
-		../../clib/irmp.c                                    \
+		../../clib/ir.c                                       \
+		../../clib/irmp.c                                     \
 		../../clib/irsnd.c                                    \
 		../../clib/onewire.c                                  \
+		../../clib/intertechno.c                              \
 		
 OPT = s
 DEBUG = dwarf-2
@@ -114,8 +115,8 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
 
 AVRDUDE_PROGRAMMER = avr109
-AVRDUDE_PORT = /dev/ttyUSB1 -b 38400 
-#AVRDUDE_PORT = COM10 -b 38400 
+#AVRDUDE_PORT = /dev/ttyUSB1 -b 38400 
+AVRDUDE_PORT = COM10 -b 38400 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
@@ -236,7 +237,6 @@ gccversion :
 
 erase:
 	$(AVRDUDE) $(AVRDUDE_FLAGS) -e
-
 
 usbprogram: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
