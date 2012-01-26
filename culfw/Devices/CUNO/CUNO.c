@@ -33,6 +33,7 @@
 #include "ntp.h"
 #include "memory.h"
 #include "onewire.h"
+#include "intertechno.h"
 
 #include "i2cmaster.h"
 

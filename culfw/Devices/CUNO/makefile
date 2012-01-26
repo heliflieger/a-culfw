@@ -38,6 +38,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/spi.c                                      \
 		../../clib/twimaster.c                                \
 		../../clib/onewire.c                                  \
+		../../clib/intertechno.c                              \
 		
 OPT = s
 DEBUG = dwarf-2
