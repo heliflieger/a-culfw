@@ -6,6 +6,8 @@
 Version 1.44 (2011-11-10)
 - CUNO2:new device directory
 - all:  source moved to sourceforge
+- all:  modified InterTechno Support. Now it's possible to send IT from all 
+        RF-Modes with soft-tuning (except CUL_V2)
 
 Version 1.43 (2011-06-25)
 - all:  FS20 repeater support.
