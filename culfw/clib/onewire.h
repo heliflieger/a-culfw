@@ -64,6 +64,9 @@ void onewire_Init(void);
 void onewire_HsecTask (void) ;
 void onewire_SecTask (void);
 
+int
+rndup(double n);//round up a float type and show one decimal place
+
 unsigned char onewire_BusyWait(void);
 int onewire_Reset(void);
 void onewire_WriteBit(unsigned char data);

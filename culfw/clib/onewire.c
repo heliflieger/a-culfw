@@ -69,25 +69,8 @@ onewire_Init(void)
  }
 }
 
-double
-rndup(double n)//round up a float type and show one decimal place
-{
-      double t;
-      t=n-floor(n);
-      if (t>=0.5) {
-        n*=10;//where n is the multi-decimal float
-        n=ceil(n);
-        n/=10;
-      } else {
-        n*=10;//where n is the multi-decimal float
-        n=floor(n);
-        n/=10;
-      }
-      return n;
-}      
-
 void 
-onewire_HsecTask (void) 
+onewire_HsecTask(void) 
 {   
     if (onewire_conversionrunning) {
         if (onewire_ReadByte() & DS2482_STATUS_DIR)
@@ -99,7 +82,7 @@ onewire_HsecTask (void)
             onewire_allconversionsrunning = 0;
     }
     if (onewire_hmsemulation && !onewire_hmsemulationtimer) { //HMS-Emulation & timer has exipered
-        if (onewire_hmsemulationstate == 0) {                 //First step for HMS Emulaion: Start all conversions
+        if (onewire_hmsemulationstate == 0) {                                       //First step for HMS Emulaion: Start all conversions
             // Reset the bus
             onewire_Reset();
             //Skip ROMs to start ALL conversions
@@ -110,14 +93,14 @@ onewire_HsecTask (void)
             onewire_BusyWait();
             //Set Marker for Conversion running
             onewire_allconversionsrunning = 1;
-            onewire_allconversiontimer = 7;                     //It takes ~750ms to finish all conversions: 125msec timer * 6
+            onewire_allconversiontimer = 7;                                             //It takes ~750ms to finish all conversions: 125msec timer * 6
             onewire_hmsemulationstate = 1;
             onewire_hmsemulationdevicecounter = 0;
-        } else if (onewire_hmsemulationstate == 1) {            // Conversions have been started already
-                if (!onewire_allconversionsrunning) {           // Are all conversions already done ?
+        } else if (onewire_hmsemulationstate == 1) {                                // Conversions have been started already
+                if (!onewire_allconversionsrunning) {                                       // Are all conversions already done ?
                     //Start to read out the things, but one-by-one in turns
                     if (onewire_hmsemulationdevicecounter < onewire_connecteddevices) {     // go through all connected devices
-                        //Chek if this device is a Temp-Sensor  				//Family: 28h - DS18B20; 10h - DS18S20; 22h - DS1822
+                        //Chek if this device is a Temp-Sensor  //Family: 28h - DS18B20; 10h - DS18S20; 22h - DS1822
                         if ((ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 34) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16)) {  
                             //Match ROM
                             onewire_Reset();
@@ -139,60 +122,75 @@ onewire_HsecTask (void)
                         onewire_hmsemulationdevicecounter = 0;
                     }
                 }
-        } else if (onewire_hmsemulationstate == 2) {            //MatchRom for selected Temp-Sensor has been done
-            																										//Read Scratchpad for selected Device
-          char get[10];
-          int temp = 0;;
-          char sign = '0';
-          double tempf = 0.0;
-  
-            onewire_WriteByte(0xBE); // Read Scratch Pad
-            for (int k=0;k<9;k++){get[k]=onewire_ReadByte();}
-            
+        } else if (onewire_hmsemulationstate == 2) {                            //MatchRom for selected Temp-Sensor has been done
+            //Read Scratchpad for selected Device (only Temp-Sensors)    
             if ( (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 34) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16)) {
-							temp = (get[1] << 8) | get[0];
-							if ((get[1] & 0xF8) !=0 )  { 		//Negative Temp
-							   temp = (temp ^ 0xFFFF) +1;
-							   sign = '8';
-							}
-							if ( (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 34) ) { //DS18B20 and DS1822
-								tempf = ((double)(temp))/16.0;
-							} else {				// DS18S20
+            	    
+            	char 	get[10]; 
+              int  	temp = 0;;
+              char 	sign = '0';
+              double 	tempf = 0.0;
+                
+              onewire_WriteByte(0xBE); // Read Scratch Pad
+              for (int k=0;k<9;k++){get[k]=onewire_ReadByte();}
+            
+					    temp = (get[1] << 8) | get[0];
+						  if ( (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 40) || (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 34) ) { 		//DS18B20 and DS1822
+						    tempf = ((double)(temp))/16.0;
+						  } else {// if (ROM_CODES[onewire_hmsemulationdevicecounter*8] == 16) { //DS18S20
 								double count_per_c  = (double) get[7];
 								double count_remain = (double) get[6];
-								temp = (temp >> 1) & 0x7FFF;
+								temp = temp / 2;
 								tempf = (double)temp - 0.25 + ((count_per_c - count_remain)/ count_per_c);
 							}
-							tempf = rndup(tempf);
-							double fractpart, intpart;
-							fractpart = modf (tempf , &intpart);
-							
+							temp = rndup(tempf);
+							if (temp < 0 )
+							{
+								sign = '8';
+								temp*=-1;
+							}
 							DC('H');
 							DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+2]);
 							DH2(ROM_CODES[onewire_hmsemulationdevicecounter*8+1]);
-							DC(sign);//Sign-Bit (needs to be 8 for negative
-							DC('1'); //HMS Type (only Temp)
+							DC(sign);		//Sign-Bit (needs to be 8 for negative
+							DC('1'); 		//HMS Type (only Temp)
 							//Temp under 10 degs
-							sign  =  (char) ((((uint8_t) (intpart) % 10))&0x0F) + '0';
+							sign  =  (char) ( ( (uint8_t) ((temp / 10 ) % 10) )&0x0F ) + '0';
 							DC(sign);
 							//Degrees below 1  
-							sign = (char) ((uint8_t) (fractpart * 10)&0x0F) +'0';
+							sign  =  (char) ( ( (uint8_t)  (temp % 10 ) 	  )&0x0F ) + '0';
 							DC(sign);
 							DC('0');
 							//Temp over 9 degs
-							sign =   (char)((uint8_t) (intpart / 10.0) &0x0F) +'0';  
+							sign  =  (char) ( ( (uint8_t) ((temp / 100) % 10) )&0x0F ) + '0';
 							DC(sign);
 							DC('0');DC('0');DC('F');DC('F');                                            //Humidity & RSSI
-	    			}
-            onewire_hmsemulationdevicecounter++;                                        //Done with this sensor, go to the next
-            onewire_hmsemulationstate = 1;
-            DNL();
-        }
-    }
+							DNL();
+	    	}
+      	onewire_hmsemulationdevicecounter++;                                        //Done with this sensor, go to the next
+      	onewire_hmsemulationstate = 1;
+    	}
+  	}
 }
 
+int
+rndup(double n)		//round up a float type and show one decimal place
+{
+      double t = 0.0;
+      n *= 10.0;
+      t=n-floor(n);
+     
+      if (t>=0.5555)  {
+	      n = ceil(n);;
+      }
+      else {
+      	n = floor(n);
+      }
+      return (int)n;
+}      
+
 void
-onewire_SecTask (void)
+onewire_SecTask(void)
 {
     if (onewire_hmsemulation) {
         if (onewire_hmsemulationtimer)
@@ -293,30 +291,30 @@ onewire_ReadBit(void)
 void 
 onewire_MatchRom(unsigned char* romaddress)
 {
-    //Start
-    onewire_Reset();
-  onewire_WriteByte(0x55); // Start RomMatch
-  onewire_WriteByte(romaddress[7]);
-  onewire_WriteByte(romaddress[6]);
-  onewire_WriteByte(romaddress[5]);
-  onewire_WriteByte(romaddress[4]);
-  onewire_WriteByte(romaddress[3]);
-  onewire_WriteByte(romaddress[2]);
-  onewire_WriteByte(romaddress[1]);
-  onewire_WriteByte(romaddress[0]);
+  	//Start
+  	onewire_Reset();
+  	onewire_WriteByte(0x55); // Start RomMatch
+  	onewire_WriteByte(romaddress[7]);
+  	onewire_WriteByte(romaddress[6]);
+  	onewire_WriteByte(romaddress[5]);
+  	onewire_WriteByte(romaddress[4]);
+  	onewire_WriteByte(romaddress[3]);
+  	onewire_WriteByte(romaddress[2]);
+  	onewire_WriteByte(romaddress[1]);
+  	onewire_WriteByte(romaddress[0]);
 }
 
 void 
 onewire_StartConversion(void)
 {
-    // wait for DS2482 to be ready
-    onewire_BusyWait();
-    //Write Conversion Command
-  onewire_WriteByte(0x44); // Start Conversion
-  // wait for DS2482 to finish
-    onewire_BusyWait();
-    //Set Marker for Conversion running
-    onewire_conversionrunning = 1;
+  	// wait for DS2482 to be ready
+  	onewire_BusyWait();
+  	//Write Conversion Command
+  	onewire_WriteByte(0x44); // Start Conversion
+  	// wait for DS2482 to finish
+  	onewire_BusyWait();
+  	//Set Marker for Conversion running
+  	onewire_conversionrunning = 1;
 }
 
 int
@@ -351,7 +349,16 @@ void onewire_FullSearch(void)
   if (onewire_Search()) {
         do
         {
-            DC('R'); DC(':'); DH2(ROM_CODES[DeviceCounter*8 + 7]);DH2(ROM_CODES[DeviceCounter*8 + 6]);DH2(ROM_CODES[DeviceCounter*8 + 5]);DH2(ROM_CODES[DeviceCounter*8 + 4]);DH2(ROM_CODES[DeviceCounter*8 + 3]);DH2(ROM_CODES[DeviceCounter*8 + 2]);DH2(ROM_CODES[DeviceCounter*8 + 1]);DH2(ROM_CODES[DeviceCounter*8 + 0]);
+            DC('R');
+            DC(':');
+            DH2(ROM_CODES[DeviceCounter*8 + 7]);
+            DH2(ROM_CODES[DeviceCounter*8 + 6]);
+            DH2(ROM_CODES[DeviceCounter*8 + 5]);
+            DH2(ROM_CODES[DeviceCounter*8 + 4]);
+            DH2(ROM_CODES[DeviceCounter*8 + 3]);
+            DH2(ROM_CODES[DeviceCounter*8 + 2]);
+            DH2(ROM_CODES[DeviceCounter*8 + 1]);
+            DH2(ROM_CODES[DeviceCounter*8 + 0]);
             DeviceCounter++;
         DNL();
         }
