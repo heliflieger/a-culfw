@@ -1,0 +1,23 @@
+#!/bin/sh
+
+set -e
+
+if pgrep fhem.pl >/dev/null; then
+    invoke-rc.d fhem stop
+    RUN=1
+fi
+
+echo "calling bootloader ..."
+echo out > /sys/class/gpio/gpio25/direction
+echo 0 > /sys/class/gpio/gpio25/value
+echo 0 > /sys/class/gpio/gpio23/value
+echo 1 > /sys/class/gpio/gpio23/value
+sleep 1
+echo in > /sys/class/gpio/gpio25/direction
+
+avrdude -p atmega644p -P /dev/ttySP1 -b 38400 -c avr109 -U flash:w:/tmp/CSM-tuxradio.hex
+
+if [ "$RUN" = "1" ] 
+then
+	invoke-rc.d fhem start
+fi

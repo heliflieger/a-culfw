@@ -1,0 +1,19 @@
+TuxRadio is a miniature linux system with a CSM radio interface.
+
+FLASHING FIRMWARE
+
+To update CSMs firmware with culfw execute:
+
+	make program
+
+on the TuxRadio itself. This will require some tools installed upfront. 
+Use:
+
+	apt-get install make avrdude
+
+
+to flash the recompiled CSM.hex file.
+
+USING
+
+The culfw stack is available on: /dev/ttySP1@38400
