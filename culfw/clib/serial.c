@@ -67,7 +67,7 @@ void uart_task(void)
 
 void uart_flush(void) 
 {
-     if (!bit_is_set( UCSR0B, UDRIE0) && TTY_Tx_Buffer.nbytes)
+     if (!bit_is_set(UCSR0B, UDRIE0) && TTY_Tx_Buffer.nbytes)
 	  UCSR0B |= _BV(UDRIE0);
      
 }

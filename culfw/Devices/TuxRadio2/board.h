@@ -38,7 +38,7 @@
 #define USART_RX_vect           USART0_RX_vect
 #define USART_UDRE_vect         USART0_UDRE_vect
 
-#define TTY_BUFSIZE             128     
+#define TTY_BUFSIZE             1024  // 4 buffers < 16k SRAM
 
 #define HAS_FHT_80b                   // PROGMEM: 1374b, RAM: 90b
 #define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
@@ -52,7 +52,11 @@
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #define HAS_ASKSIN
 #define HAS_ESA
+#define HAS_TX3
+#define HAS_INTERTECHNO
+#define HAS_MEMFN
 
 #define BUSWARE_CSM
 
 #endif
+

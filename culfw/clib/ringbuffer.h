@@ -4,6 +4,7 @@
 #include "board.h"
 #include <stdint.h>
 
+#if TTY_BUFSIZE < 256
 typedef struct
 {   
   uint8_t putoff;
@@ -11,6 +12,16 @@ typedef struct
   uint8_t nbytes;       // Number of data bytes
   char buf[TTY_BUFSIZE];
 } rb_t;
+#else
+typedef struct
+{   
+  uint16_t putoff;
+  uint16_t getoff;
+  uint16_t nbytes;       // Number of data bytes
+  char buf[TTY_BUFSIZE];
+} rb_t;
+#endif
+    
     
 void rb_put(rb_t *rb, uint8_t data);
 uint8_t rb_get(rb_t *rb);

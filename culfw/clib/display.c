@@ -60,8 +60,11 @@ display_char(char data)
 #endif
 
 #ifdef HAS_UART
-  if(display_channel & DISPLAY_USB)
+  if(display_channel & DISPLAY_USB) {
+    if((TTY_Tx_Buffer.nbytes  < TTY_BUFSIZE-2) ||
+       (TTY_Tx_Buffer.nbytes  < TTY_BUFSIZE && (data == '\r' || data == '\n')))
     rb_put(&TTY_Tx_Buffer, data);
+  }
 #endif
 
 #ifdef HAS_RF_ROUTER
