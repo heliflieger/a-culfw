@@ -42,16 +42,16 @@
 
 #define HAS_FHT_80b                   // PROGMEM: 1374b, RAM: 90b
 #define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
-//#define HAS_RF_ROUTER                 // PROGMEM: 1248b  RAM: 44b
+#define HAS_RF_ROUTER                 // PROGMEM: 1248b  RAM: 44b
 
 #define FHTBUF_SIZE          174      //                 RAM: 174b
 #define RCV_BUCKETS            4      //                 RAM: 25b * bucket
-//#define RFR_DEBUG                     // PROGMEM:  354b  RAM: 14b
+#define RFR_DEBUG                     // PROGMEM:  354b  RAM: 14b
 #define FULL_CC1100_PA                // PROGMEM:  108b
 #define HAS_RAWSEND                   //
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
-//#define HAS_ASKSIN
-//#define HAS_ESA
+#define HAS_ASKSIN
+#define HAS_ESA
 
 #define BUSWARE_CSM
 
