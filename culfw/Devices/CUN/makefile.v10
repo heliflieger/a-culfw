@@ -25,6 +25,8 @@ SRC = $(TARGET).c                                                  \
 		../../clib/spi.c                                      \
 		../../clib/ethernet.c                                 \
 		../../clib/tcplink.c                                  \
+		../../clib/rf_router.c                                \
+		../../clib/rf_asksin.c                                \
 		../../avr-uip/drivers/enc28j60/enc28j60.c             \
 		../../avr-uip/drivers/enc28j60/network.c              \
 		../../avr-uip/uip/uip.c                               \
