@@ -3,7 +3,8 @@ Version 1.45 (2012-07-11)
 - CUNO2: bugfixed FHT8v timing
 - CUL: VH returns the hardware version for CUL_V3 and CUL_V4.
 - CSM: serial line overflow bug, TuxRadio2/board.h parameters changed
-- all*: T0200, RFR support for FHT
+- all: Min length for FS20(4) and FHT(5) set, FHT8v removed from CUL_V2
+- all: RFR won't send while FHT communication is active, T0200 added
 
 Version 1.44 (2011-11-10)
 - CUNO2:new device directory

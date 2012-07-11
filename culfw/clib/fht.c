@@ -40,7 +40,6 @@ uint8_t fht_hc0, fht_hc1;
 
 #ifdef HAS_FHT_80b
 
-       uint8_t fht80b_timer_enabled;
        uint8_t fht80b_timeout;
        uint8_t fht80b_state;    // 80b state machine
        uint8_t fht80b_minute;
@@ -50,7 +49,7 @@ static uint8_t fht80b_repeatcnt;
 static uint8_t fht80b_buf[FHTBUF_SIZE];
 static uint8_t fht80b_bufoff;   // offset in the current fht80b_buf
 
-static void    fht80b_print(void);
+static void    fht80b_print(uint8_t level);
 static void    fht80b_initbuf(void);
 static uint8_t fht_bufspace(void);
 static void    fht_delbuf(uint8_t *buf);
@@ -124,7 +123,7 @@ fhtsend(char *in)
 
 #ifdef HAS_FHT_80b
     } else if(hb[0] == 2) {            // Return the 80b buffer
-      fht80b_print();
+      fht80b_print(l==1 || hb[1]==1);
 
     } else if(hb[0] == 3) {            // Return the remaining fht buffer
       DH2(fht_bufspace());
@@ -266,7 +265,10 @@ static void
 fht80b_sendpacket(void)
 {
   ccStrobe(CC1100_SIDLE);               // Don't let the CC1101 to disturb us
-                                        // avg. FHT packet is 75ms 
+
+  // avg. FHT packet is 75ms.
+  // The first delay is larger, as we don't know if we received the first or
+  // second FHT actuator message.
   my_delay_ms(fht80b_out[2]==FHT_CAN_XMIT ? 155 : 75);
   addParityAndSendData(fht80b_out, 5, FHT_CSUM_START, 1);
   ccRX();                               // reception might be lost due to LOVF
@@ -280,6 +282,7 @@ fht80b_reset_state(void)
   fht80b_state = 0;
   fht80b_ldata = 0;
   fht80b_bufoff = 3;
+  fht80b_timeout = FHT_TIMER_DISABLED;
 }
 
 void
@@ -287,7 +290,6 @@ fht80b_timer(void)
 {
   if(fht80b_repeatcnt) {
     fht80b_sendpacket();
-    fht80b_timer_enabled = 1;
     fht80b_timeout = 41;               // repeat if there is no msg for 0.3sec
     fht80b_repeatcnt--;
   } else {
@@ -301,9 +303,8 @@ fht80b_send_repeated(void)
   fht80b_sendpacket(); 
   if(fht80b_out[2]==FHT_ACK2)
     return;
-  fht80b_timer_enabled = 1; 
-  fht80b_timeout = 41;
   fht80b_repeatcnt = 1;                // Never got reply for the 3.rd data
+  fht80b_timeout = 41;                 // 330+75+70 = 475ms
 }
 
 void
@@ -315,7 +316,7 @@ fht_hook(uint8_t *fht_in)
   uint8_t fi3 = fht_in[3];             // Originator: CUL or FHT
   uint8_t fi4 = fht_in[4];             // Command Argument
 
-  fht80b_timer_enabled = 0;            // no resend if there is an answer
+  fht80b_timeout = FHT_TIMER_DISABLED; // no resend if there is an answer
   if(fht_hc0 == 0 && fht_hc1 == 0)     // FHT processing is off
     return;
 
@@ -516,7 +517,7 @@ fht80b_initbuf()
 }
 
 static void
-fht80b_print()
+fht80b_print(uint8_t full)
 {
   uint8_t *p = fht80b_buf;
 
@@ -528,11 +529,13 @@ fht80b_print()
     uint8_t i = 1;
     DH2(p[i++]);
     DH2(p[i++]);
-    DC(':');
-    while(i < p[0]) {
-      if(i > 3 && (i&1))
-        DC(',');
-      DH2(p[i++]);
+    if(full) {
+      DC(':');
+      while(i < p[0]) {
+        if(i > 3 && (i&1))
+          DC(',');
+        DH2(p[i++]);
+      }
     }
     p += p[0];
   }

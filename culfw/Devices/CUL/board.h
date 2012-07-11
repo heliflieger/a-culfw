@@ -28,6 +28,7 @@
 #  define HAS_ESA
 #  define HAS_TX3
 #  define HAS_INTERTECHNO
+#  define HAS_HOERMANN
 #  define HAS_MEMFN
 #endif
 
@@ -37,6 +38,8 @@
 #  define RCV_BUCKETS            2 
 #  define RFR_SHADOW                    // PROGMEM: 10b    RAM: -(TTY_BUFSIZE+3)
 #  define HAS_TX3
+#  define HAS_HOERMANN
+#  undef  HAS_FHT_8v
 #endif
 
 #ifdef CUL_V2_HM

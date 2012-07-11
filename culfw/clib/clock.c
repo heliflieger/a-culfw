@@ -73,7 +73,7 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
     fht8v_timeout--;
 #endif
 #ifdef HAS_FHT_80b
-  if(fht80b_timer_enabled && fht80b_timeout)
+  if(fht80b_timeout != FHT_TIMER_DISABLED)
     fht80b_timeout--;
 #endif
 
@@ -114,7 +114,7 @@ Minute_Task(void)
     fht8v_timer();
 #endif
 #ifdef HAS_FHT_80b
-  if(fht80b_timer_enabled && fht80b_timeout == 0)
+  if(fht80b_timeout == 0)
     fht80b_timer();
 #endif
 #ifdef HAS_RF_ROUTER

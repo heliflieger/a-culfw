@@ -405,14 +405,14 @@ RfAnalyze_Task(void)
   if(!datatype && analyze(b, TYPE_FS20)) {
     oby--;                                  // Separate the checksum byte
     uint8_t fs_csum = cksum1(6,obuf,oby);
-    if(fs_csum == obuf[oby]) {
+    if(fs_csum == obuf[oby] && oby >= 4) {
       datatype = TYPE_FS20;
 
-    } else if(fs_csum+1 == obuf[oby]) {     // Repeater
+    } else if(fs_csum+1 == obuf[oby] && oby >= 4) {     // Repeater
       datatype = TYPE_FS20;
       obuf[oby] = fs_csum;                  // do not report if we get both
 
-    } else if(cksum1(12, obuf, oby) == obuf[oby]) {
+    } else if(cksum1(12, obuf, oby) == obuf[oby] && oby == 5) {
       datatype = TYPE_FHT;
     } else {
       datatype = 0;
@@ -445,20 +445,17 @@ RfAnalyze_Task(void)
       delbit(b);
   }
 
+#ifdef HAS_HOERMANN
   // This protocol is not yet understood. It should be last in the row!
   if(!datatype && b->byteidx == 4 && b->bitidx == 4 &&
      wave_equals(&b->zero, TSCALE(960), TSCALE(480))) {
 
     addbit(b, wave_equals(&b->one, hightime, TSCALE(480)));
-    oby = 0;
-    obuf[oby] = b->data[oby]; oby++;
-    obuf[oby] = b->data[oby]; oby++;
-    obuf[oby] = b->data[oby]; oby++;
-    obuf[oby] = b->data[oby]; oby++;
-    obuf[oby] = b->data[oby]; oby++;
+    for(oby=0; oby < 5; oby++)
+      obuf[oby] = b->data[oby];
     datatype = TYPE_HRM;
   }
-
+#endif
 
   if(datatype && (tx_report & REP_KNOWN)) {
 
@@ -466,8 +463,6 @@ RfAnalyze_Task(void)
     if(!(tx_report & REP_REPEATED)) {      // Filter repeated messages
       
       // compare the data
-
-
       if(roby == oby) {
         for(roby = 0; roby < oby; roby++)
           if(robuf[roby] != obuf[roby])
@@ -541,7 +536,7 @@ RfAnalyze_Task(void)
   LED_OFF();
 
 #ifdef HAS_FHT_80b
-  if(datatype == TYPE_FHT && oby == 5) {
+  if(datatype == TYPE_FHT) {
     fht_hook(obuf);
   }
 #endif
@@ -805,5 +800,5 @@ retry_sync:
 uint8_t
 rf_isreceiving()
 {
-  return (bucket_array[bucket_in].state != STATE_RESET);
+  return (bucket_array[bucket_in].state != STATE_RESET || fht80b_state);
 }

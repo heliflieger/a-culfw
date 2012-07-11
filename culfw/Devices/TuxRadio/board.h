@@ -61,7 +61,8 @@
 
 #define FHTBUF_SIZE          174      //                 RAM: 174b
 #define RCV_BUCKETS            4      //                 RAM: 25b * bucket
-//#define RFR_DEBUG                     // PROGMEM:  354b  RAM: 14b
+#define HAS_RF_ROUTER
+#define RFR_DEBUG                     // PROGMEM:  354b  RAM: 14b
 #define FULL_CC1100_PA                // PROGMEM:  108b
 #define HAS_RAWSEND                   //
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b

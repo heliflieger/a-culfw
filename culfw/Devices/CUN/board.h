@@ -104,6 +104,8 @@
 #define HAS_ASKSIN
 #define HAS_ESA
 #define HAS_TX3
+#define HAS_INTERTECHNO
+#define HAS_HOERMANN
 
 #define BUSWARE_CUN
 

@@ -689,7 +689,9 @@
         Return the FHT80b buffer. FHT80b commands are queued in the internal
         buffer, which has place for 14 to 31 messages.
 	A command is removed from the buffer after CUL has received the
-	acknowledgement from FHT80b.
+	acknowledgement from FHT80b.<br>
+        A short form (only the destination, without the content) is returned if
+        T0200 is specified, this mode is intended for FHTs connected via RFR.
       <li>T03<br>
         Return the size of the remaining FHT80b buffer (bytes, hex).
       <li>T10<br>

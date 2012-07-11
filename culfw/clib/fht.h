@@ -8,7 +8,7 @@ void fht80b_timer(void);
 void fht_init(void);
 
 extern uint16_t fht8v_timeout;
-extern uint8_t fht80b_timer_enabled, fht80b_timeout;
+extern uint8_t  fht80b_timeout;
 extern uint8_t fht80b_minute;
 
 extern uint8_t fht_hc0, fht_hc1; // Our housecode.
@@ -26,6 +26,8 @@ extern uint8_t fht80b_state;
 
 #define FHT_DATA       0xff
 #define FHT_FOREIGN    0xff
+
+#define FHT_TIMER_DISABLED   0xff
 
 #define FHT_CSUM_START   12
 
