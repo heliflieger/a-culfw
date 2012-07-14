@@ -412,7 +412,7 @@ RfAnalyze_Task(void)
       datatype = TYPE_FS20;
       obuf[oby] = fs_csum;                  // do not report if we get both
 
-    } else if(cksum1(12, obuf, oby) == obuf[oby] && oby == 5) {
+    } else if(cksum1(12, obuf, oby) == obuf[oby] && oby >= 4) {
       datatype = TYPE_FHT;
     } else {
       datatype = 0;
