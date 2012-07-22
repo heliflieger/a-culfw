@@ -109,6 +109,7 @@ Minute_Task(void)
   last_tick = (uint8_t)ticks;
   wdt_reset();
 
+  // 125Hz
 #ifdef HAS_FHT_8v
   if(fht8v_timeout == 0)
     fht8v_timer();
@@ -133,7 +134,6 @@ Minute_Task(void)
     return;
 
   // 1Hz
-
   if(led_mode & 2)
     LED_TOGGLE();
 

@@ -25,6 +25,44 @@ uint8_t log_enabled = 0;
 
 uint8_t display_channel = 0;
 
+#ifdef HAS_RF_ROUTER
+/////////////////////////////////////////
+// If there are 2 FHT commands in the buffer, delete rssif and separator from
+// the first one, and prefix, address and initiator from the second. i.e from
+// the second commands 14 bytes 10 are dropped.
+void
+FHT_compress(rb_t *rb)
+{
+  uint8_t *bp1 = (uint8_t *)rb->buf;
+  if(bp1[0] != 'T')
+    return;
+
+  uint8_t off = 13;
+  while(off < rb->putoff && bp1[off] != ';')
+    off++;
+
+  if(off != rb->putoff-15)       // expect a "normal" FHT message (13+1 bytes)
+    return;
+
+  uint8_t *bp2 = bp1+off+1;
+  if(bp2[0] != 'T' ||            // compress only messages from the same FHT
+     bp1[1]!=bp2[1] || bp1[2]!=bp2[2] || bp1[3]!=bp2[3] || bp1[4]!=bp2[4])
+    return;
+
+  bp1 += (off-2);
+  bp2 += 5;
+  *bp1++ = *bp2++;          // cmd
+  *bp1++ = *bp2; bp2 += 3;  // cmd
+  *bp1++ = *bp2++;          // val
+  *bp1++ = *bp2++;          // val
+  *bp1++ = *bp2++;          // rssi
+  *bp1++ = *bp2++;          // rssi
+  *bp1++ = *bp2;            // ;
+  rb->putoff -= 10;
+  rb->nbytes -= 10;
+}
+#endif
+
 //////////////////////////////////////////////////
 // Display routines
 void
@@ -72,6 +110,8 @@ display_char(char data)
      (display_channel & DISPLAY_RFROUTER) &&
      data != '\n' && buffer_free) {
     rb_put(&RFR_Buffer, data == '\r' ? ';' : data);
+    if(data == '\r')
+      FHT_compress(&RFR_Buffer);
     rf_router_sendtime = 3; 
     rf_nr_send_checks = 2;
   }

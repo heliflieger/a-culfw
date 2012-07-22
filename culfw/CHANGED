@@ -1,3 +1,8 @@
+Version 1.46 (2012-07-22)
+- all: CUL_FHTTK is working again
+- all: RFR silence while FHT is active changed
+- all: RFR is compressing multiple FHT messages. Needs current fhem/CUL_RFR.pm
+
 Version 1.45 (2012-07-11)
 - CU*: added support for new multifrequency hardware detection
 - CUNO2: bugfixed FHT8v timing

@@ -71,11 +71,24 @@ uint8_t fht8v_ctsync;
 
 #endif
 
+#undef FHTDEBUG        // Display all FHT traffic on USB
+
 void
 fht_display_buf(uint8_t ptr[])
 {
+#ifdef FHTDEBUG
+#warning FHT USB DEBUGGING IS ACTIVE
+  uint8_t odc = display_channel;
+  display_channel = DISPLAY_USB;
+  uint16_t *p = (uint16_t *)&ticks;
+  DU(*p, 5);
+  DC(' ');
+  DH2(fht80b_state);
+  DC(' ');
+#else
   if(!(tx_report & REP_FHTPROTO))
     return;
+#endif
 
   DC('T');
   for(uint8_t i = 0; i < 5; i++)
@@ -83,6 +96,9 @@ fht_display_buf(uint8_t ptr[])
   if(tx_report & REP_RSSI)
     DH2(250);
   DNL();
+#ifdef FHTDEBUG
+  display_channel = odc;
+#endif
 }
 
 void
@@ -315,8 +331,12 @@ fht_hook(uint8_t *fht_in)
   uint8_t fi2 = fht_in[2];             // FHT Command with extension bit
   uint8_t fi3 = fht_in[3];             // Originator: CUL or FHT
   uint8_t fi4 = fht_in[4];             // Command Argument
+#ifdef FHTDEBUG
+  fht_display_buf(fht_in); 
+#endif
 
-  fht80b_timeout = FHT_TIMER_DISABLED; // no resend if there is an answer
+  fht80b_timeout = 41;                 // Activate the timer, delay RFR...
+  fht80b_repeatcnt = 0;                // but do not send anything per default
   if(fht_hc0 == 0 && fht_hc1 == 0)     // FHT processing is off
     return;
 

@@ -1,0 +1,30 @@
+Das war eigentlich kein Freqtest, sondern ein Antennen-Vergleichtest
+
+Erste Spalte: Anzahl der empfangenen Pakete.
+Zweite Spalte: durchschnittliches RSSI
+L1 : Lambda   antenne (35 cm)
+L2 : Lambda/2 antenne lang (17 cm)
+L2': Lambda/2 antenne kurz (12 cm)
+L8 : Lambda/8 antenne (ca 5cm)
+
+CUL_V3.0 (50min)
+        L1        L2        L2'      L8
+    -------------------------------------------
+  TX3  98 -86    51 -87     7 -73    18 -77
+   EM  19 -68    20 -71    21 -77    21 -80
+  HMS   5 -52     6 -52     9 -47     6 -48
+ S300  39 -77    43 -72    22 -69    40 -84
+  FHT  61 -63    51 -72    50 -68    67 -72
+    -------------------------------------------
+      222 -76   171 -76   109 -68   152 -76
+
+CUL_V3.3 (60min)
+            L1        L2        L2'      L8
+        -----------------------------------------
+      TX3 118 -87   74 -83     80 -84    22 -66
+       EM  23 -69   24 -69     25 -70    23 -77
+      HMS   8 -50    5 -43      6 -47     8 -46
+     S300  26 -67   45 -67     41 -75    27 -78
+      FHT  58 -69   66 -59     61 -64    61 -63
+      RFR 260      237        218       164
+Sum       493      451        431       305

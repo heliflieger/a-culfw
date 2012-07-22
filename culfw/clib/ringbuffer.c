@@ -1,3 +1,10 @@
+//#define TESTING
+#ifdef TESTING
+#define TTY_BUFSIZE 64
+typedef unsigned char uint8_t;
+#include <stdio.h>
+#endif
+
 #include "ringbuffer.h"
 
 void
@@ -30,3 +37,34 @@ rb_get(rb_t *rb)
     rb->getoff = 0;
   return ret;
 }
+
+#ifdef TESTING
+void
+d_s(rb_t *rb, char *s)
+{
+  while(*s)
+    rb_put(rb, *s++);
+}
+
+void
+p(rb_t *rb)
+{
+  uint8_t c;
+  while((c = rb_get(rb))) {
+    putchar(c);
+  }
+  putchar('\n');
+}
+
+
+int
+main(int ac, char **av)
+{
+  rb_t buffer;
+  rb_reset(&buffer);
+  //d_s(&buffer, "T40484269E72E;T40484369001F;");
+  d_s(&buffer, "T40484269E743001F;T404847690118;");
+  FHT_compress(&buffer);
+  p(&buffer);
+}
+#endif

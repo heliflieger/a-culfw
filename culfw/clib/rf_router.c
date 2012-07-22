@@ -30,6 +30,8 @@ void rf_debug_out(uint8_t);
 #ifdef RFR_DEBUG
 uint16_t nr_t, nr_f, nr_e, nr_k, nr_h, nr_r, nr_plus;
 #endif
+#undef RFR_USBECHO
+
 
 void
 usbMsg(char *s)
@@ -142,6 +144,9 @@ rf_router_send(uint8_t addAddr)
 
   CC1100_ASSERT;
   cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
+#ifdef RFR_USBECHO
+  uint8_t nbuf = RFR_Buffer.nbytes;
+#endif
   cc1100_sendbyte(RFR_Buffer.nbytes+l);
   for(uint8_t i = 0; i < l; i++)
     cc1100_sendbyte(buf[i]);
@@ -149,12 +154,20 @@ rf_router_send(uint8_t addAddr)
     cc1100_sendbyte(rb_get(&RFR_Buffer));
   CC1100_DEASSERT;
   ccTX();
+  rb_reset(&RFR_Buffer); // needed by FHT_compress
 
   // Wait for the data to be sent
   uint8_t maxwait = 20;        // max 20ms
   while((cc1100_readReg(CC1100_TXBYTES) & 0x7f) && maxwait--)
     my_delay_ms(1);
   set_txrestore();
+#ifdef RFR_USBECHO
+#warning RFR USB DEBUGGING IS ACTIVE
+  uint8_t odc = display_channel;
+  display_channel = DISPLAY_USB;
+  DC('.'); DU(nbuf, 2); DNL();
+  display_channel = odc;
+#endif
 }
 
 void

@@ -1,8 +1,10 @@
 #ifndef __ringbuffer_H_
 #define __ringbuffer_H_
 
+#ifndef TESTING
 #include "board.h"
 #include <stdint.h>
+#endif
 
 #if TTY_BUFSIZE < 256
 typedef struct
