@@ -51,11 +51,15 @@ static uint8_t fht80b_bufoff;   // offset in the current fht80b_buf
 
 static void    fht80b_print(uint8_t level);
 static void    fht80b_initbuf(void);
-static uint8_t fht_bufspace(void);
 static void    fht_delbuf(uint8_t *buf);
 static uint8_t fht_addbuf(char *in);
 static uint8_t fht_getbuf(uint8_t *buf);
 static void    fht80b_reset_state(void);
+#if FHTBUF_SIZE > 255
+static uint16_t fht_bufspace(void);
+#else
+static uint8_t fht_bufspace(void);
+#endif
 
 #endif 
 
@@ -142,7 +146,11 @@ fhtsend(char *in)
       fht80b_print(l==1 || hb[1]==1);
 
     } else if(hb[0] == 3) {            // Return the remaining fht buffer
+#if FHTBUF_SIZE > 255
+      DH(fht_bufspace(),4);
+#else
       DH2(fht_bufspace());
+#endif
 #endif
 
 #ifdef HAS_FHT_8v
@@ -512,11 +520,19 @@ fht_addbuf(char *in)
   return 1;
 }
 
+#if FHTBUF_SIZE > 255
+static uint16_t
+fht_bufspace(void)
+{
+  return (FHTBUF_SIZE - (uint16_t)(fht_lookbuf(0)-fht80b_buf));
+}
+#else
 static uint8_t
 fht_bufspace(void)
 {
   return (FHTBUF_SIZE - (uint8_t)(fht_lookbuf(0)-fht80b_buf));
 }
+#endif
 
 static uint8_t
 fht_getbuf(uint8_t *buf)
