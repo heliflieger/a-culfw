@@ -1,3 +1,7 @@
+Version 1.47
+- all: CUL_FHTTK bugfix, don't filter out FHTTK's with a special adress
+       (third byte is one of 4B, 53, 54, 69, 7D, 7E). Workaround: X61
+
 Version 1.46 (2012-07-22)
 - all: CUL_FHTTK is working again
 - all: RFR silence while FHT is active changed

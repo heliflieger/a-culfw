@@ -480,6 +480,7 @@ RfAnalyze_Task(void)
     }
 
     if(datatype == TYPE_FHT && !(tx_report & REP_FHTPROTO) &&
+       oby > 4 &&
        (obuf[2] == FHT_ACK        || obuf[2] == FHT_ACK2    ||
         obuf[2] == FHT_CAN_XMIT   || obuf[2] == FHT_CAN_RCV ||
         obuf[2] == FHT_START_XMIT || obuf[2] == FHT_END_XMIT ||
