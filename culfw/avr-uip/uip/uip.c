@@ -889,6 +889,12 @@ uip_process(u8_t flag)
   }
 #endif /* UIP_CONF_IPV6 */
 
+#ifdef HAS_MDNS
+  const uip_ipaddr_t mdns_address = {0x00e0, 0xfb00};
+  if(uip_ipaddr_cmp(BUF->destipaddr, mdns_address))
+    goto ip_check_end;
+#endif
+
   if(uip_ipaddr_cmp(uip_hostaddr, all_zeroes_addr)) {
     /* If we are configured to use ping IP address configuration and
        hasn't been assigned an IP address yet, we accept all ICMP
@@ -935,6 +941,10 @@ uip_process(u8_t flag)
     }
 #endif /* UIP_CONF_IPV6 */
   }
+
+#ifdef HAS_MDNS
+ip_check_end:
+#endif
 
 #if !UIP_CONF_IPV6
   if(uip_ipchksum() != 0xffff) { /* Compute and check the IP header

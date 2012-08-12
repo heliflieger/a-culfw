@@ -8,6 +8,7 @@
 #include "display.h"
 #include "delay.h"
 #include "ntp.h"
+#include "mdns_sd.h"
 #include "led.h"
 
 #include "uip_arp.h"
@@ -228,6 +229,9 @@ ip_initialized(void)
   network_set_led(0x476);// LED A: Link Status  LED B: TX/RX
   tcplink_init();
   ntp_init();
+#ifdef HAS_MDNS
+  mdns_init();
+#endif
 }
 
 void
@@ -273,5 +277,12 @@ udp_appcall()
             uip_udp_conn->lport == HTONS(NTP_PORT)) {
     ntp_digestpacket();
 
+#ifdef HAS_MDNS
+  } else if(uip_udp_conn &&
+            uip_newdata() &&
+            uip_udp_conn->lport == HTONS(MDNS_PORT)) {
+    mdns_new_data();
+
+#endif
   } 
 }
