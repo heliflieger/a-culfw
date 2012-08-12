@@ -41,6 +41,7 @@ SRC = $(TARGET).c                                                    \
 		../../avr-uip/uip/uip-neighbor.c                      \
 		../../avr-uip/apps/dhcpc/dhcpc.c                      \
 		../../clib/ntp.c                                      \
+		../../clib/mdns_sd.c                                      \
 		../../clib/spi.c                                      \
 		../../clib/twimaster.c                                \
 		../../clib/ir.c                                       \

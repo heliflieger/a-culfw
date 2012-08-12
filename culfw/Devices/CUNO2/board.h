@@ -83,6 +83,9 @@
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
 #endif
 
+#define HAS_MDNS		"CUNO2"  // this has to be a unique id per network
+#undef  HAS_MDNS                         // disable Bonjour at present
+
 #define MULTI_FREQ_DEVICE       // available in multiple versions: 433MHz,868MHz,915MHz
 #define BOARD_ID_STR            "CUNO868"
 #define BOARD_ID_STR433         "CUNO433"

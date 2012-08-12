@@ -108,14 +108,14 @@ typedef unsigned short uip_stats_t;
  *
  * \hideinitializer
  */
-#define UIP_CONF_BROADCAST		0
+#define UIP_CONF_BROADCAST	0
 
 /**
  * The maximum amount of concurrent UDP connections.
  *
  * \hideinitializer
  */
-#define UIP_CONF_UDP_CONNS		1
+#define UIP_CONF_UDP_CONNS		2
 
 //Include app configuration
 #include "apps-conf.h"
