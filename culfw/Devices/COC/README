@@ -1,0 +1,36 @@
+COC is an extesion for Raspberry Pi with a CSM radio interface.
+
+FLASHING FIRMWARE
+
+To update CSMs firmware with culfw execute:
+
+	make program
+
+on the RPi itself. This will require some tools installed upfront. 
+Use:
+
+	apt-get install make avrdude
+
+
+to flash the recompiled COC.hex file.
+
+BEFORE
+
+To use the serial port @ RPi you need to free it form other tasks as:
+
+* console in /etc/inittab
+* debugging stuff - edit /boot/cmdline.txt
+
+reboot when done!
+
+USING
+
+The culfw stack is available as: 
+
+define CSM CUL /dev/ttyAMA0@38400 1234
+
+BE AWARE
+
+The board introduces a I2C-multimaster. This means the RTC-, OneWire- 
+and Flash chip are sharing the same I2C bus. This will allow the board 
+and the RPi to access those resources.
