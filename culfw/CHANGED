@@ -1,3 +1,5 @@
+- CUL: added MORITZ protocol receive and send
+
 Version 1.47
 - all: CUL_FHTTK bugfix, don't filter out FHTTK's with a special adress
        (third byte is one of 4B, 53, 54, 69, 7D, 7E). Workaround: X61

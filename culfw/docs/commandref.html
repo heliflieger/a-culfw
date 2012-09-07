@@ -61,6 +61,7 @@
     <a href="#cmd_W">W</a>
     <a href="#cmd_w">w</a>
     <a href="#cmd_X">X</a>
+    <a href="#cmd_Z">Z</a>
   </ul>
   <a href="#protocol2">Protocol Part 2 (radio messages)</a><br>
   <a href="#FHT_8v">FHT_8v</a><br>
@@ -876,6 +877,34 @@
       Example: x03
     </ul><br><br>
 
+    <a name="cmd_Z"></a>
+    Z&lt;func&gt;[&lt;hex&gt;]
+    <ul>
+      MORITZ (aka MAX!) mode.  &lt;func&gt; is one of:
+      <ul>
+      <li> r<br>
+        enable MORITZ reception. Note: only MORITZ messages will be received in
+        this mode. Data is reported in hex. If bit 4 was set in previous X cmd
+        (i.e. X10) reported data is binary.
+      <li> s<br>
+        Send out an MORITZ message. &lt;hex&gt; is a hex string of the following
+        form: llnnccttssssssddddddpp...
+        <ul>
+          ll - length<br>
+          nn - msg counter<br>
+          cc - control byte<br>
+          tt - msg type<br>
+          ss - sender address (3byte)<br>
+          dd - destination address (3byte - 000000 for broadcast)<br>
+          pp - payload...<br>
+        </ul>
+      <li> x<br>
+        Disable MORITZ mode. To enable reception of FS20 messages, an "X21" or
+        similar is needed.
+      </ul>
+    </ul><br><br>
+
+
     Unknown commands
     <ul>
       Prints the "help", the list of supported commands<br>
@@ -936,7 +965,7 @@
         Note: this protocol is not really understood.
       <br><br>
 
-    <li>For AskSin:<br>
+    <li>For AskSin/MORITZ:<br>
       allnnccttssssssddddddpp...<br>
       Allnnccttssssssddddddpp...<br>
       <ul>
@@ -948,7 +977,7 @@
       <li>dd - destination address
       <li>pp - payload
       </ul>
-      (for binary data lower case 'a' is prepended)
+      (for binary data lower case 'a' is prepended - MORITZ messages are structured same but letter 'Z'/'z' is prepended)
       <br><br>
 
     <li>For TX2/TX3 (see http://www.f6fbb.org/domo/sensors/tx3_th.php):<br>
