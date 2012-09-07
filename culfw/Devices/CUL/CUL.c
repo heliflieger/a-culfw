@@ -37,6 +37,9 @@
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
 #endif
+#ifdef HAS_MORITZ
+#include "rf_moritz.h"
+#endif
 #ifdef HAS_INTERTECHNO
 #include "intertechno.h"
 #endif
@@ -51,6 +54,9 @@ PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
@@ -89,10 +95,10 @@ start_bootloader(void)
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
 
-#if defined(CUL_V3) || defined(CUL_V4)
+#if defined(CUL_V3)
 #  define jump_to_bootloader ((void(*)(void))0x3800)
 #endif
-#if defined(CUL_V2)
+#if defined(CUL_V2) || defined(CUL_V4)
 #  define jump_to_bootloader ((void(*)(void))0x1800)
 #endif
   jump_to_bootloader();
@@ -155,6 +161,9 @@ main(void)
 #endif
 #ifdef HAS_ASKSIN
     rf_asksin_task();
+#endif
+#ifdef HAS_MORITZ
+    rf_moritz_task();
 #endif
   }
 }
