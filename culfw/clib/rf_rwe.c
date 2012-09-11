@@ -107,12 +107,12 @@ rf_rwe_task(void)
 
     if (tx_report & REP_BINTIME) {
       
-      DC('e');
+      DC('w');
       for (uint8_t i=0; i<=enc[0]; i++)
       DC( enc[i] );
          
     } else {
-      DC('E');
+      DC('W');
       
       for (uint8_t i=0; i<=enc[0]; i++)
         DH2( enc[i] );
