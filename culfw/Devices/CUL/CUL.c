@@ -40,6 +40,9 @@
 #ifdef HAS_MORITZ
 #include "rf_moritz.h"
 #endif
+#ifdef HAS_RWE
+#include "rf_rwe.h"
+#endif
 #ifdef HAS_INTERTECHNO
 #include "intertechno.h"
 #endif
@@ -57,6 +60,9 @@ PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
+#endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
@@ -164,6 +170,9 @@ main(void)
 #endif
 #ifdef HAS_MORITZ
     rf_moritz_task();
+#endif
+#ifdef HAS_RWE
+    rf_rwe_task();
 #endif
   }
 }
