@@ -19,6 +19,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ringbuffer.c                              \
 		../../clib/rf_send.c                                 \
 		../../clib/rf_asksin.c                               \
+		../../clib/rf_moritz.c                               \
 		../../clib/rf_receive.c                              \
 		../../clib/rf_router.c                               \
 		../../clib/fht.c                                     \
@@ -234,18 +235,19 @@ program: $(TARGET).hex
 	@echo
 	@echo calling radio frontends bootloader ...
 	@echo
-	@if test ! -d /sys/class/gpio/gpio17; then echo 17 > /sys/class/gpio/export; fi 
-	@echo out > /sys/class/gpio/gpio17/direction 
-	@echo 0 > /sys/class/gpio/gpio17/value
+	if test ! -d /sys/class/gpio/gpio17; then echo 17 > /sys/class/gpio/export; fi 
+	echo out > /sys/class/gpio/gpio17/direction 
+	echo 0 > /sys/class/gpio/gpio17/value
 
-	@if test ! -d /sys/class/gpio/gpio18; then @echo 18 > /sys/class/gpio/export; fi 
-	@echo out > /sys/class/gpio/gpio18/direction 
-	@echo 0 > /sys/class/gpio/gpio18/value
+	if test ! -d /sys/class/gpio/gpio18; then echo 18 > /sys/class/gpio/export; fi 
+	echo out > /sys/class/gpio/gpio18/direction 
+	echo 0 > /sys/class/gpio/gpio18/value
 
-	@echo 1 > /sys/class/gpio/gpio17/value
-	@sleep 1
-	@echo in > /sys/class/gpio/gpio18/direction 
-	@echo 18 > /sys/class/gpio/unexport 
+	echo 1 > /sys/class/gpio/gpio17/value
+	sleep 1
+	echo 1 > /sys/class/gpio/gpio18/value
+	echo in > /sys/class/gpio/gpio18/direction 
+	echo 18 > /sys/class/gpio/unexport 
 
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 

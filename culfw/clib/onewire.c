@@ -7,7 +7,6 @@
 
 #include "fncollection.h"
 #include "stringfunc.h"
-#include "timer.h"
 #include "display.h"
 #include "delay.h"
 
@@ -720,7 +719,11 @@ ds2482Reset(void)
     unsigned char ret;
     ret = ds2482SendCmd(DS2482_CMD_DRST);
     if (ret == I2C_OK) {
+#ifdef OW_SPU
+        return (ds2482SendCmdArg(DS2482_CMD_WCFG, DS2482_CFG_SPU) == I2C_OK) ? 1 : 0;
+#else
         return 1;
+#endif
     } else {
         return 0;
     }

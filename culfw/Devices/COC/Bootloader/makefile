@@ -423,7 +423,7 @@ AVRDUDE_PROGRAMMER = stk500v2
 #AVRDUDE_PORT = com6    # programmer connected to serial device
 AVRDUDE_PORT = /dev/ttyUSB0   # programmer connected to serial device
 
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex -U flash:w:../CSM.hex -U lfuse:w:0xd6:m -U hfuse:w:0xdc:m -U lock:w:0x2f:m
+AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex -U flash:w:../COC.hex -U lfuse:w:0xd6:m -U hfuse:w:0xdc:m -U lock:w:0x2f:m
 #AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
 
 

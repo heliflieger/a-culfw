@@ -39,6 +39,10 @@
 #include "rf_asksin.h"
 #endif
 
+#ifdef HAS_MORITZ
+#include "rf_moritz.h"
+#endif
+
 #ifdef HAS_DOGM
 #include "dogm16x.h"
 #endif
@@ -59,6 +63,9 @@ PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
 #endif
 #ifdef HAS_IRRX
   { 'I', ir_func },
@@ -170,8 +177,8 @@ main(void)
 #ifdef HAS_ASKSIN
     rf_asksin_task();
 #endif
-#ifdef HAS_IRRX
-    ir_task();
+#ifdef HAS_MORITZ
+    rf_moritz_task();
 #endif
   }
 

@@ -51,6 +51,7 @@
 #define HAS_RAWSEND                   //
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #define HAS_ASKSIN
+#define HAS_MORITZ
 #define HAS_ESA
 #define HAS_TX3
 #define HAS_INTERTECHNO
@@ -58,6 +59,8 @@
 #define HAS_MEMFN
 
 #define HAS_ONEWIRE         10      // OneWire Device Buffer, RAM: 10 * 8 Byte
+#define OW_SPU			    // StrongPullUp support
+#undef  HHAS_ONEWIRE
 
 #undef  HAS_RTC
 #define RTC_ADDR                0xd0
