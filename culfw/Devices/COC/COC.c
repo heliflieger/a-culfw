@@ -55,7 +55,6 @@ PROGMEM t_fntab fntab[] = {
 
   { 'm', getfreemem },
 
-  { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
 #ifdef HAS_RTC
