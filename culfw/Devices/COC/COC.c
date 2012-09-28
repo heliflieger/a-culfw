@@ -51,12 +51,19 @@
 #include "ir.h"
 #endif
 
+#ifdef HAS_INTERTECHNO
+#include "intertechno.h"
+#endif
+
 PROGMEM t_fntab fntab[] = {
 
   { 'm', getfreemem },
 
   { 'C', ccreg },
   { 'F', fs20send },
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
 #ifdef HAS_RTC
   { 'c', rtc_func },
 #endif

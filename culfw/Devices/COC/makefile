@@ -22,6 +22,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_receive.c                              \
 		../../clib/rf_router.c                               \
+                ../../clib/intertechno.c                             \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                  \
@@ -250,6 +251,8 @@ program: $(TARGET).hex
 	echo 18 > /sys/class/gpio/unexport 
 
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
+
+#	if test -e /sys/bus/i2c/devices/0-0050/eeprom; then echo COC V1.1 FULL `date +%F`"\0" > /sys/bus/i2c/devices/0-0050/eeprom; fi
 
 usbprogram: $(TARGET).hex
 	dfu-programmer $(MCU) erase || true
