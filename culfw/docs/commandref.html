@@ -50,6 +50,7 @@
     <a href="#cmd_M">M</a>
     <a href="#cmd_l">l</a>
     <a href="#cmd_O">O</a>
+    <a href="#cmd_o">o</a>
     <a href="#cmd_P">P</a>
     <a href="#cmd_q">q</a>
     <a href="#cmd_R">R</a>
@@ -584,6 +585,15 @@
        </ul>
     </ul><br><br>
       	
+    <a name="cmd_o"></a>
+    o&lt;func&gt; OBIS Command-Set
+    <ul>
+      (CUNO2 with hardware patch and IR-head only)
+      &lt;func&gt; is one of the following:
+      <li> r  - read most recent telegram
+      <li> a&lt;seconds&gt; - set automatic reading of telegrams
+    </ul><br><br>
+
 
     <a name="cmd_P"></a>
     P&lt;hex&gt;&lt;filename&gt;
@@ -978,6 +988,11 @@
       <li>pp - payload
       </ul>
       (for binary data lower case 'a' is prepended - MORITZ messages are structured same but letter 'Z'/'z' is prepended)
+      <br><br>
+
+    <li>For OBIS:<br>
+      oESY5Q3DA1004 V3.03||1-0:0.0.0*255(1124001569)|....<br>
+      Frame '/' - '!' has been removed. CRLF within telegram translates to '|'<br>
       <br><br>
 
     <li>For TX2/TX3 (see http://www.f6fbb.org/domo/sensors/tx3_th.php):<br>
