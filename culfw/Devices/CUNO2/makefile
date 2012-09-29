@@ -28,6 +28,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                   \
 		../../clib/serial.c                                  \
+		../../clib/vz.c                                      \
 		../../clib/ttydata.c                                 \
 		../../clib/ethernet.c                                 \
 		../../clib/tcplink.c                                  \

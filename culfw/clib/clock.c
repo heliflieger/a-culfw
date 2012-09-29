@@ -22,6 +22,9 @@
 #ifdef HAS_ONEWIRE
 #include "onewire.h"
 #endif
+#ifdef HAS_VZ
+#include "vz.h"
+#endif
 
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
 #include "ir.h"
@@ -144,6 +147,9 @@ Minute_Task(void)
 // if HMS Emulation is on, check the HMS timer
 #ifdef HAS_ONEWIRE
     onewire_SecTask ();
+#endif
+#ifdef HAS_VZ
+    vz_sectask();
 #endif
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)

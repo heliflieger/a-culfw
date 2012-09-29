@@ -106,6 +106,11 @@
 #define HAS_NTP                 1   
 
 #define HAS_ONEWIRE         10      // OneWire Device Buffer, RAM: 10 * 8 Byte 
+#define OW_SPU			    // enable StrongPullUp
+
+#define HAS_VZ			    // Volkszaehler IR-Head 
+#define VZ_MSG_SIZE 512             // required space to cache a complete message
+#undef  HAS_VZ			    // disable at present
 
 #define TTY_BUFSIZE             1024
 

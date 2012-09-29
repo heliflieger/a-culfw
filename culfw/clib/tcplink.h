@@ -36,6 +36,7 @@
 #define __TCPLINK_H__
 
 #include "uipopt.h"
+#include "board.h"
 
 void tcplink_appcall(void);
 void tcp_putchar(char data);
@@ -44,8 +45,13 @@ void tcplink_init(void);
 
 struct tcplink_state {
   u8_t state;
+#ifdef HAS_VZ
+  u16_t offset;
+  char buffer[VZ_MSG_SIZE];
+#else
   u8_t offset;
   char buffer[250];
+#endif
 };
 
 typedef struct tcplink_state uip_tcp_appstate_t;

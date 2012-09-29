@@ -34,6 +34,10 @@
 #include "onewire.h"
 #include "intertechno.h"
 
+#ifdef HAS_VZ
+#include "vz.h"
+#endif
+
 #include "i2cmaster.h"
 
 #ifdef HAS_ASKSIN
@@ -52,6 +56,9 @@ PROGMEM t_fntab fntab[] = {
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
+#ifdef HAS_VZ
+  { 'o', vz_func },
+#endif
 #ifdef HAS_INTERTECHNO
   { 'i', it_func },
 #endif
@@ -174,6 +181,10 @@ main(void)
   display_channel = DISPLAY_USB;
 #endif
 
+#ifdef HAS_VZ
+  vz_init();
+#endif
+
   ethernet_init();
     
   LED_OFF();
@@ -198,6 +209,9 @@ main(void)
 #endif
 #ifdef HAS_ETHERNET
     Ethernet_Task();
+#endif
+#ifdef HAS_VZ
+    vz_task();
 #endif
   }
 
