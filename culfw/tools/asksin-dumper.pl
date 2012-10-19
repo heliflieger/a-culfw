@@ -38,6 +38,11 @@ sub setup_device {
   my $port = tie( *$handle, "Device::SerialPort", $device );
   die "can't open port: $!" unless $port;
   
+  $port->baudrate(38400);
+  $port->databits(8);
+  $port->parity("none");
+  $port->stopbits(1);
+
   $heap->{port}       = $port;
   $heap->{port_wheel} = POE::Wheel::ReadWrite->new(
 						   Handle => $handle,
@@ -55,12 +60,15 @@ sub setup_device {
   $heap->{console}->put("Press ^D to stop.");
   $heap->{console}->get("Ready: ");
 
+  $heap->{port_wheel}->put( 'V' );
   $heap->{port_wheel}->put( 'X10' );
   $heap->{port_wheel}->put( 'Ar' );
 }
 
 sub got_message {
   my ( $heap, $data ) = @_[ HEAP, ARG0 ];
+
+  return unless @$data;
 
   my $msg = sprintf '%s nr: %02X cc: %02X ty: %02X s: %02X%02X%02X d: %02X%02X%02X pl: ', DateTime->now()->strftime('%T'), @$data;
 
