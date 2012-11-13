@@ -1,3 +1,7 @@
+Version 1.49
+- Raw-Mode (G) Send 1-bit optional, to enable sending LOTT Uniroll
+
+Version 1.48
 - CUNO2: added support for hardware patch - connecting Volkszaehler IR-head
 - CUL: added RWE SH protocol receive
 - CUL: added MORITZ protocol receive and send

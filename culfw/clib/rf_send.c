@@ -99,7 +99,8 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   do {
     for(i = 0; i < sync; i++)                   // sync
       send_bit(0);
-    send_bit(1);
+    if(sync)
+      send_bit(1);
     
     for(j = 0; j < nbyte; j++) {                // whole bytes
       for(i = 7; i >= 0; i--)

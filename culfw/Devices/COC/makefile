@@ -168,7 +168,7 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 
-all: sizebefore build sizeafter
+all: clean sizebefore build sizeafter
 
 build: elf hex eep lss sym
 
@@ -232,7 +232,7 @@ reset:
 	@if test -d /sys/class/gpio/gpio18; then echo 1 > /sys/class/gpio/gpio18/value; fi 
 	@echo 1 > /sys/class/gpio/gpio17/value
 
-program: $(TARGET).hex
+program:
 	@echo
 	@echo calling radio frontends bootloader ...
 	@echo
@@ -402,7 +402,7 @@ clean_list:
 	@$(REMOVE) $(SRC:.c=.s)
 	@$(REMOVE) $(SRC:.c=.d)
 	@$(REMOVE) $(SRC:.c=.i)
-	@$(REMOVEDIR) .dep
+#	@$(REMOVEDIR) .dep
 
 
 $(shell mkdir $(OBJDIR) 2>/dev/null)
@@ -416,3 +416,4 @@ finish end sizebefore sizeafter gccversion  \
 build elf hex eep lss sym coff extcoff      \
 clean clean_list clean_binary program debug \
 gdb-config
+# DO NOT DELETE
