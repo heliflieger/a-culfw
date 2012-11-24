@@ -112,6 +112,17 @@
 #define VZ_MSG_SIZE 512             // required space to cache a complete message
 #undef  HAS_VZ			    // disable at present
 
+#define HAS_DMX 
+#define DMX_CHANNELS           16
+#define DMX_RESTING            1      // idle DMX for unsued channels (512-DMX_CHANNELS) bit times, rather than start over immediately
+#define DMX_FS20EMU_HC         "2822" // This is the house code used to address DMX space while using F... commands
+#undef  HAS_DMX 
+
+#ifdef HAS_DMX
+#undef  HAS_IRTX
+#undef  HAS_IRRX
+#endif
+
 #define TTY_BUFSIZE             1024
 
 #define BUSWARE_CUNO2

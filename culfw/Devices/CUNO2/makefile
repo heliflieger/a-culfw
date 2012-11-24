@@ -49,6 +49,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/irmp.c                                     \
 		../../clib/irsnd.c                                    \
 		../../clib/onewire.c                                  \
+		../../clib/dmx.c                                      \
 		../../clib/intertechno.c                              \
 		
 OPT = s
@@ -115,7 +116,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
-
+#AVRDUDE_NO_VERIFY = -V
 AVRDUDE_PROGRAMMER = avr109
 #AVRDUDE_PORT = /dev/ttyUSB1 -b 38400 
 AVRDUDE_PORT = COM10 -b 38400 

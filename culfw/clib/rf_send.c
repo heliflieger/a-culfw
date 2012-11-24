@@ -20,6 +20,10 @@
 #include "fncollection.h"
 #include "fht.h"
 
+#ifdef HAS_DMX
+#include "dmx.h"
+#endif
+
 // For FS20 we time the complete message, for KS300 the rise-fall distance
 // FS20  NULL: 400us high, 400us low
 // FS20  ONE:  600us high, 600us low
@@ -186,6 +190,10 @@ addParityAndSend(char *in, uint8_t startcs, uint8_t repeat)
 void
 fs20send(char *in)
 {
+#ifdef HAS_DMX
+  if (dmx_fs20_emu( in ))
+	return;
+#endif
   addParityAndSend(in, 6, 3);
 }
 

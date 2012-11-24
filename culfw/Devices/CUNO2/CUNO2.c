@@ -38,6 +38,10 @@
 #include "vz.h"
 #endif
 
+#ifdef HAS_DMX
+#include "dmx.h"
+#endif
+
 #include "i2cmaster.h"
 
 #ifdef HAS_ASKSIN
@@ -58,6 +62,9 @@ PROGMEM t_fntab fntab[] = {
   { 'F', fs20send },
 #ifdef HAS_VZ
   { 'o', vz_func },
+#endif
+#ifdef HAS_DMX
+  { 'D', dmx_func },
 #endif
 #ifdef HAS_INTERTECHNO
   { 'i', it_func },
@@ -139,7 +146,6 @@ main(void)
 //    start_bootloader();
   }
 
-
 // Setup OneWire and make a full search at the beginning (takes some time)
 #ifdef HAS_ONEWIRE
   i2c_init();
@@ -189,7 +195,19 @@ main(void)
     
   LED_OFF();
 
+#ifdef HAS_DMX
+#ifdef DMX_CHANNELS
+  dmx_initialize(DMX_CHANNELS);
+#else
+  dmx_initialize(16);
+#endif
+#endif
+
   sei();
+
+#ifdef HAS_DMX
+  dmx_start();
+#endif
 
   for(;;) {
     uart_task();

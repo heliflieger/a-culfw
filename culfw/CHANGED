@@ -1,3 +1,5 @@
+- CUNO2: added support for DMX on RS485 port
+
 Version 1.49
 - Raw-Mode (G) Send 1-bit optional, to enable sending LOTT Uniroll
 
