@@ -28,6 +28,10 @@
 #include "rf_asksin.h"
 #endif
 
+#ifdef HAS_MORITZ
+#include "rf_moritz.h"
+#endif
+
 static uint8_t intertechno_on = 0;
 
 const PROGMEM prog_uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
@@ -78,6 +82,7 @@ const PROGMEM prog_uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
 uint16_t it_interval = 420;
 uint16_t it_repetition = 6;
 uint8_t restore_asksin = 0;
+uint8_t restore_moritz = 0;
 unsigned char it_frequency[] = {0x10, 0xb0, 0x71};
 
 static void
@@ -183,6 +188,12 @@ it_send (char *in) {
 					asksin_on = 0;
 				}
 			#endif 	 		
+			#ifdef HAS_MORITZ
+				if(moritz_on) {
+					restore_moritz = 1;
+					moritz_on = 0;
+				}
+			#endif
   	  it_tunein();
     	my_delay_ms(3);             // 3ms: Found by trial and error
   	}
@@ -226,6 +237,14 @@ it_send (char *in) {
    		 	ccRX();
   		}  
   	#endif
+	#ifdef HAS_MORITZ
+	else if (restore_moritz) {
+		restore_moritz = 0;
+		rf_moritz_init();
+		moritz_on = 1;
+		ccRX();
+	}
+	#endif
   	else {
     	set_txrestore();
   	}	
@@ -270,6 +289,12 @@ it_func(char *in)
 				asksin_on = 0;
 			}
 		#endif
+		#ifdef HAS_MORITZ
+			if (moritz_on) {
+				restore_moritz = 1;
+				moritz_on = 0;
+			}
+		#endif
 		it_tunein ();
 		intertechno_on = 1;
 	} else if (in[1] == 'f') { // Set Frequency
@@ -286,24 +311,30 @@ it_func(char *in)
 		  DH2(it_frequency[2]);
 		  DNL();
 	} else if (in[1] == 'x') { 		                    // Reset Frequency back to Eeprom value
+		if(0) { ;
 		#ifdef HAS_ASKSIN
-			if (restore_asksin) {
-				restore_asksin = 0;
-   			rf_asksin_init();
-				asksin_on = 1;
-   		 	ccRX();
-  		} else {
-		#endif 
- 			  ccInitChip(EE_CC1100_CFG);										// Set back to Eeprom Values
- 			  if(tx_report) {                               // Enable RX
-	  		  ccRX();
-	  		} else {
-		    	ccStrobe(CC1100_SIDLE);
-		  	}
-		#ifdef HAS_ASKSIN
-		  }
+		} else if (restore_asksin) {
+			restore_asksin = 0;
+			rf_asksin_init();
+			asksin_on = 1;
+			ccRX();
 		#endif
-	  	intertechno_on = 0;
+		#ifdef HAS_MORITZ
+		} else if (restore_moritz) {
+			restore_moritz = 0;
+			rf_moritz_init();
+			moritz_on = 1;
+			ccRX();
+		#endif
+		} else {
+			ccInitChip(EE_CC1100_CFG);										// Set back to Eeprom Values
+			if(tx_report) {                               // Enable RX
+				ccRX();
+			} else {
+				ccStrobe(CC1100_SIDLE);
+			}
+		}
+		intertechno_on = 0;
 	}
 }
 
