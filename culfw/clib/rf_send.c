@@ -24,6 +24,10 @@
 #include "dmx.h"
 #endif
 
+#ifdef HAS_MORITZ
+#include "rf_moritz.h"
+#endif
+
 // For FS20 we time the complete message, for KS300 the rise-fall distance
 // FS20  NULL: 400us high, 400us low
 // FS20  ONE:  600us high, 600us low
@@ -97,6 +101,15 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
     cli();
   #endif
 
+#ifdef HAS_MORITZ
+  uint8_t restore_moritz = 0;
+  if(moritz_on) {
+    restore_moritz = 1;
+    moritz_on = 0;
+    set_txreport("21");
+  }
+#endif
+
   if(!cc_on)
     set_ccon();
   ccTX();                                       // Enable TX 
@@ -126,6 +139,14 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   #if defined (HAS_IRRX) || defined (HAS_IRTX) //Activate IR_Reception again
     sei(); 
   #endif
+
+#ifdef HAS_MORITZ
+    if(restore_moritz) {
+      rf_moritz_init();
+      moritz_on = 1;
+      ccRX();
+    }
+#endif
 
   LED_OFF();
 }

@@ -1,3 +1,4 @@
+- all: sending intertechno/FS20 commands from moritz mode restores moritz mode afterwards
 - CUNO2: added support for DMX on RS485 port
 
 Version 1.49
