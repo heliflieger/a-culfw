@@ -9,7 +9,7 @@ rb_t TTY_Tx_Buffer;
 rb_t TTY_Rx_Buffer;
 static char cmdbuf[TTY_BUFSIZE+1];
 
-extern PROGMEM t_fntab fntab[];
+extern const PROGMEM t_fntab fntab[];
 uint8_t
 callfn(char *buf)
 {

@@ -42,7 +42,7 @@
 #endif
 
 
-PROGMEM t_fntab fntab[] = {
+const PROGMEM t_fntab fntab[] = {
 
   { 'm', getfreemem },
 

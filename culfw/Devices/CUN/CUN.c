@@ -48,7 +48,7 @@ df_chip_t df;
 #include "rf_asksin.h"
 #endif
 
-PROGMEM t_fntab fntab[] = {
+const PROGMEM t_fntab fntab[] = {
 
   { 'M', testmem },
   { 'm', getfreemem },

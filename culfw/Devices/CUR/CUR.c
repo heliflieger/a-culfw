@@ -42,7 +42,7 @@
 
 df_chip_t df;
 
-PROGMEM t_fntab fntab[] = {
+const PROGMEM t_fntab fntab[] = {
 
   { 'B', prepare_boot },
   { 'C', ccreg },

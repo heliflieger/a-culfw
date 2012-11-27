@@ -34,7 +34,7 @@
 #define NO_DESCRIPTOR_STRING NO_DESCRIPTOR
 #endif
 
-USB_Descriptor_Device_t DeviceDescriptor PROGMEM =
+const USB_Descriptor_Device_t DeviceDescriptor PROGMEM =
 {
   Header:                 {Size: sizeof(USB_Descriptor_Device_t), Type: DTYPE_Device},
           
@@ -60,7 +60,7 @@ USB_Descriptor_Device_t DeviceDescriptor PROGMEM =
   NumberOfConfigurations: 1
 };
 	
-USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
+const USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
 {
   Config:
     {
@@ -168,21 +168,21 @@ USB_Descriptor_Configuration_t ConfigurationDescriptor PROGMEM =
     }
 };
 
-USB_Descriptor_String_t LanguageString PROGMEM =
+const USB_Descriptor_String_t LanguageString PROGMEM =
 {
   Header:           {Size: USB_STRING_LEN(1),
                      Type: DTYPE_String},
   UnicodeString:    {LANGUAGE_ID_ENG}
 };
 
-USB_Descriptor_String_t ManufacturerString PROGMEM =
+const USB_Descriptor_String_t ManufacturerString PROGMEM =
 {
   Header:           {Size: USB_STRING_LEN(10),
                      Type: DTYPE_String},
   UnicodeString:    L"busware.de"
 };
 
-USB_Descriptor_String_t ProductString PROGMEM =
+const USB_Descriptor_String_t ProductString PROGMEM =
 {
   Header:           {Size: USB_STRING_LEN(20),
                      Type: DTYPE_String},
@@ -190,7 +190,7 @@ USB_Descriptor_String_t ProductString PROGMEM =
 };
 
 #ifdef MULTI_FREQ_DEVICE
-USB_Descriptor_String_t ProductString433 PROGMEM =
+const USB_Descriptor_String_t ProductString433 PROGMEM =
 {
   Header:           {Size: USB_STRING_LEN(20),
                      Type: DTYPE_String},

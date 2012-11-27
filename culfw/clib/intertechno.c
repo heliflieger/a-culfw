@@ -30,7 +30,7 @@
 
 static uint8_t intertechno_on = 0;
 
-PROGMEM prog_uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
+const PROGMEM prog_uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
 // CULFW   IDX NAME     RESET STUDIO COMMENT
    0x0D, // 00 IOCFG2   *29   *0B    GDO2 as serial output
    0x2E, // 01 IOCFG1    2E    2E    Tri-State
