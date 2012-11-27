@@ -65,7 +65,7 @@
 #include <avr/io.h>
 #include <avr/power.h>
 
-#ifndef clock_prescale_set
+#if !defined(clock_prescale_set) && __AVR_LIBC_VERSION__  < 10701UL
 #  warning "avr/power.h needs patching for prescaler functions to work."
 #  warning "for the m32u4 add __AVR_ATmega32U4__ for cpu types on prescale block"
 #  warning "for the m32u2 add __AVR_ATmega32U2__ for cpu types on prescale block"
