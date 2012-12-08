@@ -88,7 +88,7 @@ read_eeprom(char *in)
   } else 
 #endif
   {
-    hb[0] = hb[2] = 0;
+    hb[0] = hb[1] = 0;
     d = fromhex(in+1, hb, 2);
     if(d == 2)
       addr = (hb[0] << 8) | hb[1];
