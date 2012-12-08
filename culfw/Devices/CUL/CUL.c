@@ -101,10 +101,10 @@ start_bootloader(void)
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
 
-#if defined(CUL_V3)
+#if defined(CUL_V3) || defined(CUL_V4)
 #  define jump_to_bootloader ((void(*)(void))0x3800)
 #endif
-#if defined(CUL_V2) || defined(CUL_V4)
+#if defined(CUL_V2)
 #  define jump_to_bootloader ((void(*)(void))0x1800)
 #endif
   jump_to_bootloader();
