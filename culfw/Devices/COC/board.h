@@ -66,6 +66,7 @@
 #define RTC_ADDR                0xd0
 
 #define BUSWARE_CSM
+#define BUSWARE_COC
 
 #endif
 
