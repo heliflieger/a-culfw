@@ -7,7 +7,7 @@
 
 void display_char(char s);
 void display_string(char *s);
-void display_string_P(prog_char *s);
+void display_string_P(const char *s);
 void display_udec(uint16_t d, int8_t pad, uint8_t padc);
 void display_hex(uint16_t h, int8_t pad, uint8_t padc);
 void display_hex2(uint8_t h);

@@ -488,7 +488,7 @@
 			static inline void Endpoint_Discard_Byte(void) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_Discard_Byte(void)
 			{
-				uint8_t Dummy;
+                                __attribute__((__unused__)) uint8_t Dummy;
 				
 				Dummy = UEDATX;
 			}
@@ -564,7 +564,7 @@
 			static inline void Endpoint_Discard_Word(void) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_Discard_Word(void)
 			{
-				uint8_t Dummy;
+				__attribute__((__unused__)) uint8_t Dummy;
 				
 				Dummy = UEDATX;
 				Dummy = UEDATX;
@@ -657,7 +657,7 @@
 			static inline void Endpoint_Discard_DWord(void) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_Discard_DWord(void)
 			{
-				uint8_t Dummy;
+				__attribute__((__unused__)) uint8_t Dummy;
 				
 				Dummy = UEDATX;
 				Dummy = UEDATX;

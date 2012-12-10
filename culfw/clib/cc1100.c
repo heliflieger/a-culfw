@@ -13,7 +13,7 @@ uint8_t cc_on;
 // NOTE: FS20 devices can receive/decode signals sent with PA ramping,
 // but the CC1101 cannot
 #ifdef FULL_CC1100_PA
-const PROGMEM prog_uint8_t CC1100_PA[] = {
+const PROGMEM const uint8_t CC1100_PA[] = {
 
   0x00,0x03,0x0F,0x1E,0x26,0x27,0x00,0x00,      //-10 dBm with PA ramping
   0x00,0x03,0x0F,0x1E,0x25,0x36,0x38,0x67,      // -5 dBm
@@ -29,7 +29,7 @@ const PROGMEM prog_uint8_t CC1100_PA[] = {
 
 };
 #else
-const PROGMEM prog_uint8_t CC1100_PA[] = {
+const PROGMEM const uint8_t CC1100_PA[] = {
 
   0x27,   //-10 dBm
   0x67,   // -5 dBm (yes it is 67, checked 3 times!)
@@ -40,7 +40,7 @@ const PROGMEM prog_uint8_t CC1100_PA[] = {
 #endif
 
 
-const PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
+const PROGMEM const uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
 // CULFW   IDX NAME     RESET STUDIO COMMENT
    0x0D, // 00 IOCFG2   *29   *0B    GDO2 as serial output
    0x2E, // 01 IOCFG1    2E    2E    Tri-State
@@ -93,7 +93,7 @@ const PROGMEM prog_uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
 };
 
 #if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
-const PROGMEM prog_uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
+const PROGMEM const uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
 // CULFW   IDX NAME     
    0x07, // 00 IOCFG2 (x)    INT when a packet with CRC OK has been received
    0x2E, // 01 IOCFG1        3-State
@@ -195,7 +195,7 @@ cc_set_pa(uint8_t idx)
     idx = 8;
 
 #ifdef FULL_CC1100_PA
-  uint8_t *f = CC1100_PA+idx*8;
+  const uint8_t *f = CC1100_PA+idx*8;
   for (uint8_t i = 0; i < 8; i++)
     ewb(t++, __LPM(f+i));
 

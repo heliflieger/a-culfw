@@ -40,7 +40,7 @@ void dogm_put_string( char *s ) {
      DOGM_CS_PORT |= _BV( DOGM_CS_PIN );
 }
 
-void dogm_put_string_P(prog_char *s) {
+void dogm_put_string_P(const char *s) {
      uint8_t c;
 
      DOGM_CS_PORT &= ~_BV(DOGM_CS_PIN);		

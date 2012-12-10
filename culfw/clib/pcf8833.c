@@ -36,7 +36,7 @@ static uint8_t lcd_scroll_y = 18;
 static uint8_t lcd_col_bg0, lcd_col_bg1, lcd_col_bg2;
 
 static void lcd_window (uint8_t xp, uint8_t yp, uint8_t xe, uint8_t ye);
-static void drawtext(char *dataptr, uint8_t datalen, uint8_t *font,
+static void drawtext(char *dataptr, uint8_t datalen, const uint8_t *font,
                         uint8_t font_width, uint8_t lcd_y, uint8_t font_y,
                         uint8_t rows);
 static void lcd_init(void);
@@ -375,7 +375,7 @@ lcd_scroll(int8_t offset)
 ////////////////////////////////////////////////////////////////////////
 // Draw a text-row (or some pixel-rows of this text-row) to the display.
 static void
-drawtext(char *dataptr, uint8_t datalen, uint8_t *font, uint8_t font_width,
+drawtext(char *dataptr, uint8_t datalen, const uint8_t *font, uint8_t font_width,
         uint8_t lcd_y, uint8_t font_y, uint8_t rows)
 {
   while(rows--) {                             // One pixel row
@@ -403,7 +403,7 @@ drawtext(char *dataptr, uint8_t datalen, uint8_t *font, uint8_t font_width,
         }
       }
 
-      uint8_t *fp;
+      const uint8_t *fp;
       if(data < 33) { // space
         fp = font;
       } else {

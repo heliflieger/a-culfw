@@ -24,10 +24,9 @@ rtc_read(unsigned char addr)
 void
 rtc_write(unsigned char addr, unsigned char data)
 {
-  unsigned char ret;
   i2c_start_wait(RTC_ADDR); // set device address and write mode
   i2c_write(addr);          // write address
-  ret = i2c_write(data);    // ret=0 -> Ok, ret=1 -> no ACK 
+  i2c_write(data);          // ret=0 -> Ok, ret=1 -> no ACK 
   i2c_stop();               // set stop conditon = release bus
 }
 

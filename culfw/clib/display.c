@@ -184,7 +184,7 @@ display_string(char *s)
 }
 
 void
-display_string_P(prog_char *s)
+display_string_P(const char *s)
 {
   uint8_t c;
   while((c = __LPM(s))) {
