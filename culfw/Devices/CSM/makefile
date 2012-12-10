@@ -1,4 +1,6 @@
-MCU = atmega324p
+#MCU = atmega644p
+MCU = atmega1284p
+#MCU = atmega324p
 BOARD  =
 F_CPU = 8000000
 FORMAT = ihex
@@ -21,6 +23,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_receive.c                              \
 		../../clib/rf_router.c                               \
+                ../../clib/intertechno.c                             \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                  \
@@ -96,12 +99,13 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
-AVRDUDE_NO_VERIFY = -V
+#AVRDUDE_NO_VERIFY = -V
 
-AVRDUDE_PROGRAMMER = jtagmkII
-AVRDUDE_PORT = usb
+#AVRDUDE_PROGRAMMER = jtagmkII
+#AVRDUDE_PORT = usb
 #AVRDUDE_PROGRAMMER = stk500v2
-#AVRDUDE_PORT = /dev/ttyUSB0
+AVRDUDE_PROGRAMMER = avr109 -b 38400
+AVRDUDE_PORT = /dev/ttyUSB3
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
@@ -224,11 +228,15 @@ gccversion :
 program: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM) -U lfuse:w:0xc2:m -U hfuse:w:0x99:m
 
+program_serial: $(TARGET).hex $(TARGET).eep
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
+
+erase: 
+	$(AVRDUDE) $(AVRDUDE_FLAGS) -e
+
 
 usbprogram: $(TARGET).hex
-	dfu-programmer $(MCU) erase || true
-	dfu-programmer $(MCU) flash $(TARGET).hex
-	dfu-programmer $(MCU) start
+	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 
 deb: $(TARGET).hex
 	echo $(PWD)

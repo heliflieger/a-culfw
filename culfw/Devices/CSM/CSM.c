@@ -32,6 +32,10 @@
 #include "rf_router.h"
 #include "memory.h"
 
+#ifdef HAS_INTERTECHNO
+#include "intertechno.h"
+#endif
+
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
 #endif
@@ -51,6 +55,9 @@ const PROGMEM t_fntab fntab[] = {
   { 'B', prepare_boot },
   { 'C', ccreg },
   { 'F', fs20send },
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
 #endif
@@ -63,7 +70,7 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
   { 'M', em_send },
-  { 'S', esa_send },
+//  { 'S', esa_send },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
