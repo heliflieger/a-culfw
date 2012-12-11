@@ -176,27 +176,23 @@ it_send (char *in) {
     #endif
 			
 
-  	// If NOT InterTechno mode && NOT 433 MHZ Device
-  	#ifdef MULTI_FREQ_DEVICE
- 	 		if((!intertechno_on) && (bit_is_set(MARK433_PIN, MARK433_BIT)))  {
- 	 	#else
- 	 		if(!intertechno_on)  {
- 	 	#endif
-			#ifdef HAS_ASKSIN
-				if (asksin_on) {
-					restore_asksin = 1;
-					asksin_on = 0;
-				}
-			#endif 	 		
-			#ifdef HAS_MORITZ
-				if(moritz_on) {
-					restore_moritz = 1;
-					moritz_on = 0;
-				}
-			#endif
-  	  it_tunein();
-    	my_delay_ms(3);             // 3ms: Found by trial and error
-  	}
+	// If NOT InterTechno mode
+	if(!intertechno_on)  {
+	#ifdef HAS_ASKSIN
+		if (asksin_on) {
+			restore_asksin = 1;
+			asksin_on = 0;
+			}
+	#endif
+	#ifdef HAS_MORITZ
+		if(moritz_on) {
+			restore_moritz = 1;
+			moritz_on = 0;
+		}
+	#endif
+	it_tunein();
+	my_delay_ms(3);             // 3ms: Found by trial and error
+}
   	ccStrobe(CC1100_SIDLE);
   	ccStrobe(CC1100_SFRX );
   	ccStrobe(CC1100_SFTX );
