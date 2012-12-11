@@ -60,6 +60,22 @@
 #  define HAS_INTERTECHNO
 #endif
 
+#ifdef CUL_V2_MAX
+#  define CUL_V2
+#  define HAS_MORITZ
+#  define TTY_BUFSIZE           64
+#  define RCV_BUCKETS            2
+#  undef  HAS_RF_ROUTER
+#  undef  HAS_FHT_80b
+#  undef  HAS_FHT_8v
+#  define FHTBUF_SIZE            0
+#  undef  BOARD_ID_STR
+#  define BOARD_ID_STR            "CUL_MX"
+#  undef  BOARD_ID_USTR
+#  define BOARD_ID_USTR           L"CUL_MX"
+#  define HAS_INTERTECHNO
+#endif
+
 // No features to define below
 
 #include <avr/io.h>
