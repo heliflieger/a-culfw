@@ -238,7 +238,6 @@ it_send (char *in) {
 		restore_moritz = 0;
 		rf_moritz_init();
 		moritz_on = 1;
-		ccRX();
 	}
 	#endif
   	else {

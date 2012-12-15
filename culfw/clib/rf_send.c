@@ -144,7 +144,6 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
     if(restore_moritz) {
       rf_moritz_init();
       moritz_on = 1;
-      ccRX();
     }
 #endif
 
