@@ -9,6 +9,7 @@
 #include "rf_receive.h"
 #include "display.h"
 #include "clock.h"
+#include "rf_send.h" //credit_10ms
 
 #include "rf_moritz.h"
 
@@ -168,10 +169,29 @@ moritz_send(char *in)
 //    DS_P(PSTR("LENERR\r\n"));
     return;
   }
+  //1kb/s = 1 bit/ms. we send 1 sec preamble + hblen*8 bits
+  uint32_t sum = 100 + (hblen*8)/10;
+  if (credit_10ms < sum) {
+    DS_P(PSTR("LOVF\r\n"));
+    return;
+  }
+  credit_10ms -= sum;
 
   // in Moritz mode already?
   if(!moritz_on) {
     rf_moritz_init();
+  }
+
+  if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
+    DC('Z');
+    DC('E');
+    DC('R');
+    DC('R');
+    DC('1');
+    DH2(cc1100_readReg( CC1100_MARCSTATE ));
+    DNL();
+    rf_moritz_init();
+    return;
   }
 
   /* Enable TX. Perform calibration first if MCSM0.FS_AUTOCAL=1 (this is the case) (takes 809μs)
@@ -180,6 +200,17 @@ moritz_send(char *in)
    * It will not go into TX mode instantly if channel is not clear (see CCA_MODE), thus ccTX tries multiple times */
   ccTX();
 
+  if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_TX) { //error
+    DC('Z');
+    DC('E');
+    DC('R');
+    DC('R');
+    DC('2');
+    DH2(cc1100_readReg( CC1100_MARCSTATE ));
+    DNL();
+    rf_moritz_init();
+    return;
+  }
   /* Send preamble for 1 sec. Keep in mind that waiting for too long may trigger the watchdog (2 seconds on CUL) */
   for(int i=0;i<10;++i)
     my_delay_ms(100); //arg is uint_8, so loop
@@ -193,6 +224,28 @@ moritz_send(char *in)
   }
 
   CC1100_DEASSERT;
+
+  //Wait for sending to finish (CC1101 will go to RX state automatically
+  //after sending
+  uint8_t i;
+  for(i=0; i< 200;++i) {
+    if( cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_RX)
+      break; //now in RX, good
+    if( cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_TX)
+      break; //neither in RX nor TX, probably some error
+    my_delay_ms(1);
+  }
+
+  if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
+    DC('Z');
+    DC('E');
+    DC('R');
+    DC('R');
+    DC('3');
+    DH2(cc1100_readReg( CC1100_MARCSTATE ));
+    DNL();
+    rf_moritz_init();
+  }
 
   if(!moritz_on) {
     set_txrestore();
