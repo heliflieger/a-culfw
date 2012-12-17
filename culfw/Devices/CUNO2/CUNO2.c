@@ -52,6 +52,9 @@
 #include "ir.h"
 #endif
 
+#ifdef HAS_MORITZ
+#include "rf_moritz.h"
+#endif
 
 const PROGMEM t_fntab fntab[] = {
 
@@ -62,6 +65,9 @@ const PROGMEM t_fntab fntab[] = {
   { 'F', fs20send },
 #ifdef HAS_VZ
   { 'o', vz_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
 #endif
 #ifdef HAS_DMX
   { 'D', dmx_func },
@@ -230,6 +236,9 @@ main(void)
 #endif
 #ifdef HAS_VZ
     vz_task();
+#endif
+#ifdef HAS_MORITZ
+    rf_moritz_task();
 #endif
   }
 

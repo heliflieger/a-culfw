@@ -69,6 +69,7 @@
 #define HAS_TX3
 #define HAS_INTERTECHNO
 #define HAS_HOERMANN
+#define HAS_MORITZ
 
 #define HAS_IRRX                                //IR Receiption
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
@@ -76,12 +77,14 @@
 #define IRMP_DDR                DDRA
 #define IRMP_PIN                PINA
 #define IRMP_BIT                2       // use PA2 as IR input on AVR
+#undef  HAS_IRRX
 
 #define HAS_IRTX                                //IR-Transmission
 #define IRSND_OCx               IRSND_OC2A          // use OC2A
 #ifndef F_INTERRUPTS            
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
 #endif
+#undef  HAS_IRTX
 
 #define HAS_MDNS		"CUNO2"  // this has to be a unique id per network
 #undef  HAS_MDNS                         // disable Bonjour at present
