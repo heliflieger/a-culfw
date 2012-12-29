@@ -801,6 +801,9 @@ retry_sync:
 uint8_t
 rf_isreceiving()
 {
-  return (bucket_array[bucket_in].state != STATE_RESET ||
-          fht80b_timeout != FHT_TIMER_DISABLED);
+  return (bucket_array[bucket_in].state != STATE_RESET
+#ifdef HAS_FHT_80b
+        || fht80b_timeout != FHT_TIMER_DISABLED
+#endif
+          );
 }
