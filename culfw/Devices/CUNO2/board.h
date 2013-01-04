@@ -115,6 +115,8 @@
 #define VZ_MSG_SIZE 512             // required space to cache a complete message
 #undef  HAS_VZ			    // disable at present
 
+#define HAS_HM485		    // HM485 "Homematic Wired" support
+
 #define HAS_DMX 
 #define DMX_CHANNELS           16
 #define DMX_RESTING            1      // idle DMX for unsued channels (512-DMX_CHANNELS) bit times, rather than start over immediately
@@ -124,9 +126,8 @@
 #ifdef HAS_DMX
 #undef  HAS_IRTX
 #undef  HAS_IRRX
+#undef  HAS_HM485
 #endif
-
-#define HAS_HM485
 
 #define TTY_BUFSIZE             1024
 

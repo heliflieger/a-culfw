@@ -118,20 +118,6 @@ const PROGMEM t_fntab fntab[] = {
   { 0, 0 },
 };
 
-
-void
-start_bootloader(void)
-{
-  cli();
-
-  /* move interrupt vectors to bootloader section and jump to bootloader */
-  MCUCR = _BV(IVCE);
-  MCUCR = _BV(IVSEL);
-
-#define jump_to_bootloader ((void(*)(void))0x1FC00)
-  jump_to_bootloader();
-}
-
 int
 main(void)
 {
@@ -150,14 +136,9 @@ main(void)
   spi_init();
 
   eeprom_init();
-
-  // if we had been restarted by watchdog check the REQ BootLoader byte in the
-  // EEPROM ...
-  if(bit_is_set(MCUSR,WDRF) && eeprom_read_byte(EE_REQBL)) {
-    eeprom_write_byte( EE_REQBL, 0 ); // clear flag
-// TBD: This is useless as button needs to be pressed - needs moving into bootloader directly
-//    start_bootloader();
-  }
+  
+  // Reset the "Request Bootloader" flag in EEPROM, to avoid a permanent loop
+  eeprom_update_byte( EE_REQBL, 0);
 
 // Setup OneWire and make a full search at the beginning (takes some time)
 #ifdef HAS_ONEWIRE

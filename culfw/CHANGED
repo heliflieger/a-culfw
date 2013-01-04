@@ -1,5 +1,5 @@
 Version 1.51 (2013-01-04)
-- CUNO2: added HM485 support
+- CUNO2: added HM485 support (mutually exclusive with DMX)
 
 Version 1.50 (2012-29-12)
 - CUL: add CUL_V2_MAX variant

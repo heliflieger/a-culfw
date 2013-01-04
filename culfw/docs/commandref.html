@@ -45,6 +45,7 @@
     <a href="#cmd_F">F</a>
     <a href="#cmd_f">f</a>
     <a href="#cmd_G">G</a>
+    <a href="#cmd_H">H</a>
     <a href="#cmd_I">I</a>
     <a href="#cmd_i">i</a>
     <a href="#cmd_M">M</a>
@@ -455,6 +456,37 @@
       <li>DDDDD... Databytes
       </ul>
       See also X04
+    </ul><br><br>
+    
+    <a name="cmd_H"></a>
+    H&lt;func&gt;[&lt;hex&gt;]
+    <ul>
+      HM485 mode. &lt;func&gt; is one of:
+      <ul>
+      <li> ?<br>
+      	report statistics:
+      	<ul>
+	  <li>SEND: messages sent
+	  <li>RECV: messages received
+	  <li>FE: UART frame errors
+	  <li>PE: UART parity errors
+	  <li>OV: UART overruns
+	  <li>CRC: checksum errors
+	  <li>DATA: message structure errros
+	  <li>SIZE: messages too large
+      	</ul>
+      <li> s<br>
+        Send out a HM485 message. &lt;hex&gt; is a hex string of the following
+        form: ddddddddccsssssssspp...<br>
+        The length byte (after the header) and the CRC are automatically
+        added.
+        <ul>
+          <li>dd - destination address (4 byte, FFFFFFFF broadcast)
+          <li>cc - control byte
+          <li>ss - sender address (4 byte, 00000001 controller)
+          <li>pp - payload...
+        </ul>
+      </ul>
     </ul><br><br>
 
     <a name="cmd_I"></a>
