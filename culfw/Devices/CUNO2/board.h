@@ -126,6 +126,8 @@
 #undef  HAS_IRRX
 #endif
 
+#define HAS_HM485
+
 #define TTY_BUFSIZE             1024
 
 #define BUSWARE_CUNO2

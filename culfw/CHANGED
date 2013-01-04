@@ -1,3 +1,6 @@
+Version 1.51 (2013-01-04)
+- CUNO2: added HM485 support
+
 Version 1.50 (2012-29-12)
 - CUL: add CUL_V2_MAX variant
 - all: sending intertechno/FS20 commands from moritz mode restores moritz mode afterwards

@@ -52,6 +52,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/onewire.c                                  \
 		../../clib/dmx.c                                      \
 		../../clib/intertechno.c                              \
+		../../clib/hm485.c                                      \
 		
 OPT = s
 DEBUG = dwarf-2
@@ -119,8 +120,8 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 
 #AVRDUDE_NO_VERIFY = -V
 AVRDUDE_PROGRAMMER = avr109
-#AVRDUDE_PORT = /dev/ttyUSB1 -b 38400 
-AVRDUDE_PORT = COM10 -b 38400 
+AVRDUDE_PORT = /dev/ttyUSB0 -b 38400 
+#AVRDUDE_PORT = COM10 -b 38400 
 AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
 AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)

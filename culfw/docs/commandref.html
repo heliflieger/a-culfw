@@ -989,6 +989,7 @@
       </ul>
       (for binary data lower case 'a' is prepended - MORITZ messages are structured same but letter 'Z'/'z' is prepended)
       <br><br>
+      
 
     <li>For OBIS:<br>
       oESY5Q3DA1004 V3.03||1-0:0.0.0*255(1124001569)|....<br>
@@ -1006,6 +1007,16 @@
       </ul>
       <br><br>
 
+
+    <li>For HM485<br>
+     Hddddccsssspp...<br>
+     <ul>
+     <li>dd - destination address (32 bit)
+     <li>cc - control byte
+     <li>ss - sender address (32 bit)
+     <li>pp - payload
+     </ul>
+     <br><br>
 
     If bit 3 in the X command is set, then report raw data, even if it has a
     wrong checksum or parity. The format is:<ul>
