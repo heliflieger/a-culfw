@@ -330,6 +330,9 @@ static void send_boot(void)
 
 static void (*jump_to_app)(void) = 0x0000;
 
+// We include this to get EE_REQBL
+#include "../../../clib/fncollection.h"
+
 int main(void)
 {
 	uint16_t address = 0;
@@ -374,8 +377,9 @@ int main(void)
 	    etc.).
 	*/
 	for(;OK;) {
-		if ((BLPIN & (1<<BLPNUM))) {
+		if ((BLPIN & (1<<BLPNUM)) && eeprom_read_byte(EE_REQBL)!=1) {
 			// jump to main app if pin is not grounded
+			// and EEPROM bootloader request flag is not set
 			BLPORT &= ~(1<<BLPNUM);	// set to default
 #ifdef UART_DOUBLESPEED
 			UART_STATUS &= ~( 1<<UART_DOUBLE );
@@ -403,8 +407,9 @@ int main(void)
 
 #elif defined(START_SIMPLE)
 
-	if ((BLPIN & (1<<BLPNUM))) {
+	if ((BLPIN & (1<<BLPNUM)) && eeprom_read_byte(EE_REQBL)!=1) {
 		// jump to main app if pin is not grounded
+		// and EEPROM bootloader request flag is not set
 		BLPORT &= ~(1<<BLPNUM);		// set to default		
 #ifdef UART_DOUBLESPEED
 		UART_STATUS &= ~( 1<<UART_DOUBLE );
@@ -437,6 +442,7 @@ int main(void)
 #error "Select START_ condition for bootloader in main.c"
 #endif
 
+	eeprom_update_byte(EE_REQBL, 0);
 
 	for(;;) {
  	        PORTB |= _BV( 0 );
