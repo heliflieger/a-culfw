@@ -32,6 +32,10 @@
 #include "rf_router.h"
 #include "memory.h"
 
+#ifdef HAS_MORITZ
+#include "rf_moritz.h"
+#endif
+
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
 #endif
@@ -53,6 +57,9 @@ const PROGMEM t_fntab fntab[] = {
   { 'F', fs20send },
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
 #endif
 #ifdef HAS_IRRX
   { 'I', ir_func },
@@ -158,6 +165,10 @@ main(void)
 #ifdef HAS_IRRX
     ir_task();
 #endif
+#ifdef HAS_MORITZ
+    rf_moritz_task();
+#endif
+
   }
 
 }

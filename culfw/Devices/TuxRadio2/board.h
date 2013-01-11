@@ -56,6 +56,7 @@
 #define HAS_INTERTECHNO
 #define HAS_HOERMANN
 #define HAS_MEMFN
+#define HAS_MORITZ
 
 #define BUSWARE_CSM
 
