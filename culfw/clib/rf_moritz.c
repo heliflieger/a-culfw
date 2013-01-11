@@ -13,6 +13,10 @@
 
 #include "rf_moritz.h"
 
+void moritz_sendraw(uint8_t* buf, int longPreamble);
+void moritz_sendAck(uint8_t* enc);
+void moritz_handleAutoAck(uint8_t* enc);
+
 uint8_t moritz_on = 0;
 
 /*
@@ -66,6 +70,8 @@ const uint8_t PROGMEM MORITZ_CFG[60] = {
      0xff
 };
 
+static uint8_t autoAckAddr[3] = {0, 0, 0};
+
 void
 rf_moritz_init(void)
 {
@@ -103,6 +109,38 @@ rf_moritz_init(void)
 }
 
 void
+moritz_handleAutoAck(uint8_t* enc)
+{
+  /* Debug ouput
+  DC('D');
+  DC('Z');
+  DH2(autoAckAddr[0]);
+  DH2(autoAckAddr[1]);
+  DH2(autoAckAddr[2]);
+  DC('-');
+  DH2(enc[0]);
+  DH2(enc[3]);
+  DH2(enc[7]);
+  DH2(enc[8]);
+  DH2(enc[9]);
+  DNL();
+  */
+
+  if(autoAckAddr[0] == 0 && autoAckAddr[1] == 0 && autoAckAddr[2] == 0)
+    return; //auto-Ack is disabled
+
+  //we only have to send Acks to ShutterContactState messages directed at us
+  if(enc[0] != 11 /*len*/
+      || enc[3] != 0x30 /* type */
+      || enc[7] != autoAckAddr[0] /* dest */
+      || enc[8] != autoAckAddr[1]
+      || enc[9] != autoAckAddr[2])
+    return;
+
+  moritz_sendAck(enc);
+}
+
+void
 rf_moritz_task(void)
 {
   uint8_t enc[MAX_MORITZ_MSG];
@@ -132,6 +170,8 @@ rf_moritz_task(void)
     /* LQI = */ cc1100_sendbyte( 0 );
 
     CC1100_DEASSERT;
+
+    moritz_handleAutoAck(enc);
 
     if (tx_report & REP_BINTIME) {
 
@@ -166,11 +206,19 @@ moritz_send(char *in)
   uint8_t hblen = fromhex(in+1, dec, MAX_MORITZ_MSG-1);
 
   if ((hblen-1) != dec[0]) {
-//    DS_P(PSTR("LENERR\r\n"));
+    DS_P(PSTR("LENERR\r\n"));
     return;
   }
+  moritz_sendraw(dec, 1);
+}
+
+/* longPreamble is necessary for unsolicited messages to wakeup the receiver */
+void
+moritz_sendraw(uint8_t *dec, int longPreamble)
+{
+  uint8_t hblen = dec[0]+1;
   //1kb/s = 1 bit/ms. we send 1 sec preamble + hblen*8 bits
-  uint32_t sum = 100 + (hblen*8)/10;
+  uint32_t sum = (longPreamble ? 100 : 0) + (hblen*8)/10;
   if (credit_10ms < sum) {
     DS_P(PSTR("LOVF\r\n"));
     return;
@@ -211,9 +259,12 @@ moritz_send(char *in)
     rf_moritz_init();
     return;
   }
-  /* Send preamble for 1 sec. Keep in mind that waiting for too long may trigger the watchdog (2 seconds on CUL) */
-  for(int i=0;i<10;++i)
-    my_delay_ms(100); //arg is uint_8, so loop
+
+  if(longPreamble) {
+    /* Send preamble for 1 sec. Keep in mind that waiting for too long may trigger the watchdog (2 seconds on CUL) */
+    for(int i=0;i<10;++i)
+      my_delay_ms(100); //arg is uint_8, so loop
+  }
 
   // send
   CC1100_ASSERT;
@@ -253,6 +304,33 @@ moritz_send(char *in)
 }
 
 void
+moritz_sendAck(uint8_t* enc)
+{
+  uint8_t ackPacket[12];
+  ackPacket[0] = 11; /* len*/
+  ackPacket[1] = enc[1]; /* msgcnt */
+  ackPacket[2] = 0; /* flag */
+  ackPacket[3] = 2; /* type = Ack */
+  for(int i=0;i<3;++i) /* src */
+    ackPacket[4+i] = autoAckAddr[0+i];
+  for(int i=0;i<3;++i) /* dst = enc_src */
+    ackPacket[7+i] = enc[4+i];
+  ackPacket[10] = 0; /* groupid */
+  ackPacket[11] = 0; /* payload */
+
+  my_delay_ms(20); /* by experiments */
+  moritz_sendraw(ackPacket, 0);
+
+  //Inform FHEM that we send an autoack
+  DC('Z');
+  for (uint8_t i=0; i < ackPacket[0]+1; i++)
+    DH2( ackPacket[i] );
+  if (tx_report & REP_RSSI)
+    DH2( 0 ); //fake some rssi
+  DNL();
+}
+
+void
 moritz_func(char *in)
 {
   if(in[1] == 'r') {                // Reception on
@@ -261,6 +339,9 @@ moritz_func(char *in)
 
   } else if(in[1] == 's') {         // Send
     moritz_send(in+1);
+
+  } else if(in[1] == 'a') {         // Auto-Ack
+    fromhex(in+2, autoAckAddr, 3);
 
   } else {                          // Off
     moritz_on = 0;
