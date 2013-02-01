@@ -1,0 +1,85 @@
+#ifndef _BOARD_H
+#define _BOARD_H
+
+#ifndef F_CPU
+#define F_CPU 8000000
+#endif
+
+
+#define HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
+#define HAS_FHT_80b                     // PROGMEM: 1158b, RAM:  5b
+
+#undef  FULL_CC1100_PA                  // PROGMEM:  108b
+
+#undef  HAS_RAWSEND                     // PROGMEM:  198b     RAM:  4b
+#undef  HAS_FASTRF                      // PROGMEM:  362+106  RAM:  1b
+#undef  HAS_RF_ROUTER                   // PROGMEM:  920b  RAM: 38b
+#undef  HAS_LONGMSG                     // CUR support     RAM: 20b
+
+
+#define SPI_PORT                PORTB
+#define SPI_DDR                 DDRB
+#define SPI_SS                  4
+#define SPI_MISO                6
+#define SPI_MOSI                5
+#define SPI_SCLK                7
+
+#define OCR0A OCR0
+#define TCCR0B TCCR0
+#define TCCR0A TCCR0
+#define TIMSK0 TIMSK
+#define TIMSK1 TIMSK
+#define OCIE0A OCIE0
+#define TIMER0_COMPA_vect TIMER0_COMP_vect
+
+#define EIMSK GICR
+#define EIFR  GIFR
+#define TIFR1 TIFR
+
+#define CC1100_CS_DDR           SPI_DDR
+#define CC1100_CS_PORT          SPI_PORT
+#define CC1100_CS_PIN           SPI_SS
+
+#define CC1100_OUT_DDR          DDRD
+#define CC1100_OUT_PORT         PORTD
+#define CC1100_OUT_PIN          3
+
+#define CC1100_IN_DDR           DDRD
+#define CC1100_IN_PORT          PIND
+#define CC1100_IN_PIN           2
+#define CC1100_INT              INT0
+#define CC1100_INTVECT          INT0_vect
+#define CC1100_ISC              ISC00
+#define CC1100_EICR             MCUCR
+
+#define LED_DDR                 DDRD
+#define LED_PORT                PORTD
+#define LED_PIN                 4
+
+#define REL_DDR                 DDRB
+#define REL_PORT                PORTB
+#define REL_PIN                 0
+
+#define KEY_DDR                 DDRA
+#define KEY_PORT                PORTA
+#define KEY_PIN                 0
+#define KEY_IN                  PINA
+
+#define FHTBUF_SIZE          174      //                 RAM: 174b
+#define RCV_BUCKETS            4      //                 RAM: 25b * bucket
+#define RFR_DEBUG                     // PROGMEM:  354b  RAM: 14b
+#define FULL_CC1100_PA                // PROGMEM:  108b
+#define HAS_RAWSEND                   //
+#define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
+#define HAS_RF_ROUTER
+#define HAS_ASKSIN
+#define HAS_ESA
+#define HAS_INTERTECHNO
+
+#define BOARD_ID_STR            "CSM868"
+
+#define TTY_BUFSIZE             132
+
+#define BUSWARE_CSM
+
+#endif

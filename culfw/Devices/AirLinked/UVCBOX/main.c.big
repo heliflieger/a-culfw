@@ -1,0 +1,86 @@
+#include <avr/boot.h>
+#include <avr/power.h>
+#include <avr/eeprom.h>
+#include <avr/interrupt.h>
+#include <avr/io.h>
+#include <util/delay.h>
+#include <avr/pgmspace.h>
+#include <avr/wdt.h>
+
+#include <string.h>
+
+#include "../board.h"
+
+volatile uint16_t count = 0; 
+volatile uint16_t chA   = 0; 
+volatile uint16_t chB   = 0; 
+
+const uint8_t xlevels[] = {
+    0, 1, 2, 2, 2, 3, 3, 4, 5, 6, 7, 8, 10, 11, 13, 16, 19, 23,
+    27, 32, 38, 45, 54, 64, 76, 91, 108, 128, 152, 181, 215, 255
+};
+
+const uint16_t levels[] = {
+    0, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6, 7, 8, 9, 10,
+    11, 12, 13, 15, 17, 19, 21, 23, 26, 29, 32, 36, 40, 44, 49, 55,
+    61, 68, 76, 85, 94, 105, 117, 131, 146, 162, 181, 202, 225, 250,
+    279, 311, 346, 386, 430, 479, 534, 595, 663, 739, 824, 918, 1023
+};
+
+ISR(TIMER2_OVF_vect) {
+
+  if ((chA & 0x300) == count) {
+    // PWM - set on match
+    OCR2A   = (chA & 0xff);
+    TCCR2A |= (_BV( COM2A1 ) | _BV( COM2A0 ));
+    PORTD  |= _BV( 7 );
+  } else if ((chA & 0x300)<count) {
+    // ON - segment after match
+    TCCR2A &= ~(_BV( COM2A1 ) | _BV( COM2A0 ));
+    PORTD |= _BV( 7 );
+  } else {
+    // OFF
+    TCCR2A &= ~(_BV( COM2A1 ) | _BV( COM2A0 ));
+    PORTD &= ~_BV( 7 );
+  }
+
+  count = (count + 0x100) & 0x300;
+  TCNT2 = 0;
+}
+
+int main(void) {
+  wdt_disable();
+
+  DDRD  |= _BV( 7 ) | _BV( 6 );
+  DDRC   = _BV( 4 );
+  PORTC |= _BV( 3 );
+
+//  OCR2A  = 10;
+//  TCCR2A = _BV( WGM21 );
+//  TCCR2B = _BV( CS21 ) | _BV( CS21 ) | _BV( CS21 ); // 1MHz
+//  TIMSK2 = _BV( OCIE2A );
+
+// normal PWM
+  TCCR2A = _BV( WGM20) | _BV( WGM21 );
+  TCCR2B = _BV( CS20 ) | _BV( CS21 ) | _BV( CS21 );
+  TIMSK2 = _BV( TOIE2 );
+
+  uint8_t level = 0;
+
+  sei();
+
+  while (1) {
+    level = level & 0x3f;
+    chA = levels[level];
+    chB = levels[0x3f-level];
+//    OCR2A = levels[level];
+//    OCR2B = levels[0x3f-level];
+    PORTC ^= _BV( 4 );
+
+//    for (uint8_t i=0;i<3;i++)
+      _delay_ms(40);
+
+//    if (!bit_is_set(PINC, 3))
+      level++;
+  }
+}
