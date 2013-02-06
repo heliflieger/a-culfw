@@ -106,6 +106,8 @@ rf_moritz_init(void)
   //Why do it multiple times?
   while(cnt-- && (ccStrobe( CC1100_SRX ) & 0x70) != 1)
     my_delay_us(10);
+
+  moritz_on = 1;
 }
 
 void
@@ -335,7 +337,6 @@ moritz_func(char *in)
 {
   if(in[1] == 'r') {                // Reception on
     rf_moritz_init();
-    moritz_on = 1;
 
   } else if(in[1] == 's') {         // Send
     moritz_send(in+1);

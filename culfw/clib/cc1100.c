@@ -8,6 +8,10 @@
 #include "fncollection.h"
 #include "cc1100.h"
 
+#ifdef HAS_MORITZ
+#include "rf_moritz.h"
+#endif
+
 uint8_t cc_on;
 
 // NOTE: FS20 devices can receive/decode signals sent with PA ramping,
@@ -152,6 +156,10 @@ cc1100_sendbyte(uint8_t data)
 void
 ccInitChip(uint8_t *cfg)
 {
+#ifdef HAS_MORITZ
+  moritz_on = 0; //loading this configuration overwrites moritz cfg
+#endif
+
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
 

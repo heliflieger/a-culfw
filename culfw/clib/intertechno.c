@@ -237,7 +237,6 @@ it_send (char *in) {
 	else if (restore_moritz) {
 		restore_moritz = 0;
 		rf_moritz_init();
-		moritz_on = 1;
 	}
 	#endif
   	else {
@@ -318,8 +317,6 @@ it_func(char *in)
 		} else if (restore_moritz) {
 			restore_moritz = 0;
 			rf_moritz_init();
-			moritz_on = 1;
-			ccRX();
 		#endif
 		} else {
 			ccInitChip(EE_CC1100_CFG);										// Set back to Eeprom Values
