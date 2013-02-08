@@ -71,6 +71,7 @@ const uint8_t PROGMEM MORITZ_CFG[60] = {
 };
 
 static uint8_t autoAckAddr[3] = {0, 0, 0};
+static uint32_t lastSendingTicks = 0;
 
 void
 rf_moritz_init(void)
@@ -244,6 +245,15 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
     return;
   }
 
+  /* We have to keep at least 20 ms of silence between two sends
+   * (found out by trial and error). ticks runs at 125 Hz (8 ms per tick),
+   * so we wait for 3 ticks.
+   * This looks a bit cumbersome but handles overflows of ticks gracefully.
+   */
+  while(lastSendingTicks &&
+       (ticks == lastSendingTicks || ticks == lastSendingTicks+1 || ticks == lastSendingTicks+2))
+    my_delay_ms(8);
+
   /* Enable TX. Perform calibration first if MCSM0.FS_AUTOCAL=1 (this is the case) (takes 809μs)
    * start sending - CC1101 will send preamble continuously until TXFIFO is filled.
    * The preamble will wake up devices. See http://e2e.ti.com/support/low_power_rf/f/156/t/142864.aspx
@@ -303,6 +313,7 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
   if(!moritz_on) {
     set_txrestore();
   }
+  lastSendingTicks = ticks;
 }
 
 void
@@ -320,7 +331,6 @@ moritz_sendAck(uint8_t* enc)
   ackPacket[10] = 0; /* groupid */
   ackPacket[11] = 0; /* payload */
 
-  my_delay_ms(20); /* by experiments */
   moritz_sendraw(ackPacket, 0);
 
   //Inform FHEM that we send an autoack

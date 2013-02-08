@@ -32,8 +32,8 @@ uint8_t ir_ticks = 0;
 uint8_t ir_ticks_thrd = 0;
 #endif
 
-uint32_t ticks;
-uint8_t  clock_hsec;
+volatile uint32_t ticks;
+volatile uint8_t  clock_hsec;
 
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
