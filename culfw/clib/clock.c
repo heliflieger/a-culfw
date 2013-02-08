@@ -4,6 +4,9 @@
 
 #include "board.h"
 #include "led.h"
+#ifdef XLED
+#include "xled.h"
+#endif
 #include "fncollection.h"
 #include "clock.h"
 #include "display.h"
@@ -113,6 +116,16 @@ Minute_Task(void)
   wdt_reset();
 
   // 125Hz
+#ifdef XLED
+  if ((ticks % 12) == 0) {
+    if ( xled_pattern & _BV(xled_pos++) ) {
+      LED_ON();
+    } else {
+      LED_OFF();
+    }
+  }
+  xled_pos &= 15;
+#endif
 #ifdef HAS_FHT_8v
   if(fht8v_timeout == 0)
     fht8v_timer();
@@ -136,9 +149,11 @@ Minute_Task(void)
   if(clock_hsec>0)     // Note: this can skip some hsecs
     return;
 
+#ifndef XLED
   // 1Hz
   if(led_mode & 2)
     LED_TOGGLE();
+#endif
 
   // one second, 1% duty cycle, 10ms resolution => this is simple ;-)
   if (credit_10ms < MAX_CREDIT)

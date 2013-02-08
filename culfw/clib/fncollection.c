@@ -21,6 +21,10 @@
 
 uint8_t led_mode = 2;   // Start blinking
 
+#ifdef XLED
+#include "xled.h"
+#endif
+
 //////////////////////////////////////////////////
 // EEprom
 
@@ -165,6 +169,25 @@ eeprom_init(void)
        eeprom_factory_reset(0);
 
   led_mode = erb(EE_LED);
+#ifdef XLED
+  switch (led_mode) {
+    case 0:
+      xled_pattern = 0;
+      break;
+    case 1:
+      xled_pattern = 0xffff;
+      break;
+    case 2:
+      xled_pattern = 0xff00;
+      break;
+    case 3:
+      xled_pattern = 0xa000;
+      break;
+    case 4:
+      xled_pattern = 0xaa00;
+      break;
+  }
+#endif
 #ifdef HAS_SLEEP
   sleep_time = erb(EE_SLEEPTIME);
 #endif
@@ -209,10 +232,30 @@ void
 ledfunc(char *in)
 {
   fromhex(in+1, &led_mode, 1);
+#ifdef XLED
+  switch (led_mode) {
+    case 0:
+      xled_pattern = 0; 
+      break;
+    case 1:
+      xled_pattern = 0xffff; 
+      break;
+    case 2:
+      xled_pattern = 0xff00; 
+      break;
+    case 3:
+      xled_pattern = 0xa000; 
+      break;
+    case 4:
+      xled_pattern = 0xaa00; 
+      break;
+  }
+#else
   if(led_mode & 1)
     LED_ON();
   else
     LED_OFF();
+#endif
 
   ewb(EE_LED, led_mode);
 }

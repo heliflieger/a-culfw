@@ -10,7 +10,12 @@
 
 #include "board.h"
 
+#ifdef XLED
+#include "xled.h"
+#define led_init()   LED_DDR  |= _BV(LED_PIN); xled_pos=0; xled_pattern=0xff00
+#else
 #define led_init()   LED_DDR  |= _BV(LED_PIN)
+#endif
 
 #define LED_TOGGLE() LED_PORT ^= _BV(LED_PIN)
 
