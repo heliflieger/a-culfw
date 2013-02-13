@@ -250,9 +250,9 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
    * so we wait for 3 ticks.
    * This looks a bit cumbersome but handles overflows of ticks gracefully.
    */
-  while(lastSendingTicks &&
-       (ticks == lastSendingTicks || ticks == lastSendingTicks+1 || ticks == lastSendingTicks+2))
-    my_delay_ms(8);
+  if(lastSendingTicks)
+    while(ticks == lastSendingTicks || ticks == lastSendingTicks+1)
+      my_delay_ms(1);
 
   /* Enable TX. Perform calibration first if MCSM0.FS_AUTOCAL=1 (this is the case) (takes 809μs)
    * start sending - CC1101 will send preamble continuously until TXFIFO is filled.
@@ -330,6 +330,8 @@ moritz_sendAck(uint8_t* enc)
     ackPacket[7+i] = enc[4+i];
   ackPacket[10] = 0; /* groupid */
   ackPacket[11] = 0; /* payload */
+
+  my_delay_ms(20); /* by experiments */
 
   moritz_sendraw(ackPacket, 0);
 
