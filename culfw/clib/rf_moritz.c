@@ -357,8 +357,14 @@ moritz_func(char *in)
   if(in[1] == 'r') {                // Reception on
     rf_moritz_init();
 
-  } else if(in[1] == 's') {         // Send
-    moritz_send(in+1);
+  } else if(in[1] == 's' || in[1] == 'f' ) {         // Send/Send fast
+    uint8_t dec[MAX_MORITZ_MSG];
+    uint8_t hblen = fromhex(in+2, dec, MAX_MORITZ_MSG-1);
+    if ((hblen-1) != dec[0]) {
+      DS_P(PSTR("LENERR\r\n"));
+      return;
+    }
+    moritz_sendraw(dec, in[1] == 's');
 
   } else if(in[1] == 'a') {         // Auto-Ack
     fromhex(in+2, autoAckAddr, 3);
