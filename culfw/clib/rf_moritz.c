@@ -71,6 +71,7 @@ const uint8_t PROGMEM MORITZ_CFG[60] = {
 };
 
 static uint8_t autoAckAddr[3] = {0, 0, 0};
+static uint8_t fakeWallThermostatAddr[3] = {0, 0, 0};
 static uint32_t lastSendingTicks = 0;
 
 void
@@ -129,18 +130,24 @@ moritz_handleAutoAck(uint8_t* enc)
   DNL();
   */
 
-  if(autoAckAddr[0] == 0 && autoAckAddr[1] == 0 && autoAckAddr[2] == 0)
-    return; //auto-Ack is disabled
-
   //we only have to send Acks to ShutterContactState messages directed at us
-  if(enc[0] != 11 /*len*/
-      || enc[3] != 0x30 /* type */
-      || enc[7] != autoAckAddr[0] /* dest */
-      || enc[8] != autoAckAddr[1]
-      || enc[9] != autoAckAddr[2])
-    return;
+  if((autoAckAddr[0] != 0 || autoAckAddr[1] != 0 || autoAckAddr[2] == 0) /* auto-ack enabled */
+      && enc[0] == 11 /* len */
+      && enc[3] == 0x30 /* type ShutterContactState */
+      && enc[7] == autoAckAddr[0] /* dest */
+      && enc[8] == autoAckAddr[1]
+      && enc[9] == autoAckAddr[2])
+    moritz_sendAck(enc);
 
-  moritz_sendAck(enc);
+  if((fakeWallThermostatAddr[0] != 0 || fakeWallThermostatAddr[1] != 0 || fakeWallThermostatAddr[2] != 0) /* fake enabled */
+      && enc[0] == 11 /* len */
+      && enc[3] == 0x40 /* type SetTemperature */
+      && enc[7] == fakeWallThermostatAddr[0] /* dest */
+      && enc[8] == fakeWallThermostatAddr[1]
+      && enc[9] == fakeWallThermostatAddr[2])
+    moritz_sendAck(enc);
+
+  return;
 }
 
 void
@@ -324,8 +331,8 @@ moritz_sendAck(uint8_t* enc)
   ackPacket[1] = enc[1]; /* msgcnt */
   ackPacket[2] = 0; /* flag */
   ackPacket[3] = 2; /* type = Ack */
-  for(int i=0;i<3;++i) /* src */
-    ackPacket[4+i] = autoAckAddr[0+i];
+  for(int i=0;i<3;++i) /* src = enc_dst*/
+    ackPacket[4+i] = enc[7+i];
   for(int i=0;i<3;++i) /* dst = enc_src */
     ackPacket[7+i] = enc[4+i];
   ackPacket[10] = 0; /* groupid */
@@ -355,6 +362,9 @@ moritz_func(char *in)
 
   } else if(in[1] == 'a') {         // Auto-Ack
     fromhex(in+2, autoAckAddr, 3);
+
+  } else if(in[1] == 'w') {         // Fake Wall-Thermostat
+    fromhex(in+2, fakeWallThermostatAddr, 3);
 
   } else {                          // Off
     moritz_on = 0;
