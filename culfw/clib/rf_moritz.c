@@ -130,10 +130,18 @@ moritz_handleAutoAck(uint8_t* enc)
   DNL();
   */
 
-  //we only have to send Acks to ShutterContactState messages directed at us
+  //we only have to send Acks to ShutterContactState and EcoButtonState messages directed at us
   if((autoAckAddr[0] != 0 || autoAckAddr[1] != 0 || autoAckAddr[2] == 0) /* auto-ack enabled */
       && enc[0] == 11 /* len */
       && enc[3] == 0x30 /* type ShutterContactState */
+      && enc[7] == autoAckAddr[0] /* dest */
+      && enc[8] == autoAckAddr[1]
+      && enc[9] == autoAckAddr[2])
+    moritz_sendAck(enc);
+
+  if((autoAckAddr[0] != 0 || autoAckAddr[1] != 0 || autoAckAddr[2] == 0) /* auto-ack enabled */
+      && enc[0] == 12 /* len */
+      && enc[3] == 0x50 /* type PushButtonState */
       && enc[7] == autoAckAddr[0] /* dest */
       && enc[8] == autoAckAddr[1]
       && enc[9] == autoAckAddr[2])
