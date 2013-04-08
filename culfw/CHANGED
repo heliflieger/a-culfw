@@ -1,3 +1,6 @@
+Version 1.54 (2013-04-08)
+- MORITZ: Add auto-ack for SetTemperature
+
 Version 1.52 (2013-01-11)
 - MORITZ: Add support for auto-Ack
 
