@@ -177,6 +177,14 @@ asksin_send(char *in)
   ccStrobe(CC1100_SFRX );
   ccStrobe(CC1100_SFTX );
 
+  if (dec[2] & (1 << 4)) { //BURST-bit set?
+    ccStrobe(CC1100_STX  ); //We need to send a burst
+
+    //According to ELV, devices get activated every 300ms, so send burst for 360ms
+    for(l = 0; l < 3; l++)
+      my_delay_ms(120); //arg is uint_8, so loop
+  }
+
   // "crypt"
 
   enc[0] = dec[0];
