@@ -328,7 +328,7 @@ fht80b_send_repeated(void)
   if(fht80b_out[2]==FHT_ACK2)
     return;
   fht80b_repeatcnt = 1;                // Never got reply for the 3.rd data
-  fht80b_timeout = 41;                 // 330+75+70 = 475ms
+  fht80b_timeout = 41;                 // 330+75+70 = 475ms (41==328ms?)
 }
 
 void
@@ -343,7 +343,7 @@ fht_hook(uint8_t *fht_in)
   fht_display_buf(fht_in); 
 #endif
 
-  fht80b_timeout = 41;                 // Activate the timer, delay RFR...
+  fht80b_timeout = 95;                 // Wait 0.76s (second can-rcv) for reply
   fht80b_repeatcnt = 0;                // but do not send anything per default
   if(fht_hc0 == 0 && fht_hc1 == 0)     // FHT processing is off
     return;
