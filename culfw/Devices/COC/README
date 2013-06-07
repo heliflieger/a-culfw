@@ -4,7 +4,13 @@ FLASHING FIRMWARE
 
 To update CSMs firmware with culfw execute:
 
-	make program
+	make 
+
+Then, depending on yr version do:
+
+	make program_full
+or
+	make program_radio_only
 
 on the RPi itself. This will require some tools installed upfront. 
 Use:
@@ -12,7 +18,7 @@ Use:
 	apt-get install make avrdude
 
 
-to flash the recompiled COC.hex file.
+to flash the recompiled hex-file.
 
 BEFORE
 
