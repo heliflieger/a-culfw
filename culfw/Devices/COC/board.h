@@ -60,7 +60,9 @@
 
 #define HAS_ONEWIRE         10      // OneWire Device Buffer, RAM: 10 * 8 Byte
 #define OW_SPU			    // StrongPullUp support
-#undef  HHAS_ONEWIRE
+#ifdef RADIO_ONLY
+#undef  HAS_ONEWIRE
+#endif
 
 #undef  HAS_RTC
 #define RTC_ADDR                0xd0
