@@ -11,7 +11,7 @@
 
 uint8_t asksin_on = 0;
 
-const uint8_t PROGMEM ASKSIN_CFG[50] = {
+const uint8_t PROGMEM ASKSIN_CFG[] = {
      0x00, 0x07,
      0x02, 0x2e,
      0x03, 0x0d,
@@ -26,17 +26,20 @@ const uint8_t PROGMEM ASKSIN_CFG[50] = {
      0x11, 0x93,
      0x12, 0x03,
      0x15, 0x34,
-     0x17, 0x30, // always go into IDLE
+     0x17, 0x33, // go into RX after TX, CCA; EQ3 uses 0x03
      0x18, 0x18,
      0x19, 0x16,
      0x1B, 0x43,
      0x21, 0x56,
      0x25, 0x00,
      0x26, 0x11,
+     0x29, 0x59,
+     0x2c, 0x81,
      0x2D, 0x35,
-     0x3e, 0xc3,
-     0xff
+     0x3e, 0xc3
 };
+
+static void rf_asksin_reset_rx(void);
 
 void
 rf_asksin_init(void)
@@ -56,18 +59,25 @@ rf_asksin_init(void)
   my_delay_us(100);
 
   // load configuration
-  for (uint8_t i = 0; i<50; i += 2) {
-       
-    if (pgm_read_byte( &ASKSIN_CFG[i] )>0x40)
-      break;
-
+  for (uint8_t i = 0; i < sizeof(ASKSIN_CFG); i += 2) {
     cc1100_writeReg( pgm_read_byte(&ASKSIN_CFG[i]),
                      pgm_read_byte(&ASKSIN_CFG[i+1]) );
   }
   
   ccStrobe( CC1100_SCAL );
 
-  my_delay_ms(1);
+  my_delay_ms(4);
+
+  ccRX();
+}
+
+static void
+rf_asksin_reset_rx(void)
+{
+  ccStrobe( CC1100_SFRX  );
+  ccStrobe( CC1100_SIDLE );
+  ccStrobe( CC1100_SNOP  );
+  ccStrobe( CC1100_SRX   );
 }
 
 void
@@ -83,12 +93,14 @@ rf_asksin_task(void)
 
   // see if a CRC OK pkt has been arrived
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
-
     enc[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
 
-    if (enc[0]>=MAX_ASKSIN_MSG)
-         enc[0] = MAX_ASKSIN_MSG-1;
-    
+    if (enc[0] >= MAX_ASKSIN_MSG) {
+      // Something went horribly wrong, out of sync?
+      rf_asksin_reset_rx();
+      return;
+    }
+
     CC1100_ASSERT;
     cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
     
@@ -97,12 +109,10 @@ rf_asksin_task(void)
     }
     
     rssi = cc1100_sendbyte( 0 );
-    
+    /* LQI = */ cc1100_sendbyte( 0 );
+
     CC1100_DEASSERT;
 
-    ccStrobe( CC1100_SFRX  );
-    ccStrobe( CC1100_SIDLE );
-    ccStrobe( CC1100_SNOP  );
     ccStrobe( CC1100_SRX   );
 
     dec[0] = enc[0];
@@ -112,7 +122,6 @@ rf_asksin_task(void)
          dec[l] = (enc[l-1] + 0xdc) ^ enc[l];
     
     dec[l] = enc[l] ^ dec[2];
-    
     
     if (tx_report & REP_BINTIME) {
       
@@ -131,26 +140,17 @@ rf_asksin_task(void)
       
       DNL();
     }
-
-    return;
-       
-  }
-       
-       
-  switch (cc1100_readReg( CC1100_MARCSTATE )) {
-            
-       // RX_OVERFLOW
-  case 17:
-       // IDLE
-  case 1:
-    ccStrobe( CC1100_SFRX  );
-    ccStrobe( CC1100_SIDLE );
-    ccStrobe( CC1100_SNOP  );
-    ccStrobe( CC1100_SRX   );
-    break;
-       
   }
 
+  switch(cc1100_readReg( CC1100_MARCSTATE )) {
+    case MARCSTATE_RXFIFO_OVERFLOW:
+      ccStrobe( CC1100_SFRX  );
+    case MARCSTATE_IDLE:
+      ccStrobe( CC1100_SIDLE );
+      ccStrobe( CC1100_SNOP  );
+      ccStrobe( CC1100_SRX   );
+      break;
+  }
 }
 
 void
@@ -173,20 +173,7 @@ asksin_send(char *in)
     my_delay_ms(3);             // 3ms: Found by trial and error
   }
 
-  ccStrobe(CC1100_SIDLE);
-  ccStrobe(CC1100_SFRX );
-  ccStrobe(CC1100_SFTX );
-
-  if (dec[2] & (1 << 4)) { //BURST-bit set?
-    ccStrobe(CC1100_STX  ); //We need to send a burst
-
-    //According to ELV, devices get activated every 300ms, so send burst for 360ms
-    for(l = 0; l < 3; l++)
-      my_delay_ms(120); //arg is uint_8, so loop
-  }
-
   // "crypt"
-
   enc[0] = dec[0];
   enc[1] = (~dec[1]) ^ 0x89;
 
@@ -194,6 +181,15 @@ asksin_send(char *in)
     enc[l] = (enc[l-1] + 0xdc) ^ dec[l];
   
   enc[l] = dec[l] ^ dec[2];
+
+  ccTX();
+  if (dec[2] & (1 << 4)) { // BURST-bit set?
+    // According to ELV, devices get activated every 300ms, so send burst for 360ms
+    for(l = 0; l < 3; l++)
+      my_delay_ms(120); // arg is uint_8, so loop
+  } else {
+  	my_delay_ms(10);
+  }
 
   // send
   CC1100_ASSERT;
@@ -205,11 +201,16 @@ asksin_send(char *in)
 
   CC1100_DEASSERT;
 
-  ccStrobe( CC1100_SFRX  );
-  ccStrobe( CC1100_STX   );
-  
-  while( cc1100_readReg( CC1100_MARCSTATE ) != 1 )
-    my_delay_ms(5);
+  // wait for TX to finish
+  while(cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_TX)
+    ;
+
+  if (cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_TXFIFO_UNDERFLOW) {
+      ccStrobe( CC1100_SFTX  );
+      ccStrobe( CC1100_SIDLE );
+      ccStrobe( CC1100_SNOP  );
+      ccStrobe( CC1100_SRX   );
+  }
   
   if(asksin_on) {
     ccRX();
