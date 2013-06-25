@@ -17,7 +17,6 @@ SRC =           COC.c\
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
-		../../clib/rf_airlink.c                              \
 		../../clib/intertechno.c                             \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
