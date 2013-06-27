@@ -1,3 +1,7 @@
+Version 1.56 (2013-06-27)
+- improved communications-reliability in AskSin-mode
+- changed first FHT timeout
+
 Version 1.55 (2013-05-21)
 - AskSin burst support (by Michael)
 
