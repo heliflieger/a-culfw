@@ -68,7 +68,10 @@ rf_asksin_init(void)
 
   my_delay_ms(4);
 
-  ccRX();
+  // enable RX, but don't enable the interrupt
+  do {
+    ccStrobe(CC1100_SRX);
+  } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
 }
 
 static void
@@ -113,7 +116,9 @@ rf_asksin_task(void)
 
     CC1100_DEASSERT;
 
-    ccStrobe( CC1100_SRX   );
+    do {
+      ccStrobe(CC1100_SRX);
+    } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
 
     dec[0] = enc[0];
     dec[1] = (~enc[1]) ^ 0x89;
@@ -182,7 +187,11 @@ asksin_send(char *in)
   
   enc[l] = dec[l] ^ dec[2];
 
-  ccTX();
+  // enable TX, wait for CCA
+  do {
+    ccStrobe(CC1100_STX);
+  } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_TX);
+
   if (dec[2] & (1 << 4)) { // BURST-bit set?
     // According to ELV, devices get activated every 300ms, so send burst for 360ms
     for(l = 0; l < 3; l++)
@@ -209,11 +218,12 @@ asksin_send(char *in)
       ccStrobe( CC1100_SFTX  );
       ccStrobe( CC1100_SIDLE );
       ccStrobe( CC1100_SNOP  );
-      ccStrobe( CC1100_SRX   );
   }
   
   if(asksin_on) {
-    ccRX();
+    do {
+      ccStrobe(CC1100_SRX);
+    } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
   } else {
     set_txrestore();
   }
