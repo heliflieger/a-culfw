@@ -1,0 +1,14 @@
+The RFbee is a small module containing an Atmel ATmega168 and a CC1101.
+This directory contains the files necessary to build culfw for this
+platform.
+
+To flash culfw to the RFbee, at least RX, TX, DTR and GND need to be
+connected to a (3.3V) serial interface. Then run "make program"
+which uses the arduino-bootloader preprogrammed in the RFbee
+to flash culfw. Make sure to set AVRDUDE_PORT to the right serial
+port in the Makefile.
+
+To use the RFbee from within Fhem, use something like the following
+definition:
+
+define RFbee CUL /dev/ttyUSB0@38400 1234
