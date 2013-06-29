@@ -1,7 +1,7 @@
 /* Copyright Rudolf Koenig, 2008.
    Released under the GPL Licence, Version 2
    Inpired by the MyUSB USBtoSerial demo, Copyright (C) Dean Camera, 2008.
-*/
+ */
 
 #include <avr/boot.h>
 #include <avr/power.h>
@@ -53,106 +53,106 @@
 #endif
 
 const PROGMEM t_fntab fntab[] = {
-  { 'B', prepare_boot },
-  { 'C', ccreg },
-  { 'F', fs20send },
+	{ 'B', prepare_boot },
+	{ 'C', ccreg },
+	{ 'F', fs20send },
 #ifdef HAS_INTERTECHNO
-  { 'i', it_func },
+	{ 'i', it_func },
 #endif
 #ifdef HAS_ASKSIN
-  { 'A', asksin_func },
+	{ 'A', asksin_func },
 #endif
 #ifdef HAS_MORITZ
-  { 'Z', moritz_func },
+	{ 'Z', moritz_func },
 #endif
 #ifdef HAS_RWE
-  { 'E', rwe_func },
+	{ 'E', rwe_func },
 #endif
 #ifdef HAS_RAWSEND
-  { 'G', rawsend },
-  { 'M', em_send },
+	{ 'G', rawsend },
+	{ 'M', em_send },
 #endif
-  { 'R', read_eeprom },
-  { 'T', fhtsend },
-  { 'V', version },
-  { 'W', write_eeprom },
-  { 'X', set_txreport },
+	{ 'R', read_eeprom },
+	{ 'T', fhtsend },
+	{ 'V', version },
+	{ 'W', write_eeprom },
+	{ 'X', set_txreport },
 
-  { 'e', eeprom_factory_reset },
+	{ 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
-  { 'f', fastrf_func },
+	{ 'f', fastrf_func },
 #endif
 #ifdef HAS_MEMFN
-  { 'm', getfreemem },
+	{ 'm', getfreemem },
 #endif
-  { 't', gettime },
+	{ 't', gettime },
 #ifdef HAS_RF_ROUTER
-  { 'u', rf_router_func },
+	{ 'u', rf_router_func },
 #endif
-  { 'x', ccsetpa },
+	{ 'x', ccsetpa },
 
-  { 0, 0 },
+	{ 0, 0 },
 };
 
-int
+	int
 main(void)
 {
-  wdt_disable();
+	wdt_disable();
 
-  led_init();
+	led_init();
 
-  spi_init();
+	spi_init();
 
-//  eeprom_factory_reset("xx");
-  eeprom_init();
+	// eeprom_factory_reset("xx");
+	eeprom_init();
 
-  // Setup the timers. Are needed for watchdog-reset
-  OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz
-  TCCR0B = _BV(CS02);
-  TCCR0A = _BV(WGM01);
-  TIMSK0 = _BV(OCIE0A);
+	// Setup the timers. Are needed for watchdog-reset
+	OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz
+	TCCR0B = _BV(CS02);
+	TCCR0A = _BV(WGM01);
+	TIMSK0 = _BV(OCIE0A);
 
-  TCCR1A = 0;
-  TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
+	TCCR1A = 0;
+	TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
 
-  clock_prescale_set(clock_div_1);
+	clock_prescale_set(clock_div_1);
 
-  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
-  wdt_enable(WDTO_2S);
+	MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
+	wdt_enable(WDTO_2S);
 
-  uart_init( UART_BAUD_SELECT(UART_BAUD_RATE,F_CPU) );
+	uart_init( UART_BAUD_SELECT(UART_BAUD_RATE,F_CPU) );
 
-  fht_init();
-  tx_init();
-  input_handle_func = analyze_ttydata;
+	fht_init();
+	tx_init();
+	input_handle_func = analyze_ttydata;
 
-  display_channel = DISPLAY_USB;
+	display_channel = DISPLAY_USB;
 
 #ifdef HAS_RF_ROUTER
-  rf_router_init();
-  display_channel |= DISPLAY_RFROUTER;
+	rf_router_init();
+	display_channel |= DISPLAY_RFROUTER;
 #endif
 
-  sei();
+	sei();
 
-  for(;;) {
-    uart_task();
-    RfAnalyze_Task();
-    Minute_Task();
+	for(;;) {
+		uart_task();
+		RfAnalyze_Task();
+		Minute_Task();
 #ifdef HAS_FASTRF
-    FastRF_Task();
+		FastRF_Task();
 #endif
 #ifdef HAS_RF_ROUTER
-    rf_router_task();
+		rf_router_task();
 #endif
 #ifdef HAS_ASKSIN
-    rf_asksin_task();
+		rf_asksin_task();
 #endif
 #ifdef HAS_MORITZ
-    rf_moritz_task();
+		rf_moritz_task();
 #endif
 #ifdef HAS_RWE
-    rf_rwe_task();
+		rf_rwe_task();
 #endif
-  }
+	}
 }
