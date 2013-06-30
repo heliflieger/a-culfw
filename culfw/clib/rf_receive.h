@@ -20,6 +20,10 @@
 #define REP_FHTPROTO _BV(6)
 #define REP_LCDMON   _BV(7)
 
+#ifndef REPTIME
+#define REPTIME      38
+#endif
+
 /* public prototypes */
 #ifdef HAS_ESA
 #define MAXMSG 20               // ESA messages

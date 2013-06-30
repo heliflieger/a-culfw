@@ -15,6 +15,9 @@
 #include "clock.h"
 #include "log.h"
 
+#ifdef HAS_PRIVATE_CHANNEL
+#include "private_channel.h"
+#endif
 #ifdef HAS_ETHERNET
 #include "tcplink.h"
 #endif
@@ -79,6 +82,10 @@ display_char(char data)
 #ifdef HAS_ETHERNET
   if(display_channel & DISPLAY_TCP)
     tcp_putchar( data );
+#endif
+
+#ifdef HAS_PRIVATE_CHANNEL
+    private_putchar( data );
 #endif
 
 #ifdef HAS_DOGM

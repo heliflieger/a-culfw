@@ -468,7 +468,7 @@ RfAnalyze_Task(void)
           if(robuf[roby] != obuf[roby])
             break;
 
-        if(roby == oby && ticks - reptime < 38) // 38/125 = 0.3 sec
+        if(roby == oby && (ticks - reptime < REPTIME)) // 38/125 = 0.3 sec
           isrep = 1;
       }
 
