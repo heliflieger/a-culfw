@@ -39,24 +39,24 @@
 #define CC1100_ISC              ISC00
 #define CC1100_EICR             EICRA
 
-#define LED_DDR                 DDRA
-#define LED_PORT                PORTA
-#define LED_PIN                 0
+#define _LED_DDR                 DDRA
+#define _LED_PORT                PORTA
+#define _LED_PIN                 0
 
-#define REL_DDR                 DDRA
-#define REL_PORT                PORTA
-#define REL_PIN                 1
+#define _REL_DDR                 DDRA
+#define _REL_PORT                PORTA
+#define _REL_PIN                 1
 
-#define KEY_DDR                 DDRD
-#define KEY_PORT                PORTD
-#define KEY_PIN                 5
-#define KEY_IN                  PIND
+#define _KEY_DDR                 DDRD
+#define _KEY_PORT                PORTD
+#define _KEY_PIN                 5
+#define _KEY_IN                  PIND
 
-#define BOOTKEY_DDR             DDRD
-#define BOOTKEY_PORT            PORTD
-#define BOOTKEY_PIN             5
-#define BOOTKEY_IN              PIND
-#define BOOTKEY_REVERSE		1
+#define _BOOTKEY_DDR             DDRD
+#define _BOOTKEY_PORT            PORTD
+#define _BOOTKEY_PIN             5
+#define _BOOTKEY_IN              PIND
+#define _BOOTKEY_REVERSE		1
 
 #define FHTBUF_SIZE          174      //                 RAM: 174b
 #define RCV_BUCKETS            4      //                 RAM: 25b * bucket
