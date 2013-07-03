@@ -95,7 +95,11 @@
  * Use Callbacks to indicate output signal or something else
  *---------------------------------------------------------------------------------------------------------------------------------------------------
  */
+#ifdef IRTX_CALLBACKS
+#define IRSND_USE_CALLBACK                      1       // flag: 0 = don't use callbacks, 1 = use callbacks, default is 0
+#else
 #define IRSND_USE_CALLBACK                      0       // flag: 0 = don't use callbacks, 1 = use callbacks, default is 0
+#endif
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  *                              D O   N O T   C H A N G E   T H E   F O L L O W I N G   L I N E S   !

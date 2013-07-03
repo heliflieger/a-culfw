@@ -135,6 +135,7 @@ typedef unsigned short  uint16_t;
 
 #elif defined (__AVR_ATmega164__)   \
    || defined (__AVR_ATmega324__)   \
+   || defined (__AVR_ATmega324P__)   \
    || defined (__AVR_ATmega644__)   \
    || defined (__AVR_ATmega644P__)  \
    || defined (__AVR_ATmega1284__)  \
@@ -376,6 +377,15 @@ irsnd_on (void)
 {
     if (! irsnd_is_on)
     {
+
+#if IRSND_USE_CALLBACK == 1
+        if (irsnd_callback_ptr)
+        {
+            (*irsnd_callback_ptr) (TRUE);
+        }
+
+#else
+
 #ifndef DEBUG
 #if   IRSND_OCx == IRSND_OC2                            // use OC2
         TCCR2 |= (1<<COM20)|(1<<WGM21);                 // toggle OC2 on compare match,  clear Timer 2 at compare match OCR2
@@ -394,11 +404,6 @@ irsnd_on (void)
 #endif // IRSND_OCx
 #endif // DEBUG
 
-#if IRSND_USE_CALLBACK == 1
-        if (irsnd_callback_ptr)
-        {
-            (*irsnd_callback_ptr) (TRUE);
-        }
 #endif // IRSND_USE_CALLBACK == 1
 
         irsnd_is_on = TRUE;
@@ -415,6 +420,14 @@ irsnd_off (void)
 {
     if (irsnd_is_on)
     {
+
+#if IRSND_USE_CALLBACK == 1
+        if (irsnd_callback_ptr)
+        {
+           (*irsnd_callback_ptr) (FALSE);
+        }
+#else
+
 #ifndef DEBUG
 #if   IRSND_OCx == IRSND_OC2                                    // use OC2
         TCCR2 &= ~(1<<COM20);                           // normal port operation, OC2 disconnected.
@@ -434,11 +447,6 @@ irsnd_off (void)
         IRSND_PORT  &= ~(1<<IRSND_BIT);                 // set IRSND_BIT to low
 #endif // DEBUG
 
-#if IRSND_USE_CALLBACK == 1
-        if (irsnd_callback_ptr)
-        {
-           (*irsnd_callback_ptr) (FALSE);
-        }
 #endif // IRSND_USE_CALLBACK == 1
 
         irsnd_is_on = FALSE;
@@ -480,6 +488,8 @@ irsnd_set_freq (uint8_t freq)
 void
 irsnd_init (void)
 {
+#if IRSND_USE_CALLBACK == 1
+#else
 #ifndef DEBUG
     IRSND_PORT &= ~(1<<IRSND_BIT);                                                  // set IRSND_BIT to low
     IRSND_DDR |= (1<<IRSND_BIT);                                                    // set IRSND_BIT to output
@@ -502,6 +512,7 @@ irsnd_init (void)
 
     irsnd_set_freq (IRSND_FREQ_36_KHZ);                                             // default frequency
 #endif // DEBUG
+#endif // IRSND_USE_CALLBACK == 1
 }
 
 #if IRSND_USE_CALLBACK == 1
