@@ -37,7 +37,7 @@ const uint8_t levels[] = {
 #define BIT_OFF          1
 #define BIT_DOWN         2
 
-static char mycmd[16];
+static char mycmd[65];
 static uint8_t mypos = 0;
 static uint8_t learning = 0;
 static uint32_t learn_timer = 0;
@@ -188,7 +188,8 @@ void private_putchar(char data) {
     return;
   }
 
-  mycmd[(mypos++&15)] = data;
+  mycmd[mypos] = data;
+  mypos = (mypos+1) & 63;
 }
 
 

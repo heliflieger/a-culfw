@@ -44,7 +44,7 @@
 #include "dogm16x.h"
 #endif
 
-#ifdef HAS_IRRX
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
 #include "ir.h"
 #endif
 
@@ -68,7 +68,7 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_OWN_ADDRESS
   { 'a', myaddress_func },
 #endif
-#ifdef HAS_IRRX
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
   { 'I', ir_func },
 #endif
 #ifdef HAS_DOGM
@@ -134,7 +134,7 @@ void culfw_init(void) {
 //  }
 
   // Setup the timers. Are needed for watchdog-reset
-#ifdef HAS_IRRX
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
   ir_init();
   // IR uses highspeed TIMER0 for sampling 
   OCR0A  = 1;                              // Timer0: 0.008s = 8MHz/256/2   == 15625Hz
@@ -200,7 +200,7 @@ void culfw_loop(void) {
 #ifdef HAS_ASKSIN
     rf_asksin_task();
 #endif
-#ifdef HAS_IRRX
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
     ir_task();
 #endif
 
