@@ -11,6 +11,9 @@
 #define TYPE_ESA     'S'
 #define TYPE_TX3     't'
 
+#define TYPE_REVOLT	 'r'
+#define TYPE_IT  	 'i'
+
 #define REP_KNOWN    _BV(0)
 #define REP_REPEATED _BV(1)
 #define REP_BITS     _BV(2)
@@ -19,6 +22,9 @@
 #define REP_RSSI     _BV(5)
 #define REP_FHTPROTO _BV(6)
 #define REP_LCDMON   _BV(7)
+
+
+#define TWRAP		20000
 
 #ifndef REPTIME
 #define REPTIME      38
@@ -30,6 +36,19 @@
 #else
 #define MAXMSG 12               // EMEM messages
 #endif
+
+#ifdef HAS_IT
+#ifndef LONG_PULSE
+#define LONG_PULSE
+#endif
+#endif
+
+#ifdef HAS_REVOLT
+#ifndef LONG_PULSE
+#define LONG_PULSE
+#endif
+#endif
+
 
 void set_txreport(char *in);
 void set_txrestore(void);
