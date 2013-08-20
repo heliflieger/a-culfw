@@ -61,7 +61,9 @@
 #define FULL_CC1100_PA                // PROGMEM:  108b
 #define HAS_RAWSEND                   //
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
+#define HAS_RF_ROUTER                 // PROGMEM:  920b  RAM: 38b
 #define HAS_ASKSIN
+#define HAS_MORITZ
 #define HAS_ESA
 #define HAS_INTERTECHNO
 
