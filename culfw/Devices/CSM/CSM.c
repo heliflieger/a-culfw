@@ -65,6 +65,9 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
 #endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
 #ifdef HAS_IRRX
   { 'I', ir_func },
 #endif
