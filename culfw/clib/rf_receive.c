@@ -80,7 +80,6 @@ static uint16_t hightime, lowtime;
 static uint8_t hightime, lowtime;
 #endif
 
-static uint8_t cksum3(uint8_t *buf, uint8_t len);
 static void addbit(bucket_t *b, uint8_t bit);
 static void delbit(bucket_t *b);
 static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime);
@@ -149,7 +148,7 @@ cksum2(uint8_t *buf, uint8_t len)               // EM
   return s;
 }
 
-static uint8_t
+uint8_t
 cksum3(uint8_t *buf, uint8_t len)               // KS300
 {
   uint8_t x = 0, y = 5, cnt = 0;

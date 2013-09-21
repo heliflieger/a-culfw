@@ -67,6 +67,7 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
   { 'M', em_send },
+  { 'K', ks_send },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
