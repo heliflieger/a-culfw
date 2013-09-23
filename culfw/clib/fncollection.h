@@ -14,7 +14,6 @@ void prepare_boot(char *);
 void version(char *);
 void do_wdt_enable(uint8_t t);
 
-
 // Already used magics: c1,c2
 
 #define EE_MAGIC_OFFSET      (uint8_t *)0                       // 2 bytes
@@ -31,6 +30,12 @@ void do_wdt_enable(uint8_t t);
 #define EE_FASTRF_CFG        (EE_FHTID+2)                       // Offset: 55:37
 #define EE_RF_ROUTER_ID      (EE_FASTRF_CFG+EE_CC1100_CFG_SIZE)
 #define EE_RF_ROUTER_ROUTER  (EE_RF_ROUTER_ID+1) 
+
+// if device is equipped with Dudette bootloader (i.e. newer CUNO/COC/CCD/CSM) 
+// there is some unique stuff programmed during manufacture:
+#define EE_DUDETTE_MAC       (uint8_t *)(E2END-5)		// UNIQUE MAC ADDRESS
+#define EE_DUDETTE_PRIV      (EE_DUDETTE_MAC-16)		// 128bit RSA private key 
+#define EE_DUDETTE_PUBL      (EE_DUDETTE_PRIV-16)		// 128bit RSA public key
 
 #ifdef HAS_ETHERNET
 # define EE_MAC_ADDR         (EE_RF_ROUTER_ROUTER+1)

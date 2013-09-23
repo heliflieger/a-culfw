@@ -45,19 +45,24 @@ erb(uint8_t *p)
   return eeprom_read_byte(p);
 }
 
-#ifdef HAS_ETHERNET
 static void
-display_ee_mac(uint8_t *a)
+display_ee_bytes(uint8_t *a, uint8_t cnt)
 {
-  uint8_t cnt = 6;
   while(cnt--) {
     DH2(erb(a++));
     if(cnt)
       DC(':');
   }
-  
+
 }
 
+static void
+display_ee_mac(uint8_t *a)
+{
+  display_ee_bytes( a, 6 );
+}
+
+#ifdef HAS_ETHERNET
 static void
 display_ee_ip4(uint8_t *a)
 {
@@ -91,7 +96,9 @@ read_eeprom(char *in)
     }
   } else 
 #endif
-  {
+  if(in[1] == 'M') { display_ee_mac(EE_DUDETTE_MAC); }  
+  else if(in[1] == 'P') { display_ee_bytes(EE_DUDETTE_PUBL, 16); }  
+  else {
     hb[0] = hb[1] = 0;
     d = fromhex(in+1, hb, 2);
     if(d == 2)
