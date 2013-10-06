@@ -1,0 +1,32 @@
+CCD is an extension for Raspberry Pi with a CSM radio interface and TFT display.
+
+FLASHING FIRMWARE
+
+To update CSMs firmware with culfw execute:
+
+        /etc/init.d/fhem stop
+	make 
+	make program
+
+on the RPi itself. This will require some tools installed upfront. 
+Use:
+
+	apt-get install make avrdude
+
+
+to flash the recompiled hex-file.
+
+BEFORE
+
+To use the serial port @ RPi you need to free it form other tasks as:
+
+* console in /etc/inittab
+* debugging stuff - edit /boot/cmdline.txt
+
+reboot when done!
+
+USING
+
+The culfw stack is available as: 
+
+define CCD CUL /dev/ttyAMA0@38400 1234
