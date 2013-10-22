@@ -82,6 +82,22 @@ ethernet_reset(void)
   buf[2] = 'N'; strcpy_P(buf+3, PSTR("0.0.0.0"));       write_eeprom(buf);//==GW
   buf[2] = 'o'; strcpy_P(buf+3, PSTR("00"));            write_eeprom(buf);//GMT
 
+#ifdef EE_DUDETTE_MAC
+  // check for mac stored during manufacture
+  uint8_t *ee = EE_DUDETTE_MAC;
+  if (erb( ee++ ) == 0xa4)
+    if (erb( ee++ ) == 0x50)
+      if (erb( ee++ ) == 0x55) {
+        buf[2] = 'm'; strcpy_P(buf+3, PSTR("A45055"));        // busware.de OUI range
+        tohex(erb( ee++ ), (uint8_t*)buf+9);
+        tohex(erb( ee++ ), (uint8_t*)buf+11);
+        tohex(erb( ee++ ), (uint8_t*)buf+13);
+        buf[15] = 0;
+        write_eeprom(buf);
+        return;
+      } 
+#endif
+
   // Generate a "unique" MAC address from the unique serial number
   buf[2] = 'm'; strcpy_P(buf+3, PSTR("A45055"));        // busware.de OUI range
 #define bsbg boot_signature_byte_get
@@ -96,7 +112,6 @@ ethernet_reset(void)
   tohex(0, (uint8_t*)buf+9);
   tohex((serial>>8) & 0xff, (uint8_t*)buf+11);
   tohex(serial & 0xff, (uint8_t*)buf+13);
-
   
   buf[15] = 0;
   write_eeprom(buf);
