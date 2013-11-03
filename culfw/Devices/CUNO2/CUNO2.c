@@ -46,6 +46,10 @@
 #include "hm485.h"
 #endif
 
+#ifdef HAS_HELIOS
+#include "helios.h"
+#endif
+
 #include "i2cmaster.h"
 
 #ifdef HAS_ASKSIN
@@ -109,6 +113,9 @@ const PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_HM485
   { 'H', hm485_func },
+#endif
+#ifdef HAS_HELIOS
+  { 'h', helios_func },
 #endif
   { 'x', ccsetpa },
   { 'E', eth_func },
@@ -201,6 +208,10 @@ main(void)
   hm485_initialize();
 #endif
 
+#ifdef HAS_HELIOS
+  helios_initialize();
+#endif
+
   sei();
 
 #ifdef HAS_DMX
@@ -234,6 +245,9 @@ main(void)
 #endif
 #ifdef HAS_HM485
     hm485_task();
+#endif    
+#ifdef HAS_HELIOS
+    helios_task();
 #endif    
   }
 

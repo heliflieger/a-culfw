@@ -24,6 +24,10 @@
 #include "dmx.h"
 #endif
 
+#ifdef HAS_HELIOS
+#include "helios.h"
+#endif
+
 #ifdef HAS_MORITZ
 #include "rf_moritz.h"
 #endif
@@ -210,6 +214,10 @@ fs20send(char *in)
 {
 #ifdef HAS_DMX
   if (dmx_fs20_emu( in ))
+	return;
+#endif
+#ifdef HAS_HELIOS
+  if (helios_fs20_emu( in ))
 	return;
 #endif
   addParityAndSend(in, 6, 3);

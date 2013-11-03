@@ -50,6 +50,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/irmp.c                                     \
 		../../clib/irsnd.c                                    \
 		../../clib/onewire.c                                  \
+		../../clib/helios.c                                      \
 		../../clib/dmx.c                                      \
 		../../clib/intertechno.c                              \
 		../../clib/hm485.c                                      \

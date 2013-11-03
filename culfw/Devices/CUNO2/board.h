@@ -123,14 +123,23 @@
 #define DMX_FS20EMU_HC         "2822" // This is the house code used to address DMX space while using F... commands
 #undef  HAS_DMX 
 
+#define HAS_HELIOS
+#define HELIOS_EMU_HC          "2823" // This is the house code used to address HELIOS space while using F... commands
+#undef  HAS_HELIOS
+
 #ifdef HAS_DMX
 #undef  HAS_IRTX
 #undef  HAS_IRRX
 #undef  HAS_HM485
+#undef  HAS_HELIOS
 #endif
 
 #define TTY_BUFSIZE             1024
 
 #define BUSWARE_CUNO2
+
+#ifndef eeprom_update_byte
+#define eeprom_update_byte eeprom_write_byte
+#endif
 
 #endif
