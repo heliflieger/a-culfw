@@ -24,6 +24,7 @@
 #include "helios.h"   
 #include "stringfunc.h"   
 #include "display.h"   
+#include "clock.h"   
 #include <string.h>
 #include <avr/io.h>   
 #include <avr/interrupt.h>   
@@ -31,7 +32,9 @@
 // PD2 (RXD1) and PD3 (TXD1) are connected to the RS485 transceiver's 
 // RXD and TXD; PA3 is connected to REN/TXEN (high = transmit)   
 
-static uint8_t helios_crc;
+static uint8_t helios_crc, msgpos, helios_power, helios_debug;
+static uint8_t msg[10];
+static uint32_t helios_next;
 
 #define BAUD 9600
 #include <util/setbaud.h>
@@ -51,6 +54,10 @@ void helios_initialize(void) {
       #endif      
       UCSR1B = _BV(RXCIE1) | _BV(RXEN1); // RX Complete IRQ enabled, Receiver Enable 
       UCSR1C = _BV(UCSZ10) | _BV(UCSZ11); // 8 Bit, n, 1 Stop  
+
+      msgpos = 0;
+      helios_next = -1;
+      helios_debug = 0;
 }   
 
 static void usart_send(uint8_t b) {
@@ -109,19 +116,102 @@ ISR(USART1_RX_vect) {
 		return;
 	}
 
-//        DH2(data); DC(' ');
-	
-	switch(data) {
-	}
+	// check SOM
+	if ((msgpos == 0) && (data != 1)) 
+		return;
+
+	// check EOM & CRC
+	if (msgpos == 5) {
+
+		for (uint8_t i=0;i<5;i++)
+			data -= msg[i];
+
+		if (data) {
+			// CRC error
+			if (helios_debug)
+				DC( '*' );
+		} else {
+			if (helios_debug)
+			for (uint8_t i=0;i<5;i++) {
+				DH2( msg[i] );
+				DC( ' ' );
+			}
+			// check value updates
+			if (msg[1] == 0x11) {
+				switch(msg[3]) {
+					case 0x29: // Drehzahl
+						
+						if (helios_power != msg[4])
+							helios_next = 0; // force FHEM update
+
+						helios_power = msg[4];
+						break;
+				}
+			}
+		}
+
+		if (helios_debug)
+			DNL();
+
+		msgpos = 0;
+		return;
+        }
+
+        msg[msgpos++] = data;
+
 }   
 
 void helios_task(void) {
+	if (helios_next>ticks) 
+		return;
+
+	DC( 'F' );
+	DS_P(PSTR(HELIOS_EMU_HC));
+	DH2( 0 );
+
+	switch (helios_power) {
+		case 0x1:
+			DH2( 0x1 );
+			break;
+		case 0x3:
+			DH2( 0x3 );
+			break;
+		case 0x7:
+			DH2( 0x5 );
+			break;
+		case 0xf:
+			DH2( 0x7 );
+			break;
+		case 0x1f:
+			DH2( 0x9 );
+			break;
+		case 0x3f:
+			DH2( 0xb );
+			break;
+		case 0x7f:
+			DH2( 0xd );
+			break;
+		case 0xff:
+			DH2( 0xf );
+			break;
+	}
+
+	DH2( 0xff ); // RSSI
+	DNL();
+
+	helios_next = ticks + 41000; // roughly 5 min
 }
 
 void helios_func(char *in) {
 	switch(in[1]) {
+		case 'D':
+			helios_debug = 1;
+			break;
+		case 'd':
+			helios_debug = 0;
+			break;
 		default:
-			DS_P(PSTR("nothing yet"));
+			DS_P(PSTR("use d/D to toggle raw message dump"));
 			DNL();
 	}
 }

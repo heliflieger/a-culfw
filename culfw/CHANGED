@@ -1,3 +1,4 @@
+- CUNO2: support for KWL EC 200/300/500 Helios Lüftungen (HAS_HELIOS) via RS485  
 - !CUL: extended command for reading unique eeprom values provided by Dudette bootloader. (RM: MAC addr / RP: 128bit RSA private key)
 - all: added sending support for "Kxxxx" messages (requires RAWSEND enabled)
 - all: IT & REVOLT receive support from mehf (disabled per default)
