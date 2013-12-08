@@ -37,7 +37,7 @@ const uint8_t levels[] = {
 #define BIT_OFF          1
 #define BIT_DOWN         2
 
-static char mycmd[65];
+static char mycmd[256];
 static uint8_t mypos = 0;
 static uint8_t learning = 0;
 static uint32_t learn_timer = 0;
@@ -47,10 +47,14 @@ static uint8_t state[2][3];
 
 void update( uint8_t ch ) {
 
+   uint8_t bm = ch ? (_BV(COM2B0) | _BV(COM2B1)) : (_BV(COM2A0) | _BV(COM2A1)); 
+
    if (bit_is_set(state[ch][1], BIT_OFF)) {
+     TCCR2A &= ~bm;
      state[ch][2] = 0;
    } else {
      state[ch][2] = levels[state[ch][0]];
+     TCCR2A |= bm;
    }
 
 }
@@ -189,23 +193,25 @@ void private_putchar(char data) {
   }
 
   mycmd[mypos] = data;
-  mypos = (mypos+1) & 63;
+  mypos++;
 }
 
 
 int main(void) {
   int16_t d;
-  uint8_t loop = 0;
+  uint8_t loop = 100;
 
   wdt_disable();
 
 #ifndef ADB2001
   // normal PWM
   DDRD  |= _BV( 7 ) | _BV( 6 );
+  PORTD |= _BV( 7 ) | _BV( 6 );
 
-  OCR2A = 0;
-  OCR2B = 0;
-  TCCR2A = _BV( WGM20) | _BV( WGM21) | _BV( COM2A1 ) | _BV( COM2A0 ) | _BV( COM2B1 ) | _BV( COM2B0 );
+  OCR2A = 1;
+  OCR2B = 1;
+//  TCCR2A = _BV( WGM20) | _BV( WGM21) | _BV( COM2A1 ) | _BV( COM2A0 ) | _BV( COM2B1 ) | _BV( COM2B0 );
+  TCCR2A = _BV( WGM20) | _BV( WGM21);
   TCCR2B = _BV( CS21 ) | _BV( CS21 ) | _BV( CS22 );
 
   KEY_PORT |= _BV( KEY_PIN ); // pull
