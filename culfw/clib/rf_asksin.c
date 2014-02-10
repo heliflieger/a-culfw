@@ -29,8 +29,18 @@ const uint8_t PROGMEM ASKSIN_CFG[] = {
      0x17, 0x33, // go into RX after TX, CCA; EQ3 uses 0x03
      0x18, 0x18,
      0x19, 0x16,
+#ifdef HAS_ASKSIN_FUP
+     0x1A, 0x6C,
+#endif
      0x1B, 0x43,
+#ifdef HAS_ASKSIN_FUP
+     0x1C, 0x40,
+     0x1D, 0x91,
+#endif
      0x21, 0x56,
+#ifdef HAS_ASKSIN_FUP
+     0x23, 0xA9,
+#endif
      0x25, 0x00,
      0x26, 0x11,
      0x29, 0x59,
@@ -38,6 +48,24 @@ const uint8_t PROGMEM ASKSIN_CFG[] = {
      0x2D, 0x35,
      0x3e, 0xc3
 };
+
+#ifdef HAS_ASKSIN_FUP
+const uint8_t PROGMEM ASKSIN_UPDATE_CFG[] = {
+     0x0B, 0x08,
+     0x10, 0x5B,
+     0x11, 0xF8,
+     0x15, 0x47,
+     0x19, 0x1D,
+     0x1A, 0x1C,
+     0x1B, 0xC7,
+     0x1C, 0x00,
+     0x1D, 0xB2,
+     0x21, 0xB6,
+     0x23, 0xEA,
+};
+
+static unsigned char asksin_update_mode = 0;
+#endif
 
 static void rf_asksin_reset_rx(void);
 
@@ -63,6 +91,15 @@ rf_asksin_init(void)
     cc1100_writeReg( pgm_read_byte(&ASKSIN_CFG[i]),
                      pgm_read_byte(&ASKSIN_CFG[i+1]) );
   }
+
+#ifdef HAS_ASKSIN_FUP
+  if (asksin_update_mode) {
+    for (uint8_t i = 0; i < sizeof(ASKSIN_UPDATE_CFG); i += 2) {
+      cc1100_writeReg( pgm_read_byte(&ASKSIN_UPDATE_CFG[i]),
+                       pgm_read_byte(&ASKSIN_UPDATE_CFG[i+1]) );
+    }
+  }
+#endif
   
   ccStrobe( CC1100_SCAL );
 
@@ -232,7 +269,16 @@ asksin_send(char *in)
 void
 asksin_func(char *in)
 {
+#ifndef HAS_ASKSIN_FUP
   if(in[1] == 'r') {                // Reception on
+#else
+  if((in[1] == 'r') || (in[1] == 'R')) {                // Reception on
+    if (in[1] == 'R') {
+      asksin_update_mode = 1;
+    } else {
+      asksin_update_mode = 0;
+    }
+#endif
     rf_asksin_init();
     asksin_on = 1;
 
