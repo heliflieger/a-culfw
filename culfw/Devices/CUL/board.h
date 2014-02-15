@@ -25,6 +25,7 @@
 #  define HAS_RAWSEND                   //
 #  define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #  define HAS_ASKSIN
+#  define HAS_ASKSIN_FUP
 #  define HAS_MORITZ
 #  define HAS_RWE
 #  define HAS_ESA
