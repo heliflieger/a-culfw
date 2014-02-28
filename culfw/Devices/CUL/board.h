@@ -17,7 +17,7 @@
 #define HAS_RF_ROUTER                   // PROGMEM: 1248b  RAM: 44b
 
 #if defined(CUL_V3) || defined(CUL_V4)
-#  define TTY_BUFSIZE           64      // RAM: TTY_BUFSIZE*4
+#  define TTY_BUFSIZE          192      // RAM: TTY_BUFSIZE*4
 #  define FHTBUF_SIZE          174      //                 RAM: 174b
 #  define RCV_BUCKETS            4      //                 RAM: 25b * bucket
 #  define RFR_DEBUG                     // PROGMEM:  354b  RAM: 14b
