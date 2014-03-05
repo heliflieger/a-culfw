@@ -273,9 +273,15 @@
       AskSin (aka BidCOS (R)) mode.  &lt;func&gt; is one of:
       <ul>
       <li> r<br>
-        enable AskSin reception. Note: only AskSin messages will be received in
-        this mode. Data is reported in hex. If bit 4 was set in previous X cmd
-        (i.e. X10) reported data is binary.
+        enable AskSin (10kbit/s) reception. Note: only AskSin messages will be
+        received in this mode. Data is reported in hex. If bit 4 was set in
+        previous X cmd (i.e. X10) reported data is binary. Messages sent
+        with "s" will be sent as normal AskSin messages.
+      <li> R<br>
+        enable AskSin firmware-update (100kbit/s) reception. Note: only AskSin
+        firmware-update messages will be received in this mode. Data is reported
+        in hex. If bit 4 was set in previous X cmd (i.e. X10) reported data is
+        binary. Messages sent with "s" will be sent as firmware-update messages.
       <li> s<br>
         Send out an AskSin message. &lt;hex&gt; is a hex string of the following
         form: llnnccttssssssddddddpp...
