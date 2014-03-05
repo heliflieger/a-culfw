@@ -5,6 +5,7 @@
 #include "board.h"
 #include <stdint.h>
 #endif
+#include <avr/interrupt.h>
 
 #if TTY_BUFSIZE < 256
 typedef struct
