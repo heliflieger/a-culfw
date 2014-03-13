@@ -120,7 +120,7 @@ main(void)
 	MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
 	wdt_enable(WDTO_2S);
 
-	uart_init( UART_BAUD_SELECT(UART_BAUD_RATE,F_CPU) );
+	uart_init( UART_BAUD_SELECT_DOUBLE_SPEED(UART_BAUD_RATE,F_CPU) );
 
 	fht_init();
 	tx_init();

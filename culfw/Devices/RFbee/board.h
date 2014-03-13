@@ -57,6 +57,6 @@
 #define HAS_UART		1
 #define UART_BAUD_RATE		38400
 
-#define TTY_BUFSIZE		112
+#define TTY_BUFSIZE		104
 
 #endif
