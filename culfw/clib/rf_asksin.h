@@ -4,7 +4,7 @@
 #ifndef HAS_ASKSIN_FUP
 #define MAX_ASKSIN_MSG 30
 #else
-#define MAX_ASKSIN_MSG 64
+#define MAX_ASKSIN_MSG 50
 #endif
 
 extern uint8_t asksin_on;

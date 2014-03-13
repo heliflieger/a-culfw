@@ -113,8 +113,8 @@ rf_asksin_reset_rx(void)
 void
 rf_asksin_task(void)
 {
-  uint8_t enc[MAX_ASKSIN_MSG];
-  uint8_t dec[MAX_ASKSIN_MSG];
+  uint8_t msg[MAX_ASKSIN_MSG];
+  uint8_t this_enc, last_enc;
   uint8_t rssi;
   uint8_t l;
 
@@ -123,9 +123,9 @@ rf_asksin_task(void)
 
   // see if a CRC OK pkt has been arrived
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
-    enc[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
+    msg[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
 
-    if (enc[0] >= MAX_ASKSIN_MSG) {
+    if (msg[0] >= MAX_ASKSIN_MSG) {
       // Something went horribly wrong, out of sync?
       rf_asksin_reset_rx();
       return;
@@ -134,8 +134,8 @@ rf_asksin_task(void)
     CC1100_ASSERT;
     cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
     
-    for (uint8_t i=0; i<enc[0]; i++) {
-         enc[i+1] = cc1100_sendbyte( 0 );
+    for (uint8_t i=0; i<msg[0]; i++) {
+         msg[i+1] = cc1100_sendbyte( 0 );
     }
     
     rssi = cc1100_sendbyte( 0 );
@@ -147,25 +147,28 @@ rf_asksin_task(void)
       ccStrobe(CC1100_SRX);
     } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
 
-    dec[0] = enc[0];
-    dec[1] = (~enc[1]) ^ 0x89;
+    last_enc = msg[1];
+    msg[1] = (~msg[1]) ^ 0x89;
     
-    for (l = 2; l < dec[0]; l++)
-         dec[l] = (enc[l-1] + 0xdc) ^ enc[l];
+    for (l = 2; l < msg[0]; l++) {
+         this_enc = msg[l];
+         msg[l] = (last_enc + 0xdc) ^ msg[l];
+         last_enc = this_enc;
+    }
     
-    dec[l] = enc[l] ^ dec[2];
+    msg[l] = msg[l] ^ msg[2];
     
     if (tx_report & REP_BINTIME) {
       
       DC('a');
-      for (uint8_t i=0; i<=dec[0]; i++)
-      DC( dec[i] );
+      for (uint8_t i=0; i<=msg[0]; i++)
+      DC( msg[i] );
          
     } else {
       DC('A');
       
-      for (uint8_t i=0; i<=dec[0]; i++)
-        DH2( dec[i] );
+      for (uint8_t i=0; i<=msg[0]; i++)
+        DH2( msg[i] );
       
       if (tx_report & REP_RSSI)
         DH2(rssi);
@@ -188,13 +191,13 @@ rf_asksin_task(void)
 void
 asksin_send(char *in)
 {
-  uint8_t enc[MAX_ASKSIN_MSG];
-  uint8_t dec[MAX_ASKSIN_MSG];
+  uint8_t msg[MAX_ASKSIN_MSG];
+  uint8_t ctl;
   uint8_t l;
 
-  uint8_t hblen = fromhex(in+1, dec, MAX_ASKSIN_MSG-1);
+  uint8_t hblen = fromhex(in+1, msg, MAX_ASKSIN_MSG-1);
 
-  if ((hblen-1) != dec[0]) {
+  if ((hblen-1) != msg[0]) {
 //  DS_P(PSTR("LENERR\r\n"));
     return;
   }
@@ -205,21 +208,22 @@ asksin_send(char *in)
     my_delay_ms(3);             // 3ms: Found by trial and error
   }
 
-  // "crypt"
-  enc[0] = dec[0];
-  enc[1] = (~dec[1]) ^ 0x89;
+  ctl = msg[2];
 
-  for (l = 2; l < dec[0]; l++)
-    enc[l] = (enc[l-1] + 0xdc) ^ dec[l];
+  // "crypt"
+  msg[1] = (~msg[1]) ^ 0x89;
+
+  for (l = 2; l < msg[0]; l++)
+    msg[l] = (msg[l-1] + 0xdc) ^ msg[l];
   
-  enc[l] = dec[l] ^ dec[2];
+  msg[l] = msg[l] ^ ctl;
 
   // enable TX, wait for CCA
   do {
     ccStrobe(CC1100_STX);
   } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_TX);
 
-  if (dec[2] & (1 << 4)) { // BURST-bit set?
+  if (ctl & (1 << 4)) { // BURST-bit set?
     // According to ELV, devices get activated every 300ms, so send burst for 360ms
     for(l = 0; l < 3; l++)
       my_delay_ms(120); // arg is uint_8, so loop
@@ -232,7 +236,7 @@ asksin_send(char *in)
   cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
 
   for(uint8_t i = 0; i < hblen; i++) {
-    cc1100_sendbyte(enc[i]);
+    cc1100_sendbyte(msg[i]);
   }
 
   CC1100_DEASSERT;

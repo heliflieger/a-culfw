@@ -10,6 +10,7 @@
 #define HAS_RAWSEND			//
 #define HAS_FASTRF			// PROGMEM:  468b  RAM:  1b
 #define HAS_ASKSIN
+#define HAS_ASKSIN_FUP
 #undef  HAS_ESA
 #define HAS_INTERTECHNO
 #define HAS_MORITZ
@@ -56,6 +57,6 @@
 #define HAS_UART		1
 #define UART_BAUD_RATE		38400
 
-#define TTY_BUFSIZE		80
+#define TTY_BUFSIZE		112
 
 #endif
