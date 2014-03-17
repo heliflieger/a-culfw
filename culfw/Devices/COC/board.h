@@ -70,6 +70,7 @@
 
 #define BUSWARE_CSM
 #define BUSWARE_COC
+#define RPI_TTY_FIX
 
 #endif
 

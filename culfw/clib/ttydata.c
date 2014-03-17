@@ -41,7 +41,7 @@ analyze_ttydata(uint8_t channel)
 
     ucCommand = rb_get(&TTY_Rx_Buffer);
 
-#ifdef BUSWARE_COC
+#ifdef RPI_TTY_FIX
     // eat RPi rubbish
     if (ucCommand == 0xff)
       continue;

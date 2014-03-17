@@ -63,6 +63,7 @@
 
 #define BUSWARE_CSM
 #define BUSWARE_CCD
+#define RPI_TTY_FIX
 
 #endif
 
