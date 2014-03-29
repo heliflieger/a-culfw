@@ -1,7 +1,8 @@
 - SCC: inital addition of new RPi extension
+- UNIROLL send routines (currently CUL only) by C_Herrmann
 
 Version 1.58 (2014-03-14)
-- CUNO2: support for KWL EC 200/300/500 Helios Lüftungen (HAS_HELIOS) via RS485  
+- CUNO2: support for KWL EC 200/300/500 Helios Lüftungen (HAS_HELIOS) via RS485
 - !CUL: extended command for reading unique eeprom values provided by Dudette bootloader. (RM: MAC addr / RP: 128bit RSA private key)
 - all: added sending support for "Kxxxx" messages (requires RAWSEND enabled)
 - all: IT & REVOLT receive support from mehf (disabled per default)

@@ -337,3 +337,22 @@ ks_send(char *in)
 }
 
 #endif
+
+#ifdef HAS_UNIROLL
+//G0031E368232368hhhhdc1
+//16 bit group-address 4 bit channel-address 4 bit command 1 1-bit
+
+void
+ur_send(char *in)
+{
+  uint8_t hb[4];
+
+  fromhex(in+1, hb, 3);
+  zerohigh = TDIV(1700);
+  zerolow  = TDIV(590);
+  onehigh  = TDIV(540);
+  onelow   = TDIV(1700);
+  hb[3] = 0x80;     //10000000
+  sendraw(hb, 0, 3, 6, 3, 15);
+}
+#endif

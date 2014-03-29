@@ -59,6 +59,7 @@
     <a href="#cmd_T">T</a>
     <a href="#cmd_t">t</a>
     <a href="#cmd_u">u</a>
+    <a href="#cmd_U">U</a>
     <a href="#cmd_V">V</a>
     <a href="#cmd_W">W</a>
     <a href="#cmd_w">w</a>
@@ -811,6 +812,19 @@
       Print the hardware version on CUL_V3 and CUL_V4
     </ul><br><br>
 
+    <a name="cmd_U"></a>
+    U&lt;hex&gt;
+    <ul>
+      Send out an UNIRoll message. &lt;hex&gt; is a hex string of the following
+      form:<br>
+      ggggdc, where
+      <ul>
+      <li> gggg is the UNIRoll group address,
+      </li><li> d is the UNIRoll device address,
+      </li><li> c is the UNIRoll command (b - down, d - stop, e - up)
+      </li></ul>
+      Example: U12340b
+    </ul><br><br>
 
     <a name="cmd_W"></a>
     W&lt;AA&gt;&lt;DD&gt; or W&lt;AAAA&gt;&lt;DD&gt;

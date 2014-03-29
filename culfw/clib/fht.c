@@ -233,7 +233,6 @@ fht8v_timer(void)
 
   } else {
     fht8v_timeout = (125*(230+(fht_hc1&0x7)))>>1;
-
   }
 
   for(i = 0 ; i < FHT_8V_NUM; i++ ) {
