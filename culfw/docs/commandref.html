@@ -58,8 +58,8 @@
     <a href="#cmd_s">s</a>
     <a href="#cmd_T">T</a>
     <a href="#cmd_t">t</a>
-    <a href="#cmd_u">u</a>
     <a href="#cmd_U">U</a>
+    <a href="#cmd_u">u</a>
     <a href="#cmd_V">V</a>
     <a href="#cmd_W">W</a>
     <a href="#cmd_w">w</a>
@@ -130,6 +130,7 @@
     <li> ESA
     <li> ASKSIN (aka BidCos(R))
     <li> basic OneWire Protocol through the DS4282 (CUNO only)
+    <li> UNIRoll
   </ul>
   <br>
   In the culfw package there are pre-built .hex files ready for flashing the
@@ -758,6 +759,19 @@
       resolution is 1/125 sec. An overflow occures every 397 days.
     </ul><br><br>
 
+    <a name="cmd_U"></a>
+    U&lt;hex&gt;
+    <ul>
+      Send out an UNIRoll message. &lt;hex&gt; is a hex string of the following form:<br>
+      ggggdc, where
+      <ul>
+      <li> gggg is the UNIRoll group address,
+      </li><li> d is the UNIRoll device address,
+      </li><li> c is the UNIRoll command (b - down, d - stop, e - up)
+      </li></ul>
+      Example: U12340b
+    </ul><br><br>
+
     <a name="cmd_u"></a>
     u&lt;data&gt;
     <ul>
@@ -812,19 +826,6 @@
       Print the hardware version on CUL_V3 and CUL_V4
     </ul><br><br>
 
-    <a name="cmd_U"></a>
-    U&lt;hex&gt;
-    <ul>
-      Send out an UNIRoll message. &lt;hex&gt; is a hex string of the following
-      form:<br>
-      ggggdc, where
-      <ul>
-      <li> gggg is the UNIRoll group address,
-      </li><li> d is the UNIRoll device address,
-      </li><li> c is the UNIRoll command (b - down, d - stop, e - up)
-      </li></ul>
-      Example: U12340b
-    </ul><br><br>
 
     <a name="cmd_W"></a>
     W&lt;AA&gt;&lt;DD&gt; or W&lt;AAAA&gt;&lt;DD&gt;
@@ -1067,6 +1068,16 @@
      <li>cc - control byte
      <li>ss - sender address (32 bit)
      <li>pp - payload
+     </ul>
+     <br><br>
+
+
+	 <li>For UNIRoll<br>
+     Uggggdc<br>
+     <ul>
+     <li>gg - group address address (16 bit)
+     <li>d  - device address (4 bit)
+     <li>c  - command (4 bit)
      </ul>
      <br><br>
 
