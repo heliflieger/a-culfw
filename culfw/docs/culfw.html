@@ -69,6 +69,7 @@
           <li>CUN (CC1101 USB Network, to the left)</li>
           <li>CUNO (CC1101 USB Network + OneWire, similar to the CUN)</li>
           <li>CUR (CC1101 USB Remote, prototype, to the right)</li>
+          <li>rpiaddon (CC1101 Raspberry PI AddOn board with OneWire, display and sensors)</li>
         </ul>
 
         At the heart of the CUL family of devices is the Texas Instruments
@@ -85,6 +86,7 @@
         CUNO: atmega644p / 2.0 kB / 64 kB<br>
         CUR V1: at90usb128 / 4.0 kB / 128 kB<br>
         CUR V2: at90usb64 / 2.0 kB / 64 kB<br>
+        rpiaddon: atmega644v / 4.0 kB / 64 kB<br>
         <br>
 
         From the program memory 4kB is used by the USB-Bootloader, and 4kB by
@@ -166,6 +168,10 @@
         Install the package avrdude and check the makefile for the correct port
         (look for AVRDUDE_PORT). Then execute "make usbprogram". 
         </li>
+
+      <li>rpiaddon:<br>
+        Install the package avrdude and then execute "make program". 
+        </li>
       </ul>
 
 
@@ -176,7 +182,7 @@
           To test it start "screen /dev/ttyACM0", and then type V<return>. The
           version string should appear. To use the device in fhem, define it as
           a CUL instance: "define MyCUL CUL /dev/ttyACM0 1234". See the fhem
-          documentation for details.</li>
+          documentation for details.<br>For the rpiaddon replace ttyACM0 with ttyAMA0.</li>
 
         <li>Windows:<br>
           Right-click on the docs/MyUSB_USBtoSerial.inf file, and install

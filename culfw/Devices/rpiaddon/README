@@ -1,0 +1,24 @@
+The rpiaddon the an Raspberry Pi Add On board by Damian Nelson. See
+https://github.com/damianmelson/Add-On-Board
+and
+http://forum.fhem.de/index.php/topic,14156.msg89058.html#msg89058
+for details.
+
+FLASHING FIRMWARE
+
+To update firmware with culfw execute:
+
+	make program
+
+on the raspberry pi. This will require some tools installed upfront. 
+Use:
+
+	apt-get install make avrdude
+
+
+to flash the recompiled rpiaddon.hex file. It has support for InfraRed Rx  
+compiled in.
+
+USING
+
+The culfw stack is available on: /dev/ttyAMA0@38400

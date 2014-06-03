@@ -1,0 +1,12 @@
+Package: culfw-tuxradio
+Version: =VERS=
+Maintainer: Rudolf Koenig <r.koenig@koeniglich.de>
+Description: GPL'd perl server for house automation.
+ It is used to automate some common tasks in the household like switching lamps
+ / shutters / heating / etc. and to log events like temperature/humidity/power
+ consumption.
+Section: utils
+Priority: extra
+Architecture: all
+Homepage: http://www.fhem.de
+Depends: avrdude (>= 1.0)
