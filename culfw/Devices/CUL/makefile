@@ -19,6 +19,7 @@ SRC =           CUL.c\
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
 		../../clib/intertechno.c                             \
+		../../clib/somfy_rts.c				   				 \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/ttydata.c                                 \
@@ -67,7 +68,7 @@ ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
 
 EXTMEMOPTS =
 LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
-LDFLAGS += -Wl,--relax 
+LDFLAGS += -Wl,--relax
 LDFLAGS += -Wl,--gc-sections
 LDFLAGS += $(EXTMEMOPTS)
 
@@ -172,7 +173,7 @@ do_usbprogram:
 
 $(OBJDIR)/%.o : %.c
 	@echo $(MSG_COMPILING) $<
-	@$(CC) -c $(ALL_CFLAGS) $< -o $@ 
+	@$(CC) -c $(ALL_CFLAGS) $< -o $@
 
 mostly_clean:
 	@echo $(MSG_CLEANING)
