@@ -52,6 +52,7 @@
 #define HAS_MORITZ
 #define HAS_ESA
 #define HAS_INTERTECHNO
+#define HAS_SOMFY_RTS
 
 #define MULTI_FREQ_DEVICE       // available in multiple versions: 433MHz,868MHz,915MHz
 
