@@ -41,6 +41,9 @@
 #include "rf_asksin.h"
 #endif
 
+#ifdef HAS_SOMFY_RTS
+#include "somfy_rts.h"
+#endif
 
 const PROGMEM t_fntab fntab[] = {
 
@@ -60,14 +63,17 @@ const PROGMEM t_fntab fntab[] = {
   { 'M', em_send },
 //  { 'S', esa_send },
 #endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
-#ifdef HAS_ONEWIRE  
+#ifdef HAS_ONEWIRE
   { 'O', onewire_func },
-#endif  
+#endif
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -115,7 +121,7 @@ main(void)
   // un-reset ethernet
   DDRD  |= _BV( PD4 );
   PORTD |= _BV( PD4 );
-  
+
 
 //  while(1);
 
@@ -173,7 +179,7 @@ main(void)
 #endif
 
   ethernet_init();
-    
+
   LED_OFF();
 
   sei();

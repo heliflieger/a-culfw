@@ -73,7 +73,7 @@
 #define HAS_TX3
 #define HAS_INTERTECHNO
 #define HAS_HOERMANN
-
+#define HAS_SOMFY_RTS
 
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
 
@@ -83,9 +83,9 @@
 
 #define HAS_UART                1
 #define UART_BAUD_RATE          38400
-#define HAS_ETHERNET            1   
-#define HAS_NTP                 1   
-#define HAS_ONEWIRE						  10		// OneWire Device Buffer, RAM: 10 * 8 Byte 
+#define HAS_ETHERNET            1
+#define HAS_NTP                 1
+#define HAS_ONEWIRE						  10		// OneWire Device Buffer, RAM: 10 * 8 Byte
 
 #define TTY_BUFSIZE             512
 
