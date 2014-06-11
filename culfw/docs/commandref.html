@@ -64,6 +64,7 @@
     <a href="#cmd_W">W</a>
     <a href="#cmd_w">w</a>
     <a href="#cmd_X">X</a>
+    <a href="#cmd_Y">Y</a>
     <a href="#cmd_Z">Z</a>
   </ul>
   <a href="#protocol2">Protocol Part 2 (radio messages)</a><br>
@@ -112,7 +113,7 @@
     TuxRadio
     <br><br>
 
-  <li>The CUNO (Cc110x Usb Network Onewire) is a device with following features: 
+  <li>The CUNO (Cc110x Usb Network Onewire) is a device with following features:
     CSM == CC1101+ATMega m644/m1284 cpu / Ethernet interface w/ PoE /
     ACM-USB bridge / OneWire Bus-Master DS2482 / MicroSD
     <br><br>
@@ -248,7 +249,7 @@
     directory. Locate the COM-port in the device manager shown as
     "USB Virtual Serial Port (COMx)". Start Hyperterminal, open a connection
     to COMx 9600,8,n,1.<br><br>
-    
+
     For CUNO: Install a virtual COM port, use MCP2200.inf from the docs
     directory. Locate the COM-port in the device manager shown as
     "USB Virtual Serial Port (COMx)". Start Hyperterminal, open a connection
@@ -471,7 +472,7 @@
       </ul>
       See also X04
     </ul><br><br>
-    
+
     <a name="cmd_H"></a>
     H&lt;func&gt;[&lt;hex&gt;]
     <ul>
@@ -504,7 +505,7 @@
     </ul><br><br>
 
     <a name="cmd_I"></a>
-    I&lt;cmd&gt;&lt;data&gt; - Infrared Rx/Tx 
+    I&lt;cmd&gt;&lt;data&gt; - Infrared Rx/Tx
     <ul>
       &lt;cmd&gt; is one of:
       <ul>
@@ -568,7 +569,7 @@
       (CUNO only)
       &lt;func&gt; is one of the following:
       <li> i  - Initialize OneWire Sub-System; Reset HMS-Emulation & Timers
-      
+
       <li> R&lt;func&gt;	   Reset Routines:
         <ul>
       	<li>b - Reset OneWire Bus; Returns:
@@ -584,11 +585,11 @@
           </ul>
         </ul>
 
-      <li> c  - Returns list of found RomCodes for OneWire Devices 
+      <li> c  - Returns list of found RomCodes for OneWire Devices
       	(based on OneWire FullSearch, performed during boot, or with Of-Command)<br>
         Output: 1:aabbccddeeffgghh  where a-h are Hex-Values: 64Bit Address<br>
-      	        2:aabbccddeeffgghh 
-      						   
+      	        2:aabbccddeeffgghh
+
       <li> w&lt;func&gt;    Write Routines
         <ul>
         <li>b&lt;hex&gt; - Write one BIT to the OneWire Bus; &lt;hex&gt;: 00, or &gt;00 otherwise
@@ -601,17 +602,17 @@
         <li>B - Read one BYTE from the OneWire Bus; Return: &lt;hex&gt;:dd Hex-Value of Data
         </ul>
       <li> m&lt;hex&gt; - MatchRom Code to select Device; &lt;hex&gt;:64-Bit Address in 8xHEX
-      
+
       <li> H&lt;func&gt;   HMS Emulation Routines for Temp-Sensors (DS18B20 & DS18S20)
       <ul>
         <li>o - Toggle HMS-Emulation on/off; Returns: ON / OFF<br>
-                Based on found RomCodes an HMS Emulation will be done for 
+                Based on found RomCodes an HMS Emulation will be done for
                 OW-Temp-Sensors DS18B20 & DS18S20
         <li>t&lt;dec&gt;   - Set Time-Interval for HMS-emulated Reporting<br>
                 &lt;dec&gt;: Seconds in decimal: 0-255
                 default: 120s
       </ul>
-                   
+
       <li>C&lt;func&gt; Sensor-Conversion Routines
       <ul>
        <li>s - Start Asynchronous Conversion for a selected Sensor (MatchRom)
@@ -630,7 +631,7 @@
        <li>f - Start a new RomCode Full Search on the OW-Bus
        </ul>
     </ul><br><br>
-      	
+
     <a name="cmd_o"></a>
     o&lt;func&gt; OBIS Command-Set
     <ul>
@@ -946,6 +947,31 @@
       Example: x03
     </ul><br><br>
 
+    <a name="cmd_Y"></a>
+    Y&lt;func&gt;
+    <ul>
+      Somfy RTS/Simu Hz (R) mode. &lt;func&gt; is one of:
+      <ul>
+      <li>t&lt;dez&gt;<br>
+      Sets the time in us (microseconds) for a single symbol<br>
+	Typical values are: 1200-1300<br>
+        Default: 1240 (According to the patent it should be 1208, but this works better)
+      <li>r&lt;dez&gt;<br>
+        Sets the number of repetitions of a Somfy RTS frame.
+        If the receiver is far away from the sender, increasing this number may help reception.<br>
+        Default: 6
+      <li>s<br>
+        Send out a Somfy command. &lt;hex&gt; is a hex string of the following form: KKC0RRRRAAAAAA<br>
+	     <ul>
+		    KK - Encryption key<br>
+		    C - Command (1 = My, 2 = Up, 4 = Down, 8 = Prog)<br>
+		    0 - Checksum (set to 0, is calculated automatically)<br>
+		    RRRR - Rolling code<br>
+		    AAAAAA - Address (= remote channel)
+	     </ul>
+      </ul>
+    </ul><br><br>
+
     <a name="cmd_Z"></a>
     Z&lt;func&gt;[&lt;hex&gt;]
     <ul>
@@ -1048,7 +1074,7 @@
       </ul>
       (for binary data lower case 'a' is prepended - MORITZ messages are structured same but letter 'Z'/'z' is prepended)
       <br><br>
-      
+
 
     <li>For OBIS:<br>
       oESY5Q3DA1004 V3.03||1-0:0.0.0*255(1124001569)|....<br>
@@ -1172,8 +1198,8 @@
 <h3>InterTechno(R) - 433.92 Mhz</h3>
 <ul>
   The basic protocol is a 12-Bit Tri-State Protocol. As the transceivers
-  for this protocol can handle 3 states the different versions of IT-Switches 
-  are putting those Bits either to Ground(0), to VCC (1) or leaving them 
+  for this protocol can handle 3 states the different versions of IT-Switches
+  are putting those Bits either to Ground(0), to VCC (1) or leaving them
   open(Float). <br>
   The original InterTechno(R) Switch knows ONLY 0 &amp; F, but many
   discounter variants are also using 1 &amp; F or 1 &amp; 0 or even all
@@ -1192,7 +1218,7 @@
    N  F0FF         14  F0FF
    O  0FFF         15  0FFF
    P  FFFF         16  FFFF</pre>
-  
+
   For Switching Bit 11/12 are needed (either 11/10 or 11/00) depending
   on the Brand of the Switch.<br>
   Bit 9/10 are either part of a non-IT Address (discounter) or are fixed
@@ -1203,7 +1229,7 @@
   420us seems to fit the most so far.<br>
   </ul>
 </ul>
-  
+
 <a name="cc1100"></a>
 <h3>CC1100 settings</h3>
  <ul>
@@ -1265,7 +1291,7 @@
 
   Connect CUN to your PC via USB. On Linux a device /dev/ttyACM0 will appear (on
   subsequent experiments, the device may be named /dev/ttyACM1, /dev/ttyACM2 and
-  so forth). Use screen /dev/ttyACM1 to talk to CUN and screen /dev/ttyACM1@38400 
+  so forth). Use screen /dev/ttyACM1 to talk to CUN and screen /dev/ttyACM1@38400
   for CUNO. Enter the following commands:<br><pre>
   V                     output version, e.g. V 1.39 CUN
   Wid00                 disable DHCP
@@ -1303,7 +1329,7 @@
     The FS20 protocol sends each message 3 times. The firmware filters optionally
     (See Command X bit 1) repeated messages.
     <br><br>
-    
+
   <li> CUNO via USB<br>
     The USB-Bridge of CUNO operates on 38400 Baud. This means, that you have to
     assign this speed to the port in your host OS.<br>
