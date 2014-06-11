@@ -52,6 +52,10 @@
 #include "ir.h"
 #endif
 
+#ifdef HAS_SOMFY_RTS
+#include "somfy_rts.h"
+#endif
+
 const PROGMEM t_fntab fntab[] = {
 
   { 'm', getfreemem },
@@ -79,6 +83,9 @@ const PROGMEM t_fntab fntab[] = {
   { 'M', em_send },
   { 'K', ks_send },
 //  { 'S', esa_send },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
@@ -146,7 +153,7 @@ main(void)
   // Setup the timers. Are needed for watchdog-reset
 #ifdef HAS_IRRX
   ir_init();
-  // IR uses highspeed TIMER0 for sampling 
+  // IR uses highspeed TIMER0 for sampling
   OCR0A  = 1;                              // Timer0: 0.008s = 8MHz/256/2   == 15625Hz
 #else
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz

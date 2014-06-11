@@ -67,6 +67,7 @@
 #define HAS_MORITZ
 #define HAS_ESA
 #define HAS_INTERTECHNO
+#define HAS_SOMFY_RTS
 
 #ifdef TUXRADIO
 #define HAS_DOGM
@@ -138,7 +139,7 @@
 #define LED_DDR                 DDRD
 #define LED_PORT                PORTD
 #define LED_PIN                 2
-#endif 
+#endif
 
 #define BOARD_ID_STR            "CSM868"
 #define BOARD_ID_STR433         "CSM433"
