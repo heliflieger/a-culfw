@@ -93,6 +93,9 @@ MSG_CLEANING = Cleaning project:
 
 OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
+ifeq ($(TARGET), CUL_V3)
+SRC += ../../clib/rf_mbus.c ../../clib/mbus/manchester.c ../../clib/mbus/3outof6.c ../../clib/mbus/mbus_packet.c ../../clib/mbus/crc.c
+endif
 
 all:
 	make TARGET=CUL_V2 MCU=at90usb162 mostly_clean build size

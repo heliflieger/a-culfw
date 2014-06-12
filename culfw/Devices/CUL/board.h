@@ -42,6 +42,7 @@
 
 #if defined(CUL_V3)
 #  define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
+#  define HAS_MBUS
 #endif
 
 
@@ -142,9 +143,11 @@
 #  define CC1100_OUT_DDR        DDRD
 #  define CC1100_OUT_PORT       PORTD
 #  define CC1100_OUT_PIN        PD3
+#  define CC1100_OUT_IN         PIND
 #  define CC1100_IN_DDR		DDRD
 #  define CC1100_IN_PORT        PIND
 #  define CC1100_IN_PIN         PD2
+#  define CC1100_IN_IN          PIND
 #  define CC1100_INT		INT2
 #  define CC1100_INTVECT        INT2_vect
 #  define CC1100_ISC		ISC20
