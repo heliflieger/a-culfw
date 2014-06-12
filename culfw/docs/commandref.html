@@ -36,6 +36,7 @@
     <a href="#cmd_A">A</a>
     <a href="#cmd_a">a</a>
     <a href="#cmd_B">B</a>
+    <a href="#cmd_b">b</a>
     <a href="#cmd_C">C</a>
     <a href="#cmd_c">c</a>
     <a href="#cmd_D">D</a>
@@ -332,6 +333,19 @@
       Reboot device.<br>
       If &lt;hex&gt; is not 00 enter bootloader mode (for flashing the device see the
       flashing section above)
+    </ul><br><br>
+
+    <a name="cmd_b"></a>
+    b&lt;cmd&gt;&lt;data&gt;
+    <ul>
+      Wireless M-Bus:
+      <ul>
+      <li> r&lt;mode&gt;<br>
+        start receiving messages. &lt;mode&gt; bust be either s or t for desired mode
+      <li> s&lt;data&gt;<br>
+        send data (tbd)
+      </ul>
+      returns always the actual receiving mode 
     </ul><br><br>
 
     <a name="cmd_C"></a>
@@ -1112,6 +1126,15 @@
      <li>c  - command (4 bit)
      </ul>
      <br><br>
+
+     <li>For Wireless M-Bus<br>
+     bllddddd...<br>
+     <ul>
+     <li>ll   - number of mbus packet data bytes to follow 
+     <li>dddd - mbus packet data
+     </ul>
+     <br><br>
+
 
     If bit 3 in the X command is set, then report raw data, even if it has a
     wrong checksum or parity. The format is:<ul>
