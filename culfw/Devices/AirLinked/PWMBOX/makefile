@@ -10,6 +10,7 @@ OBJDIR = .
 SRC = $(TARGET).c                                                    \
 		../culfw.c                                  \
 		../../../clib/cc1100.c                                  \
+		../../../clib/cc1101_pllcheck.c                         \
 		../../../clib/clock.c                                   \
 		../../../clib/delay.c                                   \
 		../../../clib/display.c                                 \

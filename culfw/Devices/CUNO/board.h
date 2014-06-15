@@ -75,6 +75,10 @@
 #define HAS_HOERMANN
 #define HAS_SOMFY_RTS
 
+#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
+
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
 
 

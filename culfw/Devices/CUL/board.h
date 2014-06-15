@@ -15,6 +15,9 @@
 #define HAS_FHT_80b                     // PROGMEM: 1374b, RAM: 90b
 #define HAS_FHT_8v                      // PROGMEM:  586b  RAM: 23b
 #define HAS_RF_ROUTER                   // PROGMEM: 1248b  RAM: 44b
+#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT	// PROGMEM: 118b
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG		// PROGMEM:  22b
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW	// PROGMEM:  22b
 
 #if defined(CUL_V3) || defined(CUL_V4)
 #  define FHTBUF_SIZE          174      //                 RAM: 174b
@@ -55,6 +58,7 @@
 #  define HAS_TX3
 #  define HAS_HOERMANN
 #  undef  HAS_FHT_8v
+#  undef  HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #endif
 
 #ifdef CUL_V2_HM

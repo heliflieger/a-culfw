@@ -19,6 +19,9 @@
 #define HAS_HOERMANN
 #undef  HAS_MEMFN
 #define HAS_RF_ROUTER
+#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
 /*
  * Board definition according to

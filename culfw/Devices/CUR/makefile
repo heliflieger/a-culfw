@@ -8,7 +8,8 @@ OBJDIR = .
 SRC = $(TARGET).c                                                  \
 		../../clib/Descriptors.c                              \
 		../../clib/cc1100.c                                   \
-		../../clib/cdcLUFA.c                                      \
+		../../clib/cc1101_pllcheck.c                          \
+		../../clib/cdcLUFA.c                                  \
 		../../clib/clock.c                                    \
 		../../clib/delay.c                                    \
 		../../clib/display.c                                  \

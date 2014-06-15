@@ -68,6 +68,9 @@
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 //#define HAS_ASKSIN
 //#define HAS_ESA
+#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
 #define BUSWARE_CSM
 

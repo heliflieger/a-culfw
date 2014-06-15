@@ -68,6 +68,9 @@
 #define HAS_REVOLT
 #define HAS_HOERMANN
 #define HAS_UNIROLL
+#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
 
 /* a maximum of 8 onewire devices is supported */

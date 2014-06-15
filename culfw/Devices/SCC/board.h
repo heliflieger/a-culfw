@@ -53,6 +53,9 @@
 #define HAS_ESA
 #define HAS_INTERTECHNO
 #define HAS_SOMFY_RTS
+#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
 #define MULTI_FREQ_DEVICE       // available in multiple versions: 433MHz,868MHz,915MHz
 
