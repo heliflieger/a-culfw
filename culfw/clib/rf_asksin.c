@@ -6,6 +6,7 @@
 #include "delay.h"
 #include "rf_receive.h"
 #include "display.h"
+#include "cc1101_pllcheck.h"
 
 #include "rf_asksin.h"
 
@@ -186,6 +187,10 @@ rf_asksin_task(void)
       ccStrobe( CC1100_SRX   );
       break;
   }
+
+#ifdef HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
+  cc1101_RX_check_PLL_wait_task();
+#endif
 }
 
 void

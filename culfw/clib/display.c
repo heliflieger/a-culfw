@@ -211,7 +211,7 @@ void
 display_udec(uint16_t d, int8_t pad, uint8_t padc)
 {
   char buf[6];
-  int8_t i=6;
+  uint8_t i=6;
 
   buf[--i] = 0;
   do {
@@ -229,7 +229,7 @@ void
 display_hex(uint16_t h, int8_t pad, uint8_t padc)
 {
   char buf[5];
-  int8_t i=5;
+  uint8_t i=5;
 
   buf[--i] = 0;
   do {
