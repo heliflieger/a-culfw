@@ -1,3 +1,6 @@
+Version 1.59 (2014-06-22)
+- RX/TX switch bugfix (saves 2ms when switching)
+
 Version 1.59 (2014-06-15)
 - added display_hex8 function in display.h/.c. Is compiled with #define
   HAS_DISPLAY_32BIT_HEX8. by noansi
