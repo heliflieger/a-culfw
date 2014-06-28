@@ -25,7 +25,6 @@
 #define FULL_CC1100_PA                  // PROGMEM:  100b
 #define HAS_FASTRF                      // PROGMEM:  362b  RAM:  1b
 #define HAS_RAWSEND                     // PROGMEM:   90b  RAM:  6b
-#define HAS_ASKSIN
 #define HAS_ESA
 #define HAS_TX3
 #define HAS_HOERMANN
