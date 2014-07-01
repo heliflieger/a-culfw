@@ -110,6 +110,13 @@ main(void)
 //  eeprom_factory_reset("xx");
   eeprom_init();
 
+// Setup OneWire and make a full search at the beginning (takes some time)
+#ifdef HAS_ONEWIRE
+  i2c_init();
+	onewire_Init();
+	onewire_FullSearch();
+#endif
+
   // Setup the timers. Are needed for watchdog-reset
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
   ir_init();
