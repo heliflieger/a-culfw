@@ -1,4 +1,7 @@
-Version 1.59 (2014-06-22)
+Version 1.61 (2014-06-28)
+- Fix asksin "garbage" message, after X00 followed by X21 (fhem restart)
+
+Version 1.60 (2014-06-22)
 - RX/TX switch bugfix (saves 2ms when switching)
 
 Version 1.59 (2014-06-15)

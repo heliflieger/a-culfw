@@ -8,6 +8,9 @@
 #include "fncollection.h"
 #include "cc1100.h"
 
+#include "rf_asksin.h"  // asksin_on
+#include "rf_moritz.h"  // moritz_on
+
 #ifdef HAS_MORITZ
 #include "rf_moritz.h"
 #endif
@@ -361,7 +364,16 @@ set_ccoff(void)
 #else
   ccStrobe(CC1100_SIDLE);
 #endif
+
   cc_on = 0;
+
+#ifdef HAS_ASKSIN
+  asksin_on = 0;
+#endif
+
+#ifdef HAS_MORITZ
+  moritz_on = 0;
+#endif
 }
 
 void
@@ -369,4 +381,12 @@ set_ccon(void)
 {
   ccInitChip(EE_CC1100_CFG);
   cc_on = 1;
+
+#ifdef HAS_ASKSIN
+  asksin_on = 0;
+#endif
+
+#ifdef HAS_MORITZ
+  moritz_on = 0;
+#endif
 }
