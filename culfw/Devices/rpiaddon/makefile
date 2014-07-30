@@ -5,7 +5,7 @@ FORMAT = ihex
 TARGET = rpiaddon
 OBJDIR = .
 
-VERS=1.58
+VERS=1.61
 DATE=$(shell date +%Y-%m-%d)
 DESTDIR=culfw-rpiaddon.$(VERS)
 
@@ -35,6 +35,12 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ir.c                                      \
 		../../clib/irmp.c                                    \
 		../../clib/irsnd.c                                   \
+                ../../clib/rf_mbus.c                                 \
+                ../../clib/mbus/manchester.c                         \
+                ../../clib/mbus/3outof6.c                            \
+                ../../clib/mbus/mbus_packet.c                        \
+                ../../clib/mbus/crc.c                                \
+
 
 
 OPT = s

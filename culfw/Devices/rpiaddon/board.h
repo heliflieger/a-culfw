@@ -17,10 +17,13 @@
 #define CC1100_OUT_DDR		DDRB
 #define CC1100_OUT_PORT         PORTB
 #define CC1100_OUT_PIN          1
+#define CC1100_OUT_IN           PINB
 
 #define CC1100_IN_DDR		DDRD
 #define CC1100_IN_PORT          PIND
 #define CC1100_IN_PIN           2
+#define CC1100_IN_IN            PIND
+
 #define CC1100_INT		INT0
 #define CC1100_INTVECT          INT0_vect
 #define CC1100_ISC		ISC00
@@ -71,7 +74,7 @@
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
-
+#define HAS_MBUS
 
 /* a maximum of 8 onewire devices is supported */
 #define HAS_ONEWIRE         8      // OneWire Device Buffer, RAM: 10 * 8 Byte
