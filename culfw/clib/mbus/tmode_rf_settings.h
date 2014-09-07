@@ -29,7 +29,7 @@
 // Length configuration = (0) Fixed length packets, length configured in PKTLEN register.
 // Packetlength = 255
 // Preamble count = (2)  4 bytes
-// Append status = 0
+// Append status = 1
 // Address check = (0) No address check
 // FIFO autoflush = 0
 // Device address = 0
@@ -79,7 +79,7 @@ static const uint8_t PROGMEM tModeRfConfig[] = {
     CC1100_TEST2, 0x81,   // TEST2     Various test settings.
     CC1100_TEST1, 0x35,   // TEST1     Various test settings.
     CC1100_TEST0, 0x09,   // TEST0     Various test settings.
-    CC1100_PKTCTRL1, 0x00,   // !! 00 !! PKTCTRL1  Packet automation control.
+    CC1100_PKTCTRL1, 0x04,   // !! 00 !! PKTCTRL1  Packet automation control.
     CC1100_PKTCTRL0, 0x00,   // PKTCTRL0  Packet automation control.
     CC1100_ADDR, 0x00,   // ADDR      Device address.
     CC1100_PKTLEN, 0xFF,    // PKTLEN    Packet length.

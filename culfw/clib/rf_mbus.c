@@ -28,13 +28,19 @@ uint8 RXbytes[584];
 static uint8_t mbus_mode = WMBUS_NONE;
 RXinfoDescr RXinfo;
 
-static void halRfReadFifo(uint8* data, uint8 length) {
+static void halRfReadFifo(uint8* data, uint8 length, uint8 *rssi, uint8 *lqi) {
   CC1100_ASSERT;
 
   cc1100_sendbyte( CC1100_RXFIFO|CC1100_READ_BURST );
   for (uint8_t i = 0; i < length; i++)
     data[i] = cc1100_sendbyte( 0 );
-
+	
+  if (rssi) {
+    *rssi = cc1100_sendbyte( 0 );
+    if (lqi) {
+      *lqi =  cc1100_sendbyte( 0 );
+    }
+  }
   CC1100_DEASSERT;
 }
 
@@ -151,7 +157,7 @@ void rf_mbus_task(void) {
     case 2:
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
         // Read the 3 first bytes
-        halRfReadFifo(RXinfo.pByteIndex, 3);
+        halRfReadFifo(RXinfo.pByteIndex, 3, NULL, NULL);
 
         // - Calculate the total number of bytes to receive -
         if (RXinfo.mode == WMBUS_SMODE) {
@@ -220,7 +226,7 @@ void rf_mbus_task(void) {
   
         // Read out the RX FIFO
         // Do not empty the FIFO (See the CC110x or 2500 Errata Note)
-        halRfReadFifo(RXinfo.pByteIndex, RX_AVAILABLE_FIFO - 1);
+        halRfReadFifo(RXinfo.pByteIndex, RX_AVAILABLE_FIFO - 1, NULL, NULL);
 
         RXinfo.bytesLeft  -= (RX_AVAILABLE_FIFO - 1);
         RXinfo.pByteIndex += (RX_AVAILABLE_FIFO - 1);
@@ -231,7 +237,9 @@ void rf_mbus_task(void) {
 
   // END OF PAKET
   if (!bit_is_set(GDO2_PIN,GDO2_BIT) && RXinfo.state>1) {
-    halRfReadFifo(RXinfo.pByteIndex, (uint8)RXinfo.bytesLeft);
+    uint8_t rssi = 0;
+    uint8_t lqi = 0;
+    halRfReadFifo(RXinfo.pByteIndex, (uint8)RXinfo.bytesLeft, &rssi, &lqi);
     RXinfo.complete = TRUE;
 
     // decode!
@@ -251,6 +259,10 @@ void rf_mbus_task(void) {
 //	DC( ' ' );
       }
 
+      if (tx_report & REP_RSSI) {
+        DH2(lqi);	
+        DH2(rssi);
+      }
       DNL();
     }
     RXinfo.state = 0;
