@@ -1,3 +1,6 @@
+Version 1.62
+- SOMFY_RTS: return already decrypted data when sending commands
+
 Version 1.61 (2014-06-28)
 - Fix asksin "garbage" message, after X00 followed by X21 (fhem restart)
 

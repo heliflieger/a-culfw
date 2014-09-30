@@ -245,6 +245,10 @@ static void somfy_rts_send(char *in) {
 
 	// calculate checksum
 	airdata[1] |= (somfy_rts_calc_checksum(airdata) & 0x0F);
+	
+	// save unencrypted data to return later
+	somfy_rts_frame_t *unencrypted = malloc(SOMFY_RTS_FRAME_SIZE);
+	memcpy(unencrypted, airdata, SOMFY_RTS_FRAME_SIZE);
 
 	// "encrypt"
 	for (i = 1; i < SOMFY_RTS_FRAME_SIZE; i++) {
@@ -327,10 +331,13 @@ static void somfy_rts_send(char *in) {
 
 	DC('Y');
 	DC('s');
-	for(j = 0; j < 7;j++) {
-		display_hex2(airdata[j]);
+	for(j = 0; j < SOMFY_RTS_FRAME_SIZE; j++) {
+		display_hex2(unencrypted[j]);
 	}
 	DNL();
+	
+	free(unencrypted);
+	free(airdata);
 }
 
 void somfy_rts_func(char *in) {
