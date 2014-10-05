@@ -101,7 +101,7 @@ OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
 all:
 	make TARGET=COC COCVERS=FULL mostly_clean build size
-	make TARGET=COC.radio_only COCVERS=RADIO_ONLY mostly_clean build size
+	make TARGET=COC_radio_only COCVERS=RADIO_ONLY mostly_clean build size
 
 build: elf hex eep lss sym
 
@@ -126,7 +126,7 @@ program_full: TARGET=COC
 program_full: COCVERS=FULL
 program_full: do_program
 
-program_radio_only: TARGET=COC.radio_only
+program_radio_only: TARGET=COC_radio_only
 program_radio_only: COCVERS=RADIO_ONLY
 program_radio_only: do_program
 

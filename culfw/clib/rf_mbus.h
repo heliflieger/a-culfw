@@ -10,6 +10,7 @@
 void rf_mbus_task(void);
 void rf_mbus_func(char *in);
 
+extern uint8_t mbus_mode;
 #define	WMBUS_NONE 	0
 
 #define RX_FIFO_THRESHOLD         0x07

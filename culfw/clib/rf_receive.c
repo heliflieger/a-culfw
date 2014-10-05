@@ -28,6 +28,9 @@
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
 #endif
+#ifdef HAS_MBUS
+#include "rf_mbus.h"
+#endif
 
 //////////////////////////
 // With a CUL measured RF timings, in us, high/low sum
@@ -104,6 +107,14 @@ tx_init(void)
 void
 set_txrestore()
 {
+#ifdef HAS_MBUS	
+  if(mbus_mode != WMBUS_NONE) {
+    // rf_mbus.c handles cc1101 configuration on its own.
+    // if mbus is activated the configuration must not be
+    // changed here, that leads to a crash!
+    return;
+  }
+#endif
   if(tx_report) {
     set_ccon();
     ccRX();

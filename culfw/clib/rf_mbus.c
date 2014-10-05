@@ -25,7 +25,7 @@
 uint8 RXpacket[291];
 uint8 RXbytes[584];
 
-static uint8_t mbus_mode = WMBUS_NONE;
+uint8_t mbus_mode = WMBUS_NONE;
 RXinfoDescr RXinfo;
 
 static void halRfReadFifo(uint8* data, uint8 length, uint8 *rssi, uint8 *lqi) {
