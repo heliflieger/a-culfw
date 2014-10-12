@@ -14,6 +14,8 @@ all:
 	make -C TuxRadio all
 	make -C TuxRadio2 clean
 	make -C TuxRadio2 all
+	make -C CSM clean
+	make -C CSM all
 	find . -name \*.eep | xargs rm
 	find . -name \*.elf | xargs rm
 	find . -name \*.lss | xargs rm

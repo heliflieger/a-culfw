@@ -11,9 +11,9 @@ VERS=1.42-6
 DATE=$(shell date +%Y-%m-%d)
 DESTDIR=culfw-s0logger.$(VERS)
 
-SRC = $(TARGET).c                                                    \
+SRC = $(TARGET).c\
 		../../clib/cc1100.c                                  \
-		../../clib/cc1101_pllcheck.c                         \ 
+		../../clib/cc1101_pllcheck.c                         \
 		../../clib/clock.c                                   \
 		../../clib/delay.c                                   \
 		../../clib/display.c                                 \
@@ -25,8 +25,8 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_receive.c                              \
 		../../clib/rf_router.c                               \
-                ../../clib/intertechno.c                             \
-		../../clib/somfy_rts.c				     \
+		../../clib/intertechno.c                             \
+		../../clib/somfy_rts.c                               \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                  \
