@@ -10,6 +10,7 @@ all:
 	make -C CUR clean
 	make -C CUR all
 	make -C COC all
+	make -C SCC all
 	make -C TuxRadio clean
 	make -C TuxRadio all
 	make -C TuxRadio2 clean

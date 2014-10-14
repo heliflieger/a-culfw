@@ -20,7 +20,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_receive.c                              \
 		../../clib/rf_router.c                               \
 		../../clib/intertechno.c                             \
-		../../clib/somfy_rts.c				    			 \
+		../../clib/somfy_rts.c				     \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                  \
@@ -28,6 +28,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ttydata.c                                 \
 		../../clib/stacking.c                                \
 		../../clib/spi.c                                     \
+
 
 
 OPT = s
@@ -165,7 +166,7 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 
-all: sizebefore build sizeafter
+all: clean build sizeafter
 
 build: elf hex eep lss sym
 
@@ -401,7 +402,7 @@ clean_list:
 	@$(REMOVE) $(SRC:.c=.s)
 	@$(REMOVE) $(SRC:.c=.d)
 	@$(REMOVE) $(SRC:.c=.i)
-	@$(REMOVEDIR) .dep
+#	@$(REMOVEDIR) .dep
 
 
 $(shell mkdir $(OBJDIR) 2>/dev/null)
