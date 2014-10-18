@@ -30,10 +30,12 @@
 #define CC1100_OUT_DDR		DDRB
 #define CC1100_OUT_PORT         PORTB
 #define CC1100_OUT_PIN          1
+#define CC1100_OUT_IN           PINB
 
 #define CC1100_IN_DDR		DDRD
 #define CC1100_IN_PORT          PIND
 #define CC1100_IN_PIN           2
+#define CC1100_IN_IN            PIND
 #define CC1100_INT		INT0
 #define CC1100_INTVECT          INT0_vect
 #define CC1100_ISC		ISC00
@@ -68,6 +70,7 @@
 #define HAS_ESA
 #define HAS_INTERTECHNO
 #define HAS_SOMFY_RTS
+#define HAS_MBUS
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
@@ -108,10 +111,12 @@
 #define CC1100_OUT_DDR		DDRC
 #define CC1100_OUT_PORT         PORTC
 #define CC1100_OUT_PIN          0
+#define CC1100_OUT_IN           PINC
 
 #define CC1100_IN_DDR		DDRD
 #define CC1100_IN_PORT          PIND
 #define CC1100_IN_PIN           3
+#define CC1100_IN_IN            PIND
 #define CC1100_INT		INT1
 #define CC1100_INTVECT          INT1_vect
 #define CC1100_ISC		ISC10
@@ -130,10 +135,12 @@
 #define CC1100_OUT_DDR		DDRD
 #define CC1100_OUT_PORT         PORTD
 #define CC1100_OUT_PIN          5
+#define CC1100_OUT_IN           PIND
 
 #define CC1100_IN_DDR		DDRD
 #define CC1100_IN_PORT          PIND
 #define CC1100_IN_PIN           3
+#define CC1100_IN_IN            PIND
 #define CC1100_INT		INT1
 #define CC1100_INTVECT          INT1_vect
 #define CC1100_ISC		ISC10
