@@ -46,7 +46,6 @@
 #if defined(CUL_V3)
 #  define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
 #  define HAS_MBUS
-#  define HAS_IT
 #endif
 
 
