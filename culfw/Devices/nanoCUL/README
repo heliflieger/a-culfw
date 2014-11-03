@@ -1,0 +1,23 @@
+nanoCUL is an example implementation for a Arduino nano and a stand alone CC1101
+RF module.
+Other arduinos with an ATMega328p and 16 MHz can be used as well.
+For more information see http://forum.fhem.de/index.php/topic,24651.0.html
+
+
+FLASHING FIRMWARE
+
+To update firmware with culfw execute:
+
+	make program
+
+on the a computer which has the avr toolchain installed. This will require some tools installed upfront. 
+Use:
+
+	apt-get install make avrdude
+
+
+to flash the recompiled nanoCUL.hex file.
+
+USING
+
+The culfw stack is available on: /dev/ttyUSBx, where x is a number.
