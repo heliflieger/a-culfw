@@ -79,15 +79,22 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
 #endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
 #ifdef HAS_ONEWIRE
   { 'O', onewire_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
   { 'M', em_send },
+  { 'K', ks_send },
 #endif
 #ifdef HAS_UNIROLL
   { 'U', ur_send },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
