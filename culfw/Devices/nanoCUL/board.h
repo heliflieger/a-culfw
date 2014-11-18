@@ -3,6 +3,13 @@
 
 #include <stdint.h>
 
+/* if you have an Arduino with only 8MHz disable the next line */
+#define HAS_16MHZ_CLOCK
+
+/* if you are using a CC1101 module for 868MHz disable the next line */
+#define HAS_CC1100_433
+
+
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
 #define SPI_SS			2

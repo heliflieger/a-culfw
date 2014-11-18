@@ -57,7 +57,11 @@
 
 
 
+#ifdef HAS_CC1100_433
 const uint8_t mark433_pin = 0x00;
+#else
+const uint8_t mark433_pin = 0xff;
+#endif
 
 const PROGMEM t_fntab fntab[] = {
 
@@ -122,8 +126,10 @@ int
 main(void)
 {
   wdt_disable();
+#ifdef HAS_16MHZ_CLOCK
   /* set clock to 16MHz/2 = 8Mhz */
   clock_prescale_set(clock_div_2);
+#endif
 
 //  LED_ON_DDR  |= _BV( LED_ON_PIN );
 //  LED_ON_PORT |= _BV( LED_ON_PIN );
@@ -150,8 +156,11 @@ main(void)
   MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
   wdt_enable(WDTO_2S);
 
-  //uart_init( UART_BAUD_SELECT_DOUBLE_SPEED(UART_BAUD_RATE,F_CPU) );
+#ifdef HAS_16MHZ_CLOCK
   uart_init( UART_BAUD_SELECT(UART_BAUD_RATE,F_CPU) );
+#else
+  uart_init( UART_BAUD_SELECT_DOUBLE_SPEED(UART_BAUD_RATE,F_CPU) );
+#endif
   fht_init();
   tx_init();
   input_handle_func = analyze_ttydata;
