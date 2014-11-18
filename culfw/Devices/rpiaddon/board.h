@@ -75,6 +75,8 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_MBUS
+#define HAS_ASKSIN_FUP
+#define HAS_SOMFY_RTS
 
 /* a maximum of 8 onewire devices is supported */
 #define HAS_ONEWIRE         8      // OneWire Device Buffer, RAM: 10 * 8 Byte
