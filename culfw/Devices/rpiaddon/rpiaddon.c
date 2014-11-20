@@ -32,23 +32,32 @@
 #include "rf_router.h"
 #include "onewire.h"
 #include "i2cmaster.h"
-#include "intertechno.h"
 
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
+#endif
+#ifdef HAS_MORITZ
+#include "rf_moritz.h"
+#endif
+#ifdef HAS_RWE
+#include "rf_rwe.h"
+#endif
+#ifdef HAS_INTERTECHNO
+#include "intertechno.h"
+#endif
+#ifdef HAS_SOMFY_RTS
+#include "somfy_rts.h"
 #endif
 
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
 #include "ir.h"
 #endif
 
-#ifdef HAS_MORITZ
-#include "rf_moritz.h"
-#endif
 
 #ifdef HAS_MBUS
 #include "rf_mbus.h"
 #endif
+
 
 
 const PROGMEM t_fntab fntab[] = {
@@ -71,6 +80,9 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
 #endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
 #ifdef HAS_ONEWIRE
   { 'O', onewire_func },
 #endif
@@ -80,6 +92,9 @@ const PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_UNIROLL
   { 'U', ur_send },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
@@ -176,6 +191,9 @@ main(void)
 #endif
 #ifdef HAS_MORITZ
     rf_moritz_task();
+#endif
+#ifdef HAS_RWE
+    rf_rwe_task();
 #endif
 #if defined(HAS_IRRX) || defined(HAS_IRTX)
     ir_task();
