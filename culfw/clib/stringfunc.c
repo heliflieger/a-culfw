@@ -7,13 +7,15 @@
 int
 fromhex(const char *in, uint8_t *out, uint8_t buflen)
 {
-  uint8_t *op = out, c, h = 0, fnd, step = 0;
+  uint8_t *op = out, c, h = 0, step = 0;
   while((c = *in++)) {
-    fnd = 0;
-    if(c >= '0' && c <= '9') { h |= c-'0';    fnd = 1; }
-    if(c >= 'A' && c <= 'F') { h |= c-'A'+10; fnd = 1; }
-    if(c >= 'a' && c <= 'f') { h |= c-'a'+10; fnd = 1; }
-    if(!fnd) {
+    if(c >= 'a')
+      c -= 'a'-'A';
+    if(c >= '0' && c <= '9') {
+      h |= c-'0';
+    } else if(c >= 'A' && c <= 'F') {
+      h |= c-'A'+10;
+    } else  {
       if(c != ' ' && c != ':')
         break;
       continue;
