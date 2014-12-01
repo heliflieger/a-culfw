@@ -138,6 +138,8 @@
 #undef  HAS_HELIOS
 #endif
 
+#define HAS_MBUS
+
 #define TTY_BUFSIZE             1024
 
 #define BUSWARE_CUNO2

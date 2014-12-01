@@ -64,11 +64,18 @@
 #include "rf_moritz.h"
 #endif
 
+#ifdef HAS_MBUS
+#include "rf_mbus.h"
+#endif
+
 const PROGMEM t_fntab fntab[] = {
 
   { 'm', getfreemem },
 
   { 'B', prepare_boot },
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
   { 'C', ccreg },
   { 'F', fs20send },
 #ifdef HAS_VZ
@@ -249,6 +256,9 @@ main(void)
 #ifdef HAS_HELIOS
     helios_task();
 #endif    
+#ifdef HAS_MBUS
+    rf_mbus_task();
+#endif
   }
 
 }

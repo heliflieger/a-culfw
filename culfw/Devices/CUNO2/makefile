@@ -55,6 +55,11 @@ SRC = $(TARGET).c                                                    \
 		../../clib/dmx.c                                      \
 		../../clib/intertechno.c                              \
 		../../clib/hm485.c                                      \
+                ../../clib/rf_mbus.c                                 \
+                ../../clib/mbus/manchester.c                         \
+                ../../clib/mbus/3outof6.c                            \
+                ../../clib/mbus/mbus_packet.c                        \
+                ../../clib/mbus/crc.c                                \
 		
 OPT = s
 DEBUG = dwarf-2

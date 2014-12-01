@@ -28,6 +28,11 @@ SRC =           COC.c\
 		../../clib/onewire.c                                  \
                 ../../clib/ds1339.c                                   \
 		../../clib/memory.c                                  \
+                ../../clib/rf_mbus.c                                 \
+                ../../clib/mbus/manchester.c                         \
+                ../../clib/mbus/3outof6.c                            \
+                ../../clib/mbus/mbus_packet.c                        \
+                ../../clib/mbus/crc.c                                \
 
 
 LUFA_OPTS  = -D USE_NONSTANDARD_DESCRIPTOR_NAMES
