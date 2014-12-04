@@ -42,6 +42,7 @@
 
 #define HAS_FHT_80b                   // PROGMEM: 1374b, RAM: 90b
 #define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
+#define HAS_FHT_TF
 #define HAS_RF_ROUTER                 // PROGMEM: 1248b  RAM: 44b
 
 #define FHTBUF_SIZE          174      //                 RAM: 174b

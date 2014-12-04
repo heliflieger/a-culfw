@@ -70,6 +70,7 @@
   </ul>
   <a href="#protocol2">Protocol Part 2 (radio messages)</a><br>
   <a href="#FHT_8v">FHT_8v</a><br>
+  <a href="#FHT80TF">FHT80TF</a><br>
   <a href="#CUR_Menu">CUR Menu</a>
   <a href="#intertechno">InterTechno</a>
   <a href="#cc1100">CC1100 settings</a>
@@ -732,14 +733,16 @@
     <a name="cmd_T"></a>
     THHHHxxxxxx
     <ul>
-      FHT80b/FHT8v commands<br>
-      FHT80b syntax: THHHHCCAA[CCAA[CCAA...]]<br>
-      FHT8v  syntax: THHHHCCOOAA<br>
+      FHT80b/FHT8v/FHT80TF commands<br>
+      FHT80b  syntax: THHHHCCAA[CCAA[CCAA...]]<br>
+      FHT8v   syntax: THHHHCCOOAA<br>
+      FHT80TF syntax: THHHHABCC<br>
       <ul>
       <li>HHHH FHT80b (or 8v) housecode
-      <li>CC   Command
+      <li>CC   Command (for FHT80TF: 0x0C - Sync, 0x0F - Finish, 0x01 - open, 0x02 - closed)
       <li>OO   Command origin (CUL:77 or FHT:67)
       <li>AA   Argument
+      <li>AB   Addressbyte
       </ul>
       <br>
 
@@ -755,8 +758,10 @@
         Set the "own" housecode to HHHH. The first byte will be used as the FHZ
         code in in FHT80b mode. This command will also clear all buffers.
         Note: if HHHH is 0000, then FHT80b communication is switched off.
+        </li>
       <li>T01
         Return the own housecode (hex)
+        </li>
       <li>T02<br>
         Return the FHT80b buffer. FHT80b commands are queued in the internal
         buffer, which has place for 14 to 31 messages.
@@ -764,12 +769,19 @@
 	acknowledgement from FHT80b.<br>
         A short form (only the destination, without the content) is returned if
         T0200 is specified, this mode is intended for FHTs connected via RFR.
+        </li>
       <li>T03<br>
         Return the size of the remaining FHT80b buffer (bytes, hex).
+        </li>
       <li>T10<br>
         Return the FHT8v buffer. There is one value per 8v address.
+        </li>
       <li>T11<br>
         Return the time till the next 8v timeslot (seconds, hex)
+        </li>
+      <li>T12<br>
+        Return the FHT80TF buffer. There is one value per TF address.
+        </li>
       </ul>
     </ul><br><br>
 
@@ -1036,7 +1048,7 @@
 
     <li>For FHT:<br>
       ThhhhNNNNNN<br>
-      As this part is quite complex, for an explanation look into the 11_FHT.pm fhem module.
+      As this part is quite complex, for an explanation look into the 11_FHT.pm or 09_CUL_FHTTK.pm (FHT80TF) fhem module.
       <br><br>
 
     <li>For EM:<br>
@@ -1196,7 +1208,29 @@
   - T1234002C21 (Sync for 0x21 == dec 33 == 15 seconds)
   </ul>
 
-
+<a name="FHT80TF"></a>
+<h3>FHT80TF</h3>
+<ul>
+  The 80b is designed to handle up to 4 FHT80TF window sensors. A housecode of 
+  FHT80TF starts at the first byte above 0x69. <br><br>
+  
+  To setup one or more window sensors, use the commands below. Set the FHT80b in 
+  syncing mode for sensors and start with a sync, followed by a finished command. 
+  The default value after this procedure is window closed (0x02). Now, you are be 
+  able to set the right value. Use the following list of commands: <br><br>
+  
+  <ul>
+  <li> T8630A00C - start sync
+  <li> T8630A00F - finished sync
+  <li> T8630A001 - window open
+  <li> T8630A002 - window closed
+  <li> T011234 (set HC to 1234) - clear the buffers
+  <li> T12 check FHT80TF buffer, could tell 00:8630A001, if empty -> N/A
+  </ul>
+<br>
+(8630A0 -> example address of FHT80TF)
+</ul>
+  
 <a name="CUR_Menu"></a>
 <h3>CUR Menu</h3>
 <ul>

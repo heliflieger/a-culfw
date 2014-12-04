@@ -72,6 +72,15 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
   }
 #endif
 
+#ifdef HAS_FHT_TF
+  // iterate over all TFs
+  for(uint8_t i = 0; i < FHT_TF_NUM; i++) {
+    if(fht_tf_timeout_Array[3 * i] != -1 && fht_tf_timeout_Array[3 * i] > 0) {
+      // decrement timeout
+      fht_tf_timeout_Array[3 * i]--;
+    }
+  }
+#endif
 #ifdef HAS_FHT_8v
   if(fht8v_timeout)
     fht8v_timeout--;
@@ -134,6 +143,15 @@ Minute_Task(void)
     }
   }
   xled_pos &= 15;
+#endif
+#ifdef HAS_FHT_TF
+  // iterate over all TFs
+  for(uint8_t i = 0; i < FHT_TF_NUM; i++) {
+    // if timed out -> call fht_tf_timer to send out data
+    if(fht_tf_timeout_Array[3 * i] == 0) {
+      fht_tf_timer(i);
+    }
+  }
 #endif
 #ifdef HAS_FHT_8v
   if(fht8v_timeout == 0)

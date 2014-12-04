@@ -20,6 +20,7 @@
 
 #if defined(CUL_V3) || defined(CUL_V4)
 #  define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
+#  define HAS_FHT_TF
 #  define FHTBUF_SIZE          174      //                 RAM: 174b
 #  define RCV_BUCKETS            4      //                 RAM: 25b * bucket
 #  define RFR_DEBUG                     // PROGMEM:  354b  RAM: 14b

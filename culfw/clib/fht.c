@@ -10,7 +10,7 @@
 #include "clock.h"
 #include "cc1100.h"
 
-// We have two different work models:
+// We have three different work models:
 
 // 1. Control the FHT80b. In this mode we have to wait for a message from the
 //    FHT80b, and then send all buffered messages to it, with a strange
@@ -30,6 +30,13 @@
 //    increased by 0x0100. Values for each valve are sent directly one after
 //    the other, but only once.
 
+// 3. Supports up to four FHT80 TF window sensors (can be change via #define)
+//    The interval is calculated by the address byte of TF sensor (last three 
+//    bits) and with 60 + (16 - (address byte & 0x7)) (round about 1 min).
+//    Within this time, the data was check against change of value. If it was
+//    changed, the data will be send out within the ~one minute interval and
+//    repeated one more time in ~one minute. After that, the value will repeated
+//    every ~4 minute.
 
 
 // Our housecode. The first byte for 80b communication, both together for
@@ -73,6 +80,14 @@ uint8_t fht8v_ctsync;
 #define FHT8V_CMD_SYNC 0x2c
 #define FHT8V_CMD_PAIR 0x2f
 
+#endif
+
+#ifdef HAS_FHT_TF
+static void    fht_tf_send(uint8_t index); // send date from TF at given index
+static uint8_t send_tk_out[5];  // send raw data last byte is resv for CC
+       uint8_t fht_tf_buf[FHT_TF_DATA * FHT_TF_NUM]; //current 4 window sensors
+       int16_t fht_tf_timeout_Array[3 * FHT_TF_NUM]; // timeout,change,count
+       uint8_t fht_tf_deactivated; // if tf not used -> value is 1
 #endif
 
 #undef FHTDEBUG        // Display all FHT traffic on USB
@@ -119,12 +134,26 @@ fht_init(void)
   fht80b_reset_state();
   fht80b_initbuf();
 #endif
+
+#ifdef HAS_FHT_TF
+  fht_tf_deactivated = 1; // default is deactivated -> value is 1
+  // init both arrays
+  for(uint8_t i = 0; i < FHT_TF_NUM; i++) {
+    fht_tf_buf[FHT_TF_DATA*i] = FHT_TF_DISABLED; // tf is not used
+    fht_tf_timeout_Array[3 * i] = -1;    // signed as not used (empty slot)
+    fht_tf_timeout_Array[3 * i + 1] = 0; // changed
+    fht_tf_timeout_Array[3 * i + 2] = 0; // count of repeats
+  }
+#endif
 }
 
 void
 fhtsend(char *in)
 {
   uint8_t hb[6], l;                    // Last byte needed for 8v checksum
+#ifdef HAS_FHT_TF
+  uint8_t fhttf[5];
+#endif
   l = fromhex(in+1, hb, 5);
 
   if(l < 4) {
@@ -176,10 +205,103 @@ fhtsend(char *in)
       DH2(fht8v_timeout/125);
 #endif
 
+#ifdef HAS_FHT_TF
+    } else if(hb[0] == 0x12) {         // Return the FHT TF buffer
+
+      uint8_t na=0;
+      for(int i = 0; i < FHT_TF_NUM; i++) {
+        if(fht_tf_buf[FHT_TF_DATA*i] == FHT_TF_DISABLED)
+          continue;
+        if(na)
+          DC(' ');
+        DH2(i);
+        DC(':');
+        DH2(fht_tf_buf[FHT_TF_DATA*i]);    // house code 1
+        DH2(fht_tf_buf[FHT_TF_DATA*i+1]);  // house code 2
+        DH2(fht_tf_buf[FHT_TF_DATA*i+2]);  // address byte
+        DH2(fht_tf_buf[FHT_TF_DATA*i+3]);  // command byte
+        na++;
+      }
+
+      if(na==0)
+        DS_P( PSTR("N/A") );
+#endif
     }
     DNL();
 
+#ifdef HAS_FHT_TF
   } else {
+    fromhex(in+1, fhttf, 4);
+    
+    // the house code start at 0x69
+    if(fhttf[0] >= 0x69) {
+      // sync and finish can send directly without buffering and waiting of a
+      // timeslot
+      if(fhttf[3] == 0x0C) {
+        // perform sync only if necassary, that means if we found the TF 
+        // or a free slot
+        uint8_t doSync = 0;
+
+        // iterate over all known TFs
+        for(uint8_t i = 0 ; i < FHT_TF_NUM; i++ ) {
+          if(fht_tf_buf[FHT_TF_DATA*i] == fhttf[0] && 
+            fht_tf_buf[FHT_TF_DATA*i+1] == fhttf[1] &&
+            fht_tf_buf[FHT_TF_DATA*i+2] == fhttf[2]) {
+
+              // modify the state of TF sensor to 0X0C
+              fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3];
+
+              // enable the timer
+              fht_tf_timeout_Array[3*i+0] = 0;
+              // changed value for interval calculation
+              fht_tf_timeout_Array[3*i+1] = 0;
+
+              doSync = 1;
+              // reset timer for this canditate
+              break;
+           } else if(fht_tf_buf[FHT_TF_DATA*i] == FHT_TF_DISABLED) { // empty
+
+              fht_tf_buf[FHT_TF_DATA*i]   = fhttf[0];
+              fht_tf_buf[FHT_TF_DATA*i+1] = fhttf[1];
+              fht_tf_buf[FHT_TF_DATA*i+2] = fhttf[2];
+              fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3]; // state is 0x0C
+              
+              // enable the timer
+              fht_tf_timeout_Array[3*i+0] = 0;
+              // changed value for interval calculation
+              fht_tf_timeout_Array[3*i+1] = 0;
+              
+              fht_tf_deactivated = 0; // activate tf sending
+              doSync = 1;
+              
+              break;
+           }
+        }
+        
+        if(doSync) {
+          // 1x sync x0c and afterwards 1x finish 0xf 
+          // -> sync is handled by 09_cul_fhttk.pm module
+          addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
+          fhttf[3] = 0x0f; // finish
+          addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
+          fhttf[3] = 0x02; // state closed
+          addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
+        }
+
+      } else { // value has changed, seek for corresp. TF and change the value
+        for(uint8_t i = 0 ; i < FHT_TF_NUM; i++ )
+          if(fht_tf_buf[FHT_TF_DATA*i] == fhttf[0] && 
+            fht_tf_buf[FHT_TF_DATA*i+1] == fhttf[1] &&
+            fht_tf_buf[FHT_TF_DATA*i+2] == fhttf[2]) {
+
+              fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3]; // modify the state
+              fht_tf_timeout_Array[3*i+1] = 1; // changed value for interval
+              break;
+          }
+      }
+      return;
+    }
+#endif
 
 #ifdef HAS_FHT_8v
     if(hb[0]>=fht_hc0 &&
@@ -217,6 +339,62 @@ fhtsend(char *in)
 
   }
 }
+
+#ifdef HAS_FHT_TF
+void
+fht_tf_timer(uint8_t ind)
+{
+  // if tf sending is not active, return
+  if(fht_tf_deactivated)
+    return;
+    
+  // fht tf use the last three bits of address byte for calculation the time
+  // interval without state was changed is round about 4 mintues
+  // (125 * (240 + (16 - (fht_tf_buf[FHT_TF_DATA * ind + 2] & 0x7) * 2)))>>2;
+  // divided with 4 -> check for changes every 1 minute
+  
+  // uint16_t fht_tf_timeout_Array[3 * FHT_TF_NUM]; 
+  // timeout, changed and count of repeats
+  // timeout for specific TF at given index and divided with 4 
+  // -> check for changes every 1 minute
+  int16_t timeout = (125*(240+(16-(fht_tf_buf[FHT_TF_DATA*ind+2]&0x7)*2)))>>2;
+  fht_tf_timeout_Array[3*ind+0] = timeout;
+  // count of repeats
+  fht_tf_timeout_Array[3*ind+2]++;
+
+  if(fht_tf_timeout_Array[3 * ind + 1] == 0 && // changed
+  fht_tf_timeout_Array[3 * ind + 2] == 4) { // count
+    // state every 4 minutes
+    fht_tf_send(ind);
+    fht_tf_timeout_Array[3 * ind + 2] = 0; // count
+  } else if(fht_tf_timeout_Array[3 * ind + 1] == 1) { // changed
+    // state has changed, send it and repeat in 1 minute
+    fht_tf_send(ind);
+    fht_tf_timeout_Array[3 * ind + 1] = 2; // changed
+  } else if (fht_tf_timeout_Array[3 * ind + 1] == 2) { // changed
+    // state was changed and will be repeated -> then repeat it every 4 minutes
+    fht_tf_send(ind);
+    fht_tf_timeout_Array[3 * ind + 1] = 0; // changed
+    fht_tf_timeout_Array[3 * ind + 2] = 0; // count
+  }
+}
+
+// send date from TF at given index
+void
+fht_tf_send(uint8_t index)
+{
+  if(fht_tf_buf[FHT_TF_DATA * index] != FHT_TF_DISABLED ) {
+
+  send_tk_out[0] = fht_tf_buf[FHT_TF_DATA * index];
+  send_tk_out[1] = fht_tf_buf[FHT_TF_DATA * index+1];
+  send_tk_out[2] = fht_tf_buf[FHT_TF_DATA * index+2];
+  send_tk_out[3] = fht_tf_buf[FHT_TF_DATA * index+3];
+  
+  // send data to FHT80b incl. checksum
+  addParityAndSendData(send_tk_out, 4, FHT_CSUM_START, 1); 
+  }
+}
+#endif
 
 //////////////////////////////////////////////////////////////
 #ifdef HAS_FHT_8v

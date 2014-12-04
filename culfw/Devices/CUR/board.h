@@ -18,6 +18,7 @@
 #define USB_BUFSIZE             64      // Must be a supported USB endpoint size
 #define HAS_FHT_8v                      // PROGMEM:  586b, RAM: 23b
 #define HAS_FHT_80b                     // PROGMEM: 1374b, RAM: 90b
+#define HAS_FHT_TF
 #define FHTBUF_SIZE             200     //                 RAM:200b
 #define HAS_RF_ROUTER           1       // PROGMEM: 1106b, RAM: 43b
 #define RCV_BUCKETS             4       //                 RAM: 25b / bucket
