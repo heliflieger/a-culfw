@@ -59,8 +59,8 @@
 //#define LED_ON_PIN              1
 
 
-#define BOARD_ID_STR            "nanoCUL"
-#define BOARD_ID_STR433         "nanoCUL 433"
+#define BOARD_ID_STR            "nanoCUL868"
+#define BOARD_ID_STR433         "nanoCUL433"
 
 /* define this device as a 433 MHz one */
 /* this isn't done like a CUL by reading a port pin but instead a fixed value of 0 for mark433_pin is used */ 
