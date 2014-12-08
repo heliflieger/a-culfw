@@ -1,7 +1,8 @@
 nanoCUL is an example implementation for a Arduino nano and a stand alone CC1101
 RF module.
 Other arduinos with an ATMega328p and 16 MHz can be used as well.
-For more information see http://forum.fhem.de/index.php/topic,24651.0.html
+For more information see http://forum.fhem.de/index.php/topic,24651.0.html and
+http://www.fhemwiki.de/wiki/Selbstbau_CUL
 
 
 FLASHING FIRMWARE
