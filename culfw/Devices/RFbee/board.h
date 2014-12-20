@@ -3,7 +3,6 @@
 
 #define HAS_FHT_8v			// PROGMEM:  434b, RAM: 19b
 #define HAS_FHT_80b			// PROGMEM: 1158b, RAM:  5b
-#define HAS_FHT_TF
 #define FHTBUF_SIZE		174	//                 RAM: 174b
 #define RCV_BUCKETS		4	//                 RAM: 25b * bucket
 #undef  RFR_DEBUG			// PROGMEM:  354b  RAM: 14b
