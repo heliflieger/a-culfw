@@ -1,6 +1,12 @@
-F_CPU = 8000000
+
 FORMAT = ihex
 OBJDIR = .
+
+ifeq ($(TARGET), CUL_V3_16MHZ)
+F_CPU = 16000000
+else
+F_CPU = 8000000
+endif
 
 SRC =           CUL.c\
 		../../clib/Descriptors.c                             \
@@ -94,7 +100,7 @@ MSG_CLEANING = Cleaning project:
 
 OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
-ifeq ($(TARGET), CUL_V3)
+ifeq ($(GCC_TARGET),$(filter $(GCC_TARGET),CUL_V3, CUL_V3_16MHZ))
 SRC += ../../clib/rf_mbus.c ../../clib/mbus/manchester.c ../../clib/mbus/3outof6.c ../../clib/mbus/mbus_packet.c ../../clib/mbus/crc.c
 endif
 
@@ -103,6 +109,7 @@ all:
 	make TARGET=CUL_V2_HM MCU=at90usb162 mostly_clean build size
 	make TARGET=CUL_V2_MAX MCU=at90usb162 mostly_clean build size
 	make TARGET=CUL_V3 MCU=atmega32u4 mostly_clean build size
+	make TARGET=CUL_V3_16MHZ MCU=atmega32u4 mostly_clean build size
 	make TARGET=CUL_V4 MCU=atmega32u2 mostly_clean build size
 
 build: elf hex eep lss sym

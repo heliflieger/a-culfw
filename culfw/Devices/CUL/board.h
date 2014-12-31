@@ -18,7 +18,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG		// PROGMEM:  22b
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW	// PROGMEM:  22b
 
-#if defined(CUL_V3) || defined(CUL_V4)
+#if defined(CUL_V3) || defined(CUL_V3_16MHZ) || defined(CUL_V4)
 #  define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
 #  define HAS_FHT_TF
 #  define FHTBUF_SIZE          174      //                 RAM: 174b
@@ -40,11 +40,18 @@
 #  define HAS_SOMFY_RTS
 #endif
 
+//#if defined(CUL_V3_16MHZ)
+//#define F_CPU 16000000
+//#else
+//#define F_CPU 8000000
+//#endif
+
+
 #if defined(CUL_V4)
 #  define TTY_BUFSIZE           64      // RAM: TTY_BUFSIZE*4
 #endif
 
-#if defined(CUL_V3)
+#if defined(CUL_V3) || defined(CUL_V3_16MHZ)
 #  define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
 #  define HAS_MBUS
 #endif
@@ -102,7 +109,7 @@
 #  warning "for the m32u2 add __AVR_ATmega32U2__ for cpu types on prescale block"
 #endif
 
-#if defined(CUL_V3)      // not sure why libc is missing those ...
+#if defined(CUL_V3) || defined(CUL_V3_16MHZ)      // not sure why libc is missing those ...
 #  define PB0 PORTB0
 #  define PB1 PORTB1
 #  define PB2 PORTB2
@@ -138,7 +145,7 @@
 #  define LED_PIN               PC5
 #endif
 
-#if defined(CUL_V3)
+#if defined(CUL_V3) || defined(CUL_V3_16MHZ)
 #  define CC1100_CS_DDR		SPI_DDR
 #  define CC1100_CS_PORT        SPI_PORT
 #  define CC1100_CS_PIN		SPI_SS
@@ -154,9 +161,20 @@
 #  define CC1100_INTVECT        INT2_vect
 #  define CC1100_ISC		ISC20
 #  define CC1100_EICR           EICRA
+#endif
+
+#if defined(CUL_V3)
 #  define LED_DDR               DDRE
 #  define LED_PORT              PORTE
 #  define LED_PIN               6
+#endif
+
+// Ports for LED on Arduino RPro Micro Board
+#if defined(CUL_V3_16MHZ)
+#  define LED_DDR               DDRD
+#  define LED_PORT              PORTD
+#  define LED_PIN               5
+#  define LED_INV
 #endif
 
 #if defined(CUL_V2)
@@ -178,7 +196,7 @@
 #  define LED_PIN               PC4
 #endif
 
-#if defined(CUL_V3)
+#if defined(CUL_V3) || defined(CUL_V3_16MHZ)
 #  define CUL_HW_REVISION "CUL_V3"
 #elif defined(CUL_V4)
 #  define CUL_HW_REVISION "CUL_V4"
