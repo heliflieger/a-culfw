@@ -117,7 +117,7 @@ start_bootloader(void)
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
 
-#if defined(CUL_V3) || defined(CUL_V4)
+#if defined(CUL_V3) || defined(CUL_V3_16MHZ) || defined(CUL_V4)
 #  define jump_to_bootloader ((void(*)(void))0x3800)
 #endif
 #if defined(CUL_V2)
@@ -130,7 +130,11 @@ int
 main(void)
 {
   wdt_enable(WDTO_2S);
-  clock_prescale_set(clock_div_1);
+#if defined(CUL_V3_16MHZ)
+  clock_prescale_set(clock_div_2); // for 16MHz
+#else
+  clock_prescale_set(clock_div_1); // for 8MHz
+#endif
 
   MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
   MARK915_PORT |= _BV( MARK915_BIT ); // Pull 915MHz marker
