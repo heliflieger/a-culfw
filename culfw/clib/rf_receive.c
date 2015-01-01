@@ -82,7 +82,9 @@ static uint16_t hightime, lowtime;
 #else
 static uint8_t hightime, lowtime;
 #endif
-
+#ifdef HAS_IT
+static uint8_t isnotitrep;
+#endif
 static void addbit(bucket_t *b, uint8_t bit);
 static void delbit(bucket_t *b);
 static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime);
@@ -378,7 +380,7 @@ analyze_TX3(bucket_t *b)
 #ifdef HAS_IT
 uint8_t analyze_it(bucket_t *b)
 {
-  uint8_t i,j,itbit;
+  //uint8_t i,j,itbit;
   if (b->byteidx != 3 || b->bitidx != 7 || b->state != STATE_IT)
     return 0;
   /*oby=0;
@@ -534,6 +536,7 @@ RfAnalyze_Task(void)
   if(datatype && (tx_report & REP_KNOWN)) {
 
     uint8_t isrep = 0;
+    uint8_t packageOK = 0;
     if(!(tx_report & REP_REPEATED)) {      // Filter repeated messages
       
       // compare the data
@@ -552,6 +555,12 @@ RfAnalyze_Task(void)
       reptime = ticks;
 
     }
+#ifdef HAS_IT
+    else if (tx_report && datatype == TYPE_IT) {
+      // if not set isrep = 1 no it messages will be received during tx_report
+      isrep = 1;
+    }
+#endif
 
     if(datatype == TYPE_FHT && !(tx_report & REP_FHTPROTO) &&
        oby > 4 &&
@@ -561,7 +570,25 @@ RfAnalyze_Task(void)
         (obuf[3] & 0x70) == 0x70))
       isrep = 1;
 
-    if(!isrep) {
+#ifdef HAS_IT
+    if (datatype == TYPE_IT) {
+      if (isrep == 1 && isnotitrep == 0) {
+        if (!tx_report) { 
+          isnotitrep = 1;
+        }
+        packageOK = 1;
+      } else if (isrep == 1) {
+        packageOK = 0;
+      }
+    } else {
+#endif
+      if (!isrep) {
+      	packageOK = 1;
+      }
+#ifdef HAS_IT
+    }
+#endif
+    if(packageOK) {
       DC(datatype);
       if(nibble)
         oby--;
@@ -623,6 +650,9 @@ reset_input(void)
 {
   TIMSK1 = 0;
   bucket_array[bucket_in].state = STATE_RESET;
+#ifdef HAS_IT
+  isnotitrep = 0;
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -667,6 +697,23 @@ ISR(TIMER1_COMPA_vect)
 
 }
 
+#ifdef HAS_IT
+static uint8_t wave_equals_it(wave_t *a, uint8_t isOne, uint8_t htime, uint8_t ltime) {
+	if (isOne == 0) {
+		if (htime <  ltime) {
+			return 1;
+		} 
+	} else {
+		if (ltime < htime) {
+			return 1;
+		} 
+	}
+	return 0;
+}
+#endif
+
+// &b->one, hightime, lowtime, b->state
+// &b->zero, hightime, lowtime, b->state
 static uint8_t
 wave_equals(wave_t *a, uint8_t htime, uint8_t ltime)
 {
@@ -727,6 +774,14 @@ delbit(bucket_t *b)
 // "Edge-Detected" Interrupt Handler
 ISR(CC1100_INTVECT)
 {  
+
+  #ifdef LONG_PULSE
+  uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
+#else
+  uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
+#endif
+  TCNT1 = 0;                          // restart timer
+
 #ifdef HAS_FASTRF
   if(fastrf_on) {
     fastrf_on = 2;
@@ -740,11 +795,7 @@ ISR(CC1100_INTVECT)
     return;
   }
 #endif
-#ifdef LONG_PULSE
-  uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
-#else
-  uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
-#endif
+
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
@@ -777,15 +828,26 @@ ISR(CC1100_INTVECT)
 #endif
     ) {
       addbit(b, 1);
-      TCNT1 = 0;
+      //TCNT1 = 0;
     }
     hightime = c;
     return;
 
   }
 
-  lowtime = c-hightime;
-  TCNT1 = 0;                          // restart timer
+  //lowtime = c-hightime;
+  //TCNT1 = 0;                          // restart timer
+  lowtime = c;
+  
+#ifdef HAS_IT
+  if(b->state == STATE_IT && b->sync == 0) {
+    b->sync=1;
+		b->zero.hightime = hightime; 
+		b->zero.lowtime = lowtime+1;
+		b->one.hightime = lowtime+1;
+		b->one.lowtime = hightime;
+  } 
+#endif
   if( (b->state == STATE_HMS)
 #ifdef HAS_ESA
      || (b->state == STATE_ESA) 
@@ -817,28 +879,29 @@ ISR(CC1100_INTVECT)
     return;
   } 
 #endif
-#ifdef HAS_IT
-  if ((hightime < TSCALE(500)) &&  (hightime > TSCALE(200)) &&
-             (lowtime  < TSCALE(12160)) && (lowtime > TSCALE(9000))) {
-    // Intertechno
-    b->zero.hightime = hightime; 
-    b->zero.lowtime = hightime*3+1;
-    b->one.hightime = hightime*3+1;
-    b->one.lowtime = hightime;
-    b->sync=1;
-    b->state = STATE_IT;
-    b->byteidx = 0;
-    b->bitidx  = 7;
-    b->data[0] = 0;
-    OCR1A = SILENCE;
-    TIMSK1 = _BV(OCIE1A);
-    return;
-  }
-#endif
+
 
   if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
 
+
 retry_sync:
+    #ifdef HAS_IT
+	  if ( (hightime < TSCALE(500) && hightime > TSCALE(150)) &&
+		     (lowtime  < TSCALE(20160) && lowtime > TSCALE(1601)) ) {
+	    // Intertechno
+	    OCR1A = SILENCE;
+	    TIMSK1 = _BV(OCIE1A);
+	    b->sync=0;
+	    b->state = STATE_IT;
+	    b->byteidx = 0;
+	    b->bitidx  = 7;
+	    b->data[0] = 0;
+	    
+	    return;
+	  }
+    #endif
+
+
     if(hightime > TSCALE(1600) || lowtime > TSCALE(1600))
       return;
   
@@ -865,7 +928,7 @@ retry_sync:
       } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
         b->state = STATE_ESA;
   
-  OCR1A = 1000;
+ 			  OCR1A = 1000;
   
 #endif
 #ifdef HAS_RF_ROUTER
@@ -915,7 +978,26 @@ retry_sync:
     }
   } else 
 #endif
-    {                              // STATE_COLLECT, STATE_IT
+#ifdef HAS_IT
+  if (b->state==STATE_IT) { // STATE_IT
+	
+		if(wave_equals_it(&b->one, 1, hightime, lowtime)) {
+			    addbit(b, 1);
+			    b->one.hightime = makeavg(b->one.hightime, hightime);
+			    b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
+
+		} else if(wave_equals_it(&b->zero, 0, hightime, lowtime)) {
+			    addbit(b, 0);
+			    b->zero.hightime = makeavg(b->zero.hightime, hightime);
+			    b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+
+		} else {
+			reset_input();
+		}
+
+  } else 
+#endif
+    {                              // STATE_COLLECT
     if(wave_equals(&b->one, hightime, lowtime)) {
       addbit(b, 1);
       b->one.hightime = makeavg(b->one.hightime, hightime);

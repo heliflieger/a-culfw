@@ -40,12 +40,6 @@
 #  define HAS_SOMFY_RTS
 #endif
 
-//#if defined(CUL_V3_16MHZ)
-//#define F_CPU 16000000
-//#else
-//#define F_CPU 8000000
-//#endif
-
 
 #if defined(CUL_V4)
 #  define TTY_BUFSIZE           64      // RAM: TTY_BUFSIZE*4

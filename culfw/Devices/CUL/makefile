@@ -129,7 +129,7 @@ size:
 
 
 usbprogram:
-	@echo 'specify one of: usbprogram_v2 usbprogram_v2_hm usbprogram_v3 usbprogram_v4'
+	@echo 'specify one of: usbprogram_v2 usbprogram_v2_hm usbprogram_v3 usbprogram_v3_16mhz usbprogram_v4'
 
 usbprogram_v4: TARGET=CUL_V4
 usbprogram_v4: MCU=atmega32u2
@@ -138,6 +138,16 @@ usbprogram_v4: do_usbprogram
 usbprogram_v3: TARGET=CUL_V3
 usbprogram_v3: MCU=atmega32u4
 usbprogram_v3: do_usbprogram
+
+usbprogram_v3_16mhz: TARGET=CUL_V3_16MHZ
+usbprogram_v3_16mhz: MCU=atmega32u4
+usbprogram_v3_16mhz: do_usbprogram
+
+avdude_v3_16mhz: TARGET=CUL_V3_16MHZ
+avdude_v3_16mhz: MCU=atmega32u4
+avdude_v3_16mhz: PORT=/dev/ttyACM0
+avdude_v3_16mhz: BAUD=57600
+avdude_v3_16mhz: do_avdude
 
 usbprogram_v2: TARGET=CUL_V2
 usbprogram_v2: MCU=at90usb162
@@ -155,6 +165,9 @@ do_usbprogram:
 	dfu-programmer $(MCU) erase || true
 	dfu-programmer $(MCU) flash $(TARGET).hex
 	dfu-programmer $(MCU) start
+
+do_avdude:
+	avrdude -p$(MCU) -cavr109 -P$(PORT) -b$(BAUD) -D -Uflash:w:./$(TARGET).hex:i
 
 %.hex: %.elf
 	@echo $(MSG_FLASH) $@
