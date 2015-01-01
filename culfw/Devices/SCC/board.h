@@ -65,6 +65,7 @@
 #define HAS_TX3
 #define HAS_UNIROLL
 #define HAS_HOERMANN
+#define HAS_IT
 
 #define MULTI_FREQ_DEVICE       // available in multiple versions: 433MHz,868MHz,915MHz
 
