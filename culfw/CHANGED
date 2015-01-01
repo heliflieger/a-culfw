@@ -1,3 +1,7 @@
+Version 1.62a (2015-01-01)
+- Fix IT receive based on Forum #14348
+- Enable IT receive for all devices
+
 Version 1.62 (2014-11-25)
 - Compiling with avr-gcc 4.8.1 instead of 4.3.3 (3.5% smaller code)
 - Clock patches from Ansgar (Forum #24436, reworked)
