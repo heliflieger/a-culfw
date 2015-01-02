@@ -59,6 +59,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
+#define HAS_TEMPSENSOR
 
 #define BOARD_ID_STR            "CSM868"
 #define BOARD_ID_STR433         "CSM433"

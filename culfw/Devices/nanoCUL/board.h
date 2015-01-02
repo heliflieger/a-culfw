@@ -108,5 +108,6 @@ extern const uint8_t mark433_pin;
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
 #  define HAS_IT
+#  define HAS_TEMPSENSOR
 
 #endif
