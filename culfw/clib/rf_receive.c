@@ -56,6 +56,7 @@
 #define STATE_ESA     5
 #define STATE_REVOLT  6
 #define STATE_IT      7
+#define STATE_TEMPSENSOR      8
 
 uint8_t tx_report;              // global verbose / output-filter
 
@@ -407,6 +408,19 @@ uint8_t analyze_it(bucket_t *b)
   return 1;
 }
 #endif
+#ifdef HAS_TEMPSENSOR
+uint8_t analyze_tempsensor(bucket_t *b)
+{
+  if (b->byteidx != 3 || b->bitidx != 7 || b->state != STATE_TEMPSENSOR) {  
+		return 0;
+		
+	}
+  for (oby=0;oby<b->byteidx;oby++) {
+    obuf[oby]=b->data[oby];
+  }
+	return 1;
+}
+#endif
 #ifdef HAS_REVOLT
 uint8_t analyze_revolt(bucket_t *b)
 {
@@ -464,12 +478,16 @@ RfAnalyze_Task(void)
   if(!datatype && analyze_it(b))
     datatype = TYPE_IT;
 #endif
+#ifdef HAS_TEMPSENSOR
+  if(!datatype && analyze_tempsensor(b))
+    datatype = TYPE_TEMPSENSOR;
+#endif
 #ifdef HAS_REVOLT
   if(!datatype && analyze_revolt(b))
     datatype = TYPE_REVOLT;
 #endif
 #ifdef LONG_PULSE
-  if(b->state != STATE_REVOLT && b->state != STATE_IT) {
+  if(b->state != STATE_REVOLT && b->state != STATE_IT && b->state != STATE_TEMPSENSOR) {
 #endif
 #ifdef HAS_ESA
   if(analyze_esa(b))
@@ -555,12 +573,6 @@ RfAnalyze_Task(void)
       reptime = ticks;
 
     }
-#ifdef HAS_IT
-    else if (tx_report && datatype == TYPE_IT) {
-      // if not set isrep = 1 no it messages will be received during tx_report
-      isrep = 1;
-    }
-#endif
 
     if(datatype == TYPE_FHT && !(tx_report & REP_FHTPROTO) &&
        oby > 4 &&
@@ -573,9 +585,7 @@ RfAnalyze_Task(void)
 #ifdef HAS_IT
     if (datatype == TYPE_IT) {
       if (isrep == 1 && isnotitrep == 0) {
-        if (!tx_report) { 
-          isnotitrep = 1;
-        }
+        isnotitrep = 1;
         packageOK = 1;
       } else if (isrep == 1) {
         packageOK = 0;
@@ -848,6 +858,27 @@ ISR(CC1100_INTVECT)
 		b->one.lowtime = hightime;
   } 
 #endif
+#ifdef HAS_TEMPSENSOR
+ if (b->state == STATE_TEMPSENSOR && b->sync == 0) {
+	  b->sync=1;
+		//b->state = STATE_COLLECT;
+		//OCR1A = TWRAP;
+		b->zero.hightime = hightime;
+		b->one.hightime = hightime;
+
+		if (lowtime < 187) { // < 3000
+			b->zero.lowtime = lowtime;
+			b->one.lowtime = b->zero.lowtime*2;
+		} else {
+			b->zero.lowtime = lowtime;
+			b->one.lowtime = b->zero.lowtime/2;
+		}
+	  //DC('S');
+	  //DU(b->zero.hightime*16, 5);
+		//DU(b->zero.lowtime*16, 5);
+
+	}
+#endif
   if( (b->state == STATE_HMS)
 #ifdef HAS_ESA
      || (b->state == STATE_ESA) 
@@ -885,7 +916,26 @@ ISR(CC1100_INTVECT)
 
 
 retry_sync:
-    #ifdef HAS_IT
+
+#ifdef HAS_TEMPSENSOR
+		if ( (hightime < TSCALE(530) && hightime > TSCALE(420)) &&
+				   (lowtime  < TSCALE(9000) && lowtime > TSCALE(8500)) ) {
+		  OCR1A = 4600L;
+			TIMSK1 = _BV(OCIE1A);
+			b->sync=0;
+      
+			b->state = STATE_TEMPSENSOR;
+			b->byteidx = 0;
+			b->bitidx  = 7;
+			b->data[0] = 0;
+		  return;
+		}
+	#ifdef HAS_IT
+ 		else 
+#endif
+#endif
+
+	#ifdef HAS_IT
 	  if ( (hightime < TSCALE(500) && hightime > TSCALE(150)) &&
 		     (lowtime  < TSCALE(20160) && lowtime > TSCALE(1601)) ) {
 	    // Intertechno
@@ -977,6 +1027,28 @@ retry_sync:
       b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
     }
   } else 
+#endif
+#ifdef HAS_TEMPSENSOR
+	if (b->state==STATE_TEMPSENSOR) {
+		if (lowtime > 110 && lowtime < 140) {
+      addbit(b,0);
+      b->zero.hightime = makeavg(b->zero.hightime, hightime);
+      b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+      //DC('0');
+    } else if (lowtime > 230 && lowtime < 270) {
+      addbit(b,1);
+      b->one.hightime = makeavg(b->one.hightime, hightime);
+      b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
+      //DC('1');
+    } else {
+			//DC('r');
+			//delbit(b); // last is a sync so delete last bit
+			//OCR1A = 1;
+			//reset_input();
+		  
+		}
+
+	} else
 #endif
 #ifdef HAS_IT
   if (b->state==STATE_IT) { // STATE_IT
