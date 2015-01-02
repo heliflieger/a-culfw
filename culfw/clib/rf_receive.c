@@ -573,12 +573,6 @@ RfAnalyze_Task(void)
       reptime = ticks;
 
     }
-#ifdef HAS_IT
-    else if (tx_report && datatype == TYPE_IT) {
-      // if not set isrep = 1 no it messages will be received during tx_report
-      isrep = 1;
-    }
-#endif
 
     if(datatype == TYPE_FHT && !(tx_report & REP_FHTPROTO) &&
        oby > 4 &&
@@ -591,9 +585,7 @@ RfAnalyze_Task(void)
 #ifdef HAS_IT
     if (datatype == TYPE_IT) {
       if (isrep == 1 && isnotitrep == 0) {
-        if (!tx_report) { 
-          isnotitrep = 1;
-        }
+        isnotitrep = 1;
         packageOK = 1;
       } else if (isrep == 1) {
         packageOK = 0;
