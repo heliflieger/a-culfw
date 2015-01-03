@@ -1,4 +1,4 @@
-/* Copyright Rudolf Koenig, 2008.
+/* Copyright Bjoern Hempel, 2015.
    Released under the GPL Licence, Version 2
    Inpired by the MyUSB USBtoSerial demo, Copyright (C) Dean Camera, 2008.
 */
@@ -123,11 +123,8 @@ start_bootloader(void)
   MCUCR = _BV(IVCE);
   MCUCR = _BV(IVSEL);
 
-#if defined(CUL_V3) || defined(CUL_V3_16MHZ) || defined(CUL_V4)
+#if defined(CUL_ARDUINO)
 #  define jump_to_bootloader ((void(*)(void))0x3800)
-#endif
-#if defined(CUL_V2)
-#  define jump_to_bootloader ((void(*)(void))0x1800)
 #endif
   jump_to_bootloader();
 }
@@ -136,7 +133,9 @@ int
 main(void)
 {
   wdt_enable(WDTO_2S);
-  clock_prescale_set(clock_div_1); // for 8MHz
+#if defined(CUL_ARDUINO)
+  clock_prescale_set(clock_div_2); // for 16MHz
+#endif
 
   MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
   MARK915_PORT |= _BV( MARK915_BIT ); // Pull 915MHz marker
@@ -202,3 +201,4 @@ main(void)
 
   }
 }
+

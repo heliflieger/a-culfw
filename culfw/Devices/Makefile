@@ -1,6 +1,8 @@
 all:
 	make -C CUL clean
 	make -C CUL all
+	make -C CUL-Arduino clean
+	make -C CUL-Arduino all
 	make -C CUN clean
 	make -C CUN all
 	make -C CUNO clean 
@@ -29,6 +31,7 @@ all:
 
 clean:
 	make -C CUL clean
+	make -C CUL-Arduino clean
 	make -C CUN clean
 	make -C CUNO clean 
 	make -C CUNO2 clean

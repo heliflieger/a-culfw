@@ -2,12 +2,12 @@
 #define _BOARD_H
 
 // Feature definitions
-#define BOARD_ID_STR            "CUL868"
-#define BOARD_ID_USTR           L"CUL868"
+#define BOARD_ID_STR            "CUL-ARDUINO868"
+#define BOARD_ID_USTR           L"CUL-ARDUINO868"
 
 #define MULTI_FREQ_DEVICE	// available in multiple versions: 433MHz,868MHz
-#define BOARD_ID_STR433         "CUL433"
-#define BOARD_ID_USTR433        L"CUL433"
+#define BOARD_ID_STR433         "CUL-ARDUINO433"
+#define BOARD_ID_USTR433        L"CUL-ARDUINO433"
 
 #define HAS_USB                  1
 #define USB_BUFSIZE             64      // Must be a supported USB endpoint size
@@ -18,7 +18,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG		// PROGMEM:  22b
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW	// PROGMEM:  22b
 
-#if defined(CUL_V3) || defined(CUL_V4)
+#if defined(CUL_ARDUINO)
 #  define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
 #  define HAS_FHT_TF
 #  define FHTBUF_SIZE          174      //                 RAM: 174b
@@ -39,60 +39,17 @@
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
 #  define HAS_IT
-//#  define HAS_TEMPSENSOR
+#  define HAS_TEMPSENSOR
 #endif
 
 
-#if defined(CUL_V4)
-#  define TTY_BUFSIZE           64      // RAM: TTY_BUFSIZE*4
-#endif
-
-#if defined(CUL_V3)
+#if defined(CUL_ARDUINO)
 #  define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
 #  define HAS_MBUS
 #endif
 
 
 
-#ifdef CUL_V2
-#  define TTY_BUFSIZE           48
-#  define FHTBUF_SIZE           74
-#  define RCV_BUCKETS            2 
-#  define RFR_SHADOW                    // PROGMEM: 10b    RAM: -(TTY_BUFSIZE+3)
-#  define HAS_TX3
-#  define HAS_HOERMANN
-#  undef  HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
-#endif
-
-#ifdef CUL_V2_HM
-#  define CUL_V2
-#  define HAS_ASKSIN
-#  define TTY_BUFSIZE           64
-#  define RCV_BUCKETS            2 
-#  undef  HAS_RF_ROUTER
-#  undef  HAS_FHT_80b
-#  define FHTBUF_SIZE            0
-#  undef  BOARD_ID_STR
-#  define BOARD_ID_STR            "CUL_HM"
-#  undef  BOARD_ID_USTR
-#  define BOARD_ID_USTR           L"CUL_HM"
-#  define HAS_INTERTECHNO
-#endif
-
-#ifdef CUL_V2_MAX
-#  define CUL_V2
-#  define HAS_MORITZ
-#  define TTY_BUFSIZE           64
-#  define RCV_BUCKETS            2
-#  undef  HAS_RF_ROUTER
-#  undef  HAS_FHT_80b
-#  define FHTBUF_SIZE            0
-#  undef  BOARD_ID_STR
-#  define BOARD_ID_STR            "CUL_MX"
-#  undef  BOARD_ID_USTR
-#  define BOARD_ID_USTR           L"CUL_MX"
-#  define HAS_INTERTECHNO
-#endif
 
 // No features to define below
 
@@ -105,7 +62,7 @@
 #  warning "for the m32u2 add __AVR_ATmega32U2__ for cpu types on prescale block"
 #endif
 
-#if defined(CUL_V3)    // not sure why libc is missing those ...
+#if defined(CUL_ARDUINO)      // not sure why libc is missing those ...
 #  define PB0 PORTB0
 #  define PB1 PORTB1
 #  define PB2 PORTB2
@@ -113,7 +70,7 @@
 #  define PB6 PORTB6
 #  define PD2 PORTD2
 #  define PD3 PORTD3
-#endif  // CUL_V3
+#endif  // CUL_ARDUINO
 
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
@@ -122,26 +79,8 @@
 #define SPI_MOSI		PB2
 #define SPI_SCLK		PB1
 
-#if defined(CUL_V4)
-#  define CC1100_CS_DDR		SPI_DDR
-#  define CC1100_CS_PORT        SPI_PORT
-#  define CC1100_CS_PIN		SPI_SS
-#  define CC1100_OUT_DDR        DDRD
-#  define CC1100_OUT_PORT       PORTD
-#  define CC1100_OUT_PIN        PD3
-#  define CC1100_IN_DDR         DDRD
-#  define CC1100_IN_PORT        PIND
-#  define CC1100_IN_PIN         PD2
-#  define CC1100_INT		INT2
-#  define CC1100_INTVECT        INT2_vect
-#  define CC1100_ISC		ISC20
-#  define CC1100_EICR           EICRA
-#  define LED_DDR               DDRC
-#  define LED_PORT              PORTC
-#  define LED_PIN               PC5
-#endif
 
-#if defined(CUL_V3)
+#if defined(CUL_ARDUINO)
 #  define CC1100_CS_DDR		SPI_DDR
 #  define CC1100_CS_PORT        SPI_PORT
 #  define CC1100_CS_PIN		SPI_SS
@@ -159,36 +98,17 @@
 #  define CC1100_EICR           EICRA
 #endif
 
-#if defined(CUL_V3)
-#  define LED_DDR               DDRE
-#  define LED_PORT              PORTE
-#  define LED_PIN               6
+// Ports for LED on Arduino RPro Micro Board
+#if defined(CUL_ARDUINO)
+#  define LED_DDR               DDRD
+#  define LED_PORT              PORTD
+#  define LED_PIN               5
+#  define LED_INV
 #endif
 
 
-#if defined(CUL_V2)
-#  define CC1100_CS_DDR		DDRC
-#  define CC1100_CS_PORT        PORTC
-#  define CC1100_CS_PIN		PC5
-#  define CC1100_IN_DDR		DDRC
-#  define CC1100_IN_PORT        PINC
-#  define CC1100_IN_PIN         PC7
-#  define CC1100_OUT_DDR	DDRC
-#  define CC1100_OUT_PORT       PORTC
-#  define CC1100_OUT_PIN        PC6
-#  define CC1100_INT		INT4
-#  define CC1100_INTVECT        INT4_vect
-#  define CC1100_ISC		ISC40
-#  define CC1100_EICR           EICRB
-#  define LED_DDR               DDRC
-#  define LED_PORT              PORTC
-#  define LED_PIN               PC4
-#endif
-
-#if defined(CUL_V3)
-#  define CUL_HW_REVISION "CUL_V3"
-#elif defined(CUL_V4)
-#  define CUL_HW_REVISION "CUL_V4"
+#if defined(CUL_ARDUINO) 
+#  define CUL_HW_REVISION "CUL-ARDUINO"
 #else
 //#  define CUL_HW_REVISION "CUL_V2"    // No more mem for this feature
 #endif
@@ -201,3 +121,4 @@
 #define MARK915_BIT             5
 
 #endif // __BOARD_H__
+

@@ -2,7 +2,7 @@
 FORMAT = ihex
 OBJDIR = .
 
-F_CPU = 8000000
+F_CPU = 16000000
 
 SRC =           CUL.c\
 		../../clib/Descriptors.c                             \
@@ -96,16 +96,12 @@ MSG_CLEANING = Cleaning project:
 
 OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
-ifeq ($(GCC_TARGET),$(filter $(GCC_TARGET),CUL_V3, CUL_V3_16MHZ))
+ifeq ($(GCC_TARGET),$(filter $(GCC_TARGET), CUL_ARDUINO))
 SRC += ../../clib/rf_mbus.c ../../clib/mbus/manchester.c ../../clib/mbus/3outof6.c ../../clib/mbus/mbus_packet.c ../../clib/mbus/crc.c
 endif
 
 all:
-	make TARGET=CUL_V2 MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2_HM MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2_MAX MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V3 MCU=atmega32u4 mostly_clean build size
-	make TARGET=CUL_V4 MCU=atmega32u2 mostly_clean build size
+	make TARGET=CUL_ARDUINO MCU=atmega32u4 mostly_clean build size
 
 build: elf hex eep lss sym
 
@@ -124,42 +120,14 @@ size:
 
 
 usbprogram:
-	@echo 'specify one of: usbprogram_v2 usbprogram_v2_hm usbprogram_v3 usbprogram_v3_16mhz usbprogram_v4'
+	@echo 'specify one of: avdude_arduino'
 
-usbprogram_v4: TARGET=CUL_V4
-usbprogram_v4: MCU=atmega32u2
-usbprogram_v4: do_usbprogram
+avdude_arduino: TARGET=CUL_ARDUINO
+avdude_arduino: MCU=atmega32u4
+avdude_arduino: PORT=/dev/ttyACM0
+avdude_arduino: BAUD=57600
+avdude_arduino: do_avdude
 
-usbprogram_v3: TARGET=CUL_V3
-usbprogram_v3: MCU=atmega32u4
-usbprogram_v3: do_usbprogram
-
-usbprogram_v3_16mhz: TARGET=CUL_V3_16MHZ
-usbprogram_v3_16mhz: MCU=atmega32u4
-usbprogram_v3_16mhz: do_usbprogram
-
-avdude_v3_16mhz: TARGET=CUL_V3_16MHZ
-avdude_v3_16mhz: MCU=atmega32u4
-avdude_v3_16mhz: PORT=/dev/ttyACM0
-avdude_v3_16mhz: BAUD=57600
-avdude_v3_16mhz: do_avdude
-
-usbprogram_v2: TARGET=CUL_V2
-usbprogram_v2: MCU=at90usb162
-usbprogram_v2: do_usbprogram
-
-usbprogram_v2_hm: TARGET=CUL_V2_HM
-usbprogram_v2_hm: MCU=at90usb162
-usbprogram_v2_hm: do_usbprogram
-
-usbprogram_v2_max: TARGET=CUL_V2_MAX
-usbprogram_v2_max: MCU=at90usb162
-usbprogram_v2_max: do_usbprogram
-
-do_usbprogram:
-	dfu-programmer $(MCU) erase || true
-	dfu-programmer $(MCU) flash $(TARGET).hex
-	dfu-programmer $(MCU) start
 
 do_avdude:
 	avrdude -p$(MCU) -cavr109 -P$(PORT) -b$(BAUD) -D -Uflash:w:./$(TARGET).hex:i
