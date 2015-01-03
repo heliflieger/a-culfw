@@ -381,29 +381,10 @@ analyze_TX3(bucket_t *b)
 #ifdef HAS_IT
 uint8_t analyze_it(bucket_t *b)
 {
-  //uint8_t i,j,itbit;
   if (b->byteidx != 3 || b->bitidx != 7 || b->state != STATE_IT)
     return 0;
-  /*oby=0;
-  obuf[oby]=0;
-  for (i=0;i<3;i++) {
-    for (j=0;j<8;j=j+2) {
-      obuf[oby]=obuf[oby]<<1;
-      itbit=(b->data[i]>>j)&3;
-      if (itbit == 1) {
-        obuf[oby] |= 1;
-      } else if (itbit>1)
-        return 0;
-    }
-    if (i==1) {
-      oby++;
-      obuf[oby]=0;
-    }
-
-  }
-  nibble=1;oby++;
-  */
-  for (oby=0;oby<3;oby++)
+ 
+ for (oby=0;oby<3;oby++)
     obuf[oby]=b->data[oby];
   return 1;
 }
@@ -612,8 +593,6 @@ RfAnalyze_Task(void)
     }
 
   }
-
-
 
   if(tx_report & REP_BITS) {
 
@@ -838,15 +817,12 @@ ISR(CC1100_INTVECT)
 #endif
     ) {
       addbit(b, 1);
-      //TCNT1 = 0;
     }
     hightime = c;
     return;
 
   }
 
-  //lowtime = c-hightime;
-  //TCNT1 = 0;                          // restart timer
   lowtime = c;
   
 #ifdef HAS_IT
@@ -861,8 +837,6 @@ ISR(CC1100_INTVECT)
 #ifdef HAS_TEMPSENSOR
  if (b->state == STATE_TEMPSENSOR && b->sync == 0) {
 	  b->sync=1;
-		//b->state = STATE_COLLECT;
-		//OCR1A = TWRAP;
 		b->zero.hightime = hightime;
 		b->one.hightime = hightime;
 
@@ -873,10 +847,6 @@ ISR(CC1100_INTVECT)
 			b->zero.lowtime = lowtime;
 			b->one.lowtime = b->zero.lowtime/2;
 		}
-	  //DC('S');
-	  //DU(b->zero.hightime*16, 5);
-		//DU(b->zero.lowtime*16, 5);
-
 	}
 #endif
   if( (b->state == STATE_HMS)
@@ -1039,13 +1009,6 @@ retry_sync:
       addbit(b,1);
       b->one.hightime = makeavg(b->one.hightime, hightime);
       b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-      //DC('1');
-    } else {
-			//DC('r');
-			//delbit(b); // last is a sync so delete last bit
-			//OCR1A = 1;
-			//reset_input();
-		  
 		}
 
 	} else
@@ -1098,3 +1061,4 @@ rf_isreceiving()
 #endif
           );
 }
+

@@ -1,0 +1,9 @@
+This version of CUL-ARDUINO uses as hardware an Arduino Micro Pro board.
+The functinality is the same as the CUL board.
+
+Changes to CUL:
+   - Arduino pro board uses 16MHz Clock
+   - LEDs of Arduino board are on different ports
+
+Other Ports are the same as the CUL ports
+
