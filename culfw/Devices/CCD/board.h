@@ -65,7 +65,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
-#define HAS_TEMPSENSOR
+#define HAS_TCM97001
 
 #undef  HAS_RTC
 #define RTC_ADDR                0xd0

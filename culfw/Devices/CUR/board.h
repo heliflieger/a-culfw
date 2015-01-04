@@ -33,7 +33,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
-#define HAS_TEMPSENSOR
+#define HAS_TCM97001
 
 #ifdef CURV3
 #  include "board_v3.h"

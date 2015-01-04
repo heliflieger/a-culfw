@@ -48,15 +48,15 @@
 #define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
 #define SILENCE    4000        // End of message
 
-#define STATE_RESET   0
-#define STATE_INIT    1
-#define STATE_SYNC    2
-#define STATE_COLLECT 3
-#define STATE_HMS     4
-#define STATE_ESA     5
-#define STATE_REVOLT  6
-#define STATE_IT      7
-#define STATE_TEMPSENSOR      8
+#define STATE_RESET    0
+#define STATE_INIT     1
+#define STATE_SYNC     2
+#define STATE_COLLECT  3
+#define STATE_HMS      4
+#define STATE_ESA      5
+#define STATE_REVOLT   6
+#define STATE_IT       7
+#define STATE_TCM97001 8
 
 uint8_t tx_report;              // global verbose / output-filter
 
@@ -389,10 +389,10 @@ uint8_t analyze_it(bucket_t *b)
   return 1;
 }
 #endif
-#ifdef HAS_TEMPSENSOR
-uint8_t analyze_tempsensor(bucket_t *b)
+#ifdef HAS_TCM97001
+uint8_t analyze_tcm97001(bucket_t *b)
 {
-  if (b->byteidx != 3 || b->bitidx != 7 || b->state != STATE_TEMPSENSOR) {  
+  if (b->byteidx != 3 || b->bitidx != 7 || b->state != STATE_TCM97001) {  
 		return 0;
 		
 	}
@@ -472,16 +472,16 @@ RfAnalyze_Task(void)
     }
   }
 #endif
-#ifdef HAS_TEMPSENSOR
-  if(!datatype && analyze_tempsensor(b))
-    datatype = TYPE_TEMPSENSOR;
+#ifdef HAS_TCM97001
+  if(!datatype && analyze_tcm97001(b))
+    datatype = TYPE_TCM97001;
 #endif
 #ifdef HAS_REVOLT
   if(!datatype && analyze_revolt(b))
     datatype = TYPE_REVOLT;
 #endif
 #ifdef LONG_PULSE
-  if(b->state != STATE_REVOLT && b->state != STATE_IT && b->state != STATE_TEMPSENSOR) {
+  if(b->state != STATE_REVOLT && b->state != STATE_IT && b->state != STATE_TCM97001) {
 #endif
 #ifdef HAS_ESA
   if(analyze_esa(b))
@@ -759,14 +759,6 @@ delbit(bucket_t *b)
 // "Edge-Detected" Interrupt Handler
 ISR(CC1100_INTVECT)
 {  
-
-  #ifdef LONG_PULSE
-  uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
-#else
-  uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
-#endif
-  TCNT1 = 0;                          // restart timer
-
 #ifdef HAS_FASTRF
   if(fastrf_on) {
     fastrf_on = 2;
@@ -780,7 +772,11 @@ ISR(CC1100_INTVECT)
     return;
   }
 #endif
-
+#ifdef LONG_PULSE
+  uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
+#else
+  uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
+#endif
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
@@ -813,13 +809,15 @@ ISR(CC1100_INTVECT)
 #endif
     ) {
       addbit(b, 1);
+      TCNT1 = 0;
     }
     hightime = c;
     return;
 
   }
 
-  lowtime = c;
+  lowtime = c-hightime;
+  TCNT1 = 0;                          // restart timer
   
 #ifdef HAS_IT
   if(b->state == STATE_IT) {
@@ -832,8 +830,8 @@ ISR(CC1100_INTVECT)
     }
   }
 #endif
-#ifdef HAS_TEMPSENSOR
- if (b->state == STATE_TEMPSENSOR && b->sync == 0) {
+#ifdef HAS_TCM97001
+ if (b->state == STATE_TCM97001 && b->sync == 0) {
 	  b->sync=1;
 		b->zero.hightime = hightime;
 		b->one.hightime = hightime;
@@ -885,14 +883,14 @@ ISR(CC1100_INTVECT)
 
 retry_sync:
 
-#ifdef HAS_TEMPSENSOR
+#ifdef HAS_TCM97001
 		if ( (hightime < TSCALE(530) && hightime > TSCALE(420)) &&
 				   (lowtime  < TSCALE(9000) && lowtime > TSCALE(8500)) ) {
 		  OCR1A = 4600L;
 			TIMSK1 = _BV(OCIE1A);
 			b->sync=0;
       
-			b->state = STATE_TEMPSENSOR;
+			b->state = STATE_TCM97001;
 			b->byteidx = 0;
 			b->bitidx  = 7;
 			b->data[0] = 0;
@@ -960,6 +958,7 @@ retry_sync:
 
       } else {
         b->state = STATE_COLLECT;
+
       }
 
       b->one.hightime = hightime;
@@ -992,8 +991,8 @@ retry_sync:
     }
   } else 
 #endif
-#ifdef HAS_TEMPSENSOR
-	if (b->state==STATE_TEMPSENSOR) {
+#ifdef HAS_TCM97001
+	if (b->state==STATE_TCM97001) {
 		if (lowtime > 110 && lowtime < 140) {
       addbit(b,0);
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
@@ -1011,10 +1010,12 @@ retry_sync:
       addbit(b, 1);
       b->one.hightime = makeavg(b->one.hightime, hightime);
       b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
+
     } else if(wave_equals(&b->zero, hightime, lowtime)) {
       addbit(b, 0);
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
       b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+
     } else {
       if (b->state!=STATE_IT) 
         reset_input();
