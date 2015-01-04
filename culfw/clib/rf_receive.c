@@ -381,9 +381,9 @@ analyze_TX3(bucket_t *b)
 #ifdef HAS_IT
 uint8_t analyze_it(bucket_t *b)
 {
-  if (b->byteidx != 3 || b->bitidx != 7 || b->state != STATE_IT)
+  if (b->state != STATE_IT || b->byteidx != 3 || b->bitidx != 7) {
     return 0;
- 
+ }
  for (oby=0;oby<3;oby++)
     obuf[oby]=b->data[oby];
   return 1;
@@ -456,8 +456,21 @@ RfAnalyze_Task(void)
   b = bucket_array + bucket_out;
 
 #ifdef HAS_IT
-  if(!datatype && analyze_it(b))
-    datatype = TYPE_IT;
+  if(b->state == STATE_IT) {
+    if(!datatype && analyze_it(b)) { 
+      datatype = TYPE_IT;
+    } else {
+      // Ignore package
+      b->state = STATE_RESET;
+      bucket_nrused--;
+      bucket_out++;
+      if(bucket_out == RCV_BUCKETS)
+        bucket_out = 0;
+
+      LED_OFF();
+      return;
+    }
+  }
 #endif
 #ifdef HAS_TEMPSENSOR
   if(!datatype && analyze_tempsensor(b))
@@ -686,23 +699,6 @@ ISR(TIMER1_COMPA_vect)
 
 }
 
-#ifdef HAS_IT
-static uint8_t wave_equals_it(wave_t *a, uint8_t isOne, uint8_t htime, uint8_t ltime) {
-	if (isOne == 0) {
-		if (htime <  ltime) {
-			return 1;
-		} 
-	} else {
-		if (ltime < htime) {
-			return 1;
-		} 
-	}
-	return 0;
-}
-#endif
-
-// &b->one, hightime, lowtime, b->state
-// &b->zero, hightime, lowtime, b->state
 static uint8_t
 wave_equals(wave_t *a, uint8_t htime, uint8_t ltime)
 {
@@ -826,13 +822,15 @@ ISR(CC1100_INTVECT)
   lowtime = c;
   
 #ifdef HAS_IT
-  if(b->state == STATE_IT && b->sync == 0) {
-    b->sync=1;
-		b->zero.hightime = hightime; 
-		b->zero.lowtime = lowtime+1;
-		b->one.hightime = lowtime+1;
-		b->one.lowtime = hightime;
-  } 
+  if(b->state == STATE_IT) {
+    if(b->sync == 0) {
+      b->sync=1;
+		  b->zero.hightime = hightime; 
+		  b->zero.lowtime = lowtime+1;
+		  b->one.hightime = lowtime+1;
+		  b->one.lowtime = hightime;
+    }
+  }
 #endif
 #ifdef HAS_TEMPSENSOR
  if (b->state == STATE_TEMPSENSOR && b->sync == 0) {
@@ -906,9 +904,8 @@ retry_sync:
 #endif
 
 	#ifdef HAS_IT
-	  if ( (hightime < TSCALE(500) && hightime > TSCALE(150)) &&
-		     (lowtime  < TSCALE(20160) && lowtime > TSCALE(1601)) ) {
-	    // Intertechno
+	 if ( (hightime < TSCALE(600) && hightime > TSCALE(140)) &&
+		     (lowtime < TSCALE(17000) && lowtime > TSCALE(6000)) ) {
 	    OCR1A = SILENCE;
 	    TIMSK1 = _BV(OCIE1A);
 	    b->sync=0;
@@ -916,14 +913,12 @@ retry_sync:
 	    b->byteidx = 0;
 	    b->bitidx  = 7;
 	    b->data[0] = 0;
-	    
 	    return;
-	  }
+	  } else
     #endif
-
-
-    if(hightime > TSCALE(1600) || lowtime > TSCALE(1600))
+    if(hightime > TSCALE(1600) || lowtime > TSCALE(1600)) {
       return;
+    }
   
     b->zero.hightime = hightime;
     b->zero.lowtime = lowtime;
@@ -965,7 +960,6 @@ retry_sync:
 
       } else {
         b->state = STATE_COLLECT;
-
       }
 
       b->one.hightime = hightime;
@@ -1004,7 +998,6 @@ retry_sync:
       addbit(b,0);
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
       b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-      //DC('0');
     } else if (lowtime > 230 && lowtime < 270) {
       addbit(b,1);
       b->one.hightime = makeavg(b->one.hightime, hightime);
@@ -1013,39 +1006,18 @@ retry_sync:
 
 	} else
 #endif
-#ifdef HAS_IT
-  if (b->state==STATE_IT) { // STATE_IT
-	
-		if(wave_equals_it(&b->one, 1, hightime, lowtime)) {
-			    addbit(b, 1);
-			    b->one.hightime = makeavg(b->one.hightime, hightime);
-			    b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-
-		} else if(wave_equals_it(&b->zero, 0, hightime, lowtime)) {
-			    addbit(b, 0);
-			    b->zero.hightime = makeavg(b->zero.hightime, hightime);
-			    b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-
-		} else {
-			reset_input();
-		}
-
-  } else 
-#endif
-    {                              // STATE_COLLECT
+    { // STATE_COLLECT , STATE_IT
     if(wave_equals(&b->one, hightime, lowtime)) {
       addbit(b, 1);
       b->one.hightime = makeavg(b->one.hightime, hightime);
       b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-
     } else if(wave_equals(&b->zero, hightime, lowtime)) {
       addbit(b, 0);
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
       b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-
     } else {
-      reset_input();
-
+      if (b->state!=STATE_IT) 
+        reset_input();
     }
 
   }
