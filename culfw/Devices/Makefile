@@ -12,6 +12,8 @@ all:
 	make -C CUR clean
 	make -C CUR all
 	make -C COC all
+	make -C CPM-Gardenabodenfeuchtesensor/Release clean
+	make -C CPM-Gardenabodenfeuchtesensor/Release all 
 	make -C miniCUL clean
 	make -C miniCUL all
 	make -C SCC all
@@ -37,6 +39,7 @@ clean:
 	make -C CUNO2 clean
 	make -C CUR clean
 	make -C COC clean
+	make -C CPM-Gardenabodenfeuchtesensor/Release clean
 	make -C miniCUL clean
 	make -C SCC clean
 	make -C TuxRadio clean

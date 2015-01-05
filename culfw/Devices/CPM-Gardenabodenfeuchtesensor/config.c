@@ -12,8 +12,8 @@ volatile uint8_t  fs20_button    = 0x56;
 void readConfig(void)
 {
     // init variables from eeprom
-    uint16_t cfg_housecode = get_config_word(&eefs20_housecode);
-    uint8_t  cfg_button	= get_config_byte(&eefs20_button);
+    uint16_t cfg_housecode = get_config_word((uint16_t) &eefs20_housecode);
+    uint8_t  cfg_button	= get_config_byte((uint16_t) &eefs20_button);
     // check if any information available
     if(cfg_housecode != 0xffff)
     {
@@ -28,8 +28,8 @@ void saveConfig(uint16_t housecode, uint8_t button)
 	fs20_button = button;
 
 	// saves the housecode and buttoncode to the eeprom
-	set_config_word(&eefs20_housecode, fs20_housecode);
-	set_config_byte(&eefs20_button, fs20_button);
+	set_config_word((uint16_t) &eefs20_housecode, fs20_housecode);
+	set_config_byte((uint16_t) &eefs20_button, fs20_button);
 }
 
 /*

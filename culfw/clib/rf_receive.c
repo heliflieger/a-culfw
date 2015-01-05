@@ -607,6 +607,8 @@ RfAnalyze_Task(void)
 
   }
 
+
+
   if(tx_report & REP_BITS) {
 
     DC('p');
@@ -880,7 +882,6 @@ ISR(CC1100_INTVECT)
 
   if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
 
-
 retry_sync:
 
 #ifdef HAS_TCM97001
@@ -941,7 +942,7 @@ retry_sync:
       } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
         b->state = STATE_ESA;
   
- 			  OCR1A = 1000;
+  OCR1A = 1000;
   
 #endif
 #ifdef HAS_RF_ROUTER

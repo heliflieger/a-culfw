@@ -1,6 +1,6 @@
 Version 1.62.03 (2015-01-02)
 - Add receive of tempsensor, see Forum #28519
-  You need changes in 00_CUL.pm and the 14_CUL_TEMP.pm 
+  You need changes in 00_CUL.pm and the 14_CUL_TCM97001.pm 
 
 Version 1.62.01 (2015-01-01)
 - Fix IT receive based on Forum #14348

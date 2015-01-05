@@ -82,7 +82,7 @@ clean:
 	-$(RM) $(ELFS)$(ASM_DEPS)$(OBJS)$(AVRDUDEDUMMY)$(S_UPPER_DEPS)$(LSS)$(FLASH_IMAGE)$(S_DEPS)$(C_DEPS)$(SIZEDUMMY) CPM-Gardenabodenfeuchtesensor.elf
 	-@echo ' '
 
-secondary-outputs: $(LSS) $(FLASH_IMAGE) $(SIZEDUMMY) $(AVRDUDEDUMMY)
+secondary-outputs: $(LSS) $(FLASH_IMAGE) $(SIZEDUMMY)
 
 .PHONY: all clean dependents
 .SECONDARY:
