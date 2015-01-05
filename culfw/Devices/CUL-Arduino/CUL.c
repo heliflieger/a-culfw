@@ -52,9 +52,6 @@
 #ifdef HAS_MBUS
 #include "rf_mbus.h"
 #endif
-#ifdef HAS_KOPP_FC
-#include "kopp-fc.h"
-#endif
 
 const PROGMEM t_fntab fntab[] = {
 
@@ -75,9 +72,6 @@ const PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_RWE
   { 'E', rwe_func },
-#endif
-#ifdef HAS_KOPP_FC
-  { 'K', kopp_fc_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },

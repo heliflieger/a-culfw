@@ -39,9 +39,8 @@
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
 #  define HAS_IT
-#  define HAS_TEMPSENSOR
+#  define HAS_TCM97001
 #endif
-
 
 #if defined(CUL_V4)
 #  define TTY_BUFSIZE           64      // RAM: TTY_BUFSIZE*4
@@ -105,7 +104,7 @@
 #  warning "for the m32u2 add __AVR_ATmega32U2__ for cpu types on prescale block"
 #endif
 
-#if defined(CUL_V3)    // not sure why libc is missing those ...
+#if defined(CUL_V3)      // not sure why libc is missing those ...
 #  define PB0 PORTB0
 #  define PB1 PORTB1
 #  define PB2 PORTB2

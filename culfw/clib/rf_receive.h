@@ -2,15 +2,15 @@
 #define _RF_RECEIVE_H
 
 
-#define TYPE_EM      'E'
-#define TYPE_HMS     'H'
-#define TYPE_FHT     'T'
-#define TYPE_FS20    'F'
-#define TYPE_KS300   'K'
-#define TYPE_HRM     'R'        // Hoermann
-#define TYPE_ESA     'S'
-#define TYPE_TX3     't'
-#define TYPE_TEMPSENSOR     's'
+#define TYPE_EM       'E'
+#define TYPE_HMS      'H'
+#define TYPE_FHT      'T'
+#define TYPE_FS20     'F'
+#define TYPE_KS300    'K'
+#define TYPE_HRM      'R'        // Hoermann
+#define TYPE_ESA      'S'
+#define TYPE_TX3      't'
+#define TYPE_TCM97001 's'
 
 #define TYPE_REVOLT	 'r'
 #define TYPE_IT  	 'i'

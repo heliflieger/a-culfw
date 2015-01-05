@@ -65,7 +65,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
-#define HAS_TEMPSENSOR
+#define HAS_TCM97001
 
 #define HAS_ONEWIRE         10      // OneWire Device Buffer, RAM: 10 * 8 Byte
 #define OW_SPU			    // StrongPullUp support
