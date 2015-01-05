@@ -24,7 +24,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/delay.h>
+#include <util/delay.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
 #include <util/parity.h>
@@ -166,8 +166,8 @@ void fs20_init(void) {
      bl = 0;
      bh = 0;
 
-     memset( &ad, 0, sizeof( ad ));
-
+     memset( (airdata_t *) & ad, 0, sizeof( ad ));
+     
 } /* }}} */
 
 void fs20_rxon(void) {
@@ -212,13 +212,13 @@ ISR(TIM1_COMPB_vect) {
 	  SET_BIT( GIMSK, INT0 ); // enable INT
 
 	  if (ad.bits>20 && adc<AD_Q_MX) {
-	       memcpy( &adq[adc], &ad, sizeof( ad ) );
+	       memcpy( &adq[adc], (airdata_t *) & ad, sizeof( ad ) );
 	       adc++;
 	  }
 
 	  bl = 0;
 	  bh = 0;
-	  memset( &ad, 0, sizeof( ad ));
+	  memset( (airdata_t *) & ad, 0, sizeof( ad ));
 
      } else {
 	  // TX
@@ -244,7 +244,7 @@ ISR(TIM1_COMPB_vect) {
 
 	       SET_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN );
 
-	       if (AD_BIT_IS_SET( &ad, ad.sync )) {
+	       if (AD_BIT_IS_SET( (airdata_t *) & ad, ad.sync )) {
 		    // "1"
 		    OCR1A  = ad.bit[1].high;
 		    OCR1B  = ad.bit[1].low;
@@ -271,7 +271,7 @@ ISR(TIM1_COMPB_vect) {
 	       if (--ad.state<100) {
 		    // finish!
 		    ccStrobe( CC1100_SIDLE );
-		    memset( &ad, 0, sizeof( ad ));
+		    memset( (airdata_t *) & ad, 0, sizeof( ad ));
 		    OCR1B = 50000; // give time to relax ...
 
 	       } else {
@@ -341,7 +341,7 @@ ISR(INT0_vect) {
 	  TCNT1 = 0;
 
 	  if (ad.state == 99) {
-	       AD_PUSH( &ad, 0 );
+	       AD_PUSH( (airdata_t *) & ad, 0 );
 //	       printf_P( PSTR("o"));
 
 	  } else if (bh) { // have full period covered?
@@ -422,13 +422,13 @@ ISR(INT0_vect) {
 		    // check if this bit is within bit window
 		    if ( looks_like_s( ad.bit[0], bh, bl) ) {
 
-			 AD_PUSH( &ad, 0 );
+			 AD_PUSH( (airdata_t *) & ad, 0 );
 //			 printf_P( PSTR("0"));
 			 break;
 
 		    } else if ( looks_like_s( ad.bit[1], bh, bl) ) {
 
-			 AD_PUSH( &ad, 1 );
+			 AD_PUSH( (airdata_t *) & ad, 1 );
 //			 printf_P( PSTR("1"));
 
 #ifdef AVG_SIGNAL
@@ -465,7 +465,7 @@ ISR(INT0_vect) {
 		    }
 
 	       case 0: // INIT
-		    memset( &ad, 0, sizeof( ad ));
+		    memset( (airdata_t *) & ad, 0, sizeof( ad ));
 
 		    ad.bit[0].high = bh;
 		    ad.bit[0].low  = bl;
@@ -489,7 +489,7 @@ ISR(INT0_vect) {
 
 	  if (ad.state == 99) {
 	       TCNT1 = 0;
-	       AD_PUSH( &ad, 1 );
+	       AD_PUSH( (airdata_t *) & ad, 1 );
 
 //	       printf_P( PSTR("|"));
 
@@ -860,7 +860,7 @@ void fs20_send(uint8_t data[], uint8_t len) {
 
      ccStrobe( CC1100_SIDLE );
 
-     memset( &ad, 0, sizeof( ad ));
+     memset( (airdata_t *) & ad, 0, sizeof( ad ));
 
      // a simple FS20 message:
 
@@ -872,20 +872,20 @@ void fs20_send(uint8_t data[], uint8_t len) {
 
      ad.state = 102; // ( repeat 3 times )
 
-     AD_PUSH_SYNC( &ad, 12 );
+     AD_PUSH_SYNC( (airdata_t *) & ad, 12 );
 
      uint8_t crc = 6;
      for (uint8_t i=0; i<len; i++) {
 
-	  AD_PUSH_BYTE( &ad, data[i] );
+	  AD_PUSH_BYTE( (airdata_t *) & ad, data[i] );
 	  crc += data[i];
-	  AD_PUSH( &ad, parity_even_bit(data[i]) );
+	  AD_PUSH( (airdata_t *) & ad, parity_even_bit(data[i]) );
 
      }
 
-     AD_PUSH_BYTE( &ad, crc );
-     AD_PUSH( &ad, parity_even_bit(crc) );
-     AD_PUSH( &ad, 1 ); // EOT
+     AD_PUSH_BYTE( (airdata_t *) & ad, crc );
+     AD_PUSH( (airdata_t *) & ad, parity_even_bit(crc) );
+     AD_PUSH( (airdata_t *) & ad, 1 ); // EOT
 
 //     AD_DUMP( &ad, 24 );
 
