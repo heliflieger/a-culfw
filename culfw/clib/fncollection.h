@@ -14,6 +14,18 @@ void prepare_boot(char *);
 void version(char *);
 void do_wdt_enable(uint8_t t);
 
+
+#define MODE_UNKNOWN    0
+#define MODE_433_MHZ    1
+#define MODE_868_MHZ    2
+
+// function to init the frequency flag
+void checkFrequency(void); 
+// if 433 MHZ is enabled return true (0)
+uint8_t is433MHz(void);
+// if 868 MHZ is enabled return true (0)
+uint8_t is868MHz(void);
+
 // Already used magics: c1,c2
 
 #define EE_MAGIC_OFFSET      (uint8_t *)0                       // 2 bytes

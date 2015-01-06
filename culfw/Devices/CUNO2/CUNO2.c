@@ -201,6 +201,7 @@ main(void)
 
   ethernet_init();
     
+  checkFrequency(); 
   LED_OFF();
 
 #ifdef HAS_DMX

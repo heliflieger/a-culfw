@@ -456,7 +456,7 @@ RfAnalyze_Task(void)
   b = bucket_array + bucket_out;
 
 #ifdef HAS_IT
-  if(b->state == STATE_IT) {
+  if(is433MHz() && b->state == STATE_IT) {
     if(!datatype && analyze_it(b)) { 
       datatype = TYPE_IT;
     } else {
@@ -473,22 +473,22 @@ RfAnalyze_Task(void)
   }
 #endif
 #ifdef HAS_TCM97001
-  if(!datatype && analyze_tcm97001(b))
+  if(is433MHz() && !datatype && analyze_tcm97001(b))
     datatype = TYPE_TCM97001;
 #endif
 #ifdef HAS_REVOLT
-  if(!datatype && analyze_revolt(b))
+  if(is433MHz() && !datatype && analyze_revolt(b))
     datatype = TYPE_REVOLT;
 #endif
 #ifdef LONG_PULSE
   if(b->state != STATE_REVOLT && b->state != STATE_IT && b->state != STATE_TCM97001) {
 #endif
 #ifdef HAS_ESA
-  if(analyze_esa(b))
+  if(is868MHz() && analyze_esa(b))
     datatype = TYPE_ESA;
 #endif
 
-  if(!datatype && analyze(b, TYPE_FS20)) {
+  if(is868MHz() && !datatype && analyze(b, TYPE_FS20)) {
     oby--;                                  // Separate the checksum byte
     uint8_t fs_csum = cksum1(6,obuf,oby);
     if(fs_csum == obuf[oby] && oby >= 4) {
@@ -505,17 +505,17 @@ RfAnalyze_Task(void)
     }
   }
 
-  if(!datatype && analyze(b, TYPE_EM)) {
+  if(is868MHz() && !datatype && analyze(b, TYPE_EM)) {
     oby--;                                 
     if(oby == 9 && cksum2(obuf, oby) == obuf[oby])
       datatype = TYPE_EM;
   }
 
-  if(!datatype && analyze_hms(b))
+  if(is868MHz() && !datatype && analyze_hms(b))
     datatype = TYPE_HMS;
 
 #ifdef HAS_TX3
-  if(!datatype && analyze_TX3(b))
+  if(is433MHz() && !datatype && analyze_TX3(b))
     datatype = TYPE_TX3;
 #endif
 
@@ -533,7 +533,7 @@ RfAnalyze_Task(void)
 
 #ifdef HAS_HOERMANN
   // This protocol is not yet understood. It should be last in the row!
-  if(!datatype && b->byteidx == 4 && b->bitidx == 4 &&
+  if(is868MHz() && !datatype && b->byteidx == 4 && b->bitidx == 4 &&
      wave_equals(&b->zero, TSCALE(960), TSCALE(480))) {
 
     addbit(b, wave_equals(&b->one, hightime, TSCALE(480)));
@@ -643,7 +643,7 @@ RfAnalyze_Task(void)
   LED_OFF();
 
 #ifdef HAS_FHT_80b
-  if(datatype == TYPE_FHT) {
+  if(is868MHz() && datatype == TYPE_FHT) {
     fht_hook(obuf);
   }
 #endif
@@ -782,7 +782,7 @@ ISR(CC1100_INTVECT)
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
-  if (b->state == STATE_HMS) {
+  if (is868MHz() && b->state == STATE_HMS) {
     if(c < TSCALE(750))
       return;
     if(c > TSCALE(1250)) {
@@ -792,7 +792,7 @@ ISR(CC1100_INTVECT)
   }
 
 #ifdef HAS_ESA
-  if (b->state == STATE_ESA) {
+  if (is868MHz() && b->state == STATE_ESA) {
     if(c < TSCALE(375))
       return;
     if(c > TSCALE(625)) {
@@ -805,11 +805,11 @@ ISR(CC1100_INTVECT)
   //////////////////
   // Falling edge
   if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
-    if( (b->state == STATE_HMS)
+    if(is868MHz() && ( (b->state == STATE_HMS)
 #ifdef HAS_ESA
      || (b->state == STATE_ESA) 
 #endif
-    ) {
+    )) {
       addbit(b, 1);
       TCNT1 = 0;
     }
@@ -822,7 +822,7 @@ ISR(CC1100_INTVECT)
   TCNT1 = 0;                          // restart timer
   
 #ifdef HAS_IT
-  if(b->state == STATE_IT) {
+  if(is433MHz() && b->state == STATE_IT) {
     if(b->sync == 0) {
       b->sync=1;
 		  b->zero.hightime = hightime; 
@@ -833,7 +833,7 @@ ISR(CC1100_INTVECT)
   }
 #endif
 #ifdef HAS_TCM97001
- if (b->state == STATE_TCM97001 && b->sync == 0) {
+ if (is433MHz() && b->state == STATE_TCM97001 && b->sync == 0) {
 	  b->sync=1;
 		b->zero.hightime = hightime;
 		b->one.hightime = hightime;
@@ -847,11 +847,11 @@ ISR(CC1100_INTVECT)
 		}
 	}
 #endif
-  if( (b->state == STATE_HMS)
+  if(is868MHz() && ((b->state == STATE_HMS)
 #ifdef HAS_ESA
      || (b->state == STATE_ESA) 
 #endif
-  ) {
+  )) {
     addbit(b, 0);
     return;
   }
@@ -861,7 +861,7 @@ ISR(CC1100_INTVECT)
   TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
   
 #ifdef HAS_REVOLT
-  if ((hightime > TSCALE(9000)) && (hightime < TSCALE(12000)) &&
+  if (is433MHz() && (hightime > TSCALE(9000)) && (hightime < TSCALE(12000)) &&
       (lowtime  > TSCALE(150))   && (lowtime  < TSCALE(540))) {
     // Revolt
     b->zero.hightime = 6;
@@ -885,7 +885,7 @@ ISR(CC1100_INTVECT)
 retry_sync:
 
 #ifdef HAS_TCM97001
-		if ( (hightime < TSCALE(530) && hightime > TSCALE(420)) &&
+		if (is433MHz() && (hightime < TSCALE(530) && hightime > TSCALE(420)) &&
 				   (lowtime  < TSCALE(9000) && lowtime > TSCALE(8500)) ) {
 		  OCR1A = 4600L;
 			TIMSK1 = _BV(OCIE1A);
@@ -903,7 +903,7 @@ retry_sync:
 #endif
 
 	#ifdef HAS_IT
-	 if ( (hightime < TSCALE(600) && hightime > TSCALE(140)) &&
+	 if (is433MHz() && (hightime < TSCALE(600) && hightime > TSCALE(140)) &&
 		     (lowtime < TSCALE(17000) && lowtime > TSCALE(6000)) ) {
 	    OCR1A = SILENCE;
 	    TIMSK1 = _BV(OCIE1A);
@@ -979,7 +979,7 @@ retry_sync:
 
   } else 
 #ifdef HAS_REVOLT
-  if (b->state==STATE_REVOLT) { //STATE_REVOLT
+  if (is433MHz() && b->state==STATE_REVOLT) { //STATE_REVOLT
 
     if ((hightime < 11)) {
       addbit(b,0);
@@ -993,7 +993,7 @@ retry_sync:
   } else 
 #endif
 #ifdef HAS_TCM97001
-	if (b->state==STATE_TCM97001) {
+	if (is433MHz() && b->state==STATE_TCM97001) {
 		if (lowtime > 110 && lowtime < 140) {
       addbit(b,0);
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
