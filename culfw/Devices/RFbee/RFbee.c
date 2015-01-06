@@ -133,6 +133,7 @@ main(void)
 	display_channel |= DISPLAY_RFROUTER;
 #endif
 
+  checkFrequency(); 
 	sei();
 
 	for(;;) {

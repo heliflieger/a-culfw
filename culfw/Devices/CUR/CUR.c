@@ -140,6 +140,7 @@ main(void)
   display_channel = DISPLAY_USB|DISPLAY_LCD|DISPLAY_RFROUTER;
   rf_router_init();
 
+  checkFrequency(); 
   LED_OFF();
 
   for(;;) {

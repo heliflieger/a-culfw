@@ -180,6 +180,7 @@ main(void)
 
   ethernet_init();
 
+  checkFrequency(); 
   LED_OFF();
 
   sei();

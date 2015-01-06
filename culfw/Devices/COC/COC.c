@@ -174,6 +174,7 @@ main(void)
   display_channel |= DISPLAY_DOGM;
 #endif
 
+  checkFrequency(); 
   LED_OFF();
 
   sei();

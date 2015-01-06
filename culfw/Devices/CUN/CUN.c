@@ -179,6 +179,7 @@ main(void)
   input_handle_func = analyze_ttydata;
   display_channel = DISPLAY_USB;
 
+  checkFrequency(); 
   LED_OFF();
 
   for(;;) {

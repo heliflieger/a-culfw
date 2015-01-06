@@ -172,6 +172,7 @@ main(void)
   display_channel |= DISPLAY_RFROUTER;
 #endif
 
+  checkFrequency(); 
   LED_OFF();
 
   sei();

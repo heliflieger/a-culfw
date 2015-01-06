@@ -182,6 +182,7 @@ main(void)
 #endif
 
   LED_OFF();
+  checkFrequency(); 
 
   sei();
 

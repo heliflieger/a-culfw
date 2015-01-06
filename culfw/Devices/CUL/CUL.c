@@ -168,6 +168,7 @@ main(void)
   display_channel = DISPLAY_USB;
 #endif
 
+  checkFrequency(); 
   LED_OFF();
 
   for(;;) {
