@@ -1,3 +1,6 @@
+Version 1.62.05 (2015-01-07)
+- Receive only available protocols for configured freqeuncy band
+
 Version 1.62.03 (2015-01-02)
 - Add receive of tempsensor, see Forum #28519
   You need changes in 00_CUL.pm and the 14_CUL_TCM97001.pm 

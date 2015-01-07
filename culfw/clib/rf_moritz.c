@@ -4,6 +4,7 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include "fband.h"
 #include "cc1100.h"
 #include "delay.h"
 #include "rf_receive.h"
@@ -110,6 +111,7 @@ rf_moritz_init(void)
     my_delay_us(10);
 
   moritz_on = 1;
+  checkFrequency(); 
 }
 
 void

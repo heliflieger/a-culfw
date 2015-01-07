@@ -13,6 +13,7 @@
 
 #include <string.h>
 
+#include "fband.h"
 #include "cc1100.h"
 #include "cdc.h"
 #include "clock.h"

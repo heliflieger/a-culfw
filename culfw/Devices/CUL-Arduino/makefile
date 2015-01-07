@@ -15,6 +15,7 @@ SRC =           CUL.c\
 		../../clib/stringfunc.c                              \
 		../../clib/fncollection.c                            \
 		../../clib/ringbuffer.c                              \
+		../../clib/fband.c                                   \
 		../../clib/rf_send.c                                 \
 		../../clib/rf_receive.c                              \
 		../../clib/rf_router.c                               \

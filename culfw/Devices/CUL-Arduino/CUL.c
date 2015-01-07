@@ -15,6 +15,7 @@
 
 #include <Drivers/USB/USB.h>     // USB Functionality
 
+#include "fband.h"
 #include "spi.h"
 #include "cc1100.h"
 #include "cdc.h"

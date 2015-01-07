@@ -14,6 +14,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/stringfunc.c                              \
 		../../clib/fncollection.c                            \
 		../../clib/ringbuffer.c                              \
+		../../clib/fband.c                                   \
 		../../clib/rf_send.c                                 \
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \
@@ -28,11 +29,11 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ttydata.c                                 \
 		../../clib/stacking.c                                \
 		../../clib/spi.c                                     \
-                ../../clib/rf_mbus.c                                 \
-                ../../clib/mbus/manchester.c                         \
-                ../../clib/mbus/3outof6.c                            \
-                ../../clib/mbus/mbus_packet.c                        \
-                ../../clib/mbus/crc.c                                \
+		../../clib/rf_mbus.c                                 \
+		../../clib/mbus/manchester.c                         \
+		../../clib/mbus/3outof6.c                            \
+		../../clib/mbus/mbus_packet.c                        \
+		../../clib/mbus/crc.c                                \
 
 
 
