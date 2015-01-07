@@ -20,6 +20,7 @@ SRC = $(TARGET).c                                                  \
 		../../clib/qfs.c                                      \
 		../../clib/fswrapper.c                                \
 		../../clib/stringfunc.c                               \
+		../../clib/fband.c                                    \
 		../../clib/rf_send.c                                  \
 		../../clib/rf_receive.c                               \
 		../../clib/fht.c                                      \

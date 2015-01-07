@@ -16,6 +16,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/delay.c                                   \
 		../../clib/display.c                                 \
 		../../clib/stringfunc.c                              \
+		../../clib/fband.c                                   \
 		../../clib/fncollection.c                            \
 		../../clib/ringbuffer.c                              \
 		../../clib/rf_send.c                                 \

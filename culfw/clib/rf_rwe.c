@@ -2,6 +2,7 @@
 #ifdef HAS_RWE
 #include <string.h>
 #include <avr/pgmspace.h>
+#include "fband.h"
 #include "cc1100.h"
 #include "delay.h"
 #include "rf_receive.h"
@@ -70,6 +71,7 @@ rf_rwe_init(void)
   ccStrobe( CC1100_SCAL );
 
   my_delay_ms(1);
+  checkFrequency(); 
 }
 
 void

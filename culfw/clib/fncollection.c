@@ -2,6 +2,7 @@
 #include <avr/wdt.h>
 #include <avr/interrupt.h>
 
+#include "fband.h"
 #include "board.h"
 #include "display.h"
 #include "delay.h"
@@ -20,8 +21,6 @@
 #include <avr/wdt.h>
 
 uint8_t led_mode = 2;   // Start blinking
-
-uint8_t frequencyMode = MODE_UNKNOWN;
 
 #ifdef XLED
 #include "xled.h"
@@ -56,55 +55,6 @@ display_ee_bytes(uint8_t *a, uint8_t cnt)
       DC(':');
   }
 
-}
-
-/*
- * Read eeprom
- */
-uint8_t readEEpromValue(char *rbyte) {
-  uint8_t hb[2], d;
-  uint16_t addr;
-  hb[0] = hb[1] = 0;
-  d = fromhex(rbyte, hb, 2);
-  if(d == 2)
-    addr = (hb[0] << 8) | hb[1];
-  else
-    addr = hb[0];
-  d = erb((uint8_t *)addr);
-  return d;
-}
-
-/*
- * Check the frequency bits and set the frequencyMode value
- */
-void checkFrequency(void) {
-  uint32_t value_0D; 
-  uint16_t value_0E;
-  uint8_t  value_0F;
-  value_0D = readEEpromValue("0F");
-  value_0E = readEEpromValue("10");
-  value_0F = readEEpromValue("11");
-  uint16_t frequency = 26*(value_0D*256*256+value_0E*256+value_0F)/65536;
-
-  if (frequency > 500) {
-    frequencyMode = MODE_868_MHZ;
-  } else {
-    frequencyMode = MODE_433_MHZ;
-  }
-}
-
-// if 433 MHZ is enabled return true (1)
-uint8_t is433MHz(void) {
-  if (frequencyMode == MODE_433_MHZ)
-    return 1;
-  return 0;
-}
-
-// if 868 MHZ is enabled return true (1)
-uint8_t is868MHz(void) {
-  if (frequencyMode == MODE_868_MHZ)
-    return 1;
-  return 0;
 }
 
 static void
@@ -203,7 +153,7 @@ write_eeprom(char *in)
       addr = hb[0];
     else
       addr = (hb[0] << 8) | hb[1];
-     
+      
     ewb((uint8_t*)addr, hb[d-1]);
 
     if (addr == 15 || addr == 16 || addr == 17)
@@ -347,8 +297,7 @@ prepare_boot(char *in)
   TIMSK0 = 0;                // Disable the clock which resets the watchdog
   cli();
   
-  wdt_enable(WDTO_15MS);     // Make sure the watchdog is running 
-
+  wdt_enable(WDTO_15MS);       // Make sure the watchdog is running 
   while (1);                 // go to bed, the wathchdog will take us to reset
 }
 
@@ -403,8 +352,3 @@ dumpmem(uint8_t *addr, uint16_t len)
   }
   DNL();
 }
-
-
-
-
-

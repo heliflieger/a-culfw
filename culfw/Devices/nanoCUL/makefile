@@ -14,31 +14,32 @@ DESTDIR=culfw-nanoCUL.$(VERS)
 
 SRC = $(TARGET).c                                            \
 		../../clib/cc1100.c                                  \
-		../../clib/cc1101_pllcheck.c                                  \
+		../../clib/cc1101_pllcheck.c                         \
 		../../clib/clock.c                                   \
 		../../clib/delay.c                                   \
 		../../clib/display.c                                 \
 		../../clib/stringfunc.c                              \
 		../../clib/fncollection.c                            \
+		../../clib/fband.c                                   \
 		../../clib/ringbuffer.c                              \
 		../../clib/fht.c                                     \
 		../../clib/rf_send.c                                 \
 		../../clib/rf_receive.c                              \
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \
-		../../clib/rf_rwe.c                               \
+		../../clib/rf_rwe.c                                  \
 		../../clib/somfy_rts.c                               \
-		../../clib/fastrf.c                               \
+		../../clib/fastrf.c                                  \
 		../../clib/intertechno.c                             \
 		../../clib/memory.c                                  \
 		../../clib/serial.c                                  \
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
-                ../../clib/rf_mbus.c                                 \
-                ../../clib/mbus/manchester.c                         \
-                ../../clib/mbus/3outof6.c                            \
-                ../../clib/mbus/mbus_packet.c                        \
-                ../../clib/mbus/crc.c                                \
+		../../clib/rf_mbus.c                                 \
+		../../clib/mbus/manchester.c                         \
+		../../clib/mbus/3outof6.c                            \
+		../../clib/mbus/mbus_packet.c                        \
+		../../clib/mbus/crc.c                                \
 
 
 OPT = s

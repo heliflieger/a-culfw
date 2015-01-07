@@ -12,6 +12,7 @@ SRC =           CCD.c\
 		../../clib/display.c                                 \
 		../../clib/stringfunc.c                              \
 		../../clib/fncollection.c                            \
+		../../clib/fband.c                                    \
 		../../clib/ringbuffer.c                              \
 		../../clib/rf_send.c                                 \
 		../../clib/rf_receive.c                              \
@@ -23,14 +24,14 @@ SRC =           CCD.c\
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/ttydata.c                                 \
-                ../../clib/serial.c                                  \
+		../../clib/serial.c                                  \
 		../../clib/spi.c                                     \
 		../../clib/memory.c                                  \
-                ../../clib/rf_mbus.c                                 \
-                ../../clib/mbus/manchester.c                         \
-                ../../clib/mbus/3outof6.c                            \
-                ../../clib/mbus/mbus_packet.c                        \
-                ../../clib/mbus/crc.c                                \
+		../../clib/rf_mbus.c                                 \
+		../../clib/mbus/manchester.c                         \
+		../../clib/mbus/3outof6.c                            \
+		../../clib/mbus/mbus_packet.c                        \
+		../../clib/mbus/crc.c                                \
 
 
 LUFA_OPTS  = -D USE_NONSTANDARD_DESCRIPTOR_NAMES

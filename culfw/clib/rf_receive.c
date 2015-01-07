@@ -9,6 +9,7 @@
 #include <util/parity.h>
 #include <string.h>
 
+#include "fband.h"
 #include "board.h"
 #include "delay.h"
 #include "rf_send.h"
