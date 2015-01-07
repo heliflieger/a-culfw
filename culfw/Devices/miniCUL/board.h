@@ -50,5 +50,6 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
 #define HAS_TCM97001
+#define HAS_SOMFY_RTS
 
 #endif
