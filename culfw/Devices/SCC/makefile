@@ -172,7 +172,7 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 
-all: build sizeafter
+all: clean build sizeafter
 
 build: elf hex eep lss sym
 
@@ -408,7 +408,7 @@ clean_list:
 	@$(REMOVE) $(SRC:.c=.s)
 	@$(REMOVE) $(SRC:.c=.d)
 	@$(REMOVE) $(SRC:.c=.i)
-	@$(REMOVEDIR) .dep
+#	@$(REMOVEDIR) .dep
 
 
 $(shell mkdir $(OBJDIR) 2>/dev/null)

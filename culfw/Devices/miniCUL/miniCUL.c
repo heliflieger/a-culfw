@@ -30,13 +30,8 @@
 #include "ttydata.h"
 #include "fastrf.h"
 #include "rf_router.h"
-#ifdef HAS_INTERTECHNO
 #include "intertechno.h"
-#endif
 #include "fht.h"
-#ifdef HAS_SOMFY_RTS
-#include "somfy_rts.h"
-#endif
 
 #ifdef HAS_MEMFN
 #include "memory.h"
@@ -56,9 +51,6 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
   { 'M', em_send },
-#endif
-#ifdef HAS_SOMFY_RTS
-  { 'Y', somfy_rts_func },
 #endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
