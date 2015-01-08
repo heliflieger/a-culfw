@@ -2,10 +2,10 @@ MCU = atmega1284p
 BOARD  =
 F_CPU = 8000000
 FORMAT = ihex
-TARGET = SCC
+TARGET = CSM
 OBJDIR = .
 
-SRC = $(TARGET).c                                                    \
+SRC = 		../COC/COC.c                                         \
 		../../clib/cc1100.c                                  \
 		../../clib/cc1101_pllcheck.c                         \
 		../../clib/clock.c                                   \
@@ -22,7 +22,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_router.c                               \
 		../../clib/rf_mbus.c                                 \
 		../../clib/intertechno.c                             \
-		../../clib/somfy_rts.c	                             \
+		../../clib/somfy_rts.c		                  		     \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                  \
@@ -30,12 +30,12 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ttydata.c                                 \
 		../../clib/stacking.c                                \
 		../../clib/spi.c                                     \
-		../../clib/rf_mbus.c                                 \
 		../../clib/mbus/manchester.c                         \
 		../../clib/mbus/3outof6.c                            \
 		../../clib/mbus/mbus_packet.c                        \
 		../../clib/mbus/crc.c                                \
 
+SRC += ../../clib/rf_mbus.c ../../clib/mbus/manchester.c ../../clib/mbus/3outof6.c ../../clib/mbus/mbus_packet.c ../../clib/mbus/crc.c
 
 
 OPT = s
@@ -47,6 +47,15 @@ CDEFS  = -DF_CPU=$(F_CPU)UL
 ADEFS = -DF_CPU=$(F_CPU)
 CPPDEFS = -DF_CPU=$(F_CPU)UL
 
+# try reading configuration EEPROMs 
+ifneq (,$(wildcard /sys/class/i2c-adapter/i2c-1/1-0057/eeprom))
+ifeq ($(shell head -c 7 /sys/class/i2c-adapter/i2c-1/1-0057/eeprom), PIG_ETH)
+ifeq ($(shell head -c 3 /sys/class/i2c-adapter/i2c-1/1-0050/eeprom), CSM)
+RPIN=22
+BLPIN=27
+endif
+endif
+endif
 
 CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
@@ -229,30 +238,28 @@ gccversion :
 
 
 program: $(TARGET).hex
+	@echo 
+	@echo calling radio frontends bootloader / RESET gpio$(RPIN) BL_SEL gpio$(BLPIN)
 	@echo
-	@echo calling radio frontends bootloader ...
-	@echo
-	@echo KEEP THE MICRO BUTTON PRESSED AT DESIRED EXTENSION
-	@echo
-	if test ! -d /sys/class/gpio/gpio17; then echo 17 > /sys/class/gpio/export; fi
-	echo out > /sys/class/gpio/gpio17/direction
-	echo 0 > /sys/class/gpio/gpio17/value
+	if test ! -d /sys/class/gpio/gpio$(RPIN); then echo $(RPIN) > /sys/class/gpio/export; fi
+	echo out > /sys/class/gpio/gpio$(RPIN)/direction
+	echo 0 > /sys/class/gpio/gpio$(RPIN)/value
 
-	if test ! -d /sys/class/gpio/gpio18; then echo 18 > /sys/class/gpio/export; fi
-	echo out > /sys/class/gpio/gpio18/direction
-	echo 0 > /sys/class/gpio/gpio18/value
+	if test ! -d /sys/class/gpio/gpio$(BLPIN); then echo $(BLPIN) > /sys/class/gpio/export; fi
+	echo out > /sys/class/gpio/gpio$(BLPIN)/direction
+	echo 0 > /sys/class/gpio/gpio$(BLPIN)/value
 
-	echo 1 > /sys/class/gpio/gpio17/value
+	echo 1 > /sys/class/gpio/gpio$(RPIN)/value
 	sleep 1
-	echo 1 > /sys/class/gpio/gpio18/value
-	echo in > /sys/class/gpio/gpio18/direction
-	echo 18 > /sys/class/gpio/unexport
+	echo 1 > /sys/class/gpio/gpio$(BLPIN)/value
+	echo in > /sys/class/gpio/gpio$(BLPIN)/direction
+	echo $(BLPIN) > /sys/class/gpio/unexport
 
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 
-	echo 0 > /sys/class/gpio/gpio17/value
+	echo 0 > /sys/class/gpio/gpio$(RPIN)/value
 	sleep 1
-	echo 1 > /sys/class/gpio/gpio17/value
+	echo 1 > /sys/class/gpio/gpio$(RPIN)/value
 
 program_isp: $(TARGET).hex $(TARGET).eep
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM) -U lfuse:w:0xc2:m -U hfuse:w:0x99:m
