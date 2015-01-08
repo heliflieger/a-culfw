@@ -13,13 +13,17 @@ all:
 	make -C CUNO2 all
 	make -C CUR clean
 	make -C CUR all
+	make -C COC clean
 	make -C COC all
+	make -C PIGATOR clean
+	make -C PIGATOR all
 	make -C CPM-Gardenabodenfeuchtesensor/Release clean
 	make -C CPM-Gardenabodenfeuchtesensor/Release all 
 	make -C miniCUL clean
 	make -C miniCUL all
 	make -C nanoCUL clean
 	make -C nanoCUL all
+	make -C SCC clean
 	make -C SCC all
 	make -C RFbee clean
 	make -C RFbee all
@@ -52,6 +56,7 @@ clean:
 	make -C CUNO2 clean
 	make -C CUR clean
 	make -C COC clean
+	make -C PIGATOR clean
 	make -C CPM-Gardenabodenfeuchtesensor/Release clean
 	make -C miniCUL clean
 	make -C nanoCUL clean
