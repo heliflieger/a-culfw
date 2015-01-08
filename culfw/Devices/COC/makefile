@@ -17,6 +17,11 @@ SRC =           COC.c\
 		../../clib/rf_receive.c                              \
 		../../clib/rf_router.c                               \
 		../../clib/rf_asksin.c                               \
+		../../clib/rf_mbus.c                                 \
+		../../clib/mbus/manchester.c                         \
+		../../clib/mbus/3outof6.c                            \
+		../../clib/mbus/mbus_packet.c                        \
+		../../clib/mbus/crc.c                                \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
 		../../clib/intertechno.c                             \
