@@ -58,6 +58,7 @@
 #define STATE_REVOLT   6
 #define STATE_IT       7
 #define STATE_TCM97001 8
+#define STATE_ITV3     9
 
 uint8_t tx_report;              // global verbose / output-filter
 
@@ -90,6 +91,8 @@ static uint8_t isnotitrep;
 static void addbit(bucket_t *b, uint8_t bit);
 static void delbit(bucket_t *b);
 static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime);
+static uint8_t wave_equals_itV1(uint8_t htime, uint8_t ltime);
+static uint8_t wave_equals_itV3(uint8_t htime, uint8_t ltime);
 
 
 void
@@ -382,11 +385,17 @@ analyze_TX3(bucket_t *b)
 #ifdef HAS_IT
 uint8_t analyze_it(bucket_t *b)
 {
-  if (b->state != STATE_IT || b->byteidx != 3 || b->bitidx != 7) {
+  if ((b->state != STATE_IT || b->byteidx != 3 || b->bitidx != 7) 
+    && (b->state != STATE_ITV3 || b->byteidx != 8 || b->bitidx != 7)) {
     return 0;
- }
- for (oby=0;oby<3;oby++)
-    obuf[oby]=b->data[oby];
+  }
+  if (b->state == STATE_IT) {
+    for (oby=0;oby<3;oby++)
+      obuf[oby]=b->data[oby];
+  } else {
+    for (oby=0;oby<8;oby++)
+      obuf[oby]=b->data[oby];
+  }
   return 1;
 }
 #endif
@@ -457,19 +466,9 @@ RfAnalyze_Task(void)
   b = bucket_array + bucket_out;
 
 #ifdef HAS_IT
-  if(is433MHz() && b->state == STATE_IT) {
+  if(is433MHz() && (b->state == STATE_IT || b->state == STATE_ITV3)) {
     if(!datatype && analyze_it(b)) { 
       datatype = TYPE_IT;
-    } else {
-      // Ignore package
-      b->state = STATE_RESET;
-      bucket_nrused--;
-      bucket_out++;
-      if(bucket_out == RCV_BUCKETS)
-        bucket_out = 0;
-
-      LED_OFF();
-      return;
     }
   }
 #endif
@@ -578,20 +577,20 @@ RfAnalyze_Task(void)
       isrep = 1;
 
 #ifdef HAS_IT
-    if (datatype == TYPE_IT) {
+    /*if (datatype == TYPE_IT) {
       if (isrep == 1 && isnotitrep == 0) {
         isnotitrep = 1;
         packageOK = 1;
       } else if (isrep == 1) {
         packageOK = 0;
       }
-    } else {
+    } else {*/
 #endif
       if (!isrep) {
       	packageOK = 1;
       }
 #ifdef HAS_IT
-    }
+   // }
 #endif
     if(packageOK) {
       DC(datatype);
@@ -715,6 +714,24 @@ wave_equals(wave_t *a, uint8_t htime, uint8_t ltime)
   return 0;
 }
 
+static uint8_t
+wave_equals_itV1(uint8_t htime, uint8_t ltime)
+{
+  if(htime > ltime) {
+    return 1;
+  }
+  return 0;
+}
+
+static uint8_t
+wave_equals_itV3(uint8_t htime, uint8_t ltime)
+{
+  if(ltime - TDIFF > htime) {
+    return 1;
+  }
+  return 0;
+}
+
 uint8_t
 makeavg(uint8_t i, uint8_t j)
 {
@@ -808,31 +825,65 @@ ISR(CC1100_INTVECT)
   if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
     if(is868MHz() && ( (b->state == STATE_HMS)
 #ifdef HAS_ESA
-     || (b->state == STATE_ESA) 
+     || (is868MHz() && b->state == STATE_ESA) 
 #endif
     )) {
       addbit(b, 1);
       TCNT1 = 0;
     }
-    hightime = c;
+#ifdef HAS_IT
+   /* if (is433MHz() && b->state == STATE_ITV3 && b->sync == 0) {
+      // ignore
+      //DC('#');
+    } else {*/
+#endif
+      hightime = c;
+#ifdef HAS_IT
+    //}
+#endif
     return;
 
   }
 
   lowtime = c-hightime;
   TCNT1 = 0;                          // restart timer
-  
+
 #ifdef HAS_IT
-  if(is433MHz() && b->state == STATE_IT) {
-    if(b->sync == 0) {
-      b->sync=1;
-		  b->zero.hightime = hightime; 
-		  b->zero.lowtime = lowtime+1;
-		  b->one.hightime = lowtime+1;
-		  b->one.lowtime = hightime;
-    }
+  if(is433MHz() && (b->state == STATE_IT || b->state == STATE_ITV3)) {
+
+    if (b->sync == 0) {
+      if (lowtime > TSCALE(3500)) { 
+        reset_input();
+        return;
+      } else if (lowtime > TSCALE(2400)) { 
+        // this sould be the start bit for IT V3
+        b->state = STATE_ITV3;
+        TCNT1 = 0;                          // restart timer
+        return;
+      
+      } else if (b->state == STATE_ITV3) {
+        
+        b->sync=1;
+        if (lowtime-1 > hightime) {
+          b->zero.hightime = hightime; 
+		      b->zero.lowtime = lowtime;
+        } else {
+          b->zero.hightime = hightime; 
+		      b->zero.lowtime = hightime*5;
+        }
+        b->one.hightime = hightime;
+	      b->one.lowtime = hightime;
+      } else {
+        b->sync=1;
+		    b->zero.hightime = hightime; 
+		    b->zero.lowtime = lowtime+1;
+		    b->one.hightime = lowtime+1;
+		    b->one.lowtime = hightime;
+      }
+    } 
   }
 #endif
+
 #ifdef HAS_TCM97001
  if (is433MHz() && b->state == STATE_TCM97001 && b->sync == 0) {
 	  b->sync=1;
@@ -905,7 +956,7 @@ retry_sync:
 
 	#ifdef HAS_IT
 	 if (is433MHz() && (hightime < TSCALE(600) && hightime > TSCALE(140)) &&
-		     (lowtime < TSCALE(17000) && lowtime > TSCALE(6000)) ) {
+		     (lowtime < TSCALE(17000) && lowtime > TSCALE(2500)) ) {
 	    OCR1A = SILENCE;
 	    TIMSK1 = _BV(OCIE1A);
 	    b->sync=0;
@@ -943,7 +994,7 @@ retry_sync:
       } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
         b->state = STATE_ESA;
   
-  OCR1A = 1000;
+        OCR1A = 1000;
   
 #endif
 #ifdef HAS_RF_ROUTER
@@ -1008,19 +1059,20 @@ retry_sync:
 	} else
 #endif
     { // STATE_COLLECT , STATE_IT
-    if(wave_equals(&b->one, hightime, lowtime)) {
+    if(b->state==STATE_ITV3) {
+      uint8_t value = wave_equals_itV3(hightime, lowtime);
+      addbit(b, value);
+    } else if(wave_equals(&b->one, hightime, lowtime)) { // STATE_COLLECT , STATE_IT
       addbit(b, 1);
       b->one.hightime = makeavg(b->one.hightime, hightime);
       b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-
     } else if(wave_equals(&b->zero, hightime, lowtime)) {
       addbit(b, 0);
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
       b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-
     } else {
-      if (b->state!=STATE_IT) 
-        reset_input();
+        if (b->state!=STATE_IT) 
+            reset_input();
     }
 
   }
