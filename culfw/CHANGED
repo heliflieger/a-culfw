@@ -1,5 +1,8 @@
+Version 1.62.07 (2015-01-27)
+- Make protocols stable
+
 Version 1.62.06 (2015-01-25)
-- Implement IT Protocoll version 3
+- Implement IT protocol version 3
 
 Version 1.62.05 (2015-01-07)
 - Receive only available protocols for configured freqeuncy band

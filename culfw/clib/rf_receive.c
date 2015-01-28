@@ -47,6 +47,7 @@
 
 #define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
 #define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
+#define TDIFFIT    TSCALE(350) // tolerated diff to previous/avg high/low/total
 #define SILENCE    4000        // End of message
 
 #define STATE_RESET    0
@@ -90,10 +91,11 @@ static uint8_t isnotitrep;
 #endif
 static void addbit(bucket_t *b, uint8_t bit);
 static void delbit(bucket_t *b);
-static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime);
-static uint8_t wave_equals_itV1(uint8_t htime, uint8_t ltime);
-static uint8_t wave_equals_itV3(uint8_t htime, uint8_t ltime);
 
+static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state);
+#ifdef HAS_IT
+static uint8_t wave_equals_itV3(uint8_t htime, uint8_t ltime);
+#endif
 
 void
 tx_init(void)
@@ -521,7 +523,7 @@ RfAnalyze_Task(void)
 
   if(!datatype) {
     // As there is no last rise, we have to add the last bit by hand
-    addbit(b, wave_equals(&b->one, hightime, b->one.lowtime));
+    addbit(b, wave_equals(&b->one, hightime, b->one.lowtime, b->state));
     if(analyze(b, TYPE_KS300)) {
       oby--;                                 
       if(cksum3(obuf, oby) == obuf[oby-nibble])
@@ -534,9 +536,9 @@ RfAnalyze_Task(void)
 #ifdef HAS_HOERMANN
   // This protocol is not yet understood. It should be last in the row!
   if(is868MHz() && !datatype && b->byteidx == 4 && b->bitidx == 4 &&
-     wave_equals(&b->zero, TSCALE(960), TSCALE(480))) {
+     wave_equals(&b->zero, TSCALE(960), TSCALE(480), b->state)) {
 
-    addbit(b, wave_equals(&b->one, hightime, TSCALE(480)));
+    addbit(b, wave_equals(&b->one, hightime, TSCALE(480), b->state));
     for(oby=0; oby < 5; oby++)
       obuf[oby] = b->data[oby];
     datatype = TYPE_HRM;
@@ -702,27 +704,26 @@ ISR(TIMER1_COMPA_vect)
 }
 
 static uint8_t
-wave_equals(wave_t *a, uint8_t htime, uint8_t ltime)
+wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state)
 {
+  
+  uint8_t tdiffVal = TDIFF;
+#ifdef HAS_IT
+  if (state == STATE_IT) {
+    tdiffVal = TDIFFIT;
+  }
+#endif
   int16_t dlow = a->lowtime-ltime;
   int16_t dhigh = a->hightime-htime;
   int16_t dcomplete  = (a->lowtime+a->hightime) - (ltime+htime);
-  if(dlow      < TDIFF && dlow      > -TDIFF &&
-     dhigh     < TDIFF && dhigh     > -TDIFF &&
-     dcomplete < TDIFF && dcomplete > -TDIFF)
+  if(dlow      < tdiffVal && dlow      > -tdiffVal &&
+     dhigh     < tdiffVal && dhigh     > -tdiffVal &&
+     dcomplete < tdiffVal && dcomplete > -tdiffVal)
     return 1;
   return 0;
 }
 
-static uint8_t
-wave_equals_itV1(uint8_t htime, uint8_t ltime)
-{
-  if(htime > ltime) {
-    return 1;
-  }
-  return 0;
-}
-
+#ifdef HAS_IT
 static uint8_t
 wave_equals_itV3(uint8_t htime, uint8_t ltime)
 {
@@ -731,6 +732,7 @@ wave_equals_itV3(uint8_t htime, uint8_t ltime)
   }
   return 0;
 }
+#endif
 
 uint8_t
 makeavg(uint8_t i, uint8_t j)
@@ -842,7 +844,6 @@ ISR(CC1100_INTVECT)
     //}
 #endif
     return;
-
   }
 
   lowtime = c-hightime;
@@ -850,19 +851,17 @@ ISR(CC1100_INTVECT)
 
 #ifdef HAS_IT
   if(is433MHz() && (b->state == STATE_IT || b->state == STATE_ITV3)) {
-
-    if (b->sync == 0) {
-      if (lowtime > TSCALE(3500)) { 
-        reset_input();
+    if (lowtime > TSCALE(3000)) {
+        b->sync = 0;
         return;
-      } else if (lowtime > TSCALE(2400)) { 
+    }
+    if (b->sync == 0) {
+      if (lowtime > TSCALE(2400)) { 
         // this sould be the start bit for IT V3
         b->state = STATE_ITV3;
         TCNT1 = 0;                          // restart timer
         return;
-      
       } else if (b->state == STATE_ITV3) {
-        
         b->sync=1;
         if (lowtime-1 > hightime) {
           b->zero.hightime = hightime; 
@@ -875,12 +874,17 @@ ISR(CC1100_INTVECT)
 	      b->one.lowtime = hightime;
       } else {
         b->sync=1;
-		    b->zero.hightime = hightime; 
-		    b->zero.lowtime = lowtime+1;
-		    b->one.hightime = lowtime+1;
-		    b->one.lowtime = hightime;
+        if (hightime*2>lowtime) {
+          // No IT, because times to near
+          b->state = STATE_RESET;
+          return;
+        }
+        b->zero.hightime = hightime; 
+        b->zero.lowtime = lowtime+1;
+        b->one.hightime = lowtime+1;
+        b->one.lowtime = hightime;
       }
-    } 
+    }
   }
 #endif
 
@@ -978,7 +982,7 @@ retry_sync:
 
   } else if(b->state == STATE_SYNC) {   // sync: lots of zeroes
 
-    if(wave_equals(&b->zero, hightime, lowtime)) {
+    if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
 
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
       b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
@@ -1059,14 +1063,17 @@ retry_sync:
 	} else
 #endif
     { // STATE_COLLECT , STATE_IT
+#ifdef HAS_IT
     if(b->state==STATE_ITV3) {
       uint8_t value = wave_equals_itV3(hightime, lowtime);
       addbit(b, value);
-    } else if(wave_equals(&b->one, hightime, lowtime)) { // STATE_COLLECT , STATE_IT
+    } else
+#endif 
+    if(wave_equals(&b->one, hightime, lowtime, b->state)) { // STATE_COLLECT , STATE_IT
       addbit(b, 1);
       b->one.hightime = makeavg(b->one.hightime, hightime);
       b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-    } else if(wave_equals(&b->zero, hightime, lowtime)) {
+    } else if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
       addbit(b, 0);
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
       b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
