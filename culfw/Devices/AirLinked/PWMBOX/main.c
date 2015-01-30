@@ -13,6 +13,7 @@
 
 #include <string.h>
 
+#include "fband.h"
 #include "board.h"
 #include "private_channel.h"
 #include "rf_receive.h"
