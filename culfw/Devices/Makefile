@@ -33,6 +33,8 @@ all:
 	make -C TuxRadio2 all
 	make -C CSM clean
 	make -C CSM all
+	make -C CSM_RADINO clean
+	make -C CSM_RADINO all
 	make -C CPM-BS clean
 	make -C CPM-BS all
 	make -C zCSM clean
@@ -64,6 +66,7 @@ clean:
 	make -C TuxRadio clean
 	make -C TuxRadio2 clean
 	make -C CSM clean
+	make -C CSM_RADINO clean
 	make -C CPM-BS clean
 	make -C RFbee clean
 	make -C rpiaddon clean
