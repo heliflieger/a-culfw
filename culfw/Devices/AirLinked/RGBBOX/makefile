@@ -7,8 +7,8 @@ FORMAT = ihex
 TARGET = main
 OBJDIR = .
 
-SRC = $(TARGET).c                                                    \
-		../culfw.c                                  \
+SRC = $(TARGET).c                                               \
+		../culfw.c                                              \
 		../../../clib/cc1100.c                                  \
 		../../../clib/cc1101_pllcheck.c                         \
 		../../../clib/clock.c                                   \
@@ -21,15 +21,16 @@ SRC = $(TARGET).c                                                    \
 		../../../clib/rf_asksin.c                               \
 		../../../clib/rf_receive.c                              \
 		../../../clib/rf_router.c                               \
-                ../../../clib/intertechno.c                             \
+        ../../../clib/intertechno.c                             \
 		../../../clib/fht.c                                     \
 		../../../clib/fastrf.c                                  \
-                ../../../clib/ir.c                                       \
-                ../../../clib/irmp.c                                     \
-                ../../../clib/irsnd.c                                    \
+        ../../../clib/ir.c                                      \
+        ../../../clib/irmp.c                                    \
+        ../../../clib/irsnd.c                                   \
 		../../../clib/memory.c                                  \
 		../../../clib/ttydata.c                                 \
 		../../../clib/spi.c                                     \
+		../../../clib/fband.c                                   \
 
 
 OPT = s

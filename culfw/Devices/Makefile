@@ -1,4 +1,10 @@
 all:
+	make -C AirLinked/PWMBOX clean
+	make -C AirLinked/PWMBOX all
+	make -C AirLinked/RGBBOX clean
+	make -C AirLinked/RGBBOX all
+	make -C AirLinked/UVCBOX clean
+	make -C AirLinked/UVCBOX all
 	make -C CCD clean
 	make -C CCD all
 	make -C CUL clean
@@ -15,6 +21,8 @@ all:
 	make -C CUR all
 	make -C COC clean
 	make -C COC all
+	make -C CPM-BS clean
+	make -C CPM-BS all
 	make -C PIGATOR clean
 	make -C PIGATOR all
 	make -C CPM-Gardenabodenfeuchtesensor/Release clean
@@ -50,6 +58,9 @@ all:
 	find . -name \*.o | xargs rm
 
 clean:
+	make -C AirLinked/PWMBOX clean
+	make -C AirLinked/RGBBOX clean
+	make -C AirLinked/UVCBOX clean
 	make -C CCD clean
 	make -C CUL clean
 	make -C CUL-Arduino clean
@@ -58,6 +69,7 @@ clean:
 	make -C CUNO2 clean
 	make -C CUR clean
 	make -C COC clean
+	make -C CPM-BS clean
 	make -C PIGATOR clean
 	make -C CPM-Gardenabodenfeuchtesensor/Release clean
 	make -C miniCUL clean

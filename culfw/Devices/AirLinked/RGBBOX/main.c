@@ -222,6 +222,7 @@ int main(void) {
   xled_pattern=0x0000;
 
   wdt_enable(WDTO_2S);
+  checkFrequency();
 
   is_on = 1;
  
