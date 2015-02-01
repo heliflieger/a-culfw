@@ -42,29 +42,27 @@ volatile uint8_t  clock_hsec;
 // a "minute" task too long
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
-
 #ifdef HAS_IRTX     //IS IRTX defined ?
-         if (! ir_send_data() ) {   //If IR-Sending is in progress, don't receive
-         #ifdef HAS_IRRX  //IF also IRRX is define
-          ir_sample(); // call IR sample handler
-       #endif
-     }
+  if(! ir_send_data() ) {   //If IR-Sending is in progress, don't receive
+#ifdef HAS_IRRX  //IF also IRRX is define
+    ir_sample(); // call IR sample handler
+#endif
+  }
 #elif defined (HAS_IRRX)
-     ir_sample(); // call IR sample handler
+  ir_sample(); // call IR sample handler
 #endif
 
 #if defined (HAS_IRTX) || defined (HAS_IRRX)
-     // if IRRX is compiled in, timer runs 125x faster ... 
-     if (++ir_ticks<125) 
-       return;
-       
-     ir_ticks = 0;
+  // if IRRX is compiled in, timer runs 125x faster ... 
+  if (++ir_ticks<125) 
+    return;
+    
+  ir_ticks = 0;
 #endif
 
-     // 125Hz
-     ticks++; 
-     if(++clock_hsec>=125)  
-	  clock_hsec = 0;
+  // 125Hz
+  ticks++; 
+  clock_hsec++;
 
 #ifdef HAS_NTP
   ntp_hsec++;
@@ -74,6 +72,15 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
   }
 #endif
 
+#ifdef HAS_FHT_TF
+  // iterate over all TFs
+  for(uint8_t i = 0; i < FHT_TF_NUM; i++) {
+    if(fht_tf_timeout_Array[3 * i] != -1 && fht_tf_timeout_Array[3 * i] > 0) {
+      // decrement timeout
+      fht_tf_timeout_Array[3 * i]--;
+    }
+  }
+#endif
 #ifdef HAS_FHT_8v
   if(fht8v_timeout)
     fht8v_timeout--;
@@ -82,14 +89,23 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
   if(fht80b_timeout != FHT_TIMER_DISABLED)
     fht80b_timeout--;
 #endif
+}
 
-
+void
+get_timestamp(uint32_t *ts)
+{
+  uint8_t l = SREG;
+  cli(); 
+  *ts = ticks;
+  SREG = l;
 }
 
 void
 gettime(char *unused)
 {
-  uint8_t *p = (uint8_t *)&ticks;
+  uint32_t actticks;
+  get_timestamp(&actticks);
+  uint8_t *p = (uint8_t *)&actticks;
   DH2(p[3]);
   DH2(p[2]);
   DH2(p[1]);
@@ -102,7 +118,9 @@ gettime(char *unused)
 clock_time_t
 clock_time()
 {
-  return (clock_time_t)ticks;
+  uint32_t actticks;
+  get_timestamp(&actticks);
+  return (clock_time_t)actticks;
 }
 #endif
 
@@ -126,6 +144,15 @@ Minute_Task(void)
   }
   xled_pos &= 15;
 #endif
+#ifdef HAS_FHT_TF
+  // iterate over all TFs
+  for(uint8_t i = 0; i < FHT_TF_NUM; i++) {
+    // if timed out -> call fht_tf_timer to send out data
+    if(fht_tf_timeout_Array[3 * i] == 0) {
+      fht_tf_timer(i);
+    }
+  }
+#endif
 #ifdef HAS_FHT_8v
   if(fht8v_timeout == 0)
     fht8v_timer();
@@ -139,32 +166,30 @@ Minute_Task(void)
     rf_router_flush();
 #endif
 
-// OneWire hSec-Task 
-// Check if a running conversion is done
-// if HMS Emulation is on, and the Minute timer has expired
 #ifdef HAS_ONEWIRE
-    onewire_HsecTask ();
+  // Check if a running conversion is done
+  // if HMS Emulation is on, and the Minute timer has expired
+  onewire_HsecTask ();
 #endif
 
-  if(clock_hsec>0)     // Note: this can skip some hsecs
+  if(clock_hsec<125)
     return;
+  clock_hsec = 0;       // once per second from here on.
 
 #ifndef XLED
-  // 1Hz
   if(led_mode & 2)
     LED_TOGGLE();
 #endif
 
-  // one second, 1% duty cycle, 10ms resolution => this is simple ;-)
-  if (credit_10ms < MAX_CREDIT)
+  if (credit_10ms < MAX_CREDIT) // 10ms/1s == 1% -> allowed talk-time without CD
     credit_10ms += 1;
 
-// if HMS Emulation is on, check the HMS timer
 #ifdef HAS_ONEWIRE
-    onewire_SecTask ();
+  // if HMS Emulation is on, check the HMS timer
+  onewire_SecTask ();
 #endif
 #ifdef HAS_VZ
-    vz_sectask();
+  vz_sectask();
 #endif
 
 #if defined(HAS_SLEEP) && defined(JOY_PIN1)
@@ -186,7 +211,7 @@ Minute_Task(void)
 
   static uint8_t clock_sec;
   clock_sec++;
-  if(clock_sec != 60)                   // minute from now on
+if(clock_sec != 60)       // once per minute from here on
     return;
   clock_sec = 0;
 
