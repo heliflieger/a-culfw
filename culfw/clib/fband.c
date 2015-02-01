@@ -8,6 +8,8 @@
 
 uint8_t frequencyMode = MODE_UNKNOWN;
 
+
+
 /*
  * Read eeprom
  */
@@ -43,17 +45,4 @@ void checkFrequency(void) {
   }
 }
 
-// if 433 MHZ is enabled return true (1)
-uint8_t is433MHz(void) {
-  if (frequencyMode == MODE_433_MHZ)
-    return 1;
-  return 0;
-}
-
-// if 868 MHZ is enabled return true (1)
-uint8_t is868MHz(void) {
-  if (frequencyMode == MODE_868_MHZ)
-    return 1;
-  return 0;
-}
 

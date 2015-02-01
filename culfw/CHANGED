@@ -1,3 +1,7 @@
+Version 1.62.08 (2015-02-01)
+- Enable TX3 for 433MHz and 868Mhz
+- Enable FS20 for 433MHz (FS10) and 868Mhz (FS20)
+
 Version 1.62.07 (2015-01-27)
 - Make protocols stable
 
