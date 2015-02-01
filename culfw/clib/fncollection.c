@@ -318,7 +318,7 @@ version(char *in)
   else
 #endif
   DS_P( PSTR("V " VERSION " " BOARD_ID_STR) );
-  if (is433MHz()) {
+  if (IS433MHZ) {
      DS_P( PSTR(" (F-Band: 433MHz)") );
   } else {
      DS_P( PSTR(" (F-Band: 868MHz)") );
