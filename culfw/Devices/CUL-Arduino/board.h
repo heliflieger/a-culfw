@@ -30,6 +30,7 @@
 #  define HAS_ASKSIN
 #  define HAS_ASKSIN_FUP
 #  define HAS_MORITZ
+#  define HAS_KOPP_FC
 #  define HAS_RWE
 #  define HAS_ESA
 #  define HAS_TX3
