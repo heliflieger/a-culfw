@@ -21,7 +21,8 @@ SRC =           CUL.c\
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
 		../../clib/intertechno.c                             \
-		../../clib/somfy_rts.c                               \
+		../../clib/somfy_rts.c				   				 \
+		../../clib/kopp-fc.c				   				 \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/ttydata.c                                 \
