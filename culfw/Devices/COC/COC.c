@@ -124,6 +124,13 @@ main(void)
   led_init();
   LED_ON();
 
+#ifdef MARK433_PORT
+  MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
+#endif
+#ifdef MARK915_PORT
+  MARK915_PORT |= _BV( MARK915_BIT ); // Pull 915MHz marker
+#endif
+
   spi_init();
 
 //  eeprom_factory_reset("xx");

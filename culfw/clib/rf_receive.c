@@ -10,10 +10,13 @@
 #include <string.h>
 
 #include "fband.h"
+
 #include "board.h"
 #include "delay.h"
 #include "rf_send.h"
 #include "rf_receive.h"
+#include "rf_receive_bucket.h"
+#include "rf_receive_tcm97001.h"
 #include "led.h"
 #include "cc1100.h"
 #include "display.h"
@@ -45,57 +48,48 @@
 //  Revolt:  96/208  304    224/208  432
 
 
-#define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
+
 #define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
 #define TDIFFIT    TSCALE(350) // tolerated diff to previous/avg high/low/total
 #define SILENCE    4000        // End of message
 
-#define STATE_RESET    0
-#define STATE_INIT     1
-#define STATE_SYNC     2
-#define STATE_COLLECT  3
-#define STATE_HMS      4
-#define STATE_ESA      5
-#define STATE_REVOLT   6
-#define STATE_IT       7
-#define STATE_TCM97001 8
+#define STATE_RESET   0
+#define STATE_INIT    1
+#define STATE_SYNC    2
+#define STATE_COLLECT 3
+#define STATE_HMS     4
+#define STATE_ESA     5
+#define STATE_REVOLT  6
+#define STATE_IT      7
+
 #define STATE_ITV3     9
 
 uint8_t tx_report;              // global verbose / output-filter
 
-typedef struct {
-  uint8_t hightime, lowtime;
-} wave_t;
 
-// One bucket to collect the "raw" bits
-typedef struct {
-  uint8_t state, byteidx, sync, bitidx; 
-  uint8_t data[MAXMSG];         // contains parity and checksum, but no sync
-  wave_t zero, one; 
-} bucket_t;
+
+static uint8_t oby, obuf[MAXMSG]; // parity-stripped output
 
 static bucket_t bucket_array[RCV_BUCKETS];
 static uint8_t bucket_in;                 // Pointer to the in(terrupt) queue
 static uint8_t bucket_out;                // Pointer to the out (analyze) queue
 static uint8_t bucket_nrused;             // Number of unprocessed buckets
-static uint8_t oby, obuf[MAXMSG], nibble; // parity-stripped output
+static uint8_t nibble; // parity-stripped output
 static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime;
-#ifdef LONG_PULSE
-static uint16_t hightime, lowtime;
-#else
-static uint8_t hightime, lowtime;
-#endif
+
 #ifdef HAS_IT
 static uint8_t isnotitrep;
 #endif
-static void addbit(bucket_t *b, uint8_t bit);
+
 static void delbit(bucket_t *b);
 
 static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state);
 #ifdef HAS_IT
 static uint8_t wave_equals_itV3(uint8_t htime, uint8_t ltime);
 #endif
+
+static pulse_t hightime, lowtime;
 
 void
 tx_init(void)
@@ -389,31 +383,19 @@ uint8_t analyze_it(bucket_t *b)
 {
   if ((b->state != STATE_IT || b->byteidx != 3 || b->bitidx != 7) 
     && (b->state != STATE_ITV3 || b->byteidx != 8 || b->bitidx != 7)) {
-    return 0;
-  }
+        return 0;
+    }
   if (b->state == STATE_IT) {
     for (oby=0;oby<3;oby++)
       obuf[oby]=b->data[oby];
   } else {
     for (oby=0;oby<8;oby++)
       obuf[oby]=b->data[oby];
-  }
+    }
   return 1;
 }
 #endif
-#ifdef HAS_TCM97001
-uint8_t analyze_tcm97001(bucket_t *b)
-{
-  if (b->byteidx != 3 || b->bitidx != 7 || b->state != STATE_TCM97001) {  
-		return 0;
-		
-	}
-  for (oby=0;oby<b->byteidx;oby++) {
-    obuf[oby]=b->data[oby];
-  }
-	return 1;
-}
-#endif
+
 #ifdef HAS_REVOLT
 uint8_t analyze_revolt(bucket_t *b)
 {
@@ -470,14 +452,12 @@ RfAnalyze_Task(void)
 #ifdef HAS_IT
   if(IS433MHZ && (b->state == STATE_IT || b->state == STATE_ITV3)) {
     if(!datatype && analyze_it(b)) { 
-      datatype = TYPE_IT;
+    datatype = TYPE_IT;
     }
   }
 #endif
-#ifdef HAS_TCM97001
-  if(IS433MHZ && !datatype && analyze_tcm97001(b))
-    datatype = TYPE_TCM97001;
-#endif
+  analyze_tcm97001(b, &datatype, obuf, &oby);
+
 #ifdef HAS_REVOLT
   if(IS433MHZ && !datatype && analyze_revolt(b))
     datatype = TYPE_REVOLT;
@@ -545,7 +525,7 @@ RfAnalyze_Task(void)
   }
 #endif
 #ifdef LONG_PULSE
-}
+  }
 #endif
   if(datatype && (tx_report & REP_KNOWN)) {
 
@@ -579,20 +559,20 @@ RfAnalyze_Task(void)
       isrep = 1;
 
 #ifdef HAS_IT
-    /*if (datatype == TYPE_IT) {
+    if (datatype == TYPE_IT) {
       if (isrep == 1 && isnotitrep == 0) {
         isnotitrep = 1;
         packageOK = 1;
       } else if (isrep == 1) {
         packageOK = 0;
       }
-    } else {*/
+    } else {
 #endif
       if (!isrep) {
-      	packageOK = 1;
+        packageOK = 1;
       }
 #ifdef HAS_IT
-   // }
+    }
 #endif
     if(packageOK) {
       DC(datatype);
@@ -608,8 +588,6 @@ RfAnalyze_Task(void)
     }
 
   }
-
-
 
   if(tx_report & REP_BITS) {
 
@@ -651,7 +629,7 @@ RfAnalyze_Task(void)
 #endif
 }
 
-static void
+void
 reset_input(void)
 {
   TIMSK1 = 0;
@@ -706,12 +684,10 @@ ISR(TIMER1_COMPA_vect)
 static uint8_t
 wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state)
 {
-  
   uint8_t tdiffVal = TDIFF;
 #ifdef HAS_IT
-  if (state == STATE_IT) {
+  if(state == STATE_IT)
     tdiffVal = TDIFFIT;
-  }
 #endif
   int16_t dlow = a->lowtime-ltime;
   int16_t dhigh = a->hightime-htime;
@@ -734,27 +710,7 @@ wave_equals_itV3(uint8_t htime, uint8_t ltime)
 }
 #endif
 
-uint8_t
-makeavg(uint8_t i, uint8_t j)
-{
-  return (i+i+i+j)/4;
-}
 
-static void
-addbit(bucket_t *b, uint8_t bit)
-{
-  if(b->byteidx>=sizeof(b->data)){
-    reset_input();
-    return;
-  }
-  if(bit)
-    b->data[b->byteidx] |= _BV(b->bitidx);
-
-  if(b->bitidx-- == 0) {           // next byte
-    b->bitidx = 7;
-    b->data[++b->byteidx] = 0;
-  }
-}
 
 // Check for the validity of a 768:384us signal. Without PA ramping!
 // Some CUL's generate 20% values wich are out of these bounderies.
@@ -879,21 +835,8 @@ ISR(CC1100_INTVECT)
   }
 #endif
 
-#ifdef HAS_TCM97001
- if (IS433MHZ && b->state == STATE_TCM97001 && b->sync == 0) {
-	  b->sync=1;
-		b->zero.hightime = hightime;
-		b->one.hightime = hightime;
+  sync_tcm97001(b, &hightime, &lowtime);
 
-		if (lowtime < 187) { // < 3000
-			b->zero.lowtime = lowtime;
-			b->one.lowtime = b->zero.lowtime*2;
-		} else {
-			b->zero.lowtime = lowtime;
-			b->one.lowtime = b->zero.lowtime/2;
-		}
-	}
-#endif
   if(IS868MHZ && ((b->state == STATE_HMS)
 #ifdef HAS_ESA
      || (b->state == STATE_ESA) 
@@ -923,48 +866,35 @@ ISR(CC1100_INTVECT)
     OCR1A = SILENCE;
     TIMSK1 = _BV(OCIE1A);
     return;
-  } 
+  }
 #endif
-
 
   if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
 
 retry_sync:
 
-#ifdef HAS_TCM97001
-		if (IS433MHZ && (hightime < TSCALE(530) && hightime > TSCALE(420)) &&
-				   (lowtime  < TSCALE(9000) && lowtime > TSCALE(8500)) ) {
-		  OCR1A = 4600L;
-			TIMSK1 = _BV(OCIE1A);
-			b->sync=0;
-      
-			b->state = STATE_TCM97001;
-			b->byteidx = 0;
-			b->bitidx  = 7;
-			b->data[0] = 0;
-		  return;
-		}
-	#ifdef HAS_IT
+  if (is_tcm97001(b, &hightime, &lowtime)) {
+    return;
+  }	
+#ifdef HAS_IT
  		else 
 #endif
-#endif
 
-	#ifdef HAS_IT
-	 if (IS433MHZ && (hightime < TSCALE(600) && hightime > TSCALE(140)) &&
-		     (lowtime < TSCALE(17000) && lowtime > TSCALE(2500)) ) {
-	    OCR1A = SILENCE;
-	    TIMSK1 = _BV(OCIE1A);
-	    b->sync=0;
-	    b->state = STATE_IT;
-	    b->byteidx = 0;
-	    b->bitidx  = 7;
-	    b->data[0] = 0;
-	    return;
-	  } else
-    #endif
-    if(hightime > TSCALE(1600) || lowtime > TSCALE(1600)) {
+#ifdef HAS_IT
+  if(IS433MHZ && (hightime < TSCALE(600) && hightime > TSCALE(140)) &&
+     (lowtime < TSCALE(17000) && lowtime > TSCALE(2500)) ) {
+    OCR1A = SILENCE;
+    TIMSK1 = _BV(OCIE1A);
+    b->sync=0;
+    b->state = STATE_IT;
+    b->byteidx = 0;
+    b->bitidx  = 7;
+    b->data[0] = 0;
+    return;
+  } else
+#endif
+    if(hightime > TSCALE(1600) || lowtime > TSCALE(1600))
       return;
-    }
   
     b->zero.hightime = hightime;
     b->zero.lowtime = lowtime;
@@ -974,13 +904,11 @@ retry_sync:
   } else if(b->state == STATE_SYNC) {   // sync: lots of zeroes
 
     if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
-
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
       b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
       b->sync++;
 
     } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
-
       OCR1A = SILENCE;
       if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
         b->state = STATE_HMS;
@@ -988,17 +916,12 @@ retry_sync:
 #ifdef HAS_ESA
       } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
         b->state = STATE_ESA;
-  
         OCR1A = 1000;
-  
 #endif
 #ifdef HAS_RF_ROUTER
       } else if(rf_router_myid &&
                 check_rf_sync(hightime, lowtime) &&
                 check_rf_sync(b->zero.lowtime, b->zero.hightime)) {
-        //display_channel=DISPLAY_USB;
-        //DC('-');
-        //display_channel=0xff;
         rf_router_status = RF_ROUTER_SYNC_RCVD;
         reset_input();
         return;
@@ -1006,7 +929,6 @@ retry_sync:
 
       } else {
         b->state = STATE_COLLECT;
-
       }
 
       b->one.hightime = hightime;
@@ -1018,7 +940,6 @@ retry_sync:
       TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
 
     } else {                            // too few sync bits
-
       b->state = STATE_RESET;
       goto retry_sync;
 
@@ -1027,7 +948,6 @@ retry_sync:
   } else 
 #ifdef HAS_REVOLT
   if (IS433MHZ && b->state==STATE_REVOLT) { //STATE_REVOLT
-
     if ((hightime < 11)) {
       addbit(b,0);
       b->zero.hightime = makeavg(b->zero.hightime, hightime);
@@ -1039,28 +959,19 @@ retry_sync:
     }
   } else 
 #endif
-#ifdef HAS_TCM97001
-	if (IS433MHZ && b->state==STATE_TCM97001) {
-		if (lowtime > 110 && lowtime < 140) {
-      addbit(b,0);
-      b->zero.hightime = makeavg(b->zero.hightime, hightime);
-      b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-    } else if (lowtime > 230 && lowtime < 270) {
-      addbit(b,1);
-      b->one.hightime = makeavg(b->one.hightime, hightime);
-      b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-		}
-
-	} else
-#endif
-    { // STATE_COLLECT , STATE_IT
+  if (addbit_tcm97001(b, &hightime, &lowtime)) { 
+    //OK
+  } else  
+  { // STATE_COLLECT , STATE_IT
 #ifdef HAS_IT
     if(b->state==STATE_ITV3) {
       uint8_t value = wave_equals_itV3(hightime, lowtime);
       addbit(b, value);
     } else
 #endif 
-    if(wave_equals(&b->one, hightime, lowtime, b->state)) { // STATE_COLLECT , STATE_IT
+
+    // STATE_COLLECT , STATE_IT
+    if(wave_equals(&b->one, hightime, lowtime, b->state)) {
       addbit(b, 1);
       b->one.hightime = makeavg(b->one.hightime, hightime);
       b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
@@ -1070,7 +981,7 @@ retry_sync:
       b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
     } else {
         if (b->state!=STATE_IT) 
-            reset_input();
+          reset_input();
     }
 
   }
@@ -1080,10 +991,10 @@ retry_sync:
 uint8_t
 rf_isreceiving()
 {
-  return (bucket_array[bucket_in].state != STATE_RESET
+  uint8_t r = (bucket_array[bucket_in].state != STATE_RESET);
 #ifdef HAS_FHT_80b
-        || fht80b_timeout != FHT_TIMER_DISABLED
+  r = (r || fht80b_timeout != FHT_TIMER_DISABLED);
 #endif
-          );
+  return r;
 }
 

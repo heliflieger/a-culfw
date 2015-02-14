@@ -54,10 +54,13 @@
 #define HAS_RAWSEND                   //
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #define HAS_ASKSIN
+#define HAS_ASKSIN_FUP
 #define HAS_MORITZ
+#define HAS_KOPP_FC 
 #define HAS_ESA
 #define HAS_TX3
 #define HAS_INTERTECHNO
+#define HAS_TCM97001
 #define HAS_HOERMANN
 #define HAS_MEMFN
 #define HAS_MBUS
@@ -65,7 +68,6 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
-#define HAS_TCM97001
 
 #undef  HAS_RTC
 #define RTC_ADDR                0xd0

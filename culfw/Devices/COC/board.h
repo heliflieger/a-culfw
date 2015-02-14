@@ -59,13 +59,14 @@
 #define HAS_ESA
 #define HAS_TX3
 #define HAS_INTERTECHNO
+#define HAS_TCM97001
 #define HAS_HOERMANN
+#define HAS_MBUS
 #define HAS_MEMFN
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
-#define HAS_TCM97001
 
 #define HAS_ONEWIRE         10      // OneWire Device Buffer, RAM: 10 * 8 Byte
 #define OW_SPU			    // StrongPullUp support

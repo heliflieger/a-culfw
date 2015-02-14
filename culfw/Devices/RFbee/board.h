@@ -13,6 +13,7 @@
 #define HAS_ASKSIN_FUP
 #undef  HAS_ESA
 #define HAS_INTERTECHNO
+#define HAS_TCM97001
 #define HAS_MORITZ
 #undef  HAS_RWE
 #define HAS_TX3
@@ -23,7 +24,6 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
-#define HAS_TCM97001
 
 /*
  * Board definition according to

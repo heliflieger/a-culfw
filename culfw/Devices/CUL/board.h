@@ -30,10 +30,12 @@
 #  define HAS_ASKSIN
 #  define HAS_ASKSIN_FUP
 #  define HAS_MORITZ
+#  define HAS_KOPP_FC
 #  define HAS_RWE
 #  define HAS_ESA
 #  define HAS_TX3
 #  define HAS_INTERTECHNO
+#  define HAS_TCM97001
 #  define HAS_UNIROLL
 #  define HAS_HOERMANN
 #  define HAS_MEMFN
@@ -156,14 +158,10 @@
 #  define CC1100_INTVECT        INT2_vect
 #  define CC1100_ISC		ISC20
 #  define CC1100_EICR           EICRA
-#endif
-
-#if defined(CUL_V3)
 #  define LED_DDR               DDRE
 #  define LED_PORT              PORTE
 #  define LED_PIN               6
 #endif
-
 
 #if defined(CUL_V2)
 #  define CC1100_CS_DDR		DDRC

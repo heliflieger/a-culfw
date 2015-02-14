@@ -23,6 +23,8 @@ SRC = $(TARGET).c                                                  \
 		../../clib/fband.c                                    \
 		../../clib/rf_send.c                                  \
 		../../clib/rf_receive.c                               \
+		../../clib/rf_receive_bucket.c                       \
+		../../clib/rf_receive_tcm97001.c                     \
 		../../clib/fht.c                                      \
 		../../clib/ttydata.c                                  \
 		../../clib/pcf8833.c                                  \
