@@ -55,6 +55,7 @@
 #define HAS_MORITZ
 #define HAS_ESA
 #define HAS_INTERTECHNO
+#define HAS_TCM97001
 #define HAS_SOMFY_RTS
 #define HAS_MBUS
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
@@ -66,7 +67,6 @@
 #define HAS_UNIROLL
 #define HAS_HOERMANN
 #define HAS_IT
-#define HAS_TCM97001
 
 #define MULTI_FREQ_DEVICE       // available in multiple versions: 433MHz,868MHz,915MHz
 

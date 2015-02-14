@@ -227,30 +227,30 @@ it_send (char *in) {
     #if defined (HAS_IRRX) || defined (HAS_IRTX) //Blockout IR_Reception for the moment
       cli(); 
     #endif
-
-	  // If NOT InterTechno mode
-	  if(!intertechno_on)  {
-	    #ifdef HAS_ASKSIN
-		    if (asksin_on) {
-			    restore_asksin = 1;
-			    asksin_on = 0;
-			    }
-	    #endif
-	    #ifdef HAS_MORITZ
-		    if(moritz_on) {
-			    restore_moritz = 1;
-			    moritz_on = 0;
-		    }
-	    #endif
-	    it_tunein();
-	    my_delay_ms(3);             // 3ms: Found by trial and error
+			
+	// If NOT InterTechno mode
+	if(!intertechno_on)  {
+	#ifdef HAS_ASKSIN
+		if (asksin_on) {
+			restore_asksin = 1;
+			asksin_on = 0;
+			}
+	#endif
+	#ifdef HAS_MORITZ
+		if(moritz_on) {
+			restore_moritz = 1;
+			moritz_on = 0;
+		}
+	#endif
+	it_tunein();
+	my_delay_ms(3);             // 3ms: Found by trial and error
     }
   	ccStrobe(CC1100_SIDLE);
   	ccStrobe(CC1100_SFRX );
   	ccStrobe(CC1100_SFTX );
 
 	  ccTX();                       // Enable TX 
-
+	
     int8_t sizeOfPackage = strlen(in)-1; // IT-V1 = 14, IT-V3 = 33
 	  
 		for(i = 0; i < it_repetition; i++)  {
@@ -262,32 +262,32 @@ it_send (char *in) {
           if (sizeOfPackage == 33) {
 					  send_IT_bit_V3(0);
           } else {
-					  send_IT_bit(0);
+					send_IT_bit(0);
           }      
 				} else if (in[j+1] == '1') {
           if (sizeOfPackage == 33) {
 					  send_IT_bit_V3(1);
           } else {
-					  send_IT_bit(1);
+					send_IT_bit(1);
           }  
 				} else {
           if (sizeOfPackage == 33) {
 					  send_IT_bit_V3(2);
-          } else {
-					  send_IT_bit(2);
-          }  
+				} else {
+					send_IT_bit(2);
 				}
+			}
 			}
       if (sizeOfPackage == 33) {  
         send_IT_stop_V3();
       } else {
-			  // Sync-Bit
-		    CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-		    my_delay_us(it_interval);
-		    CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-		    for(k = 0; k < 31; k++)  {
-			    my_delay_us(it_interval);
-			  }
+			// Sync-Bit
+		  CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+		  my_delay_us(it_interval);
+		  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+		  for(k = 0; k < 31; k++)  {
+			  my_delay_us(it_interval);
+			}
       }
 		} //Do it n Times
 	

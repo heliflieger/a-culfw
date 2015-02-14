@@ -25,6 +25,8 @@ SRC = $(TARGET).c                                            \
 		../../clib/fht.c                                     \
 		../../clib/rf_send.c                                 \
 		../../clib/rf_receive.c                              \
+		../../clib/rf_receive_bucket.c                       \
+		../../clib/rf_receive_tcm97001.c                     \
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
