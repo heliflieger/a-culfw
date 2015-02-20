@@ -62,11 +62,7 @@ static void    fht_delbuf(uint8_t *buf);
 static uint8_t fht_addbuf(char *in);
 static uint8_t fht_getbuf(uint8_t *buf);
 static void    fht80b_reset_state(void);
-#if FHTBUF_SIZE > 255
-static uint16_t fht_bufspace(void);
-#else
 static uint8_t fht_bufspace(void);
-#endif
 
 #endif 
 
@@ -157,7 +153,6 @@ fhtsend(char *in)
   l = fromhex(in+1, hb, 5);
 
   if(l < 4) {
-
     if(hb[0] == 1) {                   // Set housecode, clear buffers
       if(l == 3) {
         ewb(EE_FHTID  , hb[1]);        // 1.st byte: 80b relevant
@@ -175,11 +170,7 @@ fhtsend(char *in)
       fht80b_print(l==1 || hb[1]==1);
 
     } else if(hb[0] == 3) {            // Return the remaining fht buffer
-#if FHTBUF_SIZE > 255
-      DH(fht_bufspace(),4);
-#else
       DH2(fht_bufspace());
-#endif
 #endif
 
 #ifdef HAS_FHT_8v
@@ -228,116 +219,116 @@ fhtsend(char *in)
 #endif
     }
     DNL();
+    return;
+  }
 
 #ifdef HAS_FHT_TF
-  } else {
-    fromhex(in+1, fhttf, 4);
-    
-    // the house code start at 0x69
-    if(fhttf[0] >= 0x69) {
-      // sync and finish can send directly without buffering and waiting of a
-      // timeslot
-      if(fhttf[3] == 0x0C) {
-        // perform sync only if necassary, that means if we found the TF 
-        // or a free slot
-        uint8_t doSync = 0;
+  fromhex(in+1, fhttf, 4);
+  
+  // the house code start at 0x69
+  if(fhttf[0] >= 0x69) {
+    // sync and finish can send directly without buffering and waiting of a
+    // timeslot
+    if(fhttf[3] == 0x0C) {
+      // perform sync only if necassary, that means if we found the TF 
+      // or a free slot
+      uint8_t doSync = 0;
 
-        // iterate over all known TFs
-        for(uint8_t i = 0 ; i < FHT_TF_NUM; i++ ) {
-          if(fht_tf_buf[FHT_TF_DATA*i] == fhttf[0] && 
-            fht_tf_buf[FHT_TF_DATA*i+1] == fhttf[1] &&
-            fht_tf_buf[FHT_TF_DATA*i+2] == fhttf[2]) {
+      // iterate over all known TFs
+      for(uint8_t i = 0 ; i < FHT_TF_NUM; i++ ) {
+        if(fht_tf_buf[FHT_TF_DATA*i] == fhttf[0] && 
+          fht_tf_buf[FHT_TF_DATA*i+1] == fhttf[1] &&
+          fht_tf_buf[FHT_TF_DATA*i+2] == fhttf[2]) {
 
-              // modify the state of TF sensor to 0X0C
-              fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3];
+            // modify the state of TF sensor to 0X0C
+            fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3];
 
-              // enable the timer
-              fht_tf_timeout_Array[3*i+0] = 0;
-              // changed value for interval calculation
-              fht_tf_timeout_Array[3*i+1] = 0;
+            // enable the timer
+            fht_tf_timeout_Array[3*i+0] = 0;
+            // changed value for interval calculation
+            fht_tf_timeout_Array[3*i+1] = 0;
 
-              doSync = 1;
-              // reset timer for this canditate
-              break;
-           } else if(fht_tf_buf[FHT_TF_DATA*i] == FHT_TF_DISABLED) { // empty
+            doSync = 1;
+            // reset timer for this canditate
+            break;
+         } else if(fht_tf_buf[FHT_TF_DATA*i] == FHT_TF_DISABLED) { // empty
 
-              fht_tf_buf[FHT_TF_DATA*i]   = fhttf[0];
-              fht_tf_buf[FHT_TF_DATA*i+1] = fhttf[1];
-              fht_tf_buf[FHT_TF_DATA*i+2] = fhttf[2];
-              fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3]; // state is 0x0C
-              
-              // enable the timer
-              fht_tf_timeout_Array[3*i+0] = 0;
-              // changed value for interval calculation
-              fht_tf_timeout_Array[3*i+1] = 0;
-              
-              fht_tf_deactivated = 0; // activate tf sending
-              doSync = 1;
-              
-              break;
-           }
-        }
-        
-        if(doSync) {
-          // 1x sync x0c and afterwards 1x finish 0xf 
-          // -> sync is handled by 09_cul_fhttk.pm module
-          addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
-          fhttf[3] = 0x0f; // finish
-          addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
-          fhttf[3] = 0x02; // state closed
-          addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
-        }
-
-      } else { // value has changed, seek for corresp. TF and change the value
-        for(uint8_t i = 0 ; i < FHT_TF_NUM; i++ )
-          if(fht_tf_buf[FHT_TF_DATA*i] == fhttf[0] && 
-            fht_tf_buf[FHT_TF_DATA*i+1] == fhttf[1] &&
-            fht_tf_buf[FHT_TF_DATA*i+2] == fhttf[2]) {
-
-              fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3]; // modify the state
-              fht_tf_timeout_Array[3*i+1] = 1; // changed value for interval
-              break;
-          }
+            fht_tf_buf[FHT_TF_DATA*i]   = fhttf[0];
+            fht_tf_buf[FHT_TF_DATA*i+1] = fhttf[1];
+            fht_tf_buf[FHT_TF_DATA*i+2] = fhttf[2];
+            fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3]; // state is 0x0C
+            
+            // enable the timer
+            fht_tf_timeout_Array[3*i+0] = 0;
+            // changed value for interval calculation
+            fht_tf_timeout_Array[3*i+1] = 0;
+            
+            fht_tf_deactivated = 0; // activate tf sending
+            doSync = 1;
+            
+            break;
+         }
       }
-      return;
+      
+      if(doSync) {
+        // 1x sync x0c and afterwards 1x finish 0xf 
+        // -> sync is handled by 09_cul_fhttk.pm module
+        addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
+        fhttf[3] = 0x0f; // finish
+        addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
+        fhttf[3] = 0x02; // state closed
+        addParityAndSendData(fhttf, 4, FHT_CSUM_START, 2);
+      }
+
+    } else { // value has changed, seek for corresp. TF and change the value
+      for(uint8_t i = 0 ; i < FHT_TF_NUM; i++ )
+        if(fht_tf_buf[FHT_TF_DATA*i] == fhttf[0] && 
+          fht_tf_buf[FHT_TF_DATA*i+1] == fhttf[1] &&
+          fht_tf_buf[FHT_TF_DATA*i+2] == fhttf[2]) {
+
+            fht_tf_buf[FHT_TF_DATA*i+3] = fhttf[3]; // modify the state
+            fht_tf_timeout_Array[3*i+1] = 1; // changed value for interval
+            break;
+        }
     }
+    return;
+  }
 #endif
 
 #ifdef HAS_FHT_8v
-    if(hb[0]>=fht_hc0 &&
-       hb[0]< fht_hc0+FHT_8V_NUM &&
-       hb[1]==fht_hc1) {                 // FHT8v mode commands
+  if(hb[0]>=fht_hc0 &&
+     hb[0]< fht_hc0+FHT_8V_NUM &&
+     hb[1]==fht_hc1) {                 // FHT8v mode commands
 
-      if(hb[3] == FHT8V_CMD_PAIR) {
-        addParityAndSend(in, FHT_CSUM_START, 2);
+    if(hb[3] == FHT8V_CMD_PAIR) {
+      addParityAndSend(in, FHT_CSUM_START, 2);
 
-      } else if(hb[3] == FHT8V_CMD_SYNC){// start syncprocess for _all_ 8v's
-        fht8v_ctsync = hb[4];            // use it to shorten the sync-time
-        fht8v_timeout=1;
+    } else if(hb[3] == FHT8V_CMD_SYNC){// start syncprocess for _all_ 8v's
+      fht8v_ctsync = hb[4];            // use it to shorten the sync-time
+      fht8v_timeout=1;
 
-        // Cheating on the 1%
-        uint8_t cnt = 0;
-        for(uint8_t i = 0 ; i < FHT_8V_NUM; i++ )
-          if(fht8v_buf[2*i] != FHT_8V_DISABLED )
-            cnt++;
-        credit_10ms += (4*fht8v_ctsync);   // should be 3.75 = 75ms / 2 / 10
-        
-      } else {                           // Valve position
-        uint8_t idx = (hb[0]-fht_hc0)*2;
-        fht8v_buf[idx  ] = hb[3];        // Command or 0xff for disable this
-        fht8v_buf[idx+1] = hb[4];        // slot (valve)
+      // Cheating on the 1%
+      uint8_t cnt = 0;
+      for(uint8_t i = 0 ; i < FHT_8V_NUM; i++ )
+        if(fht8v_buf[2*i] != FHT_8V_DISABLED )
+          cnt++;
+      credit_10ms += (4*fht8v_ctsync);   // should be 3.75 = 75ms / 2 / 10
+      
+    } else {                           // Valve position
+      uint8_t idx = (hb[0]-fht_hc0)*2;
+      fht8v_buf[idx  ] = hb[3];        // Command or 0xff for disable this
+      fht8v_buf[idx+1] = hb[4];        // slot (valve)
 
-      }
-      return;
     }
+    return;
+  }
 #endif
 
 #ifdef HAS_FHT_80b
-    if(!fht_addbuf(in))                  // FHT80b mode: Queue everything
-      DS_P( PSTR("EOB\r\n") );
+  if(!fht_addbuf(in))                  // FHT80b mode: Queue everything
+    DS_P( PSTR("EOB\r\n") );
 #endif
 
-  }
 }
 
 #ifdef HAS_FHT_TF
@@ -697,19 +688,11 @@ fht_addbuf(char *in)
   return 1;
 }
 
-#if FHTBUF_SIZE > 255
-static uint16_t
-fht_bufspace(void)
-{
-  return (FHTBUF_SIZE - (uint16_t)(fht_lookbuf(0)-fht80b_buf));
-}
-#else
 static uint8_t
 fht_bufspace(void)
 {
   return (FHTBUF_SIZE - (uint8_t)(fht_lookbuf(0)-fht80b_buf));
 }
-#endif
 
 static uint8_t
 fht_getbuf(uint8_t *buf)

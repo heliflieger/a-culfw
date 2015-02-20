@@ -11,7 +11,7 @@
 
 #include "fband.h"
 
-#include "board.h"
+
 #include "delay.h"
 #include "rf_send.h"
 #include "rf_receive.h"
@@ -49,7 +49,7 @@
 
 
 
-#define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
+
 #define TDIFFIT    TSCALE(350) // tolerated diff to previous/avg high/low/total
 #define SILENCE    4000        // End of message
 
@@ -78,9 +78,9 @@ static uint8_t nibble; // parity-stripped output
 static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime;
 
-#ifdef HAS_IT
-static uint8_t isnotitrep;
-#endif
+//#ifdef HAS_IT
+//static uint8_t isnotitrep;
+//#endif
 
 static void delbit(bucket_t *b);
 
@@ -411,6 +411,33 @@ uint8_t analyze_revolt(bucket_t *b)
   return 1;
 }
 #endif
+
+/*
+ * Check for repeted message.
+ * When Package is for e.g. IT or TCM, than there must be reveived two packages
+ * with the same message. Otherwise the package are ignored.
+ */
+void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
+#if defined (HAS_IT) || defined (HAS_TCM97001)
+  if (*datatype == TYPE_IT || (*datatype == TYPE_TCM97001 && b->state != STATE_TCM97001_P2)) {
+      if (packetCheckValues.isrep == 1 && packetCheckValues.isnotrep == 0) { 
+        packetCheckValues.isnotrep = 1;
+        packetCheckValues.packageOK = 1;
+      } else if (packetCheckValues.isrep == 1) {
+        packetCheckValues.packageOK = 0;
+      }
+  } else {
+#endif
+      if (!packetCheckValues.isrep) {
+        packetCheckValues.packageOK = 1;
+      }
+#if defined (HAS_IT) || defined (HAS_TCM97001)
+  }
+#endif
+}
+
+
+
 //////////////////////////////////////////////////////////////////////
 void
 RfAnalyze_Task(void)
@@ -529,18 +556,20 @@ RfAnalyze_Task(void)
 #endif
   if(datatype && (tx_report & REP_KNOWN)) {
 
-    uint8_t isrep = 0;
-    uint8_t packageOK = 0;
+    packetCheckValues.isrep = 0;
+    packetCheckValues.packageOK = 0;
+    //packetCheckValues.isnotrep = 0;
     if(!(tx_report & REP_REPEATED)) {      // Filter repeated messages
       
       // compare the data
       if(roby == oby) {
         for(roby = 0; roby < oby; roby++)
-          if(robuf[roby] != obuf[roby])
+          if(robuf[roby] != obuf[roby]) {
+            packetCheckValues.isnotrep = 0;
             break;
-
+          }
         if(roby == oby && (ticks - reptime < REPTIME)) // 38/125 = 0.3 sec
-          isrep = 1;
+          packetCheckValues.isrep = 1;
       }
 
       // save the data
@@ -556,25 +585,11 @@ RfAnalyze_Task(void)
         obuf[2] == FHT_CAN_XMIT   || obuf[2] == FHT_CAN_RCV ||
         obuf[2] == FHT_START_XMIT || obuf[2] == FHT_END_XMIT ||
         (obuf[3] & 0x70) == 0x70))
-      isrep = 1;
+      packetCheckValues.isrep = 1;
 
-#ifdef HAS_IT
-    if (datatype == TYPE_IT) {
-      if (isrep == 1 && isnotitrep == 0) {
-        isnotitrep = 1;
-        packageOK = 1;
-      } else if (isrep == 1) {
-        packageOK = 0;
-      }
-    } else {
-#endif
-      if (!isrep) {
-        packageOK = 1;
-      }
-#ifdef HAS_IT
-    }
-#endif
-    if(packageOK) {
+    checkForRepeatedPackage(&datatype, b);
+
+    if(packetCheckValues.packageOK) {
       DC(datatype);
       if(nibble)
         oby--;
@@ -635,7 +650,8 @@ reset_input(void)
   TIMSK1 = 0;
   bucket_array[bucket_in].state = STATE_RESET;
 #ifdef HAS_IT
-  isnotitrep = 0;
+  packetCheckValues.isnotrep = 0;
+//isnotitrep = 0;
 #endif
 }
 

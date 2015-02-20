@@ -27,3 +27,6 @@ void addbit(bucket_t *b, uint8_t bit)
     b->data[++b->byteidx] = 0;
   }
 }
+
+
+
