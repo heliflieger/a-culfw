@@ -8,6 +8,7 @@
 
 
 #define STATE_TCM97001 8
+#define STATE_TCM97001_P2 10
 #define TYPE_TCM97001 's'
 
 

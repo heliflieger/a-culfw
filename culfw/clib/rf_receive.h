@@ -1,6 +1,7 @@
 #ifndef _RF_RECEIVE_H
 #define _RF_RECEIVE_H
 
+#include "board.h"
 
 #define TYPE_EM      'E'
 #define TYPE_HMS     'H'
