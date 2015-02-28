@@ -7,8 +7,9 @@
 #define HAS_16MHZ_CLOCK
 
 /* if you are using a CC1101 module for 868MHz disable the next line */
-//#define HAS_CC1100_433
-
+#if defined (nanoCUL433)
+#define HAS_CC1100_433
+#endif
 
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
