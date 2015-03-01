@@ -256,6 +256,14 @@ it_send (char *in) {
 		for(i = 0; i < it_repetition; i++)  {
       if (sizeOfPackage == 33) {      
         send_IT_start_V3();
+      } else {
+        // Sync-Bit for IT V1 send befor package
+        CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+        my_delay_us(it_interval);
+        CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+        for(k = 0; k < 31; k++)  {
+          my_delay_us(it_interval);
+        }
       }
 		  for(j = 1; j < sizeOfPackage; j++)  {
 			  if(in[j+1] == '0') {
@@ -280,14 +288,6 @@ it_send (char *in) {
 			}
       if (sizeOfPackage == 33) {  
         send_IT_stop_V3();
-      } else {
-			// Sync-Bit
-		  CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-		  my_delay_us(it_interval);
-		  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-		  for(k = 0; k < 31; k++)  {
-			  my_delay_us(it_interval);
-			}
       }
 		} //Do it n Times
 	
