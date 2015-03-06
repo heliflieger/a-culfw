@@ -199,9 +199,8 @@ void dmx_func(char *in) {
 // F2822ccvv
 
 int dmx_fs20_emu(char *in) {
-  uint8_t hb[4], d = 0;
-
 #ifdef DMX_FS20EMU_HC
+  uint8_t hb[4], d = 0;
   if (!strncmp(in+1, DMX_FS20EMU_HC, 4)) {
     memset( hb, 0, sizeof(hb) );
     d = fromhex(in+5, hb, 2);

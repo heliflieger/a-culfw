@@ -1,7 +1,15 @@
 #ifndef _RF_RECEIVE_H
 #define _RF_RECEIVE_H
 
+
 #include "board.h"
+
+#include "fband.h"
+#include "helper.h"
+
+#include "rf_receive_bucket.h"
+#include "rf_receive_tcm97001.h"
+#include "rf_receive_it.h"
 
 #define TYPE_EM      'E'
 #define TYPE_HMS     'H'
@@ -13,7 +21,7 @@
 #define TYPE_TX3     't'
 
 #define TYPE_REVOLT	 'r'
-#define TYPE_IT  	 'i'
+
 
 #define REP_KNOWN    _BV(0)
 #define REP_REPEATED _BV(1)
