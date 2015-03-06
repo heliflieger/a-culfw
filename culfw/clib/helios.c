@@ -217,9 +217,8 @@ void helios_func(char *in) {
 }
 
 int helios_fs20_emu(char *in) {
-  uint8_t hb[4], d = 0;
-
 #ifdef HELIOS_EMU_HC
+  uint8_t hb[4], d = 0;
   if (!strncmp(in+1, HELIOS_EMU_HC, 4)) {
     memset( hb, 0, sizeof(hb) );
     d = fromhex(in+5, hb, 2);

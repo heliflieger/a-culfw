@@ -14,7 +14,12 @@
 
 #define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
 
+
 #define TDIFF      TSCALE(200) // tolerated diff to previous/avg high/low/total
+
+#define STATE_RESET   0
+
+#define SILENCE    4000        // End of message
 
 
 #if defined(HAS_REVOLT) || defined (HAS_IT) || defined (HAS_TCM97001)

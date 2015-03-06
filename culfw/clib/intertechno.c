@@ -6,6 +6,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include <stdio.h>
 #include <util/parity.h>
 #include <string.h>
@@ -220,6 +221,10 @@ send_IT_bit_V3(uint8_t bit)
 
 static void
 it_send (char *in) {	
+
+    //while (rf_isreceiving()) {
+      //_delay_ms(1);
+    //}
 	  int8_t i, j, k;
 
 		LED_ON();

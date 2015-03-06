@@ -9,14 +9,9 @@
 #include <util/parity.h>
 #include <string.h>
 
-#include "fband.h"
-
-
 #include "delay.h"
 #include "rf_send.h"
 #include "rf_receive.h"
-#include "rf_receive_bucket.h"
-#include "rf_receive_tcm97001.h"
 #include "led.h"
 #include "cc1100.h"
 #include "display.h"
@@ -48,25 +43,15 @@
 //  Revolt:  96/208  304    224/208  432
 
 
-
-
-#define TDIFFIT    TSCALE(350) // tolerated diff to previous/avg high/low/total
-#define SILENCE    4000        // End of message
-
-#define STATE_RESET   0
 #define STATE_INIT    1
 #define STATE_SYNC    2
 #define STATE_COLLECT 3
 #define STATE_HMS     4
 #define STATE_ESA     5
 #define STATE_REVOLT  6
-#define STATE_IT      7
 
-#define STATE_ITV3     9
 
 uint8_t tx_report;              // global verbose / output-filter
-
-
 
 static uint8_t oby, obuf[MAXMSG]; // parity-stripped output
 
@@ -78,16 +63,11 @@ static uint8_t nibble; // parity-stripped output
 static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime;
 
-//#ifdef HAS_IT
-//static uint8_t isnotitrep;
-//#endif
 
 static void delbit(bucket_t *b);
 
-static uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state);
-#ifdef HAS_IT
-static uint8_t wave_equals_itV3(uint8_t htime, uint8_t ltime);
-#endif
+uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state);
+
 
 static pulse_t hightime, lowtime;
 
@@ -378,23 +358,7 @@ analyze_TX3(bucket_t *b)
   return 1;
 }
 #endif
-#ifdef HAS_IT
-uint8_t analyze_it(bucket_t *b)
-{
-  if ((b->state != STATE_IT || b->byteidx != 3 || b->bitidx != 7) 
-    && (b->state != STATE_ITV3 || b->byteidx != 8 || b->bitidx != 7)) {
-        return 0;
-    }
-  if (b->state == STATE_IT) {
-    for (oby=0;oby<3;oby++)
-      obuf[oby]=b->data[oby];
-  } else {
-    for (oby=0;oby<8;oby++)
-      obuf[oby]=b->data[oby];
-    }
-  return 1;
-}
-#endif
+
 
 #ifdef HAS_REVOLT
 uint8_t analyze_revolt(bucket_t *b)
@@ -414,7 +378,7 @@ uint8_t analyze_revolt(bucket_t *b)
 
 /*
  * Check for repeted message.
- * When Package is for e.g. IT or TCM, than there must be reveived two packages
+ * When Package is for e.g. IT or TCM, than there must be received two packages
  * with the same message. Otherwise the package are ignored.
  */
 void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
@@ -476,13 +440,7 @@ RfAnalyze_Task(void)
 
   b = bucket_array + bucket_out;
 
-#ifdef HAS_IT
-  if(IS433MHZ && (b->state == STATE_IT || b->state == STATE_ITV3)) {
-    if(!datatype && analyze_it(b)) { 
-    datatype = TYPE_IT;
-    }
-  }
-#endif
+  analyze_intertechno(b, &datatype, obuf, &oby);
   analyze_tcm97001(b, &datatype, obuf, &oby);
 
 #ifdef HAS_REVOLT
@@ -649,9 +607,8 @@ reset_input(void)
 {
   TIMSK1 = 0;
   bucket_array[bucket_in].state = STATE_RESET;
-#ifdef HAS_IT
+#if defined (HAS_IT) || defined (HAS_TCM97001)
   packetCheckValues.isnotrep = 0;
-//isnotitrep = 0;
 #endif
 }
 
@@ -697,14 +654,14 @@ ISR(TIMER1_COMPA_vect)
 
 }
 
-static uint8_t
-wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state)
+uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state)
 {
   uint8_t tdiffVal = TDIFF;
 #ifdef HAS_IT
   if(state == STATE_IT)
     tdiffVal = TDIFFIT;
 #endif
+
   int16_t dlow = a->lowtime-ltime;
   int16_t dhigh = a->hightime-htime;
   int16_t dcomplete  = (a->lowtime+a->hightime) - (ltime+htime);
@@ -714,17 +671,6 @@ wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state)
     return 1;
   return 0;
 }
-
-#ifdef HAS_IT
-static uint8_t
-wave_equals_itV3(uint8_t htime, uint8_t ltime)
-{
-  if(ltime - TDIFF > htime) {
-    return 1;
-  }
-  return 0;
-}
-#endif
 
 
 
@@ -812,46 +758,9 @@ ISR(CC1100_INTVECT)
   lowtime = c-hightime;
   TCNT1 = 0;                          // restart timer
 
-#ifdef HAS_IT
-  if(IS433MHZ && (b->state == STATE_IT || b->state == STATE_ITV3)) {
-    if (lowtime > TSCALE(3000)) {
-        b->sync = 0;
-        return;
-    }
-    if (b->sync == 0) {
-      if (lowtime > TSCALE(2400)) { 
-        // this sould be the start bit for IT V3
-        b->state = STATE_ITV3;
-        TCNT1 = 0;                          // restart timer
-        return;
-      } else if (b->state == STATE_ITV3) {
-        b->sync=1;
-        if (lowtime-1 > hightime) {
-          b->zero.hightime = hightime; 
-		      b->zero.lowtime = lowtime;
-        } else {
-          b->zero.hightime = hightime; 
-		      b->zero.lowtime = hightime*5;
-        }
-        b->one.hightime = hightime;
-	      b->one.lowtime = hightime;
-      } else {
-        b->sync=1;
-        if (hightime*2>lowtime) {
-          // No IT, because times to near
-          b->state = STATE_RESET;
-          return;
-        }
-        b->zero.hightime = hightime; 
-        b->zero.lowtime = lowtime+1;
-        b->one.hightime = lowtime+1;
-        b->one.lowtime = hightime;
-      }
-    }
+  if (sync_intertechno(b, &hightime, &lowtime)) {
+    return;
   }
-#endif
-
-  sync_tcm97001(b, &hightime, &lowtime);
 
   if(IS868MHZ && ((b->state == STATE_HMS)
 #ifdef HAS_ESA
@@ -884,122 +793,106 @@ ISR(CC1100_INTVECT)
     return;
   }
 #endif
-
-  if(b->state == STATE_RESET) {   // first sync bit, cannot compare yet
-
+  switch(b->state)
+  {
+    case STATE_RESET: // first sync bit, cannot compare yet   
 retry_sync:
-
-  if (is_tcm97001(b, &hightime, &lowtime)) {
-    return;
-  }	
-#ifdef HAS_IT
- 		else 
-#endif
-
-#ifdef HAS_IT
-  if(IS433MHZ && (hightime < TSCALE(600) && hightime > TSCALE(140)) &&
-     (lowtime < TSCALE(17000) && lowtime > TSCALE(2500)) ) {
-    OCR1A = SILENCE;
-    TIMSK1 = _BV(OCIE1A);
-    b->sync=0;
-    b->state = STATE_IT;
-    b->byteidx = 0;
-    b->bitidx  = 7;
-    b->data[0] = 0;
-    return;
-  } else
-#endif
-    if(hightime > TSCALE(1600) || lowtime > TSCALE(1600))
-      return;
-  
-    b->zero.hightime = hightime;
-    b->zero.lowtime = lowtime;
-    b->sync  = 1;
-    b->state = STATE_SYNC;
-
-  } else if(b->state == STATE_SYNC) {   // sync: lots of zeroes
-
-    if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
-      b->zero.hightime = makeavg(b->zero.hightime, hightime);
-      b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-      b->sync++;
-
-    } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
-      OCR1A = SILENCE;
-      if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
-        b->state = STATE_HMS;
-
-#ifdef HAS_ESA
-      } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
-        b->state = STATE_ESA;
-        OCR1A = 1000;
-#endif
-#ifdef HAS_RF_ROUTER
-      } else if(rf_router_myid &&
-                check_rf_sync(hightime, lowtime) &&
-                check_rf_sync(b->zero.lowtime, b->zero.hightime)) {
-        rf_router_status = RF_ROUTER_SYNC_RCVD;
-        reset_input();
+      if (is_tcm97001(b, &hightime, &lowtime)) {
         return;
-#endif
-
-      } else {
-        b->state = STATE_COLLECT;
+      }	else if (is_intertechno(b, &hightime, &lowtime)) {
+        return;
+      } else if(hightime > TSCALE(1600) || lowtime > TSCALE(1600)) {
+        // Invalid Package
+        return;
       }
+     
+      b->zero.hightime = hightime;
+      b->zero.lowtime = lowtime;
+      b->sync  = 1;
+      b->state = STATE_SYNC;
+      break;
+    case STATE_SYNC:  // sync: lots of zeroes
 
-      b->one.hightime = hightime;
-      b->one.lowtime  = lowtime;
-      b->byteidx = 0;
-      b->bitidx  = 7;
-      b->data[0] = 0;
+      if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
+        b->zero.hightime = makeavg(b->zero.hightime, hightime);
+        b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+        b->sync++;
 
-      TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
+      } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
+        OCR1A = SILENCE;
+        if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
+          b->state = STATE_HMS;
 
-    } else {                            // too few sync bits
-      b->state = STATE_RESET;
-      goto retry_sync;
-
-    }
-
-  } else 
-#ifdef HAS_REVOLT
-  if (IS433MHZ && b->state==STATE_REVOLT) { //STATE_REVOLT
-    if ((hightime < 11)) {
-      addbit(b,0);
-      b->zero.hightime = makeavg(b->zero.hightime, hightime);
-      b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-    } else {
-      addbit(b,1);
-      b->one.hightime = makeavg(b->one.hightime, hightime);
-      b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-    }
-  } else 
-#endif
-  if (addbit_tcm97001(b, &hightime, &lowtime)) { 
-    //OK
-  } else  
-  { // STATE_COLLECT , STATE_IT
-#ifdef HAS_IT
-    if(b->state==STATE_ITV3) {
-      uint8_t value = wave_equals_itV3(hightime, lowtime);
-      addbit(b, value);
-    } else
-#endif 
-
-    // STATE_COLLECT , STATE_IT
-    if(wave_equals(&b->one, hightime, lowtime, b->state)) {
-      addbit(b, 1);
-      b->one.hightime = makeavg(b->one.hightime, hightime);
-      b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
-    } else if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
-      addbit(b, 0);
-      b->zero.hightime = makeavg(b->zero.hightime, hightime);
-      b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-    } else {
-        if (b->state!=STATE_IT) 
+  #ifdef HAS_ESA
+        } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
+          b->state = STATE_ESA;
+          OCR1A = 1000;
+  #endif
+  #ifdef HAS_RF_ROUTER
+        } else if(rf_router_myid &&
+                  check_rf_sync(hightime, lowtime) &&
+                  check_rf_sync(b->zero.lowtime, b->zero.hightime)) {
+          rf_router_status = RF_ROUTER_SYNC_RCVD;
           reset_input();
-    }
+          return;
+  #endif
 
+        } else {
+          b->state = STATE_COLLECT;
+        }
+
+        b->one.hightime = hightime;
+        b->one.lowtime  = lowtime;
+        b->byteidx = 0;
+        b->bitidx  = 7;
+        b->data[0] = 0;
+
+        TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
+
+      } else {                            // too few sync bits
+        b->state = STATE_RESET;
+        goto retry_sync;
+
+      }
+      break;
+#ifdef HAS_REVOLT
+    case STATE_REVOLT: //STATE_REVOLTT
+      if ((hightime < 11)) {
+        addbit(b,0);
+        b->zero.hightime = makeavg(b->zero.hightime, hightime);
+        b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+      } else {
+        addbit(b,1);
+        b->one.hightime = makeavg(b->one.hightime, hightime);
+        b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
+      }
+      break;
+#endif
+#ifdef HAS_TCM97001
+    case STATE_TCM97001:
+      sync_tcm97001(b, &hightime, &lowtime);
+      addbit_tcm97001(b, &hightime, &lowtime);
+      break;
+#endif
+#ifdef HAS_IT
+    case STATE_ITV3: 
+      addbit_intertechno_v3(b, &hightime, &lowtime);
+      break;
+#endif
+    default:
+      if(wave_equals(&b->one, hightime, lowtime, b->state)) {
+        addbit(b, 1);
+        b->one.hightime = makeavg(b->one.hightime, hightime);
+        b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
+      } else if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
+        addbit(b, 0);
+        b->zero.hightime = makeavg(b->zero.hightime, hightime);
+        b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+      } else {
+          if (b->state!=STATE_IT) 
+            reset_input();
+      }
+      break;
   }
 
 }

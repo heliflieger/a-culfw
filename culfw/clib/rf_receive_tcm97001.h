@@ -1,3 +1,8 @@
+/* 
+ * Copyright by B.Hempel
+ * License: GPL v2
+ */
+
 #ifndef _RF_RECEIVE_TCM97001_H
 #define _RF_RECEIVE_TCM97001_H
 
@@ -5,6 +10,7 @@
 #include "board.h"
 #include "rf_receive_bucket.h"
 #include "fband.h"
+#include "helper.h"
 
 
 #define STATE_TCM97001 8
@@ -25,13 +31,11 @@ void analyze_tcm97001(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *ob
 
 /*
  * Sync the TCM97001 received packet
- * return 1 (true) if packet ist OK
- * return 0 (false) if packet is not TCM97001 
  */
-uint8_t sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
+void sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
 
 /*
- * Check if received packat is an TCM97001 packet
+ * Check if received packat is a TCM97001 packet
  * hightime the received hightime
  * lowtime the received lowtime
  * return 1 (true) if packet ist OK
@@ -40,13 +44,11 @@ uint8_t sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
 uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
 
 /*
- * Add the the bit to the bucket if it is an TCM97001 bit.
+ * Add the the bit to the bucket if it is a TCM97001 bit.
  * hightime the received hightime
- * lowtime the received lowtime
- * return 1 (true) if packet ist OK
- * return 0 (false) if packet is not TCM97001 
+ * lowtime the received lowtime 
  */
-uint8_t addbit_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
+void addbit_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
 
 
 #endif

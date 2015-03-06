@@ -185,13 +185,13 @@ dumppkt(void)
 
 void
 Ethernet_Task(void) {
-     int i;
 
      ethernet_process();
      
      if(timer_expired(&periodic_timer)) {
+
 	  timer_reset(&periodic_timer);
-	  
+     int i;	  
 	  for(i = 0; i < UIP_CONNS; i++) {
 	       uip_periodic(i);
 	       if(uip_len > 0) {
