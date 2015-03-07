@@ -2,6 +2,10 @@ COC is an extesion for Raspberry Pi with a CSM radio interface.
 
 FLASHING FIRMWARE
 
+For programming the device simple call ./flash.sh
+
+---------
+
 To update CSMs firmware with culfw execute:
 
 	make 
