@@ -22,3 +22,9 @@ to flash the recompiled nanoCUL.hex file.
 USING
 
 The culfw stack is available on: /dev/ttyUSBx, where x is a number.
+
+#################################################
+For programming the device simple call ./flash.sh
+#################################################
+
+
