@@ -9,7 +9,10 @@ FLASHING FIRMWARE
 
 To update firmware with culfw execute:
 
-	make program
+	make program-433
+  or
+  make program-868
+  or use the script ./flash.sh
 
 on the a computer which has the avr toolchain installed. This will require some tools installed upfront. 
 Use:
@@ -23,8 +26,5 @@ USING
 
 The culfw stack is available on: /dev/ttyUSBx, where x is a number.
 
-#################################################
-For programming the device simple call ./flash.sh
-#################################################
 
 

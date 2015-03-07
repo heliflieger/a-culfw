@@ -1,5 +1,4 @@
 MCU = atmega328p
-BOARD  =
 F_CPU = 8000000
 FORMAT = ihex
 OBJDIR = .
@@ -216,6 +215,12 @@ sizeafter:
 
 gccversion : 
 	@$(CC) --version
+
+program-433: 
+	make TARGET=nanoCUL433 program
+
+program-868:
+	make TARGET=nanoCUL868 program
 
 program: $(TARGET).hex
 	#@if test ! -d /sys/class/gpio/gpio17; then echo 17 > /sys/class/gpio/export; fi

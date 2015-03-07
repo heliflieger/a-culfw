@@ -311,13 +311,13 @@ version(char *in)
     return;
   }
 #endif
-
+  DS_P( PSTR("V " VERSION " " FW_NAME " Build: " BUILD_NUMBER " (" BUILD_DATE ") "));
 #ifdef MULTI_FREQ_DEVICE     // check 433MHz version marker
   if (!bit_is_set(MARK433_PIN, MARK433_BIT))
-    DS_P( PSTR("V " VERSION " " BOARD_ID_STR433) );
+     DS_P( PSTR(BOARD_ID_STR433) );
   else
 #endif
-  DS_P( PSTR("V " VERSION " " BOARD_ID_STR) );
+    DS_P( PSTR(BOARD_ID_STR) );
   if (IS433MHZ) {
      DS_P( PSTR(" (F-Band: 433MHz)") );
   } else {
