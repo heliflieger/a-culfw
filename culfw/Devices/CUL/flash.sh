@@ -37,7 +37,7 @@ echo " 3 = CUL_V2_MAX"
 echo " 4 = CUL_V3"
 echo " 5 = CUL_V4"
 read -p "Please select device (1-5): " device
-if [ "X$device" == "X" -a "$device" != "1" -a "$device" != "2" -a "$device" != "3" -a "$device" != "4" -a "$device" != "5" ] ; then
+if [ "X$device" == "X" -o "$device" != "1" -a "$device" != "2" -a "$device" != "3" -a "$device" != "4" -a "$device" != "5" ] ; then
    echo "Abort"
    exit
 fi

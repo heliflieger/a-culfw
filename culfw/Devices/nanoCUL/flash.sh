@@ -6,18 +6,18 @@
 #
 
 # The file for flashing the device
-FLASH_FILE=COC.hex
+FLASH_FILE=nanoCUL433.hex
 
 # The MCU
-MCU=atmega32u4
+MCU=atmega328p
 
 # working dir
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # Default Port
-PORT=/dev/ttyAMA0
+PORT=/dev/ttyUSB0
 # Programming baudrate
-BAUD=38400
+BAUD=57600
 # The programmer
 PROGRAMMER=avrdude
 
@@ -31,19 +31,19 @@ echo "This program flash the cul device with new firmware."
 echo "Please change the device into the bootloader"
 echo "-------------------------------------------------------------"
 echo "Please choose a device:"
-echo " 1 = COC"
-echo " 2 = COC_radio_only"
+echo " 1 = nanoCUL868"
+echo " 2 = nanoCUL433"
 read -p "Please select device (1-2): " device
 if [ "X$device" == "X" -o "$device" != "1" -a "$device" != "2" ] ; then
    echo "Abort"
    exit
 fi
 if [ "$device" == "1" ] ; then
-  MCU=atmega1284p
-  FLASH_FILE=COC.hex
+  MCU=atmega328p
+  FLASH_FILE=nanoCUL868.hex
 elif [ "$device" == "2" ] ; then
-  MCU=atmega1284p
-  FLASH_FILE=COC_radio_only.hex
+  MCU=atmega328p
+  FLASH_FILE=nanoCUL433.hex
 fi
 
 echo "-------------------------------------------------------------"
@@ -63,28 +63,9 @@ echo ""
 echo "The device will now be flashed"
 read -p "Continue (y/n)?" flashdevice
 
-if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then
-  echo
-	echo calling radio frontends bootloader ...
-	echo
-	if test ! -d /sys/class/gpio/gpio17; then echo 17 > /sys/class/gpio/export; fi
-	echo out > /sys/class/gpio/gpio17/direction
-	echo 0 > /sys/class/gpio/gpio17/value
-
-	if test ! -d /sys/class/gpio/gpio18; then echo 18 > /sys/class/gpio/export; fi
-	echo out > /sys/class/gpio/gpio18/direction
-	echo 0 > /sys/class/gpio/gpio18/value
-
-	echo 1 > /sys/class/gpio/gpio17/value
-	sleep 1
-	echo 1 > /sys/class/gpio/gpio18/value
-	echo in > /sys/class/gpio/gpio18/direction
-	echo 18 > /sys/class/gpio/unexport
-   
+if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then  
   echo "Call now ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}:i"
   ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}:i
-
-  if test -e /sys/bus/i2c/devices/0-0050/eeprom; then echo COC V1.1 $(COCVERS) `date +%F` > /sys/bus/i2c/devices/0-0050/eeprom; fi
 else
   echo "Abort flash"
 fi
