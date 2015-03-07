@@ -53,7 +53,7 @@
 
 uint8_t tx_report;              // global verbose / output-filter
 
-static uint8_t oby, obuf[MAXMSG]; // parity-stripped output
+static uint8_t obuf[MAXMSG]; // parity-stripped output
 
 static bucket_t bucket_array[RCV_BUCKETS];
 static uint8_t bucket_in;                 // Pointer to the in(terrupt) queue
@@ -161,9 +161,9 @@ cksum3(uint8_t *buf, uint8_t len)               // KS300
 }
 
 static uint8_t
-analyze(bucket_t *b, uint8_t t)
+analyze(bucket_t *b, uint8_t t, uint8_t *oby)
 {
-  uint8_t cnt=0, max, iby = 0;
+  uint8_t i=0, cnt=0, max, iby = 0;
   int8_t ibi=7, obi=7;
 
   nibble = 0;
@@ -190,22 +190,22 @@ analyze(bucket_t *b, uint8_t t)
 
     if(obi == -1) {                                    // next byte
       if(t == TYPE_FS20) {
-        if(parity_even_bit(obuf[oby]) != bit)
+        if(parity_even_bit(obuf[i]) != bit)
           return 0;
       }
       if(t == TYPE_EM || t == TYPE_KS300) {
         if(!bit)
           return 0;
       }
-      obuf[++oby] = 0;
+      obuf[++i] = 0;
       obi = 7;
 
     } else {                                           // Normal bits
       if(bit) {
         if(t == TYPE_FS20)
-          obuf[oby] |= _BV(obi);
+          obuf[i] |= _BV(obi);
         if(t == TYPE_EM || t == TYPE_KS300)            // LSB
-          obuf[oby] |= _BV(7-obi);
+          obuf[i] |= _BV(7-obi);
       }
       obi--;
     }
@@ -213,11 +213,12 @@ analyze(bucket_t *b, uint8_t t)
   if(cnt <= max)
     return 0;
   else if(t == TYPE_EM && obi == -1)                  // missing last stopbit
-    oby++;
+    i++;
   else if(nibble)                                     // half byte msg 
-    oby++;
+    i++;
 
-  if(oby == 0)
+  *oby = i;
+  if(i == 0)
     return 0;
   return 1;
 }
@@ -250,7 +251,7 @@ getbits(input_t* in, uint8_t nbits, uint8_t msb)
 }
 
 uint8_t
-analyze_hms(bucket_t *b)
+analyze_hms(bucket_t *b, uint8_t *oby)
 {
   input_t in;
   in.byte = 0;
@@ -260,16 +261,16 @@ analyze_hms(bucket_t *b)
   if(b->byteidx*8 + (7-b->bitidx) < 69) 
     return 0;
 
-  uint8_t crc = 0;
-  for(oby = 0; oby < 6; oby++) {
-    obuf[oby] = getbits(&in, 8, 0);
-    if(parity_even_bit(obuf[oby]) != getbit( &in ))
+  uint8_t crc = 0, i = 0;
+  for(i = 0; i < 6; i++) {
+    obuf[i] = getbits(&in, 8, 0);
+    if(parity_even_bit(obuf[i]) != getbit( &in ))
       return 0;
     if(getbit(&in))
       return 0;
-    crc = crc ^ obuf[oby];
+    crc = crc ^ obuf[i];
   }
-
+  *oby = i;
   // Read crc
   uint8_t CRC = getbits(&in, 8, 0);
   if(parity_even_bit(CRC) != getbit(&in))
@@ -281,7 +282,7 @@ analyze_hms(bucket_t *b)
 
 #ifdef HAS_ESA
 uint8_t
-analyze_esa(bucket_t *b)
+analyze_esa(bucket_t *b, uint8_t *oby)
 {
   input_t in;
   in.byte = 0;
@@ -296,22 +297,22 @@ analyze_esa(bucket_t *b)
 
   uint8_t salt = 0x89;
   uint16_t crc = 0xf00f;
-  
-  for (oby = 0; oby < 15; oby++) {
+  uint8_t i;
+  for (i = 0; i < 15; i++) {
   
        uint8_t byte = getbits(&in, 8, 1);
      
        crc += byte;
     
-       obuf[oby] = byte ^ salt;
+       obuf[i] = byte ^ salt;
        salt = byte + 0x24;
        
   }
   
-  obuf[oby] = getbits(&in, 8, 1);
-  crc += obuf[oby];
-  obuf[oby++] ^= 0xff;
-
+  obuf[i] = getbits(&in, 8, 1);
+  crc += obuf[i];
+  obuf[i++] ^= 0xff;
+  *oby = i;
   crc -= (getbits(&in, 8, 1)<<8);
   crc -= getbits(&in, 8, 1);
 
@@ -324,31 +325,31 @@ analyze_esa(bucket_t *b)
 
 #ifdef HAS_TX3
 uint8_t
-analyze_TX3(bucket_t *b)
+analyze_TX3(bucket_t *b, uint8_t *oby)
 {
   input_t in;
   in.byte = 0;
   in.bit = 7;
   in.data = b->data;
-  uint8_t n, crc = 0;
+  uint8_t i, n, crc = 0;
 
   if(b->byteidx != 4 || b->bitidx != 1)
     return 0;
-
-  for(oby = 0; oby < 4; oby++) {
-    if(oby == 0) {
+  
+  for(i = 0; i < 4; i++) {
+    if(i == 0) {
       n = 0x80 | getbits(&in, 7, 1);
     } else {
       n = getbits(&in, 8, 1);
     }
     crc = crc + (n>>4) + (n&0xf);
-    obuf[oby] = n;
+    obuf[i] = n;
   }
 
-  obuf[oby] = getbits(&in, 7, 1) << 1;
-  crc = (crc + (obuf[oby]>>4)) & 0xF;
-  oby++;
-
+  obuf[i] = getbits(&in, 7, 1) << 1;
+  crc = (crc + (obuf[i]>>4)) & 0xF;
+  i++;
+  *oby = i;
   if((crc >> 4) != 0 || (obuf[0]>>4) != 0xA)
     return 0;
 
@@ -358,15 +359,21 @@ analyze_TX3(bucket_t *b)
 
 
 #ifdef HAS_REVOLT
-uint8_t analyze_revolt(bucket_t *b)
+uint8_t analyze_revolt(bucket_t *b, uint8_t *oby)
 {
   uint8_t sum=0;
   if (b->byteidx != 12 || b->state != STATE_REVOLT || b->bitidx != 0)
     return 0;
-  for (oby=0;oby<11;oby++) {
-    sum+=b->data[oby];
-    obuf[oby]=b->data[oby];
+
+  uint8_t i;
+  for (i=0;i<11;i++) {
+    sum+=b->data[i];
+    obuf[i]=b->data[i];
   }
+
+  *oby = i;
+
+  
   if (sum!=b->data[11])
       return 0;
   return 1;
@@ -405,7 +412,7 @@ RfAnalyze_Task(void)
 {
   uint8_t datatype = 0;
   bucket_t *b;
-  oby = 0;
+  uint8_t oby = 0;
 
   if(lowtime) {
     if(tx_report & REP_LCDMON) {
@@ -442,18 +449,18 @@ RfAnalyze_Task(void)
   analyze_tcm97001(b, &datatype, obuf, &oby);
 
 #ifdef HAS_REVOLT
-  if(IS433MHZ && !datatype && analyze_revolt(b))
+  if(IS433MHZ && !datatype && analyze_revolt(b, &oby))
     datatype = TYPE_REVOLT;
 #endif
 #ifdef LONG_PULSE
   if(b->state != STATE_REVOLT && b->state != STATE_IT && b->state != STATE_TCM97001) {
 #endif
 #ifdef HAS_ESA
-  if(IS868MHZ && !datatype && analyze_esa(b))
+  if(IS868MHZ && !datatype && analyze_esa(b, &oby))
     datatype = TYPE_ESA;
 #endif
 
-  if(!datatype && analyze(b, TYPE_FS20)) { // Can be FS10 (433Mhz) or FS20 (868MHz)
+  if(!datatype && analyze(b, TYPE_FS20, &oby)) { // Can be FS10 (433Mhz) or FS20 (868MHz)
     oby--;                                  // Separate the checksum byte
     uint8_t fs_csum = cksum1(6,obuf,oby);
     if(fs_csum == obuf[oby] && oby >= 4) {
@@ -470,24 +477,24 @@ RfAnalyze_Task(void)
     }
   }
 
-  if(IS868MHZ && !datatype && analyze(b, TYPE_EM)) {
+  if(IS868MHZ && !datatype && analyze(b, TYPE_EM, &oby)) {
     oby--;                                 
     if(oby == 9 && cksum2(obuf, oby) == obuf[oby])
       datatype = TYPE_EM;
   }
 
-  if(IS868MHZ && !datatype && analyze_hms(b))
+  if(IS868MHZ && !datatype && analyze_hms(b, &oby))
     datatype = TYPE_HMS;
 
 #ifdef HAS_TX3
-  if(!datatype && analyze_TX3(b)) // Can be 433Mhz or 868MHz
+  if(!datatype && analyze_TX3(b, &oby)) // Can be 433Mhz or 868MHz
     datatype = TYPE_TX3;
 #endif
 
   if(!datatype) {
     // As there is no last rise, we have to add the last bit by hand
     addbit(b, wave_equals(&b->one, hightime, b->one.lowtime, b->state));
-    if(analyze(b, TYPE_KS300)) {
+    if(analyze(b, TYPE_KS300, &oby)) {
       oby--;                                 
       if(cksum3(obuf, oby) == obuf[oby-nibble])
         datatype = TYPE_KS300;

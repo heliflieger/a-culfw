@@ -64,8 +64,8 @@ echo "The device will now be flashed"
 read -p "Continue (y/n)?" flashdevice
 
 if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then  
-  echo "Call now ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}:i"
-  ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}:i
+  echo "Call now ${PROGRAMMER} -p ${MCU} -c arduino -P ${port} -b ${BAUD} -D -Uflash:w:./${FLASH_FILE}:i"
+  ${PROGRAMMER} -p ${MCU} -c arduino -P ${port} -b ${BAUD} -D -Uflash:w:./${FLASH_FILE}:i
 else
   echo "Abort flash"
 fi
