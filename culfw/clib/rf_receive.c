@@ -167,7 +167,7 @@ analyze(bucket_t *b, uint8_t t)
   int8_t ibi=7, obi=7;
 
   nibble = 0;
-  oby = 0;
+  
   max = b->byteidx*8+(7-b->bitidx);
   obuf[0] = 0;
   while(cnt++ < max) {
@@ -257,7 +257,6 @@ analyze_hms(bucket_t *b)
   in.bit = 7;
   in.data = b->data;
 
-  oby = 0;
   if(b->byteidx*8 + (7-b->bitidx) < 69) 
     return 0;
 
@@ -288,8 +287,6 @@ analyze_esa(bucket_t *b)
   in.byte = 0;
   in.bit = 7;
   in.data = b->data;
-
-  oby = 0;
 
   if (b->state != STATE_ESA)
        return 0;
@@ -408,6 +405,7 @@ RfAnalyze_Task(void)
 {
   uint8_t datatype = 0;
   bucket_t *b;
+  oby = 0;
 
   if(lowtime) {
     if(tx_report & REP_LCDMON) {
@@ -451,7 +449,7 @@ RfAnalyze_Task(void)
   if(b->state != STATE_REVOLT && b->state != STATE_IT && b->state != STATE_TCM97001) {
 #endif
 #ifdef HAS_ESA
-  if(IS868MHZ && analyze_esa(b))
+  if(IS868MHZ && !datatype && analyze_esa(b))
     datatype = TYPE_ESA;
 #endif
 
