@@ -1,6 +1,19 @@
-Firmware for different busware.de gadgets
+Alternative culfw for cul devices
 
-Copyright Rudolf Koenig, 2008,2009,2010,2011
+The orginal fimware is cloned from www.culfw.de (thanks for the work to R.K.)
+
+This alternative firmware has additional send receive methods and code cleanups.
+The compiled firmware can be found at https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
+
+Inital Version 1.00.00
+
+Changelog:
+
+1.00.00
+- Receive vor TCM sensors like No.97001, No.212836
+- Send/receive for IT Protocoll 1 and 3
+- Cleanup of receive methods 
+- Additional devices like miniCul, nanoCul, CUL-Arduino
+
 License: GPL v2
 
-This doc was converted into docs/commandref.html
