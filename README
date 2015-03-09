@@ -10,10 +10,11 @@ Inital Version 1.00.00
 Changelog:
 
 1.00.00
-- Receive vor TCM sensors like No.97001, No.212836
+- Receive for TCM sensors like No.97001, No.212836
 - Send/receive for IT Protocoll 1 and 3
 - Cleanup of receive methods 
 - Additional devices like miniCul, nanoCul, CUL-Arduino
 
 License: GPL v2
+
 
