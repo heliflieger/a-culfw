@@ -22,13 +22,17 @@ SRC =           CUL.c\
 		../../clib/rf_receive_bucket.c                       \
 		../../clib/rf_receive_it.c                           \
 		../../clib/rf_receive_tcm97001.c                     \
+		../../clib/rf_receive_tx3.c                          \
+		../../clib/rf_receive_revolt.c                       \
+		../../clib/rf_receive_esa.c                          \
+		../../clib/rf_receive_hms.c                          \
 		../../clib/rf_router.c                               \
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
 		../../clib/intertechno.c                             \
 		../../clib/somfy_rts.c                               \
-		../../clib/kopp-fc.c				   				 \
+		../../clib/kopp-fc.c				                				 \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/ttydata.c                                 \
