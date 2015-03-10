@@ -30,6 +30,14 @@ typedef uint8_t pulse_t;
 #endif
 
 /*
+ * The input struct
+ */
+typedef struct  {
+  uint8_t *data;
+  uint8_t byte, bit;
+} input_t;
+
+/*
  * This struct has the bits for receive check
  */
 struct {
@@ -61,6 +69,16 @@ typedef struct {
  * Add bit to bucket
  */
 void addbit(bucket_t *b, uint8_t bit);
+
+/*
+ * Get bit
+ */
+uint8_t getbit(input_t *in);
+
+/*
+ * Get bits
+ */
+uint8_t getbits(input_t* in, uint8_t nbits, uint8_t msb);
 
 /*
  * Make avg for the received packet and return the value

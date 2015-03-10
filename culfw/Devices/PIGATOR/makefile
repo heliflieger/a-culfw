@@ -22,6 +22,10 @@ SRC = 		../COC/COC.c                                         \
 		../../clib/rf_receive_bucket.c                       \
 		../../clib/rf_receive_tcm97001.c                     \
 		../../clib/rf_receive_it.c                           \
+		../../clib/rf_receive_tx3.c                          \
+		../../clib/rf_receive_revolt.c                       \
+		../../clib/rf_receive_esa.c                          \
+		../../clib/rf_receive_hms.c                          \
 		../../clib/helper.c                                  \
 		../../clib/rf_router.c                               \
 		../../clib/rf_mbus.c                                 \

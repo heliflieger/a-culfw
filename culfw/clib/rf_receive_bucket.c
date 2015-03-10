@@ -28,5 +28,30 @@ void addbit(bucket_t *b, uint8_t bit)
   }
 }
 
+/*
+ * Description in header
+ */
+uint8_t
+getbit(input_t *in)
+{
+  uint8_t bit = (in->data[in->byte] & _BV(in->bit)) ? 1 : 0;
+  if(in->bit-- == 0) {
+    in->byte++;
+    in->bit=7;
+  }
+  return bit;
+}
 
-
+/*
+ * Description in header
+ */
+uint8_t
+getbits(input_t* in, uint8_t nbits, uint8_t msb)
+{
+  uint8_t ret = 0, i;
+  for (i = 0; i < nbits; i++) {
+    if (getbit(in) )
+      ret = ret | _BV( msb ? nbits-i-1 : i );
+  }
+  return ret;
+}
