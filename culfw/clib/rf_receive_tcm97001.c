@@ -62,12 +62,17 @@ void sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 		b->zero.hightime = *hightime;
 		b->one.hightime = *hightime;
 
+    //DU(*hightime*16, 5);
+    //DU(*lowtime *16, 5);
+
 		if (*lowtime < 187) { // < 3000=187 156=2500
-			b->zero.lowtime = *lowtime;
-			b->one.lowtime = b->zero.lowtime*2;
+     // DC('A');
+			b->zero.lowtime = *lowtime*2;
+			b->one.lowtime = *lowtime;
 		} else {
+     // DC('B');
 			b->zero.lowtime = *lowtime;
-			b->one.lowtime = b->zero.lowtime/2;
+			b->one.lowtime = *lowtime/2;
 		}
 	}
 #endif
