@@ -80,6 +80,7 @@
 #define HAS_SOMFY_RTS
 #define HAS_IT
 #define HAS_TCM97001
+#define HAS_HMS
 
 /* a maximum of 8 onewire devices is supported */
 #define HAS_ONEWIRE         8      // OneWire Device Buffer, RAM: 10 * 8 Byte

@@ -42,6 +42,7 @@
 #  define HAS_SOMFY_RTS
 #  define HAS_IT
 #  define HAS_TCM97001
+#  define HAS_HMS
 #endif
 
 #if defined(CUL_V4)
@@ -78,6 +79,7 @@
 #  undef  BOARD_ID_USTR
 #  define BOARD_ID_USTR           L"CUL_HM"
 #  define HAS_INTERTECHNO
+#  define HAS_HMS
 #endif
 
 #ifdef CUL_V2_MAX
@@ -93,6 +95,7 @@
 #  undef  BOARD_ID_USTR
 #  define BOARD_ID_USTR           L"CUL_MX"
 #  define HAS_INTERTECHNO
+#  define HAS_HMS
 #endif
 
 // No features to define below

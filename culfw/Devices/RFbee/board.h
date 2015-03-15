@@ -24,6 +24,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
+#define HAS_HMS
 
 /*
  * Board definition according to

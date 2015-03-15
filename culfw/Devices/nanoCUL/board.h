@@ -85,11 +85,12 @@ extern const uint8_t mark433_pin;
 #define HAS_RAWSEND                   //
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #define HAS_ASKSIN
+
 /* Intertechno Senden einschalten */
 #define HAS_INTERTECHNO
-/* Intertechno Empfang einschalten */
-#define HAS_IT
-#define HAS_REVOLT
+
+
+
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
@@ -102,13 +103,24 @@ extern const uint8_t mark433_pin;
 #  define HAS_ASKSIN_FUP
 #  define HAS_MORITZ
 #  define HAS_RWE
-#  define HAS_ESA
 #  define HAS_TX3
 #  define HAS_UNIROLL
-#  define HAS_HOERMANN
+
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
+
+
+#if defined (nanoCUL433)
+/* Intertechno Empfang einschalten */
 #  define HAS_IT
+#  define HAS_REVOLT
 #  define HAS_TCM97001
+#endif
+
+#if defined (nanoCUL868)
+#  define HAS_ESA
+#  define HAS_HOERMANN
+#  define HAS_HMS
+#endif
 
 #endif

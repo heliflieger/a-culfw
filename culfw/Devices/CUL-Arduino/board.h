@@ -41,6 +41,7 @@
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
 #  define HAS_IT
+#  define HAS_HMS
 #endif
 
 

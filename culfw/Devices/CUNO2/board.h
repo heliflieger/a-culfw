@@ -79,6 +79,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
+#define HAS_HMS
 
 #define HAS_IRRX                                //IR Receiption
 #define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000

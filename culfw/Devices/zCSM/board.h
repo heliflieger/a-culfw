@@ -60,6 +60,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
 #define HAS_TCM97001
+#define HAS_HMS
 
 #define BOARD_ID_STR            "CSM868"
 #define BOARD_ID_STR433         "CSM433"
