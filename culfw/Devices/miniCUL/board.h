@@ -51,5 +51,6 @@
 #define HAS_IT
 #define HAS_TCM97001
 #define HAS_SOMFY_RTS
+#define HAS_HMS
 
 #endif
