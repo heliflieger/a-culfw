@@ -102,7 +102,7 @@ extern const uint8_t mark433_pin;
 
 #  define HAS_ASKSIN_FUP
 #  define HAS_MORITZ
-#  define HAS_RWE
+
 #  define HAS_TX3
 #  define HAS_UNIROLL
 
@@ -118,6 +118,7 @@ extern const uint8_t mark433_pin;
 #endif
 
 #if defined (nanoCUL868)
+#  define HAS_RWE
 #  define HAS_ESA
 #  define HAS_HOERMANN
 #  define HAS_HMS

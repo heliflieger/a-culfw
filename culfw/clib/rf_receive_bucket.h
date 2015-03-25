@@ -56,12 +56,20 @@ extern void reset_input(void);
 typedef struct {
   uint8_t hightime, lowtime;
 } wave_t;
+#ifdef DEBUG_SYNC
+typedef struct {
+  uint16_t hightime, lowtime;
+} wave_t16;
+#endif
 
 // One bucket to collect the "raw" bits
 typedef struct {
   uint8_t state, byteidx, sync, bitidx; 
   uint8_t data[MAXMSG];         // contains parity and checksum, but no sync
   wave_t zero, one; 
+#ifdef DEBUG_SYNC
+  wave_t16 syncbit;
+#endif
 } bucket_t;
 
 

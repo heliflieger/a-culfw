@@ -14,7 +14,7 @@ void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t 
 #ifdef HAS_IT
   if (IS433MHZ && *datatype == 0) {
     if ((b->state != STATE_IT || b->byteidx != 3 || b->bitidx != 7) 
-        && (b->state != STATE_ITV3 || b->byteidx != 8 || b->bitidx != 7)) {
+        && (b->state != STATE_ITV3 || (b->byteidx != 8 && b->byteidx != 9) || b->bitidx != 7)) {
         return;
     }
 
@@ -89,7 +89,11 @@ uint8_t is_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     b->state = STATE_IT;
     b->byteidx = 0;
     b->bitidx  = 7;
-    b->data[0] = 0;
+    b->data[0] = 0;   
+#ifdef DEBUG_SYNC
+    b->syncbit.hightime=*hightime;
+    b->syncbit.lowtime=*lowtime;
+#endif
     return 1;
 	}
 #endif

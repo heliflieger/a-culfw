@@ -410,6 +410,10 @@ RfAnalyze_Task(void)
     DU(b->sync,         3);
     DU(b->byteidx,      3);
     DU(7-b->bitidx,     2);
+#ifdef DEBUG_SYNC
+    DU(b->syncbit.hightime *16, 7);
+    DU(b->syncbit.lowtime  *16, 7);
+#endif
     DC(' ');
     if(tx_report & REP_RSSI) {
       DH2(cc1100_readReg(CC1100_RSSI));
