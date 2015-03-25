@@ -8,7 +8,10 @@ The compiled firmware can be found at https://www.mediafire.com/folder/tf16radvz
 Inital Version 1.00.00
 
 Changelog:
-
+1.01.00
+- add support for intertechno v3 dimmer
+1.00.01
+- Bugfix in rf_receive
 1.00.00
 - Receive for TCM sensors like No.97001, No.212836
 - Send/receive for IT Protocoll 1 and 3
