@@ -1,6 +1,22 @@
 /* 
- * Copyright by B.Hempel
- * License: GPL v2
+ * Copyright 2015 B. Hempel
+ *
+ * License: 
+ *
+ * This program is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU General Public License as published by the Free Software 
+ * Foundation; either version 2 of the License, or (at your option) any later 
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with 
+ * this program; if not, write to the 
+ * Free Software Foundation, Inc., 
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  */
 
 #include "rf_receive_tcm97001.h"
@@ -14,39 +30,22 @@ void analyze_tcm97001(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *ob
 {
 #ifdef HAS_TCM97001
   if (IS433MHZ && *datatype == 0) {
-    
-    if ((b->byteidx != 3 && b->byteidx != 4) || (b->bitidx != 7 && b->bitidx != 3) || b->state != STATE_TCM97001) {
+    if ((b->byteidx != 3 && b->byteidx != 4) || (b->bitidx != 7 && b->bitidx != 3 && b->bitidx != 2) || b->state != STATE_TCM97001) {
 		  return;
     }
-    if (b->byteidx == 4 && b->bitidx == 3) {
-      // Protocoll 2
-      b->state = STATE_TCM97001_P2;
-    }
+    
     uint8_t i;
-    uint8_t checksum = 0;
+   // uint8_t checksum = 0;
     
     for (i=0;i<b->byteidx;i++) {
       obuf[i]=b->data[i];
-      if (b->state == STATE_TCM97001_P2) {
-        uint8_t value = mirror(b->data[i]);
-        checksum += (value>>4) + (value & 15);
-      }
     }
-    if (b->state == STATE_TCM97001_P2) {
-      checksum &= 15;
-      uint8_t crcVal = mirror(b->data[4]);
-      obuf[4]=b->data[4];
+    if (7-b->bitidx != 0) {
+      obuf[i]=b->data[i];
       i++;
-      crcVal += checksum;
-      if (crcVal == 15) {
-        // CRC OK
-        *oby = i;
-        *datatype = TYPE_TCM97001;
-      }
-    } else {
-      *oby = i;
-      *datatype = TYPE_TCM97001;
     }
+    *oby = i;
+    *datatype = TYPE_TCM97001;
   }
 #endif
 }
@@ -58,23 +57,20 @@ void sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 {
 #ifdef HAS_TCM97001
   if (b->sync == 0) {
-	  b->sync=1;
-		b->zero.hightime = *hightime;
-		b->one.hightime = *hightime;
-
-    //DU(*hightime*16, 5);
-    //DU(*lowtime *16, 5);
-
-		if (*lowtime < 187) { // < 3000=187 156=2500
-     // DC('A');
-			b->zero.lowtime = *lowtime*2;
-			b->one.lowtime = *lowtime;
-		} else {
-     // DC('B');
-			b->zero.lowtime = *lowtime;
-			b->one.lowtime = *lowtime/2;
-		}
-	}
+      b->sync=1;
+	    b->zero.hightime = *hightime;
+	    b->one.hightime = *hightime;
+	    if (*lowtime < 156) { // < 3000=187 156=2500
+        //DC('A');
+		    b->zero.lowtime = *lowtime*2;
+		    b->one.lowtime = *lowtime;
+	    } else {
+        //DC('B');
+		    b->zero.lowtime = *lowtime;
+		    b->one.lowtime = *lowtime/2;
+	    }
+  } 
+  
 #endif
   return;
 }
@@ -86,9 +82,9 @@ uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 {
 #ifdef HAS_TCM97001
   if (IS433MHZ) {
-    if ((*hightime < TSCALE(540) && *hightime > TSCALE(410)) &&
-				     (*lowtime  < TSCALE(9000) && *lowtime > TSCALE(8200)) ) {
-		    OCR1A = 4800; //End of message
+    if ((*hightime < TSCALE(640) && *hightime > TSCALE(410)) &&
+				     (*lowtime  < TSCALE(9500) && *lowtime > TSCALE(8200)) ) {
+		    OCR1A = 5200; //End of message
 			  TIMSK1 = _BV(OCIE1A);
 			  b->sync=0;
         

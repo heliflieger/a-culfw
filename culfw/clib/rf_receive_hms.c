@@ -12,7 +12,7 @@
 void analyze_hms(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
 #ifdef HAS_HMS
-  if (IS868MHZ && *datatype == 0) {
+  if (IS868MHZ && *datatype == 0 && b->state == STATE_HMS) {
     input_t in;
     in.byte = 0;
     in.bit = 7;
