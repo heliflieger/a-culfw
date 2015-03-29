@@ -8,6 +8,9 @@ The compiled firmware can be found at https://www.mediafire.com/folder/tf16radvz
 Inital Version 1.00.00
 
 Changelog:
+1.02.00
+- receive of other temperatur sensors like Rubicon and Prologue
+- Cleanup some code
 1.01.00
 - add support for intertechno v3 dimmer
 1.00.01
@@ -18,6 +21,20 @@ Changelog:
 - Cleanup of receive methods 
 - Additional devices like miniCul, nanoCul, CUL-Arduino
 
-License: GPL v2
-
+################################################################################
+# This program is free software; you can redistribute it and/or modify it under 
+# the terms of the GNU General Public License as published by the Free Software 
+# Foundation; either version 2 of the License, or (at your option) any later 
+# version.
+#
+# This program is distributed in the hope that it will be useful, but 
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+# or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+# more details.
+#
+# You should have received a copy of the GNU General Public License along with 
+# this program; if not, write to the 
+# Free Software Foundation, Inc., 
+# 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
+################################################################################
 

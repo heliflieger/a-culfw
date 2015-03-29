@@ -54,7 +54,7 @@ struct {
 extern void reset_input(void);
 
 typedef struct {
-  uint8_t hightime, lowtime;
+  pulse_t hightime, lowtime;
 } wave_t;
 #ifdef DEBUG_SYNC
 typedef struct {

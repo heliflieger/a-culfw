@@ -228,7 +228,7 @@ analyze(bucket_t *b, uint8_t t, uint8_t *oby)
  */
 void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
 #if defined (HAS_IT) || defined (HAS_TCM97001)
-  if (*datatype == TYPE_IT || (*datatype == TYPE_TCM97001 && b->state != STATE_TCM97001_P2)) {
+  if (*datatype == TYPE_IT || (*datatype == TYPE_TCM97001)) { 
       if (packetCheckValues.isrep == 1 && packetCheckValues.isnotrep == 0) { 
         packetCheckValues.isnotrep = 1;
         packetCheckValues.packageOK = 1;
@@ -289,13 +289,10 @@ RfAnalyze_Task(void)
   analyze_intertechno(b, &datatype, obuf, &oby);
   analyze_tcm97001(b, &datatype, obuf, &oby);
   analyze_revolt(b, &datatype, obuf, &oby);
-
-#ifdef LONG_PULSE
-//  if(b->state != STATE_REVOLT && b->state != STATE_IT && b->state != STATE_TCM97001) {
-#endif
-
   analyze_esa(b, &datatype, obuf, &oby);
+  analyze_hms(b, &datatype, obuf, &oby);
 
+  if (b->state == STATE_COLLECT) {
     if(!datatype && analyze(b, TYPE_FS20, &oby)) { // Can be FS10 (433Mhz) or FS20 (868MHz)
       oby--;                                  // Separate the checksum byte
       uint8_t fs_csum = cksum1(6,obuf,oby);
@@ -318,10 +315,8 @@ RfAnalyze_Task(void)
       if(oby == 9 && cksum2(obuf, oby) == obuf[oby])
         datatype = TYPE_EM;
     }
-
-    analyze_hms(b, &datatype, obuf, &oby);
-
-    analyze_tx3(b, &datatype, obuf, &oby); // Can be 433Mhz or 868MH
+    analyze_tx3(b, &datatype, obuf, &oby); // Can be 433Mhz or 868MHz
+  }
 
     if(!datatype) {
       // As there is no last rise, we have to add the last bit by hand
@@ -346,9 +341,7 @@ RfAnalyze_Task(void)
       datatype = TYPE_HRM;
     }
 #endif
-#ifdef LONG_PULSE
-//  }
-#endif
+
   if(datatype && (tx_report & REP_KNOWN)) {
 
     packetCheckValues.isrep = 0;
@@ -603,6 +596,10 @@ ISR(CC1100_INTVECT)
     return;
   }
 
+  /*DU(hightime *16, 6);
+  DU(lowtime*16, 6);
+  DC('*');*/
+
   if(IS868MHZ && ((b->state == STATE_HMS)
 #ifdef HAS_ESA
      || (b->state == STATE_ESA) 
@@ -655,10 +652,14 @@ retry_sync:
     case STATE_SYNC:  // sync: lots of zeroes
 
       if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
+
+        
+
         b->zero.hightime = makeavg(b->zero.hightime, hightime);
         b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
         b->sync++;
-
+        
+ 
       } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
         OCR1A = SILENCE;
         if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
