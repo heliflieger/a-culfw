@@ -316,7 +316,6 @@ RfAnalyze_Task(void)
         datatype = TYPE_EM;
     }
     analyze_tx3(b, &datatype, obuf, &oby); // Can be 433Mhz or 868MHz
-  }
 
     if(!datatype) {
       // As there is no last rise, we have to add the last bit by hand
@@ -329,6 +328,7 @@ RfAnalyze_Task(void)
       if(!datatype)
         delbit(b);
     }
+  }
 
 #ifdef HAS_HOERMANN
     // This protocol is not yet understood. It should be last in the row!

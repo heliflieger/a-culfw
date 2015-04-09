@@ -8,6 +8,8 @@ The compiled firmware can be found at https://www.mediafire.com/folder/tf16radvz
 Inital Version 1.00.00
 
 Changelog:
+1.02.02
+- completed wireless m-bus RX/TX support (for T or S mode)
 1.02.00
 - receive of other temperatur sensors like Rubicon and Prologue
 - Cleanup some code

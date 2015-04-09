@@ -39,6 +39,30 @@ typedef struct RXinfoDescr {
     uint8 state;
 } RXinfoDescr;
 
+
+#define TX_FIFO_THRESHOLD       0x07
+#define TX_OCCUPIED_FIF0        32    // Occupied space
+#define TX_AVAILABLE_FIFO       32    // Free space
+#define TX_FIFO_SIZE            64
+
+#define FIXED_PACKET_LENGTH     0x00
+#define INFINITE_PACKET_LENGTH  0x02
+#define INFINITE                0
+#define FIXED                   1
+#define MAX_FIXED_LENGTH        256
+
+#define TX_OK                   0
+#define TX_LENGTH_ERROR         1
+#define TX_STATE_ERROR          2
+
+// Struct. used to hold information used for TX
+typedef struct TXinfoDescr {
+    uint16 bytesLeft;           // Bytes left that are to be written to the TX FIFO
+    uint8 *pByteIndex;          // Pointer to current position in the byte array
+    uint8  format;              // Infinite or fixed length packet mode
+    uint8  complete;            // Packet Sendt
+} TXinfoDescr;
+
 #define GDO0_DDR  CC1100_OUT_DDR
 #define GDO0_PORT CC1100_OUT_PORT
 #define GDO0_PIN  CC1100_OUT_IN

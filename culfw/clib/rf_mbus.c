@@ -21,12 +21,19 @@
 #include "mbus/manchester.h"
 #include "mbus/3outof6.h"
 
-// RX - Buffers
-uint8 RXpacket[291];
-uint8 RXbytes[584];
+// Buffers
+uint8 MBpacket[291];
+uint8 MBbytes[584];
 
-uint8_t mbus_mode = WMBUS_NONE;
+// Radio Mode
+#define RADIO_MODE_NONE  0
+#define RADIO_MODE_TX    1
+#define RADIO_MODE_RX    2
+
+uint8   radio_mode = RADIO_MODE_NONE;
+uint8_t  mbus_mode = WMBUS_NONE;
 RXinfoDescr RXinfo;
+TXinfoDescr TXinfo;
 
 static void halRfReadFifo(uint8* data, uint8 length, uint8 *rssi, uint8 *lqi) {
   CC1100_ASSERT;
@@ -44,8 +51,26 @@ static void halRfReadFifo(uint8* data, uint8 length, uint8 *rssi, uint8 *lqi) {
   CC1100_DEASSERT;
 }
 
+uint8_t halRfWriteFifo(const uint8* data, uint8 length) {
+    
+    CC1100_ASSERT;
+
+    cc1100_sendbyte( CC1100_TXFIFO|CC1100_WRITE_BURST );
+    for (uint8_t i = 0; i < length; i++)
+      cc1100_sendbyte( data[i] );
+    
+    CC1100_DEASSERT;
+    
+    return 1;
+}
+
+
 static void halRfWriteReg( uint8_t reg, uint8_t value ) {
   cc1100_writeReg( reg, value );
+}
+
+uint8_t halRfGetTxStatus(void) {
+  return(ccStrobe(CC1100_SNOP));
 }
 
 static uint8_t rf_mbus_on(uint8_t force) {
@@ -66,7 +91,7 @@ static uint8_t rf_mbus_on(uint8_t force) {
   RXinfo.lengthField = 0;           // Length Field in the wireless MBUS packet
   RXinfo.length      = 0;           // Total length of bytes to receive packet
   RXinfo.bytesLeft   = 0;           // Bytes left to to be read from the RX FIFO
-  RXinfo.pByteIndex  = RXbytes;     // Pointer to current position in the byte array
+  RXinfo.pByteIndex  = MBbytes;     // Pointer to current position in the byte array
   RXinfo.format      = INFINITE;    // Infinite or fixed packet mode
   RXinfo.start       = TRUE;        // Sync or End of Packet
   RXinfo.complete    = FALSE;       // Packet Received
@@ -85,12 +110,13 @@ static uint8_t rf_mbus_on(uint8_t force) {
   return 1; // this will indicate we just have re-started RX
 }
 
-static void rf_mbus_init(uint8_t mode) {
+static void rf_mbus_init(uint8_t mmode, uint8_t rmode) {
 
   CLEAR_BIT( GDO0_DDR, GDO0_BIT );
   CLEAR_BIT( GDO2_DDR, GDO2_BIT );
 
-  mbus_mode = WMBUS_NONE;
+  mbus_mode  = WMBUS_NONE;
+  radio_mode = RADIO_MODE_NONE;
 
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -106,7 +132,7 @@ static void rf_mbus_init(uint8_t mode) {
   my_delay_us(100);
 
   // load configuration
-  switch (mode) {
+  switch (mmode) {
     case WMBUS_SMODE:
       for (uint8_t i = 0; i<200; i += 2) {
         if (sCFG(i)>0x40)
@@ -125,11 +151,46 @@ static void rf_mbus_init(uint8_t mode) {
       return;
   }
 
-  mbus_mode = mode;
+  if (rmode == RADIO_MODE_TX) {
+    // IDLE after TX and RX
+    halRfWriteReg(CC1100_MCSM1, 0x00); 
+    
+    // Set FIFO threshold
+    halRfWriteReg(CC1100_FIFOTHR, TX_FIFO_THRESHOLD);
+    
+    if (mmode == WMBUS_SMODE) {
+      // SYNC
+      // The TX FIFO must apply the last byte of the 
+      // Synchronization word
+      halRfWriteReg(CC1100_SYNC1, 0x54); 
+      halRfWriteReg(CC1100_SYNC0, 0x76); 
+    } else {
+      // SYNC
+      halRfWriteReg(CC1100_SYNC1, 0x54); 
+      halRfWriteReg(CC1100_SYNC0, 0x3D);
+      
+      // Set Deviation to 50 kHz
+      halRfWriteReg(CC1100_DEVIATN, 0x50);
+      
+      // Set data rate to 100 kbaud
+      halRfWriteReg(CC1100_MDMCFG4, 0x5B);
+      halRfWriteReg(CC1100_MDMCFG3, 0xF8);
+      
+    }
+    
+    // Set GDO0 to be TX FIFO threshold signal
+    halRfWriteReg(CC1100_IOCFG0, 0x02);
+    // Set GDO2 to be high impedance
+    halRfWriteReg(CC1100_IOCFG2, 0x2e);
+  }
+  
+  mbus_mode  = mmode;
+  radio_mode = rmode;
 
   ccStrobe( CC1100_SCAL );
 
   memset( &RXinfo, 0, sizeof( RXinfo ));
+  memset( &TXinfo, 0, sizeof( TXinfo ));
 
   my_delay_ms(4);
 }
@@ -138,6 +199,9 @@ void rf_mbus_task(void) {
   uint8 bytesDecoded[2];
   uint8 fixedLength;
 
+  if (radio_mode != RADIO_MODE_RX)
+    return;
+  
   if (mbus_mode == WMBUS_NONE)
     return;
 
@@ -183,7 +247,7 @@ void rf_mbus_task(void) {
         }
 
 	// check if incoming data will fit into buffer
-	if (RXinfo.length>sizeof(RXbytes)) {
+	if (RXinfo.length>sizeof(MBbytes)) {
           RXinfo.state = 0;
           return;
  	}
@@ -246,16 +310,16 @@ void rf_mbus_task(void) {
     uint16_t rxStatus = PACKET_CODING_ERROR;
 
     if (RXinfo.mode == WMBUS_SMODE)
-      rxStatus = decodeRXBytesSmode(RXbytes, RXpacket, packetSize(RXinfo.lengthField));
+      rxStatus = decodeRXBytesSmode(MBbytes, MBpacket, packetSize(RXinfo.lengthField));
     else
-      rxStatus = decodeRXBytesTmode(RXbytes, RXpacket, packetSize(RXinfo.lengthField));
+      rxStatus = decodeRXBytesTmode(MBbytes, MBpacket, packetSize(RXinfo.lengthField));
 
     if (rxStatus == PACKET_OK) {
 
       DC( 'b' );
 
-      for (uint8_t i=0; i < packetSize(RXpacket[0]); i++) {
-        DH2( RXpacket[i] );
+      for (uint8_t i=0; i < packetSize(MBpacket[0]); i++) {
+        DH2( MBpacket[i] );
 //	DC( ' ' );
       }
 
@@ -272,8 +336,135 @@ void rf_mbus_task(void) {
   rf_mbus_on( FALSE );
 }
 
+
+uint16 txSendPacket(uint8* pPacket, uint8* pBytes, uint8 mode) {  
+  uint16  bytesToWrite;
+  uint16  fixedLength;
+  uint8   txStatus;
+  uint8   lastMode = WMBUS_NONE;
+  uint16  packetLength;
+  
+  // Calculate total number of bytes in the wireless MBUS packet
+  packetLength = packetSize(pPacket[0]);
+
+  // Check for valid length
+  if ((packetLength == 0) || (packetLength > 290))
+    return TX_LENGTH_ERROR;
+
+  // are we coming from active RX?
+  if (radio_mode == RADIO_MODE_RX)
+    lastMode = mbus_mode;
+  
+  rf_mbus_init( mode, RADIO_MODE_TX);
+  
+  // - Data encode packet and calculate number of bytes to transmit 
+  // S-mode
+  if (mode == WMBUS_SMODE) {
+    encodeTXBytesSmode(pBytes, pPacket, packetLength);
+    TXinfo.bytesLeft = byteSize(1, 1, packetLength);   
+  }
+  
+  // T-mode
+  else {
+    encodeTXBytesTmode(pBytes, pPacket, packetLength);
+    TXinfo.bytesLeft = byteSize(0, 1, packetLength);   
+  }
+
+  // Check TX Status
+  txStatus = halRfGetTxStatus();  
+  if ( (txStatus & CC1100_STATUS_STATE_BM) != CC1100_STATE_IDLE ) {
+    ccStrobe(CC1100_SIDLE); 
+    return TX_STATE_ERROR;
+  }
+  
+  // Flush TX FIFO 
+  // Ensure that FIFO is empty before transmit is started
+  ccStrobe(CC1100_SFTX);
+  
+  // Initialize the TXinfo struct.
+  TXinfo.pByteIndex   = pBytes;  
+  TXinfo.complete     = FALSE;      
+  
+  // Set fixed packet length mode if less than 256 bytes to transmit
+  if (TXinfo.bytesLeft < (MAX_FIXED_LENGTH) ) {
+    fixedLength = TXinfo.bytesLeft;
+    halRfWriteReg(CC1100_PKTLEN, (uint8)(TXinfo.bytesLeft));
+    halRfWriteReg(CC1100_PKTCTRL0, FIXED_PACKET_LENGTH);
+    TXinfo.format = FIXED;
+  } 
+  
+  // Else set infinite length mode
+  else {
+    fixedLength = TXinfo.bytesLeft % (MAX_FIXED_LENGTH);
+    halRfWriteReg(CC1100_PKTLEN, (uint8)fixedLength);    
+    halRfWriteReg(CC1100_PKTCTRL0, INFINITE_PACKET_LENGTH);
+    TXinfo.format = INFINITE;
+  }
+  
+  // Fill TX FIFO
+  bytesToWrite = MIN(TX_FIFO_SIZE, TXinfo.bytesLeft);
+  halRfWriteFifo(TXinfo.pByteIndex, bytesToWrite);
+  TXinfo.pByteIndex += bytesToWrite;
+  TXinfo.bytesLeft  -= bytesToWrite;
+  
+  // Check for completion
+  if (!TXinfo.bytesLeft)
+    TXinfo.complete = TRUE; 
+  
+  // Strobe TX
+  ccStrobe(CC1100_STX);
+    
+  // Critical code section
+  // Interrupts must be disabled between checking for completion
+  // and enabling low power mode. Else if TXinfo.complete is set after
+  // the check, and before low power mode is entered the code will 
+  // enter a dead lock.
+  
+  // Wait for available space in FIFO
+  while (!TXinfo.complete) {
+
+    if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
+      // Write data fragment to TX FIFO
+      bytesToWrite = MIN(TX_AVAILABLE_FIFO, TXinfo.bytesLeft);
+      halRfWriteFifo(TXinfo.pByteIndex, bytesToWrite);
+      
+      TXinfo.pByteIndex   += bytesToWrite;
+      TXinfo.bytesLeft    -= bytesToWrite;
+      
+      // Indicate complete when all bytes are written to TX FIFO
+      if (!TXinfo.bytesLeft)
+	TXinfo.complete = TRUE; 
+      
+      // Set Fixed length mode if less than 256 left to transmit
+      if ((TXinfo.bytesLeft < (MAX_FIXED_LENGTH - TX_FIFO_SIZE)) && (TXinfo.format == INFINITE)) {
+	halRfWriteReg(CC1100_PKTCTRL0, FIXED_PACKET_LENGTH);
+	TXinfo.format = FIXED;
+      }
+    } else {
+      
+      // Check TX Status
+      txStatus = halRfGetTxStatus();
+      if ( (txStatus & CC1100_STATUS_STATE_BM) == CC1100_STATE_TX_UNDERFLOW ) {
+	ccStrobe(CC1100_SFTX);
+	return TX_STATE_ERROR;
+      }
+      
+    }
+    
+  }
+
+  while((cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_IDLE));
+
+  // re-enable RX if ...
+  if (lastMode != WMBUS_NONE)
+    rf_mbus_init( lastMode, RADIO_MODE_RX);
+  
+  return (TX_OK);
+}
+
 static void mbus_status(void) {
-  switch (mbus_mode) {
+  if (radio_mode == RADIO_MODE_RX ) {
+    switch (mbus_mode) {
     case WMBUS_SMODE:
       DS_P(PSTR("SMODE"));
       break;
@@ -282,27 +473,55 @@ static void mbus_status(void) {
       break;
     default:
       DS_P(PSTR("OFF"));
+    }
   }
+  else 
+    DS_P(PSTR("OFF"));
   DNL();
 }
-
 
 void rf_mbus_func(char *in) {
   if((in[1] == 'r') && in[2]) {     // Reception on
     if(in[2] == 's') {
-      rf_mbus_init(WMBUS_SMODE);
+      rf_mbus_init(WMBUS_SMODE,RADIO_MODE_RX);
     } else if(in[2] == 't') {
-      rf_mbus_init(WMBUS_TMODE);
+      rf_mbus_init(WMBUS_TMODE,RADIO_MODE_RX);
     } else {                        // Off
-      rf_mbus_init(WMBUS_NONE);
+      rf_mbus_init(WMBUS_NONE,RADIO_MODE_NONE);
     }	
-
+    
   } else if(in[1] == 's') {         // Send
-    return;
 
+    uint8_t i = 0;
+    while (in[2*i+3] && in [2*i+4]) {
+      fromhex(in+3+(2*i), &MBpacket[i], 1);
+      i++;
+    } 
+
+    /*
+    for (uint8_t i=0; i < packetSize(MBpacket[0]); i++) {
+      DH2( MBpacket[i] );
+      DC( ' ' );
+    }
+    DNL();
+    */
+   
+    if(in[2] == 's') {
+      txSendPacket(MBpacket, MBbytes, WMBUS_SMODE);
+    } else if(in[2] == 't') {
+      txSendPacket(MBpacket, MBbytes, WMBUS_TMODE);
+    }	
+    
+    return;
   }
 
   mbus_status();
 }
 
 #endif
+
+// valid tx example data:
+// bss0F44AE0C7856341201074447780B12436587255D
+// - or -
+// bst0F44AE0C7856341201074447780B12436587255D
+
