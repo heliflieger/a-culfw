@@ -289,6 +289,7 @@ RfAnalyze_Task(void)
   analyze_intertechno(b, &datatype, obuf, &oby);
   analyze_tcm97001(b, &datatype, obuf, &oby);
   analyze_revolt(b, &datatype, obuf, &oby);
+  analyze_oregon3(b, &datatype, obuf, &oby);
   analyze_esa(b, &datatype, obuf, &oby);
   analyze_hms(b, &datatype, obuf, &oby);
 
@@ -533,6 +534,9 @@ delbit(bucket_t *b)
 // "Edge-Detected" Interrupt Handler
 ISR(CC1100_INTVECT)
 {  
+#ifdef HAS_OREGON3
+  static uint8_t count_half;
+#endif
 #ifdef HAS_FASTRF
   if(fastrf_on) {
     fastrf_on = 2;
@@ -586,6 +590,32 @@ ISR(CC1100_INTVECT)
       TCNT1 = 0;
     }
     hightime = c;
+#ifdef HAS_OREGON3
+    if (b->state == STATE_OREGON3) {
+      // zero.hightime - short hightime
+      // zero.lowtime  - short lowtime
+      // one.hightime  - long hightime
+      // one.lowtime   - long lowtime
+      if (hightime>TSCALE(1400) || hightime<TSCALE(200))
+        reset_input();
+      if (count_half==1) {//sync nibble: learn long pulse
+        addbit(b,0);
+        b->one.hightime=hightime;
+        count_half+=2;
+      } else {
+        if (hightime > ((b->zero.hightime+b->one.hightime)>>1)) { 
+          b->one.hightime = makeavg(b->one.hightime,hightime);
+          count_half+=2;
+        } else {
+          b->zero.hightime = makeavg(b->zero.hightime,hightime);
+          count_half+=1;
+        }
+      }
+      if (count_half&1) { // ungerade
+        addbit(b,1);
+      }
+    }
+#endif
     return;
   }
 
@@ -612,6 +642,28 @@ ISR(CC1100_INTVECT)
   ///////////////////////
   // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
   TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
+
+#ifdef HAS_OREGON3
+    if (b->state == STATE_OREGON3) {
+      // zero.hightime - short hightime
+      // zero.lowtime  - short lowtime
+      // one.hightime  - long hightime
+      // one.lowtime   - long lowtime
+      if (lowtime>TSCALE(1400) || lowtime<TSCALE(200))
+        reset_input();
+      if (lowtime > ((b->zero.lowtime+b->one.lowtime)>>1)) { 
+        b->one.lowtime = makeavg(b->one.lowtime,lowtime);
+        count_half+=2;
+      } else {
+        b->zero.lowtime = makeavg(b->zero.lowtime,lowtime);
+        count_half+=1;
+      }
+      if (count_half&1) { // ungerade
+          addbit(b,0);
+      }
+      return;
+    }
+#endif
   
 #ifdef HAS_REVOLT
   if (IS433MHZ && (hightime > TSCALE(9000)) && (hightime < TSCALE(12000)) &&
@@ -664,7 +716,15 @@ retry_sync:
         OCR1A = SILENCE;
         if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
           b->state = STATE_HMS;
-
+#ifdef HAS_OREGON3
+      } else if (b->sync >= 12) { // erwarte 12 der 24 Preamble Bits
+        if (hightime>TSCALE(1200) || lowtime>TSCALE(1400))
+          reset_input();
+        b->state = STATE_OREGON3;
+        count_half=1;
+        // first sync bit added later
+        
+#endif
   #ifdef HAS_ESA
         } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
           b->state = STATE_ESA;

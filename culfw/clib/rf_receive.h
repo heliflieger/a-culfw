@@ -14,6 +14,7 @@
 #include "rf_receive_revolt.h"
 #include "rf_receive_esa.h"
 #include "rf_receive_hms.h"
+#include "rf_receive_oregon.h"
 
 #define TYPE_EM      'E'
 
