@@ -60,6 +60,7 @@ LUFA_OPTS += -D USE_FLASH_DESCRIPTORS
 LUFA_OPTS += -D F_CLOCK=$(F_CPU)UL
 LUFA_OPTS += -D USE_STATIC_OPTIONS="(USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)"
 CFLAGS  = -D$(TARGET)
+CFLAGS += -D$(FREQUENCE)
 CFLAGS += -DF_CPU=$(F_CPU)UL
 CFLAGS += -DLUFA $(LUFA_OPTS)
 CFLAGS += -Os
@@ -81,7 +82,7 @@ GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
 ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
 
 EXTMEMOPTS =
-LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
+LDFLAGS = -Wl,-Map=$(TARGET)$(FREQUENCE).map,--cref
 LDFLAGS += -Wl,--relax
 LDFLAGS += -Wl,--gc-sections
 LDFLAGS += $(EXTMEMOPTS)
@@ -112,36 +113,45 @@ SRC += ../../clib/rf_mbus.c ../../clib/mbus/manchester.c ../../clib/mbus/3outof6
 endif
 
 all:
-	make TARGET=CUL_ARDUINO MCU=atmega32u4 mostly_clean build size
+	make TARGET=CUL_ARDUINO FREQUENCE=_433MHZ MCU=atmega32u4 mostly_clean build size
+	make TARGET=CUL_ARDUINO FREQUENCE=_868MHZ MCU=atmega32u4 mostly_clean build size
 
 build: elf hex eep lss sym
 
-elf: $(TARGET).elf
-hex: $(TARGET).hex
-eep: $(TARGET).eep
-lss: $(TARGET).lss
-sym: $(TARGET).sym
+elf: $(TARGET)$(FREQUENCE).elf
+hex: $(TARGET)$(FREQUENCE).hex
+eep: $(TARGET)$(FREQUENCE).eep
+lss: $(TARGET)$(FREQUENCE).lss
+sym: $(TARGET)$(FREQUENCE).sym
 
 
-ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf
+ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET)$(FREQUENCE).elf
 
 size:
-	@if test -f $(TARGET).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
+	@if test -f $(TARGET)$(FREQUENCE).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
 	2>/dev/null; echo; fi
 
 
 usbprogram:
-	@echo 'specify one of: avdude_arduino'
+	@echo 'specify one of: avdude_arduino433Mhz avdude_arduino868Mhz'
 
-avdude_arduino: TARGET=CUL_ARDUINO
-avdude_arduino: MCU=atmega32u4
-avdude_arduino: PORT=/dev/ttyACM0
-avdude_arduino: BAUD=57600
-avdude_arduino: do_avdude
+avdude_arduino868Mhz: TARGET=CUL_ARDUINO
+avdude_arduino868Mhz: FREQUENCE=_868MHZ
+avdude_arduino868Mhz: MCU=atmega32u4
+avdude_arduino868Mhz: PORT=/dev/ttyACM0
+avdude_arduino868Mhz: BAUD=57600
+avdude_arduino868Mhz: do_avdude
+
+avdude_arduino433Mhz: TARGET=CUL_ARDUINO
+avdude_arduino433Mhz: FREQUENCE=_433MHZ
+avdude_arduino433Mhz: MCU=atmega32u4
+avdude_arduino433Mhz: PORT=/dev/ttyACM0
+avdude_arduino433Mhz: BAUD=57600
+avdude_arduino433Mhz: do_avdude
 
 
 do_avdude:
-	avrdude -p$(MCU) -cavr109 -P$(PORT) -b$(BAUD) -D -Uflash:w:./$(TARGET).hex:i
+	avrdude -p$(MCU) -cavr109 -P$(PORT) -b$(BAUD) -D -Uflash:w:./$(TARGET)$(FREQUENCE).hex:i
 
 %.hex: %.elf
 	@echo $(MSG_FLASH) $@
@@ -162,7 +172,7 @@ do_avdude:
 
 
 
-.SECONDARY : $(TARGET).elf
+.SECONDARY : $(TARGET)$(FREQUENCE).elf
 .PRECIOUS : $(OBJ)
 %.elf: $(OBJ)
 	@echo $(MSG_LINKING) $@
@@ -175,13 +185,13 @@ $(OBJDIR)/%.o : %.c
 
 mostly_clean:
 	@echo $(MSG_CLEANING)
-	@$(REMOVE) $(TARGET).hex
-	@$(REMOVE) $(TARGET).eep
-	@$(REMOVE) $(TARGET).cof
-	@$(REMOVE) $(TARGET).elf
-	@$(REMOVE) $(TARGET).map
-	@$(REMOVE) $(TARGET).sym
-	@$(REMOVE) $(TARGET).lss
+	@$(REMOVE) $(TARGET)$(FREQUENCE).hex
+	@$(REMOVE) $(TARGET)$(FREQUENCE).eep
+	@$(REMOVE) $(TARGET)$(FREQUENCE).cof
+	@$(REMOVE) $(TARGET)$(FREQUENCE).elf
+	@$(REMOVE) $(TARGET)$(FREQUENCE).map
+	@$(REMOVE) $(TARGET)$(FREQUENCE).sym
+	@$(REMOVE) $(TARGET)$(FREQUENCE).lss
 	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
 	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
 	@$(REMOVE) $(SRC:.c=.s)

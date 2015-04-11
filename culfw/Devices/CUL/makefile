@@ -58,6 +58,7 @@ LUFA_OPTS += -D USE_FLASH_DESCRIPTORS
 LUFA_OPTS += -D F_CLOCK=$(F_CPU)UL
 LUFA_OPTS += -D USE_STATIC_OPTIONS="(USB_DEVICE_OPT_FULLSPEED | USB_OPT_REG_ENABLED | USB_OPT_AUTO_PLL)"
 CFLAGS  = -D$(TARGET)
+CFLAGS += -D$(FREQUENCE)
 CFLAGS += -DF_CPU=$(F_CPU)UL
 CFLAGS += -DLUFA $(LUFA_OPTS)
 CFLAGS += -Os
@@ -110,54 +111,89 @@ SRC += ../../clib/rf_mbus.c ../../clib/mbus/manchester.c ../../clib/mbus/3outof6
 endif
 
 all:
-	make TARGET=CUL_V2 MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2_HM MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2_MAX MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V3 MCU=atmega32u4 mostly_clean build size
-	make TARGET=CUL_V4 MCU=atmega32u2 mostly_clean build size
+	make TARGET=CUL_V2 FREQUENCE=_433MHZ MCU=at90usb162 mostly_clean build size
+	make TARGET=CUL_V2 FREQUENCE=_868MHZ MCU=at90usb162 mostly_clean build size
+	make TARGET=CUL_V2_HM FREQUENCE=_433MHZ MCU=at90usb162 mostly_clean build size
+	make TARGET=CUL_V2_HM FREQUENCE=_868MHZ MCU=at90usb162 mostly_clean build size
+	make TARGET=CUL_V2_MAX FREQUENCE=_433MHZ MCU=at90usb162 mostly_clean build size
+	make TARGET=CUL_V2_MAX FREQUENCE=_868MHZ MCU=at90usb162 mostly_clean build size
+	make TARGET=CUL_V3 FREQUENCE=_433MHZ MCU=atmega32u4 mostly_clean build size
+	make TARGET=CUL_V3 FREQUENCE=_868MHZ MCU=atmega32u4 mostly_clean build size
+	make TARGET=CUL_V4 FREQUENCE=_433MHZ MCU=atmega32u2 mostly_clean build size
+	make TARGET=CUL_V4 FREQUENCE=_868MHZ MCU=atmega32u2 mostly_clean build size
 
 build: elf hex eep lss sym
 
-elf: $(TARGET).elf
-hex: $(TARGET).hex
-eep: $(TARGET).eep
-lss: $(TARGET).lss
-sym: $(TARGET).sym
+elf: $(TARGET)$(FREQUENCE).elf
+hex: $(TARGET)$(FREQUENCE).hex
+eep: $(TARGET)$(FREQUENCE).eep
+lss: $(TARGET)$(FREQUENCE).lss
+sym: $(TARGET)$(FREQUENCE).sym
 
 
-ELFSIZE = $(SIZE) $(TARGET).elf
+ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET)$(FREQUENCE).elf
 
 size:
-	@if test -f $(TARGET).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
+	@if test -f $(TARGET)$(FREQUENCE).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
 	2>/dev/null; echo; fi
 
 
 usbprogram:
-	@echo 'specify one of: usbprogram_v2 usbprogram_v2_hm usbprogram_v3 usbprogram_v4'
+	@echo 'specify one of: usbprogram_v2_433mhz usbprogram_v2_hm_433mhz usbprogram_v3_433mhz usbprogram_v4_433mhz usbprogram_v2_868mhz usbprogram_v2_hm_868mhz usbprogram_v3_868mhz usbprogram_v4_868mhz'
 
-usbprogram_v4: TARGET=CUL_V4
-usbprogram_v4: MCU=atmega32u2
-usbprogram_v4: do_usbprogram
+usbprogram_v4_433mhz: TARGET=CUL_V4
+usbprogram_v4_433mhz: MCU=atmega32u2
+usbprogram_v4_433mhz: FREQUENCE=_433MHZ
+usbprogram_v4_433mhz: do_usbprogram
 
-usbprogram_v3: TARGET=CUL_V3
-usbprogram_v3: MCU=atmega32u4
-usbprogram_v3: do_usbprogram
+usbprogram_v3_433mhz: TARGET=CUL_V3
+usbprogram_v3_433mhz: MCU=atmega32u4
+usbprogram_v3_433mhz: FREQUENCE=_433MHZ
+usbprogram_v3_433mhz: do_usbprogram
 
-usbprogram_v2: TARGET=CUL_V2
-usbprogram_v2: MCU=at90usb162
-usbprogram_v2: do_usbprogram
+usbprogram_v2_433mhz: TARGET=CUL_V2
+usbprogram_v2_433mhz: MCU=at90usb162
+usbprogram_v2_433mhz: FREQUENCE=_433MHZ
+usbprogram_v2_433mhz: do_usbprogram
 
-usbprogram_v2_hm: TARGET=CUL_V2_HM
-usbprogram_v2_hm: MCU=at90usb162
-usbprogram_v2_hm: do_usbprogram
+usbprogram_v2_hm_433mhz: TARGET=CUL_V2_HM
+usbprogram_v2_hm_433mhz: MCU=at90usb162
+usbprogram_v2_hm_433mhz: FREQUENCE=_433MHZ
+usbprogram_v2_hm_433mhz: do_usbprogram
 
-usbprogram_v2_max: TARGET=CUL_V2_MAX
-usbprogram_v2_max: MCU=at90usb162
-usbprogram_v2_max: do_usbprogram
+usbprogram_v2_max_433mhz: TARGET=CUL_V2_MAX
+usbprogram_v2_max_433mhz: MCU=at90usb162
+usbprogram_v2_max_433mhz: FREQUENCE=_433MHZ
+usbprogram_v2_max_433mhz: do_usbprogram
+
+usbprogram_v4_868mhz: TARGET=CUL_V4
+usbprogram_v4_868mhz: MCU=atmega32u2
+usbprogram_v4_868mhz: FREQUENCE=_868MHZ
+usbprogram_v4_868mhz: do_usbprogram
+
+usbprogram_v3_868mhz: TARGET=CUL_V3
+usbprogram_v3_868mhz: MCU=atmega32u4
+usbprogram_v3_868mhz: FREQUENCE=_868MHZ
+usbprogram_v3_868mhz: do_usbprogram
+
+usbprogram_v2_868mhz: TARGET=CUL_V2
+usbprogram_v2_868mhz: MCU=at90usb162
+usbprogram_v2_868mhz: FREQUENCE=_868MHZ
+usbprogram_v2_868mhz: do_usbprogram
+
+usbprogram_v2_hm_868mhz: TARGET=CUL_V2_HM
+usbprogram_v2_hm_868mhz: MCU=at90usb162
+usbprogram_v2_hm_868mhz: FREQUENCE=_868MHZ
+usbprogram_v2_hm_868mhz: do_usbprogram
+
+usbprogram_v2_max_868mhz: TARGET=CUL_V2_MAX
+usbprogram_v2_max_868mhz: MCU=at90usb162
+usbprogram_v2_max_868mhz: FREQUENCE=_868MHZ
+usbprogram_v2_max_868mhz: do_usbprogram
 
 do_usbprogram:
 	dfu-programmer $(MCU) erase || true
-	dfu-programmer $(MCU) flash $(TARGET).hex
+	dfu-programmer $(MCU) flash $(TARGET)$(FREQUENCE).hex
 	dfu-programmer $(MCU) start
 
 %.hex: %.elf
@@ -179,7 +215,7 @@ do_usbprogram:
 
 
 
-.SECONDARY : $(TARGET).elf
+.SECONDARY : $(TARGET)$(FREQUENCE).elf
 .PRECIOUS : $(OBJ)
 %.elf: $(OBJ)
 	@echo $(MSG_LINKING) $@
@@ -192,13 +228,13 @@ $(OBJDIR)/%.o : %.c
 
 mostly_clean:
 	@echo $(MSG_CLEANING)
-	@$(REMOVE) $(TARGET).hex
-	@$(REMOVE) $(TARGET).eep
-	@$(REMOVE) $(TARGET).cof
-	@$(REMOVE) $(TARGET).elf
-	@$(REMOVE) $(TARGET).map
-	@$(REMOVE) $(TARGET).sym
-	@$(REMOVE) $(TARGET).lss
+	@$(REMOVE) $(TARGET)$(FREQUENCE).hex
+	@$(REMOVE) $(TARGET)$(FREQUENCE).eep
+	@$(REMOVE) $(TARGET)$(FREQUENCE).cof
+	@$(REMOVE) $(TARGET)$(FREQUENCE).elf
+	@$(REMOVE) $(TARGET)$(FREQUENCE).map
+	@$(REMOVE) $(TARGET)$(FREQUENCE).sym
+	@$(REMOVE) $(TARGET)$(FREQUENCE).lss
 	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
 	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
 	@$(REMOVE) $(SRC:.c=.s)
