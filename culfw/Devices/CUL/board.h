@@ -29,20 +29,23 @@
 #  define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #  define HAS_ASKSIN
 #  define HAS_ASKSIN_FUP
-#  define HAS_MORITZ
 #  define HAS_KOPP_FC
 #  define HAS_RWE
-#  define HAS_ESA
 #  define HAS_TX3
 #  define HAS_INTERTECHNO
-#  define HAS_TCM97001
 #  define HAS_UNIROLL
-#  define HAS_HOERMANN
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
-#  define HAS_IT
+#if defined(_433MHZ)
 #  define HAS_TCM97001
+#  define HAS_IT
+#endif
+#if defined(_868MHZ)
 #  define HAS_HMS
+#  define HAS_ESA
+#  define HAS_MORITZ
+#  define HAS_HOERMANN
+#endif
 #endif
 
 #if defined(CUL_V4)
@@ -51,7 +54,9 @@
 
 #if defined(CUL_V3)
 #  define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
+#if defined(_868MHZ)
 #  define HAS_MBUS
+#endif
 #endif
 
 

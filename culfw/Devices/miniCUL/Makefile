@@ -103,7 +103,7 @@ lss: $(TARGET).lss
 sym: $(TARGET).sym
 
 
-ELFSIZE = $(SIZE) $(TARGET).elf
+ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf
 
 size:
 	@if test -f $(TARGET).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
