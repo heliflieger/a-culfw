@@ -42,6 +42,7 @@
 #  define HAS_SOMFY_RTS
 #  define HAS_IT
 #  define HAS_HMS
+//#  define HAS_OREGON3
 //#  define DEBUG_SYNC
 #endif
 
