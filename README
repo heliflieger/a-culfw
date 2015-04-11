@@ -8,6 +8,9 @@ The compiled firmware can be found at https://www.mediafire.com/folder/tf16radvz
 Inital Version 1.00.00
 
 Changelog:
+1.03.01
+- Split CULs in 433MHz and 868MHz version
+- Implement Oregon 3, disabled by default. Define HAS_OREGON3
 1.02.02
 - completed wireless m-bus RX/TX support (for T or S mode)
 1.02.00
