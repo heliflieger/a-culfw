@@ -32,6 +32,7 @@ SRC = $(TARGET).c\
 		../../clib/rf_receive_revolt.c                       \
 		../../clib/rf_receive_esa.c                          \
 		../../clib/rf_receive_hms.c                          \
+		../../clib/rf_receive_oregon.c                       \
 		../../clib/helper.c                                  \
 		../../clib/rf_router.c                               \
 		../../clib/intertechno.c                             \
