@@ -48,7 +48,7 @@
 #  define HAS_MBUS
 #  define HAS_MORITZ
 #endif
-//#  define HAS_OREGON3
+#  define HAS_OREGON3
 //#  define DEBUG_SYNC
 #endif
 
