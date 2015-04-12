@@ -6,7 +6,7 @@
 #include "board.h"
 
 /* public prototypes */
-#ifdef HAS_ESA
+#if defined(HAS_ESA) || defined (HAS_OREGON3)
 #define MAXMSG 20               // ESA messages
 #else
 #define MAXMSG 12               // EMEM messages
