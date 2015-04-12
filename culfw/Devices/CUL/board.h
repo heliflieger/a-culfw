@@ -36,16 +36,17 @@
 #  define HAS_UNIROLL
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
-#if defined(_433MHZ)
-#  define HAS_TCM97001
-#  define HAS_IT
-#endif
+#  if defined(_433MHZ)
+#    define HAS_TCM97001
+#    define HAS_IT
+#    define HAS_OREGON3
+#  endif
 #if defined(_868MHZ)
-#  define HAS_HMS
-#  define HAS_ESA
-#  define HAS_MORITZ
-#  define HAS_HOERMANN
-#endif
+#    define HAS_HMS
+#    define HAS_ESA
+#    define HAS_MORITZ
+#    define HAS_HOERMANN
+#  endif
 #endif
 
 #if defined(CUL_V4)
