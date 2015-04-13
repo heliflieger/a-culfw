@@ -146,6 +146,8 @@
 
 #define HAS_MBUS
 
+#define HAS_SOMFY_RTS		// Somfy RTS support
+
 #define TTY_BUFSIZE             1024
 
 #define BUSWARE_CUNO2

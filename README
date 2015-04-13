@@ -3,11 +3,19 @@ Alternative culfw for cul devices
 The orginal fimware is cloned from www.culfw.de (thanks for the work to R.K.)
 
 This alternative firmware has additional send receive methods and code cleanups.
-The compiled firmware can be found at https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
+The compiled firmware can be found at 
+https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
 
 Inital Version 1.00.00
 
 Changelog:
+1.03.03
+- From culfw: add Bff to test the watchdog (Forum #36215)
+- From culfw: CUNO2: added SOMFY RTS support to board definition (thdankert)
+- Fix size of 868MHz CUL (disable Hoermann, disable IT-Sending with 868Mhz 
+  version)
+1.03.02
+- Enable Oregon3 in CUL for testing
 1.03.01
 - Split CULs in 433MHz and 868MHz version
 - Implement Oregon 3, disabled by default. Define HAS_OREGON3
