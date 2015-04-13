@@ -281,6 +281,9 @@ prepare_boot(char *in)
   if(in)
     fromhex(in+1, &bl, 1);
 
+  if(bl == 0xff)             // Allow testing
+    while(1);    
+
   if(bl)                     // Next reboot we'd like to jump to the bootloader.
     ewb( EE_REQBL, 1 );      // Simply jumping to the bootloader from here
                              // wont't work. Neither helps to shutdown USB

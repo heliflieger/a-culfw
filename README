@@ -8,6 +8,12 @@ The compiled firmware can be found at https://www.mediafire.com/folder/tf16radvz
 Inital Version 1.00.00
 
 Changelog:
+1.03.03
+- From culfw: add Bff to test the watchdog (Forum #36215)
+- From culfw: CUNO2: added SOMFY RTS support to board definition (thdankert)
+- Fix size of 868MHz CUL (disable Hoermann)
+1.03.02
+- Enable Oregon3 in CUL for testing
 1.03.01
 - Split CULs in 433MHz and 868MHz version
 - Implement Oregon 3, disabled by default. Define HAS_OREGON3

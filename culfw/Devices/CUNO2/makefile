@@ -65,11 +65,12 @@ SRC = $(TARGET).c                                                    \
 		../../clib/dmx.c                                      \
 		../../clib/intertechno.c                              \
 		../../clib/hm485.c                                      \
-                ../../clib/rf_mbus.c                                 \
-                ../../clib/mbus/manchester.c                         \
-                ../../clib/mbus/3outof6.c                            \
-                ../../clib/mbus/mbus_packet.c                        \
-                ../../clib/mbus/crc.c                                \
+		../../clib/rf_mbus.c                                 \
+		../../clib/mbus/manchester.c                         \
+		../../clib/mbus/3outof6.c                            \
+		../../clib/mbus/mbus_packet.c                        \
+		../../clib/mbus/crc.c                                \
+		../../clib/somfy_rts.c					\
 		
 OPT = s
 DEBUG = dwarf-2
@@ -228,7 +229,7 @@ end:
 
 
 HEXSIZE = $(SIZE) $(TARGET).hex
-ELFSIZE = $(SIZE) $(TARGET).elf
+ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf
 
 sizebefore:
 	@if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); \
