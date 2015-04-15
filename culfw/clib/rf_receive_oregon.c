@@ -6,10 +6,10 @@
 #include "rf_receive_oregon.h"
 #include "display.h"
 
+#ifdef HAS_OREGON3
 /*
  * Reverse nibble for oregon
  */
-#ifdef HAS_OREGON3
 uint8_t reverse_bitsinnibble(uint8_t in) {
   uint8_t ret=0;
   ret = (in&0x11)<<3;
@@ -18,11 +18,9 @@ uint8_t reverse_bitsinnibble(uint8_t in) {
   ret |= (in&0x88)>>3;
   return ret;
 }
-#endif
 
 void analyze_oregon3(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
-#ifdef HAS_OREGON3
   if (IS433MHZ && *datatype == 0) {
     if (b->byteidx != 13 || b->state != STATE_OREGON3 || b->bitidx != 3)
       return;
@@ -44,12 +42,9 @@ void analyze_oregon3(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby
     *oby = i;
     *datatype = TYPE_OREGON3;
   }
-#endif
 }
 
-
-
-
+#endif
 
 
 

@@ -6,7 +6,7 @@
 #
 
 # The file for flashing the device
-FLASH_FILE=CUL_ARDUINO_433MHZ.hex
+FLASH_FILE=CUL_ARDUINO
 
 # The MCU
 MCU=atmega32u4
@@ -21,7 +21,7 @@ BAUD=57600
 # The programmer
 PROGRAMMER=avrdude
 
-if [ ! -e "$FLASH_FILE" ] ; then
+if [ ! -e "${FLASH_FILE}_433MHZ.hex" ] ; then
   echo "Program file missing building first source code"
   make
 fi 
@@ -59,11 +59,10 @@ echo "The device will now be flashed"
 read -p "Continue (y/n)?" flashdevice
 
 if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then
-  echo "Call now ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}${FREQ}:i"
-  ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}${FREQ}:i
+  echo "Call now ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}${FREQ}.hex:i"
+  ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}${FREQ}.hex:i
 else
   echo "Abort flash"
 fi
-
 
 

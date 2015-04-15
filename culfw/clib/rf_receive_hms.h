@@ -12,7 +12,7 @@
 #include "rf_receive_bucket.h"
 #include "fband.h"
 
-
+#ifdef HAS_HMS
 #define TYPE_HMS     'H'
 
 #define STATE_HMS     4
@@ -28,5 +28,6 @@
  */
 void analyze_hms(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby);
 
-
 #endif
+#endif
+

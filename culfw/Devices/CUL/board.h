@@ -1,6 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+
 // Feature definitions
 #define BOARD_ID_STR            "CUL868"
 #define BOARD_ID_USTR           L"CUL868"
@@ -32,21 +33,20 @@
 #  define HAS_KOPP_FC
 #  define HAS_RWE
 #  define HAS_TX3
-
+#  define HAS_INTERTECHNO
 #  define HAS_UNIROLL
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
 #  if defined(_433MHZ)
 #    define HAS_TCM97001
 #    define HAS_IT
-#    define HAS_INTERTECHNO
 #    define HAS_OREGON3
 #  endif
 #if defined(_868MHZ)
 #    define HAS_HMS
 #    define HAS_ESA
 #    define HAS_MORITZ
-//#    define HAS_HOERMANN
+#    define HAS_HOERMANN
 #  endif
 #endif
 

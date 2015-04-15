@@ -6,12 +6,12 @@
 #include "rf_receive_revolt.h"
 #include "display.h"
 
+#ifdef HAS_REVOLT
 /*
  * Description in header
  */
 void analyze_revolt(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
-#ifdef HAS_REVOLT
   if (IS433MHZ && *datatype == 0) {
     uint8_t sum=0;
     if (b->byteidx != 12 || b->state != STATE_REVOLT || b->bitidx != 0)
@@ -30,8 +30,8 @@ void analyze_revolt(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
         return; // failed
     *datatype = TYPE_REVOLT;
   }
-#endif
 }
 
+#endif
 
 

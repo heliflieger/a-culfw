@@ -11,10 +11,9 @@
 #include "rf_receive_bucket.h"
 #include "fband.h"
 
-
+#ifdef HAS_OREGON3
 #define STATE_OREGON3 10
 #define TYPE_OREGON3  'o'
-
 
 /*
  * Analyse Oregon 3 packet.
@@ -50,4 +49,5 @@ void analyze_oregon3(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby
  */
 //void addbit_intertechno_v3(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
 
+#endif
 #endif

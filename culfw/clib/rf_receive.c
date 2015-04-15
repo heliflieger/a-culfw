@@ -286,12 +286,24 @@ RfAnalyze_Task(void)
 
   b = bucket_array + bucket_out;
 
+#ifdef HAS_IT
   analyze_intertechno(b, &datatype, obuf, &oby);
+#endif
+#ifdef HAS_TCM97001
   analyze_tcm97001(b, &datatype, obuf, &oby);
+#endif
+#ifdef HAS_REVOLT
   analyze_revolt(b, &datatype, obuf, &oby);
+#endif
+#ifdef HAS_OREGON3
   analyze_oregon3(b, &datatype, obuf, &oby);
+#endif
+#ifdef HAS_ESA
   analyze_esa(b, &datatype, obuf, &oby);
+#endif
+#ifdef HAS_HMS
   analyze_hms(b, &datatype, obuf, &oby);
+#endif
 
   if (b->state == STATE_COLLECT) {
     if(!datatype && analyze(b, TYPE_FS20, &oby)) { // Can be FS10 (433Mhz) or FS20 (868MHz)
@@ -394,7 +406,6 @@ RfAnalyze_Task(void)
   }
 
   if(tx_report & REP_BITS) {
-
     DC('p');
     DU(b->state,        2);
     DU(b->zero.hightime*16, 5);
@@ -405,8 +416,9 @@ RfAnalyze_Task(void)
     DU(b->byteidx,      3);
     DU(7-b->bitidx,     2);
 #ifdef DEBUG_SYNC
-    DU(b->syncbit.hightime *16, 7);
-    DU(b->syncbit.lowtime  *16, 7);
+    DU(b->syncbit.hightime *16, 5);
+    DC(' ');
+    DU(b->syncbit.lowtime  *16, 5);
 #endif
     DC(' ');
     if(tx_report & REP_RSSI) {
@@ -558,6 +570,7 @@ ISR(CC1100_INTVECT)
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
+#ifdef HAS_HMS
   if (IS868MHZ && b->state == STATE_HMS) {
     if(c < TSCALE(750))
       return;
@@ -566,6 +579,7 @@ ISR(CC1100_INTVECT)
       return;
     }
   }
+#endif
 
 #ifdef HAS_ESA
   if (IS868MHZ && b->state == STATE_ESA) {
@@ -581,7 +595,12 @@ ISR(CC1100_INTVECT)
   //////////////////
   // Falling edge
   if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
-    if(IS868MHZ && ( (b->state == STATE_HMS)
+
+#if defined (HAS_HMS) || defined (HAS_ESA)
+    if(
+#ifdef HAS_HMS
+IS868MHZ && ( (b->state == STATE_HMS)
+#endif
 #ifdef HAS_ESA
      || (IS868MHZ && b->state == STATE_ESA) 
 #endif
@@ -589,6 +608,8 @@ ISR(CC1100_INTVECT)
       addbit(b, 1);
       TCNT1 = 0;
     }
+#endif
+
     hightime = c;
 #ifdef HAS_OREGON3
     if (b->state == STATE_OREGON3) {
@@ -622,15 +643,21 @@ ISR(CC1100_INTVECT)
   lowtime = c-hightime;
   TCNT1 = 0;                          // restart timer
 
+#ifdef HAS_IT
   if (sync_intertechno(b, &hightime, &lowtime)) {
     return;
   }
+#endif
 
   /*DU(hightime *16, 6);
   DU(lowtime*16, 6);
   DC('*');*/
 
-  if(IS868MHZ && ((b->state == STATE_HMS)
+#if defined (HAS_HMS) || defined (HAS_ESA)
+  if(
+#ifdef HAS_HMS
+      IS868MHZ && ((b->state == STATE_HMS)
+#endif
 #ifdef HAS_ESA
      || (b->state == STATE_ESA) 
 #endif
@@ -638,6 +665,7 @@ ISR(CC1100_INTVECT)
     addbit(b, 0);
     return;
   }
+#endif
 
   ///////////////////////
   // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
@@ -687,11 +715,21 @@ ISR(CC1100_INTVECT)
   {
     case STATE_RESET: // first sync bit, cannot compare yet   
 retry_sync:
+#ifdef DEBUG_SYNC
+        b->syncbit.hightime=0;
+        b->syncbit.lowtime=0;
+#endif
+#ifdef HAS_TCM97001
       if (is_tcm97001(b, &hightime, &lowtime)) {
         return;
-      }	else if (is_intertechno(b, &hightime, &lowtime)) {
+      }	else 
+#endif
+#ifdef HAS_IT
+      if (is_intertechno(b, &hightime, &lowtime)) {
         return;
-      } else if(hightime > TSCALE(1600) || lowtime > TSCALE(1600)) {
+      } else 
+#endif 
+      if(hightime > TSCALE(1600) || lowtime > TSCALE(1600)) {
         // Invalid Package
         return;
       }
@@ -704,42 +742,56 @@ retry_sync:
     case STATE_SYNC:  // sync: lots of zeroes
 
       if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
-
-        
-
         b->zero.hightime = makeavg(b->zero.hightime, hightime);
         b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+#ifdef DEBUG_SYNC
+        b->syncbit.hightime=b->zero.hightime;
+        b->syncbit.lowtime=b->zero.lowtime;
+#endif
         b->sync++;
-        
- 
       } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
         OCR1A = SILENCE;
+#ifdef HAS_HMS
         if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
           b->state = STATE_HMS;
+
+      } else 
+#endif
 #ifdef HAS_OREGON3
-      } else if (b->sync >= 12) { // erwarte 12 der 24 Preamble Bits
+      if (b->sync >= 12) { // erwarte 12 der 24 Preamble Bits
         if (hightime>TSCALE(1200) || lowtime>TSCALE(1400))
           reset_input();
         b->state = STATE_OREGON3;
         count_half=1;
         // first sync bit added later
-        
+        } else
 #endif
   #ifdef HAS_ESA
-        } else if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
+              if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
           b->state = STATE_ESA;
           OCR1A = 1000;
+
+        } else 
   #endif
   #ifdef HAS_RF_ROUTER
-        } else if(rf_router_myid &&
+          if(rf_router_myid &&
                   check_rf_sync(hightime, lowtime) &&
                   check_rf_sync(b->zero.lowtime, b->zero.hightime)) {
           rf_router_status = RF_ROUTER_SYNC_RCVD;
           reset_input();
           return;
-  #endif
 
-        } else {
+
+        } else
+  #endif
+        {
+          /*DC('S');
+          DU(hightime*16, 5);
+          DC('-');
+          DU(lowtime *16, 5);
+          DC('-');
+          DU(b->sync, 2);
+          DC('\n');*/
           b->state = STATE_COLLECT;
         }
 
@@ -791,7 +843,9 @@ retry_sync:
         b->zero.hightime = makeavg(b->zero.hightime, hightime);
         b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
       } else {
+#ifdef HAS_IT
           if (b->state!=STATE_IT) 
+#endif
             reset_input();
       }
       break;

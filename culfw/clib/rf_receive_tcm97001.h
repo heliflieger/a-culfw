@@ -29,6 +29,7 @@
 #include "fband.h"
 #include "helper.h"
 
+#ifdef HAS_TCM97001
 
 #define STATE_TCM97001 8
 #define TYPE_TCM97001 's'
@@ -66,5 +67,6 @@ uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
  */
 void addbit_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
 
-
 #endif
+#endif
+
