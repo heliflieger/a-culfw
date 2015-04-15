@@ -11,6 +11,7 @@
 #include "rf_receive_bucket.h"
 #include "fband.h"
 
+#ifdef HAS_ESA
 
 #define TYPE_ESA     'S'
 
@@ -27,5 +28,7 @@
  */
 void analyze_esa(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby);
 
+#endif
 
 #endif
+

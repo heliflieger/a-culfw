@@ -6,12 +6,12 @@
 #include "rf_receive_esa.h"
 #include "display.h"
 
+#ifdef HAS_ESA
 /*
  * Description in header
  */
 void analyze_esa(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
-#ifdef HAS_ESA
   if (IS868MHZ && *datatype == 0) {
     input_t in;
     in.byte = 0;
@@ -50,8 +50,8 @@ void analyze_esa(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 
     *datatype = TYPE_ESA;
   }
-#endif
 }
 
+#endif
 
 

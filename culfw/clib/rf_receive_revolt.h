@@ -6,11 +6,13 @@
 #ifndef _RF_RECEIVE_REVOLT_H
 #define _RF_RECEIVE_REVOLT_H
 
+
 #include <stdio.h>
 #include "board.h"
 #include "rf_receive_bucket.h"
 #include "fband.h"
 
+#ifdef HAS_REVOLT
 
 #define TYPE_REVOLT	 'r'
 
@@ -27,5 +29,5 @@
  */
 void analyze_revolt(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby);
 
-
+#endif
 #endif

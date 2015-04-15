@@ -23,12 +23,12 @@
 #include "display.h"
 
 
+#ifdef HAS_TCM97001
 /*
  * Description in header
  */
 void analyze_tcm97001(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
-#ifdef HAS_TCM97001
   if (IS433MHZ && *datatype == 0) {
     if ((b->byteidx != 3 && b->byteidx != 4) || (b->bitidx != 7 && b->bitidx != 3 && b->bitidx != 2) || b->state != STATE_TCM97001) {
 		  return;
@@ -47,7 +47,6 @@ void analyze_tcm97001(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *ob
     *oby = i;
     *datatype = TYPE_TCM97001;
   }
-#endif
 }
 
 /*
@@ -55,7 +54,6 @@ void analyze_tcm97001(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *ob
  */
 void sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
-#ifdef HAS_TCM97001
   if (b->sync == 0) {
       b->sync=1;
 	    b->zero.hightime = *hightime;
@@ -71,7 +69,6 @@ void sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 	    }
   } 
   
-#endif
   return;
 }
 
@@ -80,7 +77,6 @@ void sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
  */
 uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
-#ifdef HAS_TCM97001
   if (IS433MHZ) {
     if ((*hightime < TSCALE(640) && *hightime > TSCALE(410)) &&
 				     (*lowtime  < TSCALE(9500) && *lowtime > TSCALE(8200)) ) {
@@ -92,10 +88,13 @@ uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 			  b->byteidx = 0;
 			  b->bitidx  = 7;
 			  b->data[0] = 0;  
+#ifdef DEBUG_SYNC
+        b->syncbit.hightime=*hightime;
+        b->syncbit.lowtime=*lowtime;
+#endif
 		    return 1;
 	  }
   }
-#endif
   return 0;
 }
 
@@ -104,7 +103,6 @@ uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
  */
 void addbit_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
-#ifdef HAS_TCM97001
   if (*lowtime < 156) { // < 3000=187 156=2500
     addbit(b,0);
     //b->zero.hightime = makeavg(b->zero.hightime, *hightime);
@@ -114,7 +112,7 @@ void addbit_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     //b->one.hightime = makeavg(b->one.hightime, *hightime);
     //b->one.lowtime  = makeavg(b->one.lowtime,  *lowtime);
   }
-#endif
 }
 
+#endif
 

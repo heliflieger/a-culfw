@@ -6,12 +6,12 @@
 #include "rf_receive_it.h"
 #include "display.h"
 
+#ifdef HAS_IT
 /*
  * Description in header
  */
 void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
-#ifdef HAS_IT
   if (IS433MHZ && *datatype == 0) {
     if ((b->state != STATE_IT || b->byteidx != 3 || b->bitidx != 7) 
         && (b->state != STATE_ITV3 || (b->byteidx != 8 && b->byteidx != 9) || b->bitidx != 7)) {
@@ -25,7 +25,6 @@ void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t 
     *oby = i;
     *datatype = TYPE_IT;
   }
-#endif
 }
 
 
@@ -34,7 +33,6 @@ void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t 
  */
 uint8_t sync_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
-#ifdef HAS_IT
    if(IS433MHZ && (b->state == STATE_IT || b->state == STATE_ITV3)) {
     if (*lowtime > TSCALE(3000)) {
         b->sync = 0;
@@ -71,7 +69,6 @@ uint8_t sync_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
       }
     }
   }
-#endif
   return 0;
 }
 
@@ -80,9 +77,8 @@ uint8_t sync_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
  */
 uint8_t is_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
-#ifdef HAS_IT
   if(IS433MHZ && (*hightime < TSCALE(600) && *hightime > TSCALE(140)) &&
-     (*lowtime < TSCALE(17000) && *lowtime > TSCALE(2500)) ) {
+     (*lowtime < TSCALE(12000) && *lowtime > TSCALE(6000)) ) {
     OCR1A = 3100; // end of message
     TIMSK1 = _BV(OCIE1A);
     b->sync=0;
@@ -96,17 +92,14 @@ uint8_t is_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 #endif
     return 1;
 	}
-#endif
   return 0;
 }
-
 
 /*
  * Description in header
  */
 void addbit_intertechno_v3(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
-#ifdef HAS_IT
   if (IS433MHZ) {
     if(*lowtime > TDIFF + *hightime) {
       addbit(b, 1);
@@ -114,7 +107,7 @@ void addbit_intertechno_v3(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
       addbit(b, 0);
     }
   }
-#endif
 }
 
+#endif
 

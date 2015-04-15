@@ -79,8 +79,8 @@ const PROGMEM const uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
    0x00, // 28 RCCTRL0   00    00    
 };
 
-uint16_t it_interval = 420;
-uint16_t it_interval_v3 = 250;
+//uint16_t it_interval = 360;
+uint16_t it_interval = 250;
 uint16_t it_repetition = 6;
 uint8_t restore_asksin = 0;
 uint8_t restore_moritz = 0;
@@ -135,32 +135,32 @@ send_IT_bit(uint8_t bit)
 {
 	if (bit == 1) {
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval * 3);
+  	my_delay_us(it_interval * 4);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
 	  my_delay_us(it_interval);
 
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval * 3);
+  	my_delay_us(it_interval * 4);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
 	  my_delay_us(it_interval);
   } else if (bit == 0) {
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
   	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval * 3);
+	  my_delay_us(it_interval * 4);
 
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
   	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval * 3);
+	  my_delay_us(it_interval * 4);
   } else {
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
   	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval * 3);
+	  my_delay_us(it_interval * 4);
 
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval * 3);
+  	my_delay_us(it_interval * 4);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
 	  my_delay_us(it_interval);  	
   }
@@ -168,18 +168,24 @@ send_IT_bit(uint8_t bit)
 
 static void
 send_IT_start_V3(void) {
+  int8_t k;
   CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
 	my_delay_us(it_interval);
   CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-  my_delay_us(it_interval_v3 * 10);
+  for(k = 0; k < 10; k++)  {
+    my_delay_us(it_interval);
+  }
 }
 
 static void
 send_IT_stop_V3(void) {
+  int8_t k;
   CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-	my_delay_us(it_interval_v3);
+	my_delay_us(it_interval);
   CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-  my_delay_us(it_interval_v3 * 40);
+  for(k = 0; k < 40; k++)  {
+    my_delay_us(it_interval);
+  }
 }
 
 static void
@@ -187,34 +193,34 @@ send_IT_bit_V3(uint8_t bit)
 {
 	if (bit == 1) {
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval_v3);
+  	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval_v3 * 5);
+	  my_delay_us(it_interval * 5);
 
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval_v3);
+  	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval_v3);
+	  my_delay_us(it_interval);
   } else if (bit == 0) {
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval_v3);
+  	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval_v3);
+	  my_delay_us(it_interval);
 
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval_v3);
+  	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval_v3 * 5);
+	  my_delay_us(it_interval * 5);
   } else {
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval_v3);
+  	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval_v3);
+	  my_delay_us(it_interval);
 
   	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(it_interval_v3);
+  	my_delay_us(it_interval);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(it_interval_v3);  	
+	  my_delay_us(it_interval);  	
   }
 }
 
@@ -270,7 +276,7 @@ it_send (char *in) {
         CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
         my_delay_us(it_interval);
         CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-        for(k = 0; k < 31; k++)  {
+        for(k = 0; k < 40; k++)  {
           my_delay_us(it_interval);
         }
       }
@@ -417,3 +423,4 @@ it_func(char *in)
 }
 
 #endif
+

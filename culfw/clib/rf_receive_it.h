@@ -11,10 +11,12 @@
 #include "rf_receive_bucket.h"
 #include "fband.h"
 
+#ifdef HAS_IT
 
 #define STATE_IT       7
 #define STATE_ITV3     9
 #define TYPE_IT  	    'i'
+
 
 #define TDIFFIT    TSCALE(350) // tolerated diff to previous/avg high/low/total
 
@@ -52,4 +54,5 @@ uint8_t is_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
  */
 void addbit_intertechno_v3(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
 
+#endif
 #endif

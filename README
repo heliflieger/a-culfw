@@ -9,6 +9,10 @@ https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
 Inital Version 1.00.00
 
 Changelog:
+1.03.04
+- Reenable IT-Sending with CUL 868Mhz version
+- Change IT receive and sending timing to make it more stable
+- Cleanup code to reduce memory unsage
 1.03.03
 - From culfw: add Bff to test the watchdog (Forum #36215)
 - From culfw: CUNO2: added SOMFY RTS support to board definition (thdankert)

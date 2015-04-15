@@ -6,7 +6,7 @@
 #
 
 # The file for flashing the device
-FLASH_FILE=CUL_V3.hex
+FLASH_FILE=CUL_V3_433MHZ.hex
 
 # The MCU
 MCU=atmega32u4
@@ -93,6 +93,5 @@ if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o 
 else
   echo "Abort flash"
 fi
-
 
 
