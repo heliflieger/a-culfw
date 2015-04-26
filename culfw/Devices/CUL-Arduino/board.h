@@ -40,6 +40,7 @@
 #  if defined(_433MHZ)
 #    define HAS_TCM97001
 #    define HAS_IT
+#    define HAS_HOMEEASY
 #    define HAS_OREGON3
 #  endif
 

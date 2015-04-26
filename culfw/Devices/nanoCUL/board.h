@@ -115,6 +115,7 @@ extern const uint8_t mark433_pin;
 #  define HAS_IT
 #  define HAS_REVOLT
 #  define HAS_TCM97001
+#  define HAS_HOMEEASY
 #endif
 
 #if defined (nanoCUL868)
