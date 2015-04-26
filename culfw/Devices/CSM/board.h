@@ -70,6 +70,7 @@
 #define HAS_MORITZ
 #define HAS_ESA
 #define HAS_INTERTECHNO
+#define HAS_HOMEEASY
 #define HAS_TCM97001
 #define HAS_SOMFY_RTS
 #define HAS_MBUS

@@ -234,6 +234,8 @@ void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
         packetCheckValues.packageOK = 1;
       } else if (packetCheckValues.isrep == 1) {
         packetCheckValues.packageOK = 0;
+      } else {
+        packetCheckValues.isnotrep = 0;
       }
   } else {
 #endif
@@ -392,6 +394,11 @@ RfAnalyze_Task(void)
 
     if(packetCheckValues.packageOK) {
       DC(datatype);
+#ifdef HAS_HOMEEASY
+      if (b->state == STATE_HE) {
+        DC('h');
+      }
+#endif
       if(nibble)
         oby--;
       for(uint8_t i=0; i < oby; i++)
@@ -435,6 +442,7 @@ RfAnalyze_Task(void)
   }
 
   b->state = STATE_RESET;
+  
   bucket_nrused--;
   bucket_out++;
   if(bucket_out == RCV_BUCKETS)
@@ -449,8 +457,7 @@ RfAnalyze_Task(void)
 #endif
 }
 
-void
-reset_input(void)
+void reset_input(void)
 {
   TIMSK1 = 0;
   bucket_array[bucket_in].state = STATE_RESET;
@@ -642,7 +649,13 @@ IS868MHZ && ( (b->state == STATE_HMS)
 
   lowtime = c-hightime;
   TCNT1 = 0;                          // restart timer
-
+/*
+ DC('-');
+          DU(hightime*16, 5);
+        DC(',');  
+          DU(lowtime *16, 5);
+   DC('-');
+*/
 #ifdef HAS_IT
   if (sync_intertechno(b, &hightime, &lowtime)) {
     return;
@@ -726,6 +739,9 @@ retry_sync:
 #endif
 #ifdef HAS_IT
       if (is_intertechno(b, &hightime, &lowtime)) {
+        /*DC('O');
+        DU(b->state, 2);
+*/        
         return;
       } else 
 #endif 
@@ -843,9 +859,9 @@ retry_sync:
         b->zero.hightime = makeavg(b->zero.hightime, hightime);
         b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
       } else {
-#ifdef HAS_IT
-          if (b->state!=STATE_IT) 
-#endif
+//#ifdef HAS_IT
+          //if (b->state!=STATE_IT) 
+//#endif
             reset_input();
       }
       break;

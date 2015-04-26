@@ -86,6 +86,7 @@
 #define HAS_UNIROLL
 #define HAS_HOERMANN
 #define HAS_IT
+#define HAS_HOMEEASY
 #define HAS_HMS
 
 #define MULTI_FREQ_DEVICE       // available in multiple versions: 433MHz,868MHz,915MHz

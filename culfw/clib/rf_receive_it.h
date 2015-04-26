@@ -15,6 +15,7 @@
 
 #define STATE_IT       7
 #define STATE_ITV3     9
+#define STATE_HE      10
 #define TYPE_IT  	    'i'
 
 
