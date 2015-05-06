@@ -43,6 +43,7 @@
 #    define HAS_IT
 #    define HAS_HOMEEASY
 #    define HAS_OREGON3
+#    define HAS_BELFOX
 #  endif
 
 #if defined(_868MHZ)
