@@ -8,6 +8,7 @@ SRC =           CUL.c\
 		../../clib/cc1101_pllcheck.c                         \
 		../../clib/cdcLUFA.c                                 \
 		../../clib/clock.c                                   \
+		../../clib/belfox.c                                  \
 		../../clib/delay.c                                   \
 		../../clib/display.c                                 \
 		../../clib/stringfunc.c                              \
