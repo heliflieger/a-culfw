@@ -9,8 +9,10 @@ https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
 Inital Version 1.00.00
 
 Changelog:
+1.04.01
+- Implement sending for HomeEasy EU protocol (command ie<value>)
 1.04.00
-- Implement sending for HomeEasy HE800 protocol
+- Implement sending for HomeEasy HE800 protocol (command ih<value>)
 - Receive HomeEasy protocols 
 1.03.04
 - Reenable IT-Sending with CUL 868Mhz version
