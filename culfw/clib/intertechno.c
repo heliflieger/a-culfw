@@ -91,10 +91,13 @@ uint16_t itv3_sync = 10000;
 uint16_t heBit1 = 330;
 uint16_t heBit0 = 1000;
 uint16_t hesync = 5000;
+uint16_t heeusync = 9000;
+uint16_t heeusync_low = 1300;
 #endif
 
 #define DATATYPE_IT       1
 #define DATATYPE_HE       2
+#define DATATYPE_HEEU     3
 
 uint8_t it_repetition = 6;
 uint8_t restore_asksin = 0;
@@ -207,27 +210,27 @@ send_IT_latch_V3(void) {
 
 #ifdef HAS_HOMEEASY
 static void
-send_IT_sync_HE(void)
+send_IT_sync_HE(uint8_t mode)
 {
     CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(heBit1);
+  	mode == DATATYPE_HE ? my_delay_us(heBit1) : my_delay_us(itv3_bit);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(hesync);
+	  mode == DATATYPE_HE ? my_delay_us(hesync) : my_delay_us(heeusync);
 }
 
 static void
-send_IT_bit_HE(uint8_t bit)
+send_IT_bit_HE(uint8_t bit, uint8_t mode)
 {
 	if (bit == 1) {
     CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(heBit1);
+  	mode == DATATYPE_HE ? my_delay_us(heBit1) : my_delay_us(itv3_bit);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(heBit0);
+	  mode == DATATYPE_HE ? my_delay_us(heBit0) : my_delay_us(itv3_bit);
   } else {
     CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
-  	my_delay_us(heBit0);
+  	mode == DATATYPE_HE ? my_delay_us(heBit0) : my_delay_us(itv3_bit);
  	  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-	  my_delay_us(heBit1);
+	  mode == DATATYPE_HE ? my_delay_us(heBit1) : my_delay_us(heeusync_low);
   }
 }
 #endif
@@ -338,12 +341,14 @@ it_send (char *in, uint8_t datatype) {
         }
 #ifdef HAS_HOMEEASY
       } else if (datatype == DATATYPE_HE) {
-        send_IT_sync_HE();
+        send_IT_sync_HE(DATATYPE_HE);
+      } else if (datatype == DATATYPE_HEEU) {
+        send_IT_sync_HE(DATATYPE_HEEU);
 #endif
       }
       uint8_t startCount = 1;
 #ifdef HAS_HOMEEASY
-      if (datatype == DATATYPE_HE) {
+      if (datatype == DATATYPE_HE || datatype == DATATYPE_HEEU) {
         startCount = 2;
       } 
 #endif
@@ -357,7 +362,7 @@ it_send (char *in, uint8_t datatype) {
             }      
 #ifdef HAS_HOMEEASY
           } else {
-            send_IT_bit_HE(0);
+            send_IT_bit_HE(0, datatype);
 #endif
           }
 				} else if (in[j+1] == '1') {
@@ -369,7 +374,7 @@ it_send (char *in, uint8_t datatype) {
             }
 #ifdef HAS_HOMEEASY
           } else {
-            send_IT_bit_HE(1);
+            send_IT_bit_HE(1, datatype);
 #endif
           }
         } else if (in[j+1] == '2') {
@@ -422,6 +427,8 @@ it_send (char *in, uint8_t datatype) {
 #ifdef HAS_HOMEEASY
     if (datatype == DATATYPE_HE) {
       DC('h');
+    } else if (datatype == DATATYPE_HEEU) {
+      DC('e');
     }
 #endif
 		for(j = 1; j < sizeOfPackage; j++)  {
@@ -458,6 +465,8 @@ it_func(char *in)
 #ifdef HAS_HOMEEASY
       } else if (in[2] == 'h') {		// HomeEasy
         it_send (in, DATATYPE_HE);	
+      } else if (in[2] == 'e') {		// HomeEasy EU
+        it_send (in, DATATYPE_HEEU);	
 #endif	
 			} else {
 				it_send (in, DATATYPE_IT);				// Sending real data
