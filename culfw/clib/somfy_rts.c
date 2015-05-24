@@ -147,7 +147,7 @@ static void somfy_rts_tunein(void) {
 	ccStrobe( CC1100_SCAL);
 	my_delay_ms(1);
 	cc_on = 1;
-  checkFrequency(); 
+    checkFrequency(); 
 }
 
 static void send_somfy_rts_bitZero(void) {

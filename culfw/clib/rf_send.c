@@ -101,9 +101,9 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
 
   LED_ON();
 
-  #if defined (HAS_IRRX) || defined (HAS_IRTX) //Blockout IR_Reception for the moment
-    cli();
-  #endif
+#if defined (HAS_IRRX) || defined (HAS_IRTX) // Block IR_Reception
+  cli();
+#endif
 
 #ifdef HAS_MORITZ
   uint8_t restore_moritz = 0;
@@ -140,13 +140,13 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
     ccStrobe(CC1100_SIDLE);
   }
 
-  #if defined (HAS_IRRX) || defined (HAS_IRTX) //Activate IR_Reception again
-    sei(); 
-  #endif
+#if defined (HAS_IRRX) || defined (HAS_IRTX) // Activate IR_Reception
+  sei(); 
+#endif
 
 #ifdef HAS_MORITZ
-    if(restore_moritz)
-      rf_moritz_init();
+  if(restore_moritz)
+    rf_moritz_init();
 #endif
 
   LED_OFF();

@@ -87,6 +87,8 @@
 
 #define HAS_USB                 1       // undef or define...1
 #define HAS_ETHERNET            1       // undef or define...1
+#define HAS_ETHERNET_KEEPALIVE  1
+#define ETHERNET_KEEPALIVE_TIME 30
 #define HAS_XRAM                1       // undef or define...1
 #define HAS_NTP                 1       // undef or define...1
 

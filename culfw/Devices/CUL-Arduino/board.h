@@ -36,22 +36,25 @@
 #  define HAS_UNIROLL
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
+#  define HAS_RFNATIVE
 
 #  if defined(_433MHZ)
 #    define HAS_TCM97001
 #    define HAS_IT
 #    define HAS_HOMEEASY
 #    define HAS_OREGON3
+#    define HAS_BELFOX
 #  endif
 
-
-#  if defined(_868MHZ)
+#if defined(_868MHZ)
 #    define HAS_HMS
 #    define HAS_ESA
-#    define HAS_MBUS
 #    define HAS_MORITZ
-#    define HAS_HOERMANN
-#  endif
+//#    define HAS_HOERMANN
+#    define HAS_MBUS
+#    define MBUS_NO_TX                    // MBUS TX eats up lots of memory, OFF by default
+#    define OFF_LACROSSE_HMS_EMU          // if you like HMS emulation for LaCrosse temp devices
+#endif
 
 #define DEBUG_SYNC
 

@@ -170,7 +170,7 @@ do_program:
 
 	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 
-	if test -e /sys/bus/i2c/devices/0-0050/eeprom; then echo COC V1.1 $(COCVERS) `date +%F` > /sys/bus/i2c/devices/0-0050/eeprom; fi
+	if test -e /sys/bus/i2c/devices/0-0050/eeprom; then echo COC V1.2 $(COCVERS) `date +%F` > /sys/bus/i2c/devices/0-0050/eeprom; fi
 
 %.hex: %.elf
 	@echo $(MSG_FLASH) $@

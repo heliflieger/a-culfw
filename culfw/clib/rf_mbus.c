@@ -336,6 +336,7 @@ void rf_mbus_task(void) {
   rf_mbus_on( FALSE );
 }
 
+#ifndef MBUS_NO_TX
 
 uint16 txSendPacket(uint8* pPacket, uint8* pBytes, uint8 mode) {  
   uint16  bytesToWrite;
@@ -461,6 +462,8 @@ uint16 txSendPacket(uint8* pPacket, uint8* pBytes, uint8 mode) {
   
   return (TX_OK);
 }
+#endif
+
 
 static void mbus_status(void) {
   if (radio_mode == RADIO_MODE_RX ) {
@@ -492,6 +495,8 @@ void rf_mbus_func(char *in) {
     
   } else if(in[1] == 's') {         // Send
 
+#ifndef MBUS_NO_TX
+
     uint8_t i = 0;
     while (in[2*i+3] && in [2*i+4]) {
       fromhex(in+3+(2*i), &MBpacket[i], 1);
@@ -510,7 +515,11 @@ void rf_mbus_func(char *in) {
       txSendPacket(MBpacket, MBbytes, WMBUS_SMODE);
     } else if(in[2] == 't') {
       txSendPacket(MBpacket, MBbytes, WMBUS_TMODE);
-    }	
+    }
+    
+#else
+    DS_P(PSTR("not compiled in\r\n"));
+#endif    
     
     return;
   }

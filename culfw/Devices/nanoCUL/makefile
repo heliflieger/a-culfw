@@ -13,6 +13,7 @@ SRC = nanoCUL.c                                            \
 		../../clib/cc1100.c                                  \
 		../../clib/cc1101_pllcheck.c                         \
 		../../clib/clock.c                                   \
+		../../clib/belfox.c                                  \
 		../../clib/delay.c                                   \
 		../../clib/display.c                                 \
 		../../clib/stringfunc.c                              \
@@ -30,6 +31,8 @@ SRC = nanoCUL.c                                            \
 		../../clib/rf_receive_esa.c                          \
 		../../clib/rf_receive_hms.c                          \
 		../../clib/rf_receive_oregon.c                       \
+		../../clib/rf_native.c                               \
+		../../clib/lacrosse.c                                \
 		../../clib/helper.c                                  \
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \
@@ -37,6 +40,7 @@ SRC = nanoCUL.c                                            \
 		../../clib/somfy_rts.c                               \
 		../../clib/fastrf.c                                  \
 		../../clib/intertechno.c                             \
+		../../clib/kopp-fc.c                                 \
 		../../clib/memory.c                                  \
 		../../clib/serial.c                                  \
 		../../clib/ttydata.c                                 \

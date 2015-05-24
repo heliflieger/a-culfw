@@ -41,6 +41,9 @@
 #ifdef HAS_MORITZ
 #include "rf_moritz.h"
 #endif
+#ifdef HAS_RFNATIVE
+#include "rf_native.h"
+#endif
 #ifdef HAS_RWE
 #include "rf_rwe.h"
 #endif
@@ -55,6 +58,9 @@
 #endif
 #ifdef HAS_KOPP_FC
 #include "kopp-fc.h"
+#endif
+#ifdef HAS_BELFOX
+#include "belfox.h"
 #endif
 
 const PROGMEM t_fntab fntab[] = {
@@ -73,6 +79,9 @@ const PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
 #endif
 #ifdef HAS_RWE
   { 'E', rwe_func },
@@ -103,6 +112,9 @@ const PROGMEM t_fntab fntab[] = {
 #endif
 #ifdef HAS_MEMFN
   { 'm', getfreemem },
+#endif
+#ifdef HAS_BELFOX
+  { 'L', send_belfox },
 #endif
   { 'l', ledfunc },
   { 't', gettime },
@@ -196,6 +208,12 @@ main(void)
 #endif
 #ifdef HAS_RWE
     rf_rwe_task();
+#endif
+#ifdef HAS_RFNATIVE
+    native_task();
+#endif
+#ifdef HAS_KOPP_FC
+    kopp_fc_task();
 #endif
 #ifdef HAS_MBUS
     rf_mbus_task();

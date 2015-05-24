@@ -45,12 +45,19 @@ void tcplink_init(void);
 
 struct tcplink_state {
   u8_t state;
+#ifdef HAS_ETHERNET_KEEPALIVE
+  struct timer tmr_keepalive;
+#endif
 #ifdef HAS_VZ
   u16_t offset;
   char buffer[VZ_MSG_SIZE];
+  u16_t offsetlast;
+  char bufferlast[VZ_MSG_SIZE];
 #else
   u8_t offset;
   char buffer[250];
+  u8_t offsetlast;
+  char bufferlast[250];
 #endif
 };
 
