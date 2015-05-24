@@ -593,19 +593,19 @@ irsnd_send_data (IRMP_DATA * irmp_data_p, uint8_t do_wait)
 #if IRSND_SUPPORT_SIRCS_PROTOCOL == 1
         case IRMP_SIRCS_PROTOCOL:
         {
-            //uint8_t  sircs_additional_command_len;
+            uint8_t  sircs_additional_command_len;
             uint8_t  sircs_additional_address_len;
 
             sircs_additional_bitlen = (irmp_data_p->address & 0xFF00) >> 8;                             // additional bitlen
 
             if (sircs_additional_bitlen > 15 - SIRCS_MINIMUM_DATA_LEN)
             {
-                //sircs_additional_command_len = 15 - SIRCS_MINIMUM_DATA_LEN;
+                sircs_additional_command_len = 15 - SIRCS_MINIMUM_DATA_LEN;
                 sircs_additional_address_len = sircs_additional_bitlen - (15 - SIRCS_MINIMUM_DATA_LEN);
             }
             else
             {
-                //sircs_additional_command_len = sircs_additional_bitlen;
+                sircs_additional_command_len = sircs_additional_bitlen;
                 sircs_additional_address_len = 0;
             }
 

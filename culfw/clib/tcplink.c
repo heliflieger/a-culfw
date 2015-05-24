@@ -20,7 +20,7 @@
 #define STATE_OPEN   1
 #define STATE_CLOSE  2
 
-static void senddata(void);
+static void senddata(u8_t rexmit);
 uint16_t tcplink_port;
 int con_counter;
 
@@ -77,15 +77,41 @@ tcpsend(void)
 
 /*---------------------------------------------------------------------------*/
 static void
-senddata(void)
+senddata(u8_t rexmit)
 {
   struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
 
+  if (rexmit != 0) {
+    if(s->offsetlast == 0)
+      return;
+    
+    // in case of rexmit, use bufferlast and offsetlast
+    // do not touch current data in s->buffer
+    memcpy(uip_appdata, s->bufferlast, s->offsetlast);
+    uip_send(uip_appdata, s->offsetlast);
+
+    #ifdef HAS_ETHERNET_KEEPALIVE
+      // restart keepalive timer after uip_send() call
+      timer_restart(&(s->tmr_keepalive));
+    #endif
+    
+  } else {
   if(s->offset == 0)
     return;
+    
   memcpy(uip_appdata, s->buffer, s->offset);
   uip_send(uip_appdata, s->offset);
+    
+    #ifdef HAS_ETHERNET_KEEPALIVE
+      // restart keepalive timer after uip_send() call
+      timer_restart(&(s->tmr_keepalive));
+    #endif
+    
+    // copy current offset and data to bufferlast to be able rexmit identical data
+    memcpy(s->bufferlast, s->buffer, s->offset);
+    s->offsetlast = s->offset;
   s->offset = 0;
+}
 }
 
 /*---------------------------------------------------------------------------*/
@@ -95,6 +121,7 @@ closed(void)
   struct tcplink_state *s = (struct tcplink_state *)&(uip_conn->appstate);
 
   s->offset = 0;
+  s->offsetlast = 0;
   s->state  = STATE_CLOSED;
 }
 
@@ -136,6 +163,11 @@ tcplink_appcall(void)
     s->state = STATE_OPEN;
     if(con_counter++ == 0)
       display_channel |= DISPLAY_TCP;
+    
+    #ifdef HAS_ETHERNET_KEEPALIVE
+      // initially start keepalive timer
+      timer_set(&(s->tmr_keepalive), CLOCK_SECOND * ETHERNET_KEEPALIVE_TIME);
+    #endif
   }
 
   if(s->state == STATE_CLOSE) {
@@ -165,7 +197,23 @@ tcplink_appcall(void)
     uip_acked() ||
     uip_connected() ||
     uip_poll()) {
-      senddata();
+      senddata(uip_rexmit());
   }
+  
+#ifdef HAS_ETHERNET_KEEPALIVE
+  if ((s->state == STATE_OPEN) && (timer_expired(&(s->tmr_keepalive)))) {
+    timer_reset(&(s->tmr_keepalive));
+    
+    // save current display channel
+    uint8_t odc = display_channel;
+    display_channel = DISPLAY_TCP;
+    
+    // issue a version information as simple keepalive packet
+    version("V");
+    
+    // restore old display channel
+    display_channel = odc;
+  }
+#endif
 }
 /*---------------------------------------------------------------------------*/

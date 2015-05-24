@@ -33,7 +33,7 @@
 // RXD and TXD; PA3 is connected to REN/TXEN (high = transmit)   
 
 static uint8_t helios_crc, msgpos, helios_power, helios_debug;
-static uint8_t msg[10];
+static uint8_t msg[10], helios_temp[4];
 static uint32_t helios_next;
 
 #define BAUD 9600
@@ -58,6 +58,8 @@ void helios_initialize(void) {
       msgpos = 0;
       helios_next = -1;
       helios_debug = 0;
+
+      memset( helios_temp, 0, sizeof(helios_temp));
 }   
 
 static void usart_send(uint8_t b) {
@@ -140,12 +142,22 @@ ISR(USART1_RX_vect) {
 			if (msg[1] == 0x11) {
 				switch(msg[3]) {
 					case 0x29: // Drehzahl
-						
+					  
 						if (helios_power != msg[4])
 							helios_next = 0; // force FHEM update
 
 						helios_power = msg[4];
 						break;
+
+				        case 0x32:
+				        case 0x33:
+				        case 0x34:
+				        case 0x35:
+						if (helios_temp[msg[3]-0x32] != msg[4])
+						        helios_next = 0; // force FHEM update
+					  
+					        helios_temp[msg[3]-0x32] = msg[4];
+					        break;
 				}
 			}
 		}
@@ -162,6 +174,10 @@ ISR(USART1_RX_vect) {
 }   
 
 void helios_task(void) {
+        char   sign = 0;
+	int    temp = 0;
+	double tempf = 0.0;
+  
 	if (helios_next>ticks) 
 		return;
 
@@ -199,6 +215,33 @@ void helios_task(void) {
 	DH2( 0xff ); // RSSI
 	DNL();
 
+	for (uint8_t i=0;i<4;i++) {
+	  
+	  if (helios_temp[i]) {
+	    tempf = (helios_temp[i]-100)/0.3;
+	    temp  = (int) tempf;
+	    sign  = (temp<0) ? '8' : '0';
+	    
+	    DC('H');
+	    DH2(0x33);          //this needs to be coded more flexable
+	    DH2(0x10+i);
+	    DC(sign);		//Sign-Bit (needs to be 8 for negative
+	    DC('1'); 		//HMS Type (only Temp)
+	    //Temp under 10 degs
+	    sign  =  (char) ( ( (uint8_t) ((temp / 10 ) % 10) )&0x0F ) + '0';
+	    DC(sign);
+	    //Degrees below 1  
+	    sign  =  (char) ( ( (uint8_t)  (temp % 10 ) 	  )&0x0F ) + '0';
+	    DC(sign);
+	    DC('0');
+	    //Temp over 9 degs
+	    sign  =  (char) ( ( (uint8_t) ((temp / 100) % 10) )&0x0F ) + '0';
+	    DC(sign);
+	    DC('0');DC('0');DC('F');DC('F');                                            //Humidity & RSSI
+	    DNL();
+	  }
+	}
+	
 	helios_next = ticks + 41000; // roughly 5 min
 }
 

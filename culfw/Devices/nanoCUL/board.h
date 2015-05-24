@@ -108,6 +108,7 @@ extern const uint8_t mark433_pin;
 
 #  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
+#  define HAS_RFNATIVE
 
 
 #if defined (nanoCUL433)
@@ -116,6 +117,7 @@ extern const uint8_t mark433_pin;
 #  define HAS_REVOLT
 #  define HAS_TCM97001
 #  define HAS_HOMEEASY
+#  define HAS_BELFOX
 #endif
 
 #if defined (nanoCUL868)
@@ -123,6 +125,7 @@ extern const uint8_t mark433_pin;
 #  define HAS_ESA
 #  define HAS_HOERMANN
 #  define HAS_HMS
+#  define OFF_LACROSSE_HMS_EMU          // if you like HMS emulation for LaCrosse temp devices
 #endif
 
 #endif

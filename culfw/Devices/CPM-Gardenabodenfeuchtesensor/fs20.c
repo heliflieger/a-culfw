@@ -24,7 +24,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
+#include <avr/delay.h>
 #include <stdio.h>
 #include <avr/pgmspace.h>
 #include <util/parity.h>

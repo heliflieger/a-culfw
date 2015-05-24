@@ -1,6 +1,6 @@
 #define VERSION_1               1
-#define VERSION_2               04
-#define VERSION                 "1.04.01"
+#define VERSION_2               05
+#define VERSION                 "1.05.00"
 #define BUILD_DATE              "unknown"
 #define BUILD_NUMBER            "private build"
 #define FW_NAME                 "a-culfw"

@@ -95,6 +95,9 @@ const PROGMEM t_fntab fntab[] = {
   { 'M', em_send },
   { 'K', ks_send },
 #endif
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'V', version },

@@ -12,7 +12,7 @@
 #define HAS_ASKSIN
 #define HAS_ASKSIN_FUP
 #undef  HAS_ESA
-#define HAS_INTERTECHNO
+#undef  HAS_INTERTECHNO
 #define HAS_TCM97001
 #define HAS_MORITZ
 #undef  HAS_RWE

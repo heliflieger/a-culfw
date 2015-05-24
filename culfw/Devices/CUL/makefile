@@ -8,6 +8,7 @@ SRC =           CUL.c\
 		../../clib/cc1101_pllcheck.c                         \
 		../../clib/cdcLUFA.c                                 \
 		../../clib/clock.c                                   \
+		../../clib/belfox.c                                  \
 		../../clib/delay.c                                   \
 		../../clib/display.c                                 \
 		../../clib/stringfunc.c                              \
@@ -22,6 +23,7 @@ SRC =           CUL.c\
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
+		../../clib/rf_native.c                               \
 		../../clib/intertechno.c                             \
 		../../clib/rf_receive_it.c                           \
 		../../clib/rf_receive_tx3.c                          \
@@ -37,6 +39,7 @@ SRC =           CUL.c\
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
 		../../clib/memory.c                                  \
+		../../clib/lacrosse.c                                \
 		../../lufa/Drivers/USB/LowLevel/DevChapter9.c        \
 		../../lufa/Drivers/USB/LowLevel/Endpoint.c           \
 		../../lufa/Drivers/USB/LowLevel/Host.c               \

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
-#include <util/delay.h>
+#include <avr/delay.h>
 
 
 #include "cc1100.h"

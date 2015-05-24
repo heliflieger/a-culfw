@@ -33,6 +33,7 @@
 #  define HAS_KOPP_FC
 #  define HAS_RWE
 #  define HAS_TX3
+#  define HAS_RFNATIVE
 #  define HAS_INTERTECHNO
 #  define HAS_UNIROLL
 #  define HAS_MEMFN
@@ -43,13 +44,14 @@
 #    define HAS_IT
 #    define HAS_HOMEEASY
 #    define HAS_OREGON3
+#    define HAS_BELFOX
 #  endif
 
 #if defined(_868MHZ)
 #    define HAS_HMS
 #    define HAS_ESA
 #    define HAS_MORITZ
-#    define HAS_HOERMANN
+//#    define HAS_HOERMANN
 #endif
 
 #endif
@@ -62,6 +64,8 @@
 #  define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
 #if defined(_868MHZ)
 #  define HAS_MBUS
+#  define MBUS_NO_TX                    // MBUS TX eats up lots of memory, OFF by default
+#  define OFF_LACROSSE_HMS_EMU          // if you like HMS emulation for LaCrosse temp devices
 #endif
 #endif
 

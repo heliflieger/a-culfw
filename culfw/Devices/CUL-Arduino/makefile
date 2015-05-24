@@ -10,6 +10,7 @@ SRC =           CUL.c\
 		../../clib/cc1101_pllcheck.c                         \
 		../../clib/cdcLUFA.c                                 \
 		../../clib/clock.c                                   \
+		../../clib/belfox.c                                  \
 		../../clib/delay.c                                   \
 		../../clib/display.c                                 \
 		../../clib/stringfunc.c                              \
@@ -27,6 +28,8 @@ SRC =           CUL.c\
 		../../clib/rf_receive_esa.c                          \
 		../../clib/rf_receive_hms.c                          \
 		../../clib/rf_receive_oregon.c                       \
+		../../clib/rf_native.c                               \
+		../../clib/lacrosse.c                                \
 		../../clib/rf_router.c                               \
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \

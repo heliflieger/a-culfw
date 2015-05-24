@@ -50,6 +50,7 @@
     <a href="#cmd_I">I</a>
     <a href="#cmd_i">i</a>
     <a href="#cmd_M">M</a>
+    <a href="#cmd_N">N</a>
     <a href="#cmd_l">l</a>
     <a href="#cmd_O">O</a>
     <a href="#cmd_o">o</a>
@@ -569,6 +570,34 @@
       Example: M02054A140000000000
     </ul><br><br>
 
+    <a name="cmd_N"></a>
+    N&lt;func&gt;
+    <ul>
+      Native RF mode.<br>
+	This mode does not use any packet or CRC features of CC1101. It just looks for
+	preamble and given sync word and returns a fixed amount of received data.
+	This is meant for compatibility to RFM12B-based protocols. Checking, decoding
+	and processing of this raw received data is up to a higher software level.
+	<br><br>
+      &lt;func&gt; is one of:
+      <ul>
+      <li> r&lt;mode&gt;<br>
+        enables reception of datagrams. The following modes are known:
+        <ul>
+	<li>1 - LaCrosse/IT+ 17.241 kbps   
+	<li>2 - LaCrosse/IT+ 9.579 kbps
+	<li>3 - PCA 301 - 868.9500MHz 6.631kbps   
+        </ul>
+	Data is returned with prefix:<br>N&lt;mode&gt;&lt;payload&gt; i.e.<br>
+	  N019746372630AAAA0000101A7F<br>
+	  N019CF6397D410021A6554ADF1A<br>
+      <li> x<br>
+	disables reception    
+      </ul>
+      </ul>
+      Just "N" returns active mode. 
+      <br><br>
+
     <a name="cmd_l"></a>
     l&lt;hex&gt;
     <ul>
@@ -1075,6 +1104,10 @@
 
     <li>For HMS:<br>
       Hxxxxxxxxxxxx
+      <br><br>
+
+    <li>For native RF-Mode:<br>
+      N&lt;mode&gt;&lt;payload&gt;
       <br><br>
 
     <li>For ESA2000:<br>
