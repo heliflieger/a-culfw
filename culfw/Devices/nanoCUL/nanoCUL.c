@@ -61,6 +61,9 @@
 #ifdef HAS_BELFOX
 #include "belfox.h"
 #endif
+#ifdef HAS_RFNATIVE
+#include "rf_native.h"
+#endif
 
 
 
