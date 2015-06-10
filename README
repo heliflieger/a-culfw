@@ -7,6 +7,8 @@ The compiled firmware can be found at
 https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
 
 Changelog:
+1.05.02
+- Revert timing for Elro AB440 IT Switch changes
 1.05.01
 - Fix timing for Elro AB440 IT Switch
 - Fix size for nanoCul
