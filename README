@@ -7,6 +7,8 @@ The compiled firmware can be found at
 https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
 
 Changelog:
+1.05.03
+- Fix timing for IT-V1 sending and receive timing for temp sensors 
 1.05.02
 - Revert timing for Elro AB440 IT Switch changes
 1.05.01
@@ -71,4 +73,5 @@ Changelog:
 # Free Software Foundation, Inc., 
 # 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
 ################################################################################
+
 
