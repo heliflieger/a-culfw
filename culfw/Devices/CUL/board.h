@@ -54,6 +54,8 @@
 //#    define HAS_HOERMANN
 #endif
 
+#define DEBUG_SYNC
+
 #endif
 
 #if defined(CUL_V4)
