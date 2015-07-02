@@ -79,8 +79,8 @@ uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 {
   if (IS433MHZ && b->state == STATE_RESET) {
     if ((*hightime < TSCALE(640) && *hightime > TSCALE(410)) &&
-				     (*lowtime  < TSCALE(9300) && *lowtime > TSCALE(8600)) ) {
-		    OCR1A = 5600; //End of message
+				     (*lowtime  < TSCALE(9500) && *lowtime > TSCALE(8200)) ) {
+		    OCR1A = 5200; //End of message
 			  TIMSK1 = _BV(OCIE1A);
 			  b->sync=0;
         

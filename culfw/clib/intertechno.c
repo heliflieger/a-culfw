@@ -79,7 +79,7 @@ const PROGMEM const uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
    0x00, // 28 RCCTRL0   00    00    
 };
 
-uint16_t it_interval = 360;
+uint16_t it_interval = 420;
 uint8_t itv3_start_bit = 235;
 uint16_t itv3_bit = 275;
 uint16_t itv3_latch = 2650;
@@ -332,7 +332,7 @@ it_send (char *in, uint8_t datatype) {
           CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
           my_delay_us(it_interval);
           CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
-          for(k = 0; k < 40; k++)  {
+          for(k = 0; k < 31; k++)  {
             my_delay_us(it_interval);
           }
         }
