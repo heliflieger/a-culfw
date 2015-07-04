@@ -135,16 +135,19 @@ program_bl: $(OUTPUT).bin
 clean:
 	-rm -Rf obj/*
 	-rm -Rf .dep/*
+	-rm -Rf .dep
 	-rm -f $(OBJS) *.elf *.bin *.hex *.map *~
 
 clean2:
 	-rm -Rf obj/*
 	-rm -Rf .dep/*
+	-rm -Rf .dep
 	-rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).hex $(OUTPUT).map *~
 
 clean3:
 	-rm -Rf obj/*
 	-rm -Rf .dep/*
+	-rm -Rf .dep
 	-rm -f $(OBJS) *.elf *.hex *.map *~
 		
 $(shell mkdir $(OBJDIR) 2>/dev/null)
