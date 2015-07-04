@@ -15,8 +15,6 @@
 #include "rf_moritz.h"
 #endif
 
-#include <utility/trace.h>
-
 uint8_t cc_on;
 
 // NOTE: FS20 devices can receive/decode signals sent with PA ramping,
