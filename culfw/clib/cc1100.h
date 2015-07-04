@@ -10,6 +10,23 @@
 #include <avr/io.h>
 #include "led.h"
 
+#ifdef ARM
+
+typedef struct {
+	AT91PS_PIO 	CS_base;
+	uint8_t		CS_pin;
+	AT91PS_PIO 	IN_base;
+	uint8_t		IN_pin;
+} transceiver_t;
+
+extern transceiver_t CCtransceiver[];
+
+uint8_t ccStrobe2(uint8_t, transceiver_t* device);
+void cc1100_writeReg2(uint8_t addr, uint8_t data, transceiver_t* device);
+uint8_t cc1100_readReg2(uint8_t addr, transceiver_t* device);
+
+#endif
+
 void ccInitChip(uint8_t *cfg);
 void cc_factory_reset(void);
 void ccDump(void);
@@ -177,8 +194,18 @@ extern uint8_t cc_on;
 
 #include "board.h"
 
-#define CC1100_DEASSERT  SET_BIT( CC1100_CS_PORT, CC1100_CS_PIN )
-#define CC1100_ASSERT    CLEAR_BIT( CC1100_CS_PORT, CC1100_CS_PIN )
+#ifdef ARM
+
+#define CC1100_DEASSERT  	CC1100_CS_BASE->PIO_SODR = (1<<CC1100_CS_PIN)
+#define CC1100_ASSERT    	CC1100_CS_BASE->PIO_CODR = (1<<CC1100_CS_PIN)
+#define CC1100_SET_OUT		CC1100_OUT_BASE->PIO_SODR = (1<<CC1100_OUT_PIN)
+#define CC1100_CLEAR_OUT	CC1100_OUT_BASE->PIO_CODR = (1<<CC1100_OUT_PIN)
+#else
+#define CC1100_DEASSERT  	SET_BIT( CC1100_CS_PORT, CC1100_CS_PIN )
+#define CC1100_ASSERT    	CLEAR_BIT( CC1100_CS_PORT, CC1100_CS_PIN )
+#define CC1100_SET_OUT		CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN)
+#define CC1100_CLEAR_OUT	CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN)
+#endif
 
 
 /******************************************************************************/

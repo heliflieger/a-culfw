@@ -1,10 +1,9 @@
 #include "board.h"
-#ifdef HAS_MORITZ
+#ifdef HAS_MAICO
 #include <string.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
-#include "fband.h"
 #include "cc1100.h"
 #include "delay.h"
 #include "rf_receive.h"
@@ -12,16 +11,18 @@
 #include "clock.h"
 #include "rf_send.h" //credit_10ms
 
-#include "rf_moritz.h"
+#include "rf_maico.h"
 
-void moritz_sendraw(uint8_t* buf, int longPreamble);
-void moritz_sendAck(uint8_t* enc);
-void moritz_handleAutoAck(uint8_t* enc);
+#include <utility/trace.h>
 
-#ifdef CC1100_MORITZ
+//void maico_sendraw(uint8_t* buf, int longPreamble);
+//void maico_sendAck(uint8_t* enc);
+//void maico_handleAutoAck(uint8_t* enc);
+
+#ifdef CC1100_MAICO
 #include "fncollection.h"
 
-#define CC_ID				CC1100_MORITZ
+#define CC_ID				CC1100_MAICO
 
 #undef CC1100_ASSERT
 #define CC1100_ASSERT 		(CCtransceiver[CC_ID].CS_base->PIO_CODR = (1<<CCtransceiver[CC_ID].CS_pin))
@@ -49,7 +50,7 @@ void moritz_handleAutoAck(uint8_t* enc);
 
 #endif
 
-uint8_t moritz_on = 0;
+uint8_t maico_on = 0;
 
 /*
  * CC1100_PKTCTRL0.LENGTH_CONFIG = 1 //Variable packet length mode. Packet length configured by the first byte after sync word
@@ -66,6 +67,8 @@ uint8_t moritz_on = 0;
  *
  * One message with 12 payload bytes takes (4 byte preamble + 4 byte sync + 12 byte payload) / 1kbit/s = 160 ms.
  */
+
+/*
 const uint8_t PROGMEM MORITZ_CFG[60] = {
 //     0x00, 0x08,
      0x00, 0x07, //IOCFG2: GDO2_CFG=7: Asserts when a packet has been received with CRC OK. De-asserts when the first byte is read from the RX FIFO
@@ -100,14 +103,54 @@ const uint8_t PROGMEM MORITZ_CFG[60] = {
      0x2D, 0x35, //TEST1
      0x3E, 0xC3, //?? Readonly PATABLE?
      0xff
+};*/
+//07 0e
+const uint8_t PROGMEM MAICO_CFG[] = {
+     0x00, 0x07,
+     0x02, 0x2e,
+	 0x06, 0x0B,
+     0x07, 0x0C,
+	 0x08, 0x44,
+	 0x09, 0x03,
+	 0x0a, 0x00,
+     0x0B, 0x08,
+	 0x0c, 0x00,
+     0x0D, 0x21,
+     0x0E, 0x65,
+     0x0F, 0x6A,
+     0x10, 0xC9,
+     0x11, 0xE4,
+     0x12, 0x0B,
+	 0x13, 0x22,
+     0x14, 0xF8,
+	 0x15, 0x40,
+	 0x16, 0x07,
+     0x17, 0x33, // go into RX after TX, CCA; EQ3 uses 0x03
+     0x18, 0x1c,
+     0x19, 0x16,
+     0x1B, 0x43,
+	 0x1c, 0x40,
+	 0x1d, 0x91,
+	 0x20, 0x38,
+     0x21, 0x56,
+	 0x22, 0x10,
+	 0x23, 0xE9,
+	 0x24, 0x2A,
+	 0x25, 0x00,
+     0x26, 0x1F,
+     0x29, 0x59,
+     0x2c, 0x81,
+     0x2D, 0x35,
+	 0x2E, 0x09,
+     0x3e, 0xc3
 };
 
-static uint8_t autoAckAddr[3] = {0, 0, 0};
-static uint8_t fakeWallThermostatAddr[3] = {0, 0, 0};
-static uint32_t lastSendingTicks = 0;
+//static uint8_t autoAckAddr[3] = {0, 0, 0};
+//static uint8_t fakeWallThermostatAddr[3] = {0, 0, 0};
+//static uint32_t lastSendingTicks = 0;
 
 void
-rf_moritz_init(void)
+rf_maico_init(void)
 {
 #ifdef ARM
 #ifndef CC_ID
@@ -151,11 +194,11 @@ rf_moritz_init(void)
 
   // load configuration
   for (uint8_t i = 0; i<60; i += 2) {
-    if (pgm_read_byte( &MORITZ_CFG[i] )>0x40)
+    if (pgm_read_byte( &MAICO_CFG[i] )>0x40)
       break;
 
-    CC1100_WRITEREG( pgm_read_byte(&MORITZ_CFG[i]),
-                     pgm_read_byte(&MORITZ_CFG[i+1]) );
+    CC1100_WRITEREG( pgm_read_byte(&MAICO_CFG[i]),
+                     pgm_read_byte(&MAICO_CFG[i+1]) );
   }
 
   CCSTROBE( CC1100_SCAL );
@@ -168,74 +211,29 @@ rf_moritz_init(void)
   while(cnt-- && (CCSTROBE( CC1100_SRX ) & 0x70) != 1)
     my_delay_us(10);
 
-  moritz_on = 1;
-  //todo check multiCC
-  checkFrequency(); 
+  maico_on = 1;
 }
 
-void
-moritz_handleAutoAck(uint8_t* enc)
-{
-  /* Debug ouput
-  DC('D');
-  DC('Z');
-  DH2(autoAckAddr[0]);
-  DH2(autoAckAddr[1]);
-  DH2(autoAckAddr[2]);
-  DC('-');
-  DH2(enc[0]);
-  DH2(enc[3]);
-  DH2(enc[7]);
-  DH2(enc[8]);
-  DH2(enc[9]);
-  DNL();
-  */
-
-  //Send acks to when required by "spec"
-  if((autoAckAddr[0] != 0 || autoAckAddr[1] != 0 || autoAckAddr[2] != 0) /* auto-ack enabled */
-      && (
-           enc[3] == 0x30 /* type ShutterContactState */
-        || enc[3] == 0x40 /* type SetTemperature */
-        || enc[3] == 0x50 /* type PushButtonState */
-        )
-      && enc[7] == autoAckAddr[0] /* dest */
-      && enc[8] == autoAckAddr[1]
-      && enc[9] == autoAckAddr[2])
-    moritz_sendAck(enc);
-
-  if((fakeWallThermostatAddr[0] != 0 || fakeWallThermostatAddr[1] != 0 || fakeWallThermostatAddr[2] != 0) /* fake enabled */
-      && enc[0] == 11 /* len */
-      && enc[3] == 0x40 /* type SetTemperature */
-      && enc[7] == fakeWallThermostatAddr[0] /* dest */
-      && enc[8] == fakeWallThermostatAddr[1]
-      && enc[9] == fakeWallThermostatAddr[2])
-    moritz_sendAck(enc);
-
-  return;
-}
 
 void
-rf_moritz_task(void)
+rf_maico_task(void)
 {
-  uint8_t enc[MAX_MORITZ_MSG];
+  uint8_t msg[MAX_MAICO_MSG];
   uint8_t rssi;
 
-  if(!moritz_on)
+  if(!maico_on)
     return;
 
   // see if a CRC OK pkt has been arrived
   if(bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
     //errata #1 does not affect us, because we wait until packet is completely received
-    enc[0] = CC1100_READREG( CC1100_RXFIFO ) & 0x7f; // read len
-
-    if (enc[0]>=MAX_MORITZ_MSG)
-         enc[0] = MAX_MORITZ_MSG-1;
+    msg[0] = CC1100_READREG( CC1100_READ_BURST | CC1100_RXBYTES ) -2; // len
 
     CC1100_ASSERT;
     cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
 
-    for (uint8_t i=0; i<enc[0]; i++) {
-         enc[i+1] = cc1100_sendbyte( 0 );
+    for (uint8_t i=0; i<msg[0]; i++) {
+         msg[i+1] = cc1100_sendbyte( 0 );
     }
 
     // RSSI is appended to RXFIFO
@@ -245,17 +243,15 @@ rf_moritz_task(void)
 
     CC1100_DEASSERT;
 
-    moritz_handleAutoAck(enc);
-
     if (tx_report & REP_BINTIME) {
 
-      DC('z');
-      for (uint8_t i=0; i<=enc[0]; i++)
-      DC( enc[i] );
+      DC('l');
+      for (uint8_t i=0; i<=msg[0]; i++)
+      DC( msg[i] );
     } else {
-      DC('Z');
-      for (uint8_t i=0; i<=enc[0]; i++)
-        DH2( enc[i] );
+      DC('L');
+      for (uint8_t i=0; i<=msg[0]; i++)
+        DH2( msg[i] );
       if (tx_report & REP_RSSI)
         DH2(rssi);
       DNL();
@@ -264,44 +260,34 @@ rf_moritz_task(void)
     return;
   }
 
-  if(CC1100_READREG( CC1100_MARCSTATE ) == 17) {
-    CCSTROBE( CC1100_SFRX  );
-    CCSTROBE( CC1100_SIDLE );
-    CCSTROBE( CC1100_SRX   );
+  switch(CC1100_READREG( CC1100_MARCSTATE )) {
+    case MARCSTATE_RXFIFO_OVERFLOW:
+      CCSTROBE( CC1100_SFRX  );
+    case MARCSTATE_IDLE:
+      CCSTROBE( CC1100_SIDLE );
+      CCSTROBE( CC1100_SNOP  );
+      CCSTROBE( CC1100_SRX   );
+      //TRACE_INFO("Maico CC restart");
+      break;
   }
 }
 
+
 void
-moritz_send(char *in)
+maico_sendraw(uint8_t *dec)
 {
-  /* we are not affected by CC1101 errata #6, because MDMCFG2.SYNC_MODE != 0 */
-  uint8_t dec[MAX_MORITZ_MSG];
-
-  uint8_t hblen = fromhex(in+1, dec, MAX_MORITZ_MSG-1);
-
-  if ((hblen-1) != dec[0]) {
-    DS_P(PSTR("LENERR\r\n"));
-    return;
-  }
-  moritz_sendraw(dec, 1);
-}
-
-/* longPreamble is necessary for unsolicited messages to wakeup the receiver */
-void
-moritz_sendraw(uint8_t *dec, int longPreamble)
-{
-  uint8_t hblen = dec[0]+1;
+  uint8_t hblen = 0x0b;
   //1kb/s = 1 bit/ms. we send 1 sec preamble + hblen*8 bits
-  uint32_t sum = (longPreamble ? 100 : 0) + (hblen*8)/10;
+  uint32_t sum = (hblen*8)/10;
   if (credit_10ms < sum) {
     DS_P(PSTR("LOVF\r\n"));
     return;
   }
   credit_10ms -= sum;
 
-  // in Moritz mode already?
-  if(!moritz_on) {
-    rf_moritz_init();
+  // in Maico mode already?
+  if(!maico_on) {
+    rf_maico_init();
   }
 
   if(CC1100_READREG( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
@@ -312,47 +298,25 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
     DC('1');
     DH2(CC1100_READREG( CC1100_MARCSTATE ));
     DNL();
-    rf_moritz_init();
+    rf_maico_init();
     return;
   }
 
-  /* We have to keep at least 20 ms of silence between two sends
-   * (found out by trial and error). ticks runs at 125 Hz (8 ms per tick),
-   * so we wait for 3 ticks.
-   * This looks a bit cumbersome but handles overflows of ticks gracefully.
-   */
-  if(lastSendingTicks)
-    while(ticks == lastSendingTicks || ticks == lastSendingTicks+1)
-      my_delay_ms(1);
+  // We have to keep at least 20 ms of silence between two sends
+  // (found out by trial and error). ticks runs at 125 Hz (8 ms per tick),
+  // so we wait for 3 ticks.
+  // This looks a bit cumbersome but handles overflows of ticks gracefully.
 
-  /* Enable TX. Perform calibration first if MCSM0.FS_AUTOCAL=1 (this is the case) (takes 809μs)
-   * start sending - CC1101 will send preamble continuously until TXFIFO is filled.
-   * The preamble will wake up devices. See http://e2e.ti.com/support/low_power_rf/f/156/t/142864.aspx
-   * It will not go into TX mode instantly if channel is not clear (see CCA_MODE), thus ccTX tries multiple times */
-#ifdef CC_ID
-  do {
-    CCSTROBE(CC1100_STX);
-  } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_TX);
-#else
-  ccTX();
-#endif
-  if(CC1100_READREG( CC1100_MARCSTATE ) != MARCSTATE_TX) { //error
-    DC('Z');
-    DC('E');
-    DC('R');
-    DC('R');
-    DC('2');
-    DH2(CC1100_READREG( CC1100_MARCSTATE ));
-    DNL();
-    rf_moritz_init();
-    return;
-  }
+  //if(lastSendingTicks)
+  //  while(ticks == lastSendingTicks || ticks == lastSendingTicks+1)
+  //    my_delay_ms(1);
 
-  if(longPreamble) {
-    /* Send preamble for 1 sec. Keep in mind that waiting for too long may trigger the watchdog (2 seconds on CUL) */
-    for(int i=0;i<10;++i)
-      my_delay_ms(100); //arg is uint_8, so loop
-  }
+
+ // if(longPreamble) {
+  //  // Send preamble for 1 sec. Keep in mind that waiting for too long may trigger the watchdog (2 seconds on CUL)
+  //  for(int i=0;i<10;++i)
+  //    my_delay_ms(100); //arg is uint_8, so loop
+ // }
 
   // send
   CC1100_ASSERT;
@@ -360,9 +324,16 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
 
   for(uint8_t i = 0; i < hblen; i++) {
     cc1100_sendbyte(dec[i]);
+    DH2( dec[i] );
   }
 
   CC1100_DEASSERT;
+
+  // enable TX, wait for CCA
+    do {
+      CCSTROBE(CC1100_STX);
+    } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_TX);
+
 
   //Wait for sending to finish (CC1101 will go to RX state automatically
   //after sending
@@ -383,66 +354,42 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
     DC('3');
     DH2(CC1100_READREG( CC1100_MARCSTATE ));
     DNL();
-    rf_moritz_init();
+    rf_maico_init();
   }
 
-  if(!moritz_on) {
+  TRACE_INFO("Maico send %02X\r\n", hblen);
+
+
+  if(!maico_on) {
     set_txrestore();
   }
-  lastSendingTicks = ticks;
+  //lastSendingTicks = ticks;
 }
 
 void
-moritz_sendAck(uint8_t* enc)
-{
-  uint8_t ackPacket[12];
-  ackPacket[0] = 11; /* len*/
-  ackPacket[1] = enc[1]; /* msgcnt */
-  ackPacket[2] = 0; /* flag */
-  ackPacket[3] = 2; /* type = Ack */
-  for(int i=0;i<3;++i) /* src = enc_dst*/
-    ackPacket[4+i] = enc[7+i];
-  for(int i=0;i<3;++i) /* dst = enc_src */
-    ackPacket[7+i] = enc[4+i];
-  ackPacket[10] = 0; /* groupid */
-  ackPacket[11] = 0; /* payload */
-
-  my_delay_ms(20); /* by experiments */
-
-  moritz_sendraw(ackPacket, 0);
-
-  //Inform FHEM that we send an autoack
-  DC('Z');
-  for (uint8_t i=0; i < ackPacket[0]+1; i++)
-    DH2( ackPacket[i] );
-  if (tx_report & REP_RSSI)
-    DH2( 0 ); //fake some rssi
-  DNL();
-}
-
-void
-moritz_func(char *in)
+maico_func(char *in)
 {
   if(in[1] == 'r') {                // Reception on
-    rf_moritz_init();
+    rf_maico_init();
 
-  } else if(in[1] == 's' || in[1] == 'f' ) {         // Send/Send fast
-    uint8_t dec[MAX_MORITZ_MSG];
-    uint8_t hblen = fromhex(in+2, dec, MAX_MORITZ_MSG-1);
-    if ((hblen-1) != dec[0]) {
+  } else if(in[1] == 's' ) {         // Send/Send fast
+    uint8_t dec[0x0b];
+    uint8_t hblen = fromhex(in+2, dec, 0x0b);
+    if ((hblen) != 0x0b) {
       DS_P(PSTR("LENERR\r\n"));
+      TRACE_INFO("LENERR %02X\r\n", hblen);
       return;
     }
-    moritz_sendraw(dec, in[1] == 's');
-
+    maico_sendraw(dec);
+/*
   } else if(in[1] == 'a') {         // Auto-Ack
     fromhex(in+2, autoAckAddr, 3);
 
   } else if(in[1] == 'w') {         // Fake Wall-Thermostat
     fromhex(in+2, fakeWallThermostatAddr, 3);
-
+*/
   } else {                          // Off
-    moritz_on = 0;
+    maico_on = 0;
 
   }
 }

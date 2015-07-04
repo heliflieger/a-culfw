@@ -167,7 +167,7 @@ void LowLevelInit( void )
 
     /* Watchdog initialization
      *************************/
-    AT91C_BASE_WDTC->WDTC_WDMR = AT91C_WDTC_WDDIS;
+    //AT91C_BASE_WDTC->WDTC_WDMR = AT91C_WDTC_WDDIS;
 
     /* Remap
      *******/

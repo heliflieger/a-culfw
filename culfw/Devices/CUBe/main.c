@@ -285,6 +285,9 @@ int main(void)
 	//Configure Reset Controller
 	AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
 
+	TRACE_INFO("init Flash\n\r");
+	flash_init();
+
     TRACE_INFO("init Timer\n\r");
     // Configure timer 0
     ticks=0;
@@ -314,6 +317,9 @@ int main(void)
 
 	led_init();
 
+	TRACE_INFO("init EEprom\n\r");
+	eeprom_init();
+
 	rb_reset(&TTY_Rx_Buffer);
 	rb_reset(&TTY_Tx_Buffer);
 
@@ -322,12 +328,6 @@ int main(void)
 	LED_OFF();
 	LED2_ON();
 	LED3_ON();
-
-	TRACE_INFO("init Flash\n\r");
-	flash_init();
-
-	TRACE_INFO("init EEprom\n\r");
-	eeprom_init();
 
 	spi_init();
 	fht_init();
@@ -339,16 +339,15 @@ int main(void)
 
 	#endif
 
-
-	fastrf_on=0;
-
-	display_channel = DISPLAY_USB;
-
 	TRACE_INFO("init USB\n\r");
 	CDCDSerialDriver_Initialize();
 	USBD_Connect();
 
 	wdt_enable(WDTO_2S);
+
+	fastrf_on=0;
+
+	display_channel = DISPLAY_USB;
 
 	TRACE_INFO("init Complete\n\r");
 

@@ -2,6 +2,10 @@
 #include "ringbuffer.h"
 #include "cdc.h"
 
+#ifdef ARM
+#include "display.h"
+static unsigned char usbBufferOut[DATABUFFERSIZEOUT];
+#else
 /* Globals: */
 CDC_Line_Coding_t LineCoding = { BaudRateBPS: 9600,
                                  CharFormat:  OneStopBit,
@@ -57,7 +61,7 @@ HANDLES_EVENT(USB_UnhandledControlPacket)
   }
 }
 
-
+#endif
 ////////////////////
 // Fill data from USB to the RingBuffer and vice-versa
 void
@@ -68,6 +72,30 @@ CDC_Task(void)
   if(!USB_IsConnected)
     return;
 
+#ifdef ARM
+
+  if(!inCDC_TASK){ // USB -> RingBuffer
+
+    inCDC_TASK = 1;
+    output_flush_func = CDC_Task;
+    input_handle_func(DISPLAY_USB);
+    inCDC_TASK = 0;
+  }
+
+	if(TTY_Tx_Buffer.nbytes) {
+		uint16_t i=0;
+
+		while(TTY_Tx_Buffer.nbytes && i<DATABUFFERSIZEOUT) {
+
+			 usbBufferOut[i++]=rb_get(&TTY_Tx_Buffer);
+		}
+
+		while (CDCDSerialDriver_Write(usbBufferOut,i, 0, 0) != USBD_STATUS_SUCCESS);
+
+	}
+
+
+#else
   Endpoint_SelectEndpoint(CDC_RX_EPNUM);          // First data in
 
   if(!inCDC_TASK && Endpoint_ReadWriteAllowed()){ // USB -> RingBuffer
@@ -95,11 +123,14 @@ CDC_Task(void)
     Endpoint_ClearCurrentBank();                  // Send the data
 
   }
+#endif
 }
 
 void
 cdc_flush()
 {
+#ifndef ARM
   Endpoint_SelectEndpoint(CDC_TX_EPNUM);
   Endpoint_ClearCurrentBank();
+#endif
 }

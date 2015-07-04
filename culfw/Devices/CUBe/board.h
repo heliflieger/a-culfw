@@ -31,6 +31,7 @@
 #define HAS_MORITZ
 #define HAS_RWE
 #define HAS_ESA
+#define HAS_HMS
 #define HAS_TX3
 #define HAS_INTERTECHNO
 #define HAS_UNIROLL
@@ -108,10 +109,10 @@
 */
 #define BOOTLOADER_PIN		(1<<14)
 
-#define HAS_ETHERNET            1       // undef or define...1
-#define HAS_ETHERNET_KEEPALIVE  1
-#define ETHERNET_KEEPALIVE_TIME 30
-#define HAS_NTP                 1       // undef or define...1
+//#define HAS_ETHERNET            1       // undef or define...1
+//#define HAS_ETHERNET_KEEPALIVE  1
+//#define ETHERNET_KEEPALIVE_TIME 30
+//#define HAS_NTP                 1       // undef or define...1
 
 #else //HM_CFG
 #define SPI_SS				(1<<11)

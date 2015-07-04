@@ -1,7 +1,11 @@
 #ifndef __NTP_H
 #define __NTP_H
 
+#ifdef ARM
+#include <stdio.h>
+#else
 typedef uint32_t time_t;
+#endif
 
 typedef union {
   uint32_t u32;

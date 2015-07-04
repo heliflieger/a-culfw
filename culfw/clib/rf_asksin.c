@@ -10,6 +10,40 @@
 
 #include "rf_asksin.h"
 
+#ifdef CC1100_ASKSIN
+#include "fncollection.h"
+
+#define CC_ID				CC1100_ASKSIN
+
+extern void cc1101_RX_check_PLL_wait_task2( transceiver_t* device);
+
+#undef CC1100_ASSERT
+#define CC1100_ASSERT 		(CCtransceiver[CC_ID].CS_base->PIO_CODR = (1<<CCtransceiver[CC_ID].CS_pin))
+#undef CC1100_DEASSERT
+#define CC1100_DEASSERT 	(CCtransceiver[CC_ID].CS_base->PIO_SODR = (1<<CCtransceiver[CC_ID].CS_pin))
+#undef CC1100_IN_PORT
+#define CC1100_IN_PORT 		(CCtransceiver[CC_ID].CS_base->PIO_PDSR)
+#undef CC1100_IN_PIN
+#define CC1100_IN_PIN 		CCtransceiver[CC_ID].IN_pin
+#undef CC1100_CS_BASE
+#define CC1100_CS_BASE 		CCtransceiver[CC_ID].CS_base
+#undef CC1100_CS_PIN
+#define CC1100_CS_PIN 		CCtransceiver[CC_ID].CS_pin
+
+
+#define CC1100_READREG(x)				cc1100_readReg2(x,&CCtransceiver[CC_ID])
+#define CC1100_WRITEREG(x,y) 			cc1100_writeReg2(x,y,&CCtransceiver[CC_ID])
+#define CCSTROBE(x) 					ccStrobe2(x,&CCtransceiver[CC_ID])
+#define CC1101_RX_CHECK_PLL_WAIT_TASK()	cc1101_RX_check_PLL_wait_task2(&CCtransceiver[CC_ID])
+
+#else
+
+#define CC1100_READREG					cc1100_readReg
+#define CC1100_WRITEREG 				cc1100_writeReg
+#define CCSTROBE						ccStrobe
+#define CC1101_RX_CHECK_PLL_WAIT_TASK	cc1101_RX_check_PLL_wait_task
+#endif
+
 uint8_t asksin_on = 0;
 
 const uint8_t PROGMEM ASKSIN_CFG[] = {
@@ -64,8 +98,19 @@ void
 rf_asksin_init(void)
 {
 
+#ifdef ARM
+#ifndef CC_ID
+  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;	// disable INT - we'll poll...
+#endif
+
+  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
+  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);			//Enable output
+  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);			//Enable PIO control
+
+#else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
+#endif
 
   CC1100_DEASSERT;                           // Toggle chip select signal
   my_delay_us(30);
@@ -74,12 +119,28 @@ rf_asksin_init(void)
   CC1100_DEASSERT;
   my_delay_us(45);
 
-  ccStrobe( CC1100_SRES );                   // Send SRES command
+  CCSTROBE( CC1100_SRES );                   // Send SRES command
   my_delay_us(100);
 
+#ifdef CC_ID
+  CC1100_ASSERT;
+  uint8_t *cfg = EE_CC1100_CFG;
+  for(uint8_t i = 0; i < EE_CC1100_CFG_SIZE; i++) {
+      cc1100_sendbyte(erb(cfg++));
+  }
+  CC1100_DEASSERT;
+
+  uint8_t *pa = EE_CC1100_PA;
+    CC1100_ASSERT;                             // setup PA table
+    cc1100_sendbyte( CC1100_PATABLE | CC1100_WRITE_BURST );
+    for (uint8_t i = 0;i<8;i++) {
+      cc1100_sendbyte(erb(pa++));
+    }
+    CC1100_DEASSERT;
+#endif
   // load configuration
   for (uint8_t i = 0; i < sizeof(ASKSIN_CFG); i += 2) {
-    cc1100_writeReg( pgm_read_byte(&ASKSIN_CFG[i]),
+    CC1100_WRITEREG( pgm_read_byte(&ASKSIN_CFG[i]),
                      pgm_read_byte(&ASKSIN_CFG[i+1]) );
   }
 
@@ -92,23 +153,23 @@ rf_asksin_init(void)
   }
 #endif
   
-  ccStrobe( CC1100_SCAL );
+  CCSTROBE( CC1100_SCAL );
 
   my_delay_ms(4);
 
   // enable RX, but don't enable the interrupt
   do {
-    ccStrobe(CC1100_SRX);
-  } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
+    CCSTROBE(CC1100_SRX);
+  } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_RX);
 }
 
 static void
 rf_asksin_reset_rx(void)
 {
-  ccStrobe( CC1100_SFRX  );
-  ccStrobe( CC1100_SIDLE );
-  ccStrobe( CC1100_SNOP  );
-  ccStrobe( CC1100_SRX   );
+  CCSTROBE( CC1100_SFRX  );
+  CCSTROBE( CC1100_SIDLE );
+  CCSTROBE( CC1100_SNOP  );
+  CCSTROBE( CC1100_SRX   );
 }
 
 void
@@ -124,7 +185,7 @@ rf_asksin_task(void)
 
   // see if a CRC OK pkt has been arrived
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
-    msg[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
+    msg[0] = CC1100_READREG( CC1100_RXFIFO ) & 0x7f; // read len
 
     if (msg[0] >= MAX_ASKSIN_MSG) {
       // Something went horribly wrong, out of sync?
@@ -145,8 +206,8 @@ rf_asksin_task(void)
     CC1100_DEASSERT;
 
     do {
-      ccStrobe(CC1100_SRX);
-    } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
+      CCSTROBE(CC1100_SRX);
+    } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_RX);
 
     last_enc = msg[1];
     msg[1] = (~msg[1]) ^ 0x89;
@@ -178,18 +239,18 @@ rf_asksin_task(void)
     }
   }
 
-  switch(cc1100_readReg( CC1100_MARCSTATE )) {
+  switch(CC1100_READREG( CC1100_MARCSTATE )) {
     case MARCSTATE_RXFIFO_OVERFLOW:
-      ccStrobe( CC1100_SFRX  );
+      CCSTROBE( CC1100_SFRX  );
     case MARCSTATE_IDLE:
-      ccStrobe( CC1100_SIDLE );
-      ccStrobe( CC1100_SNOP  );
-      ccStrobe( CC1100_SRX   );
+      CCSTROBE( CC1100_SIDLE );
+      CCSTROBE( CC1100_SNOP  );
+      CCSTROBE( CC1100_SRX   );
       break;
   }
 
 #ifdef HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
-  cc1101_RX_check_PLL_wait_task();
+  CC1101_RX_CHECK_PLL_WAIT_TASK();
 #endif
 }
 
@@ -225,8 +286,8 @@ asksin_send(char *in)
 
   // enable TX, wait for CCA
   do {
-    ccStrobe(CC1100_STX);
-  } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_TX);
+    CCSTROBE(CC1100_STX);
+  } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_TX);
 
   if (ctl & (1 << 4)) { // BURST-bit set?
     // According to ELV, devices get activated every 300ms, so send burst for 360ms
@@ -247,19 +308,19 @@ asksin_send(char *in)
   CC1100_DEASSERT;
 
   // wait for TX to finish
-  while(cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_TX)
+  while(CC1100_READREG( CC1100_MARCSTATE ) == MARCSTATE_TX)
     ;
 
-  if (cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_TXFIFO_UNDERFLOW) {
-      ccStrobe( CC1100_SFTX  );
-      ccStrobe( CC1100_SIDLE );
-      ccStrobe( CC1100_SNOP  );
+  if (CC1100_READREG( CC1100_MARCSTATE ) == MARCSTATE_TXFIFO_UNDERFLOW) {
+      CCSTROBE( CC1100_SFTX  );
+      CCSTROBE( CC1100_SIDLE );
+      CCSTROBE( CC1100_SNOP  );
   }
   
   if(asksin_on) {
     do {
-      ccStrobe(CC1100_SRX);
-    } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
+      CCSTROBE(CC1100_SRX);
+    } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_RX);
   } else {
     set_txrestore();
   }

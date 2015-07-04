@@ -111,8 +111,15 @@ uint16_t somfy_rts_interval = 1240; // symbol width in us -> ca. 828 Hz data rat
 uint16_t somfy_rts_interval_half = 620;
 
 static void somfy_rts_tunein(void) {
+#ifdef ARM
+	AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;	// disable INT - we'll poll...
+	AT91C_BASE_PIOA->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
+	AT91C_BASE_PIOA->PIO_OER = _BV(CC1100_CS_PIN);			//Enable output
+	AT91C_BASE_PIOA->PIO_PER = _BV(CC1100_CS_PIN);			//Enable PIO control
+#else
 	EIMSK &= ~_BV(CC1100_INT);
 	SET_BIT(CC1100_CS_DDR, CC1100_CS_PIN); // CS as output
+#endif
 
 	CC1100_DEASSERT;// Toggle chip select signal
 	my_delay_us(30);
@@ -152,33 +159,33 @@ static void somfy_rts_tunein(void) {
 
 static void send_somfy_rts_bitZero(void) {
 	// Somfy RTS bits are manchester encoded: 0 = high->low
-	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);// High
+	CC1100_SET_OUT;// High
 	my_delay_us(somfy_rts_interval_half);
-	CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);// Low
+	CC1100_CLEAR_OUT;// Low
 	my_delay_us(somfy_rts_interval_half);
 }
 
 static void send_somfy_rts_bitOne(void) {
 	// Somfy RTS bits are manchester encoded: 1 = low->high
-	CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);// Low
+	CC1100_CLEAR_OUT;// Low
 	my_delay_us(somfy_rts_interval_half);
-	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);// High
+	CC1100_SET_OUT;// High
 	my_delay_us(somfy_rts_interval_half);
 }
 
 static void send_somfy_rts_frame(somfy_rts_frame_t *frame, int8_t hwPulses) {
 	// send hardware sync (pulses of ca. double length)
 	for (int8_t i = 0; i < hwPulses; i++) {
-		CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);		// High
+		CC1100_SET_OUT;		// High
 		my_delay_us(2550);
-		CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);// Low
+		CC1100_CLEAR_OUT;// Low
 		my_delay_us(2550);
 	}
 
 	// send software sync (4 x symbol width high, half symbol width low)
-	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);// High
+	CC1100_SET_OUT;// High
 	my_delay_us(4860);
-	CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);// Low
+	CC1100_CLEAR_OUT;// Low
 	my_delay_us(somfy_rts_interval_half);
 
 	// Send the user data
@@ -197,7 +204,7 @@ static void send_somfy_rts_frame(somfy_rts_frame_t *frame, int8_t hwPulses) {
 
 	// send inter-frame gap
 	// if last bit = 0, silence is 1/2 symbol longer
-	CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);// Low
+	CC1100_CLEAR_OUT;// Low
 	my_delay_us(30415 + ((frame[6] >> 7) & 1) ? 0 : somfy_rts_interval_half);
 }
 
@@ -287,9 +294,9 @@ static void somfy_rts_send(char *in) {
 	ccTX();
 
 	// send wakeup pulse
-	CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);// High
+	CC1100_SET_OUT;// High
 	my_delay_us(9415);
-	CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);// Low
+	CC1100_CLEAR_OUT;// Low
 	my_delay_ms(89);// should be 89565 us
 	my_delay_us(565);
 

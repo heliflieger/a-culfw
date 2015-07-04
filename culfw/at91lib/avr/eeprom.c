@@ -27,7 +27,7 @@ static const Pin pins[]  = {BOARD_AT45_A_SPI_PINS, BOARD_AT45_A_NPCS_PIN};
 /// SPI clock frequency, in Hz.
 #define SPCK        1000000
 
-#define FLASHPAGE	2
+#define FLASHPAGE	3
 
 #else
 
