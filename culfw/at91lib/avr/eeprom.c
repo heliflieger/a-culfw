@@ -567,7 +567,7 @@ int16_t flash_init(void) {
 	c = FLASHPAGE * AT45_PageSize(&at45);
 
 	AT45_Read(&at45, v,2,c);
-	TRACE_INFO("EE Magic: %u %u Start %u\n\r", v[0], v[1],c);
+	TRACE_INFO("EE Magic: %u %u Start %u\n\r", v[0], v[1],(unsigned int)c);
 
 	return 0;
 

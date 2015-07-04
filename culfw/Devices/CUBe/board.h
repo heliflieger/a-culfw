@@ -8,6 +8,23 @@
 //#define LONG_PULSE
 
 #define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
+
+#if defined(CUBE)
+
+#elif defined(CUBE_BL)
+#define CUBE
+#elif defined(bootloader_CUBE)
+#define CUBE
+#undef  TTY_BUFSIZE
+#define TTY_BUFSIZE          512
+#else
+#define CUBE
+#endif
+
+#define USE_DATAFLASH
+#define BOARD_NAME 			"CUBe"
+#define BOARD_ID_STR        "CUBe"
+
 #define ARM
 #define HAS_USB
 #define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
@@ -42,38 +59,7 @@
 //#define HAS_MBUS
 //#define HAS_MEMFN
 
-#if defined(HM_CFG)
 
-#elif defined(HM_CFG_BL)
-#define HM_CFG
-#elif defined(bootloader_HM_CFG)
-#undef  TTY_BUFSIZE
-#define TTY_BUFSIZE          512
-#define HM_CFG
-#elif defined(CUBE)
-
-#elif defined(CUBE_BL)
-#define CUBE
-#elif defined(bootloader_CUBE)
-#define CUBE
-#undef  TTY_BUFSIZE
-#define TTY_BUFSIZE          512
-#else
-#define CUBE
-#endif
-
-#if defined(HM_CFG)
-	#define BOARD_NAME 			"CUL-HM-CFG"
-	#define BOARD_ID_STR        "CUL-HM-CFG"
-#elif defined(CUBE)
-	#define USE_DATAFLASH
-	#define BOARD_NAME 			"CUBe"
-	#define BOARD_ID_STR        "CUBe"
-#else
-    #error no target defined.
-#endif
-
-#ifdef CUBE
 #define SPI_SS				(1<<12)
 #define SPI_MISO			(1<<16)
 #define SPI_MOSI			(1<<17)
@@ -114,34 +100,10 @@
 //#define ETHERNET_KEEPALIVE_TIME 30
 //#define HAS_NTP                 1       // undef or define...1
 
-#else //HM_CFG
-#define SPI_SS				(1<<11)
-#define SPI_MISO			(1<<12)
-#define SPI_MOSI			(1<<13)
-#define SPI_SCLK			(1<<14)
-
-#define CC1100_CS_PIN		11
-#define CC1100_CS_BASE		AT91C_BASE_PIOA
-#define CC1100_OUT_PIN      20
-#define CC1100_OUT_BASE     AT91C_BASE_PIOA
-#define CC1100_IN_PIN       19
-#define CC1100_IN_BASE		AT91C_BASE_PIOA
-#define CC1100_IN_PORT      AT91C_BASE_PIOA->PIO_PDSR
-
-#define BOOTLOADER_PIN		(1<<9)
-
-#endif
-
 //------------------------------------------------------------------------------
 //         Headers
 //------------------------------------------------------------------------------
-#if defined(HM_CFG)
-    #include "AT91SAM7S128.h"
-#elif defined(CUBE)
-    #include "AT91SAM7X256.h"
-#else
-    #error Board does not support the specified chip.
-#endif
+#include "AT91SAM7X256.h"
 
 //------------------------------------------------------------------------------
 //         Definitions
@@ -164,7 +126,6 @@
 #define BOARD_MCK               48000000
 //------------------------------------------------------------------------------
 
-#ifdef CUBE
 //------------------------------------------------------------------------------
 /// \page "SAM7X-EK - USB device"
 /// This page lists constants describing several characteristics (controller
@@ -224,35 +185,7 @@
 #define BOARD_EMAC_RUN_PINS BOARD_EMAC_PINS
 
 //------------------------------------------------------------------------------
-#else //HM_CFG
-/// Indicates the chip has a UDP controller.
-#define BOARD_USB_UDP
 
-/// Indicates the D+ pull-up is externally controlled.
-#define BOARD_USB_PULLUP_EXTERNAL
-#define PIN_USB_PULLUP {1 << 16, AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_OUTPUT_0, PIO_DEFAULT}
-
-/// Number of endpoints in the USB controller.
-#define BOARD_USB_NUMENDPOINTS                  4
-
-/// Returns the maximum packet size of the given endpoint.
-/// \param i  Endpoint number.
-/// \return Maximum packet size in bytes of endpoint.
-#define BOARD_USB_ENDPOINTS_MAXPACKETSIZE(i)    ((i == 0) ? 8 : 64)
-
-/// Returns the number of FIFO banks for the given endpoint.
-/// \param i  Endpoint number.
-/// \return Number of FIFO banks for the endpoint.
-#define BOARD_USB_ENDPOINTS_BANKS(i)            (((i == 0) || (i == 3)) ? 1 : 2)
-
-/// USB attributes configuration descriptor (bus or self powered, remote wakeup)
-//#define BOARD_USB_BMATTRIBUTES                  USBConfigurationDescriptor_SELFPOWERED_NORWAKEUP
-#define BOARD_USB_BMATTRIBUTES                  USBConfigurationDescriptor_BUSPOWERED_NORWAKEUP
-#endif
-//------------------------------------------------------------------------------
-
-
-#ifdef CUBE
 /// List of all DBGU pin definitions.
 #define PINS_DBGU  { (1<<27)|(1<<28), AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_PERIPH_A, PIO_DEFAULT}
 
@@ -300,28 +233,6 @@
 #define BOARD_AT45_A_NPCS             0
 /// Chip select pin connected to the dataflash.
 #define BOARD_AT45_A_NPCS_PIN         PIN_SPI1_NPCS0
-
-#else //HM_CFG
-#define PINS_DBGU  { (1<<9)|(1<<10), AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_PERIPH_A, PIO_DEFAULT}
-
-/// LED #0 pin definition.A8
-#define PIN_LED_0  {1 << 24, AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_OUTPUT_1, PIO_DEFAULT}
-
-#define PINS_LEDS  PIN_LED_0
-
-
-/// USART0 RXD pin definition.
-#define PIN_USART0_RXD  {1 << 0, AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_PERIPH_A, PIO_DEFAULT}
-/// USART0 TXD pin definition.
-#define PIN_USART0_TXD  {1 << 1, AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_PERIPH_A, PIO_DEFAULT}
-/// USART0 SCK pin definition.
-
-
-#define AT91C_BASE_SPI0		AT91C_BASE_SPI
-#define AT91C_ID_SPI0		AT91C_ID_SPI
-#endif
-
-
 
 /// Indicates chip has an EFC.
 #define BOARD_FLASH_EFC

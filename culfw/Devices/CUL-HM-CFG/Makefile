@@ -44,12 +44,14 @@ SIZE = $(ARMPATH)/$(TOOLPREFIX)size
 
 CPUFLAGS = -mcpu=arm7tdmi-s
 OPTFLAGS = -Os
-CFLAGS = -Wall -mlong-calls -ffunction-sections -std=c99 -Dflash -DTRACE_LEVEL=0 -D$(OUTPUT) -g $(GENDEPFLAGS)
-INC = -I. -I../ -I../../../at91lib -I../../../clib -I../../../at91lib/usb -I$(INCLUDEPATH)
-ASFLAGS = -g $(OPTFLAGS) -I. -I../ -I../../../at91lib -D__ASSEMBLY__ -Dflash
+DEBUGFLAGS = -DTRACE_LEVEL=4
+CFLAGS = -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable -mlong-calls -ffunction-sections -std=c99 -Dflash -D$(OUTPUT) $(DEBUGFLAGS) -g $(GENDEPFLAGS)
+INC = -I. -I../.. -I../../at91lib -I../../at91lib/usb -I../../clib -I../../at91lib/avr -I../../avr-uip/uip -I../../avr-uip -I$(INCLUDEPATH)
+ASFLAGS = -g $(OPTFLAGS) -I. -I../../at91lib -D__ASSEMBLY__ -Dflash
 LDFLAGS = -g -nostartfiles -Wl,--gc-sections -T"$(OUTPUT)_flash.lds"  -Xlinker -Map=$(OUTPUT).map
 LIBS = -lc
 THUMBFLAGS = -mthumb
+
 
 COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC) 
 
@@ -60,7 +62,8 @@ COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC)
 ##### output
 #####
 ###############################################################
-OUTPUT = bootloader_CUBE
+#OUTPUT = CUBE
+#OUTPUT = HM_CFG
 
 ###############################################################
 #####
@@ -82,7 +85,7 @@ define expand_dir
  $$(foreach adir,$$(SUBDIRS),$$(eval $$(call expand_dir,$(1)$$(adir)/)))
 endef
 
-ALLSRCS := board_cstartup.S
+ALLSRCS := ../../at91lib/board_cstartup.S
 ALLTHUMBSRCS :=
 ALLTHUMBSRCSUNOPT :=
 
@@ -90,9 +93,17 @@ $(eval $(call expand_dir,))
 
 OBJS := $(patsubst %.S,%.o,$(ALLSRCS:%.c=%.o)) $(ALLTHUMBSRCS:.c=.thumb.o)
 
-all: $(OUTPUT).bin $(OUTPUT).hex
+target:	$(OUTPUT).bin $(OUTPUT).hex
 	$(SIZE) $(OUTPUT).elf
-		
+
+HM_CFG_BL:
+	make OUTPUT=HM_CFG_BL target
+	
+all:
+#	make OUTPUT=HM_CFG clean2 target
+	make OUTPUT=HM_CFG_BL clean2 target
+	make clean3
+
 %.bin: %.elf
 	$(OC) -O binary $< $@
 
@@ -112,12 +123,15 @@ $(OUTPUT).elf: $(OBJS)
 %.thumb.o: %.c
 	$(COMPILE) $(THUMBFLAGS) -c -o $@ $<
 		
-programBL: $(OUTPUT).bin
-	$(OPENOCD) -c init -c 'f_imageBL $<' -c shutdown
-
 program: $(OUTPUT).bin
 	$(OPENOCD) -c init -c 'f_image $<' -c shutdown
 
+programBL: $(OUTPUT).bin
+	$(OPENOCD) -c init -c 'f_imageBL $<' -c shutdown
+
+program_bl: $(OUTPUT).bin
+	$(OPENOCD) -c init -c 'f_image2 $<' -c shutdown
+			
 clean:
 	-rm -Rf obj/*
 	-rm -Rf .dep/*

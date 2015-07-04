@@ -44,13 +44,14 @@ SIZE = $(ARMPATH)/$(TOOLPREFIX)size
 
 CPUFLAGS = -mcpu=arm7tdmi-s
 OPTFLAGS = -Os
-CFLAGS = -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable -mlong-calls -ffunction-sections -std=c99 -Dflash -D$(OUTPUT) -DTRACE_LEVEL=4 -g $(GENDEPFLAGS)
+DEBUGFLAGS = -DTRACE_LEVEL=4
+CFLAGS = -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable -mlong-calls -ffunction-sections -std=c99 -Dflash -D$(OUTPUT) $(DEBUGFLAGS) -g $(GENDEPFLAGS)
 INC = -I. -I../.. -I../../at91lib -I../../at91lib/usb -I../../clib -I../../at91lib/avr -I../../avr-uip/uip -I../../avr-uip -I$(INCLUDEPATH)
 ASFLAGS = -g $(OPTFLAGS) -I. -I../../at91lib -D__ASSEMBLY__ -Dflash
 LDFLAGS = -g -nostartfiles -Wl,--gc-sections -T"$(OUTPUT)_flash.lds"  -Xlinker -Map=$(OUTPUT).map
 LIBS = -lc
 THUMBFLAGS = -mthumb
-DEBUGFLAGS = -DTRACE_LEVEL=4
+
 
 COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC) 
 
@@ -62,7 +63,6 @@ COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC)
 #####
 ###############################################################
 #OUTPUT = CUBE
-#OUTPUT = HM_CFG
 
 ###############################################################
 #####
@@ -95,9 +95,6 @@ OBJS := $(patsubst %.S,%.o,$(ALLSRCS:%.c=%.o)) $(ALLTHUMBSRCS:.c=.thumb.o)
 target:	$(OUTPUT).bin $(OUTPUT).hex
 	$(SIZE) $(OUTPUT).elf
 
-HM_CFG_BL:
-	make OUTPUT=HM_CFG_BL target
-
 CUBE:
 	make OUTPUT=CUBE target
 
@@ -105,9 +102,7 @@ CUBE_BL:
 	make OUTPUT=CUBE_BL target
 	
 all:
-#	make OUTPUT=HM_CFG clean2 target
-	make OUTPUT=HM_CFG_BL clean2 target
-#	make OUTPUT=CUBE clean2 target
+	make OUTPUT=CUBE clean2 target
 	make OUTPUT=CUBE_BL target
 	make clean3
 

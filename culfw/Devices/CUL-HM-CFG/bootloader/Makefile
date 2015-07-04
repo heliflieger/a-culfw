@@ -60,7 +60,7 @@ COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC)
 ##### output
 #####
 ###############################################################
-OUTPUT = bootloader_CUBE
+OUTPUT = bootloader_HM_CFG
 
 ###############################################################
 #####
