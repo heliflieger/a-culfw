@@ -45,6 +45,7 @@
 #    define HAS_HOMEEASY
 #    define HAS_OREGON3
 #    define HAS_BELFOX
+#    define DEBUG_SYNC
 #  endif
 
 #if defined(_868MHZ)
@@ -53,6 +54,8 @@
 #    define HAS_MORITZ
 //#    define HAS_HOERMANN
 #endif
+
+
 
 #endif
 
