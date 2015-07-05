@@ -10,7 +10,12 @@
 #include "cc1100.h"
 #include "../version.h"
 #ifdef HAS_USB
+#ifdef ARM
+#include <usb/device/cdc-serial/CDCDSerialDriver.h>
+#include <utility/trace.h>
+#else
 #include <Drivers/USB/USB.h>
+#endif
 #endif
 #include "clock.h"
 #include "mysleep.h"
@@ -282,8 +287,25 @@ prepare_boot(char *in)
     fromhex(in+1, &bl, 1);
 
   if(bl == 0xff)             // Allow testing
-    while(1);    
+    while(1);
+    
+#ifdef ARM
 
+	unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
+
+	//Reset
+	if(bl)
+		*ram = 0xaa;		// Next reboot we'd like to jump to the bootloader.
+
+	USBD_Disconnect();
+	my_delay_ms(250);
+	my_delay_ms(250);
+	my_delay_ms(250);
+	my_delay_ms(250);
+	AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
+	while (1);
+
+#else
   if(bl)                     // Next reboot we'd like to jump to the bootloader.
     ewb( EE_REQBL, 1 );      // Simply jumping to the bootloader from here
                              // wont't work. Neither helps to shutdown USB
@@ -302,6 +324,7 @@ prepare_boot(char *in)
   
   wdt_enable(WDTO_15MS);       // Make sure the watchdog is running 
   while (1);                 // go to bed, the wathchdog will take us to reset
+#endif
 }
 
 void

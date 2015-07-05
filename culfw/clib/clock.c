@@ -40,8 +40,15 @@ volatile uint8_t  clock_hsec;
 
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
+#ifdef ARM
+void ISR_Timer0() 
+{
+	// Clear status bit to acknowledge interrupt
+	AT91C_BASE_TC0->TC_SR;
+#else
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
+#endif
 #ifdef HAS_IRTX     //IS IRTX defined ?
   if(! ir_send_data() ) {   //If IR-Sending is in progress, don't receive
 #ifdef HAS_IRRX  //IF also IRRX is define
@@ -94,10 +101,14 @@ ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 void
 get_timestamp(uint32_t *ts)
 {
+#ifdef ARM
+  *ts = ticks;
+#else
   uint8_t l = SREG;
   cli(); 
   *ts = ticks;
   SREG = l;
+#endif
 }
 
 void

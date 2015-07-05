@@ -2,13 +2,23 @@
 #define _CDC_H_
 
 /* Includes: */
-#include "Descriptors.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
 #include "ringbuffer.h"
+#ifdef ARM
+#include <usb/device/cdc-serial/CDCDSerialDriverDescriptors.h>
+#include <usb/device/cdc-serial/CDCDSerialDriver.h>
+#include "ttydata.h"
+
+/// Size in bytes of the buffer used for reading data from the USB
+#define DATABUFFERSIZEOUT \
+    BOARD_USB_ENDPOINTS_MAXPACKETSIZE(CDCDSerialDriverDescriptors_DATAOUT)
+#else
+#include "Descriptors.h"
 
 #include <Drivers/USB/USB.h>     // USB Functionality
+#endif
 
 /* Macros: */
 #define GET_LINE_CODING			0x21

@@ -1,0 +1,13 @@
+###############################################################
+
+ARMBASE = F:/Tools/GNU_Tools_ARM_Embedded/4.8
+
+INCLUDEPATH = $(ARMBASE)/arm-none-eabi/include
+LIBPATH = $(ARMBASE)/arm-none-eabi/lib
+ARMPATH = $(ARMBASE)/bin
+TOOLPREFIX = arm-none-eabi-
+OPENOCDPATH = F:\Tools\OpenOCD
+OPENOCD = $(OPENOCDPATH)\openocd.exe -f $(OPENOCDPATH)\target\sam7x256.cfg -f $(OPENOCDPATH)\interface\uniprog.cfg
+
+######################## EOF ##################################
+

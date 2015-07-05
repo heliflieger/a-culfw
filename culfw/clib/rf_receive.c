@@ -9,6 +9,7 @@
 #include <util/parity.h>
 #include <string.h>
 
+#include "board.h"
 #include "delay.h"
 #include "rf_send.h"
 #include "rf_receive.h"
@@ -31,6 +32,10 @@
 #include "rf_mbus.h"
 #endif
 
+#ifdef ARM
+#include <aic/aic.h>
+void ISR_Pio();
+#endif
 //////////////////////////
 // With a CUL measured RF timings, in us, high/low sum
 //           Bit zero        Bit one
@@ -71,11 +76,32 @@ static pulse_t hightime, lowtime;
 void
 tx_init(void)
 {
+
+#ifdef ARM
+
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
+#ifdef CUBE
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOB);
+#endif
+  //CC1100_OUT_PIN
+  CC1100_OUT_BASE->PIO_PPUER = _BV(CC1100_OUT_PIN);		//Enable pullup
+  CC1100_OUT_BASE->PIO_OER = _BV(CC1100_OUT_PIN);		//Enable output
+  CC1100_OUT_BASE->PIO_CODR = _BV(CC1100_OUT_PIN);		//Clear_Bit
+  CC1100_OUT_BASE->PIO_PER = _BV(CC1100_OUT_PIN);		//Enable PIO control
+
+  //CC1100_IN_PIN
+  CC1100_IN_BASE->PIO_IER = _BV(CC1100_IN_PIN);			//Enable input change interrupt
+  CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);			//Enable PIO control
+  AIC_ConfigureIT(AT91C_ID_PIOA, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
+
+
+#else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
   CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);
 
   CLEAR_BIT( CC1100_IN_DDR,   CC1100_IN_PIN);
   SET_BIT( CC1100_EICR, CC1100_ISC);  // Any edge of INTx generates an int.
+#endif
 
   credit_10ms = MAX_CREDIT/2;
 
@@ -459,7 +485,11 @@ RfAnalyze_Task(void)
 
 void reset_input(void)
 {
+#ifdef ARM
+  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_TC1;	//Disable Interrupt
+#else
   TIMSK1 = 0;
+#endif
   bucket_array[bucket_in].state = STATE_RESET;
 #if defined (HAS_IT) || defined (HAS_TCM97001)
   packetCheckValues.isnotrep = 0;
@@ -469,12 +499,22 @@ void reset_input(void)
 //////////////////////////////////////////////////////////////////////
 // Timer Compare Interrupt Handler. If we are called, then there was no
 // data for SILENCE time, and we can put the data to be analysed
+#ifdef ARM
+void ISR_Timer1() {
+	// Clear status bit to acknowledge interrupt
+	AT91C_BASE_TC1->TC_SR;
+#else
 ISR(TIMER1_COMPA_vect)
 {
+#endif
 #ifdef LONG_PULSE
   uint16_t tmp;
 #endif
+#ifdef ARM
+  AT91C_BASE_AIC->AIC_IDCR = 1<< AT91C_ID_TC1;	//Disable Interrupt
+#else
   TIMSK1 = 0;                           // Disable "us"
+#endif
 #ifdef LONG_PULSE
   tmp=OCR1A;
   OCR1A = TWRAP;                        // Wrap Timer
@@ -551,10 +591,19 @@ delbit(bucket_t *b)
 
 //////////////////////////////////////////////////////////////////////
 // "Edge-Detected" Interrupt Handler
+#ifdef ARM
+void ISR_Pio() {
+	// Read PIO controller status
+	AT91C_BASE_PIOA->PIO_ISR;
+#ifdef CUBE
+	AT91C_BASE_PIOB->PIO_ISR;
+#endif
+#else
 ISR(CC1100_INTVECT)
 {  
 #ifdef HAS_OREGON3
   static uint8_t count_half;
+#endif
 #endif
 #ifdef HAS_FASTRF
   if(fastrf_on) {
@@ -570,9 +619,17 @@ ISR(CC1100_INTVECT)
   }
 #endif
 #ifdef LONG_PULSE
+  #ifdef ARM
+  uint16_t c = AT91C_BASE_TC1->TC_CV / 6;   // catch the time and make it smaller
+  #else
   uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
+  #endif
 #else
+  #ifdef ARM
+  uint8_t c = AT91C_BASE_TC1->TC_CV / 6;   // catch the time and make it smaller
+  #else
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
+  #endif
 #endif
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
@@ -613,7 +670,11 @@ IS868MHZ && ( (b->state == STATE_HMS)
 #endif
     )) {
       addbit(b, 1);
+#ifdef ARM
+      AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
+#else
       TCNT1 = 0;
+#endif
     }
 #endif
 
@@ -648,7 +709,11 @@ IS868MHZ && ( (b->state == STATE_HMS)
   }
 
   lowtime = c-hightime;
+#ifdef ARM
+  AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
+#else
   TCNT1 = 0;                          // restart timer
+#endif
 /*
  DC('-');
           DU(hightime*16, 5);
@@ -682,7 +747,9 @@ IS868MHZ && ( (b->state == STATE_HMS)
 
   ///////////////////////
   // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
+#ifndef ARM
   TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
+#endif
 
 #ifdef HAS_OREGON3
     if (b->state == STATE_OREGON3) {
@@ -766,7 +833,11 @@ retry_sync:
 #endif
         b->sync++;
       } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
+#ifdef ARM
+      	AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+#else
         OCR1A = SILENCE;
+#endif
 #ifdef HAS_HMS
         if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
           b->state = STATE_HMS;
@@ -785,7 +856,11 @@ retry_sync:
   #ifdef HAS_ESA
               if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
           b->state = STATE_ESA;
+#ifdef ARM
+          AT91C_BASE_TC1->TC_RC = 375;
+#else
           OCR1A = 1000;
+#endif
 
         } else 
   #endif
@@ -817,7 +892,12 @@ retry_sync:
         b->bitidx  = 7;
         b->data[0] = 0;
 
+#ifdef ARM
+        AT91C_BASE_TC1->TC_SR;
+        AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+#else
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
+#endif
 
       } else {                            // too few sync bits
         b->state = STATE_RESET;

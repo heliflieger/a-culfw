@@ -7,6 +7,10 @@ typedef unsigned char uint8_t;
 
 #include "ringbuffer.h"
 
+#ifndef ARM
+#define restoreIRQ(sr)		SREG = sr
+#endif
+
 void
 rb_reset(rb_t *rb)
 {
@@ -20,14 +24,14 @@ rb_put(rb_t *rb, uint8_t data)
   sreg = SREG;
   cli();
   if(rb->nbytes >= TTY_BUFSIZE) {
-    SREG = sreg;
+	  restoreIRQ(sreg);
     return;
   }
   rb->nbytes++;
   rb->buf[rb->putoff++] = data;
   if(rb->putoff == TTY_BUFSIZE)
     rb->putoff = 0;
-  SREG = sreg;
+  restoreIRQ(sreg);
 }
 
 uint8_t
@@ -38,14 +42,14 @@ rb_get(rb_t *rb)
   sreg = SREG;
   cli();
   if(rb->nbytes == 0) {
-    SREG = sreg;
+	restoreIRQ(sreg);
     return 0;
   }
   rb->nbytes--;
   ret = rb->buf[rb->getoff++];
   if(rb->getoff == TTY_BUFSIZE)
     rb->getoff = 0;
-  SREG = sreg;
+  restoreIRQ(sreg);
   return ret;
 }
 

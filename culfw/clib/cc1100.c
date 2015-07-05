@@ -150,9 +150,17 @@ const PROGMEM const uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
 uint8_t
 cc1100_sendbyte(uint8_t data)
 {
+#ifdef ARM
+  // Send data
+  while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_TXEMPTY) == 0);
+  AT91C_BASE_SPI0->SPI_TDR = data;
+  while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_RDRF) == 0);
+  return AT91C_BASE_SPI0->SPI_RDR & 0xFF;
+#else
   SPDR = data;		        // send byte
   while (!(SPSR & _BV (SPIF)));	// wait until transfer finished
   return SPDR;
+#endif
 }
 
 
@@ -163,8 +171,15 @@ ccInitChip(uint8_t *cfg)
   moritz_on = 0; //loading this configuration overwrites moritz cfg
 #endif
 
+#ifdef ARM
+  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;
+  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN); 	//Enable pullup
+  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);		//Enable output
+  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);		//Enable PIO control
+#else
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
+#endif
 
   CC1100_DEASSERT;                           // Toggle chip select signal
   my_delay_us(30);
@@ -270,8 +285,11 @@ void
 ccTX(void)
 {
   uint8_t cnt = 0xff;
+#ifdef ARM
+  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;
+#else
   EIMSK  &= ~_BV(CC1100_INT);
-
+#endif
   // Going from RX to TX does not work if there was a reception less than 0.5
   // sec ago. Due to CCA? Using IDLE helps to shorten this period(?)
   ccStrobe(CC1100_SIDLE);
@@ -289,8 +307,11 @@ ccRX(void)
   while(cnt-- &&
         (ccStrobe(CC1100_SRX) & CC1100_STATUS_STATE_BM) != CC1100_STATE_RX)
     my_delay_us(10);
+#ifdef ARM
+	AT91C_BASE_AIC->AIC_IECR = 1 << AT91C_ID_PIOA;
+#else
   EIMSK |= _BV(CC1100_INT);
-
+#endif
 }
 
 
@@ -353,6 +374,44 @@ ccStrobe(uint8_t strobe)
   return ret;
 }
 
+//--------------------------------------------------------------------
+
+#ifdef ARM
+
+#ifdef CCCOUNT
+transceiver_t CCtransceiver[CCCOUNT] = CCTRANSCEIVERS;
+#endif
+
+uint8_t
+cc1100_readReg2(uint8_t addr, transceiver_t* device)
+{
+  device->CS_base->PIO_CODR = (1<<device->CS_pin);	//assert CS
+  cc1100_sendbyte( addr|CC1100_READ_BURST );
+  uint8_t ret = cc1100_sendbyte( 0 );
+  device->CS_base->PIO_SODR = (1<<device->CS_pin);	//deassert CS
+  return ret;
+}
+
+void
+cc1100_writeReg2(uint8_t addr, uint8_t data, transceiver_t* device)
+{
+  device->CS_base->PIO_CODR = (1<<device->CS_pin);	//assert CS
+  cc1100_sendbyte( addr|CC1100_WRITE_BURST );
+  cc1100_sendbyte( data );
+  device->CS_base->PIO_SODR = (1<<device->CS_pin);	//deassert CS
+}
+
+uint8_t
+ccStrobe2(uint8_t strobe, transceiver_t* device)
+{
+  device->CS_base->PIO_CODR = (1<<device->CS_pin);	//assert CS
+  uint8_t ret = cc1100_sendbyte( strobe );
+  CCtransceiver->CS_base->PIO_SODR = (1<<device->CS_pin);	//deassert CS
+
+  return ret;
+}
+#endif
+
 void
 set_ccoff(void)
 {
@@ -383,10 +442,14 @@ set_ccon(void)
   cc_on = 1;
 
 #ifdef HAS_ASKSIN
+#ifndef CC1100_ASKSIN
   asksin_on = 0;
+#endif
 #endif
 
 #ifdef HAS_MORITZ
+#ifndef CC1100_MORITZ
   moritz_on = 0;
+#endif
 #endif
 }

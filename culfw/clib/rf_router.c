@@ -95,10 +95,8 @@ rf_router_func(char *in)
 #define RF_ROUTER_ZERO_LOW  768
 #define RF_ROUTER_ONE_HIGH  768
 #define RF_ROUTER_ONE_LOW   384
-#define SET_HIGH CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN)
-#define SET_LOW  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN)
-void sethigh(uint16_t dur) { SET_HIGH; my_delay_us(dur); }
-void setlow(uint16_t dur) { SET_LOW; my_delay_us(dur); }
+void sethigh(uint16_t dur) { CC1100_SET_OUT; my_delay_us(dur); }
+void setlow(uint16_t dur) { CC1100_CLEAR_OUT; my_delay_us(dur); }
 
 // Duration is 15ms, more than one tick!
 static void
@@ -115,7 +113,7 @@ rf_router_ping(void)
   sethigh(RF_ROUTER_ONE_HIGH);
   setlow(RF_ROUTER_ONE_LOW);
   sethigh(RF_ROUTER_ONE_LOW);
-  SET_LOW;
+  CC1100_CLEAR_OUT;
 }
 
 static void

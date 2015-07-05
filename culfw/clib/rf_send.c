@@ -58,10 +58,10 @@ static uint8_t zerohigh, zerolow, onehigh, onelow;
 static void
 send_bit(uint8_t bit)
 {
-  CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+  CC1100_SET_OUT;         // High
   my_delay_us(bit ? TMUL(onehigh) : TMUL(zerohigh));
 
-  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+  CC1100_CLEAR_OUT;       // Low
   my_delay_us(bit ? TMUL(onelow) : TMUL(zerolow));
 }
 
@@ -73,10 +73,10 @@ send_bit(uint8_t bit)
 static void
 send_bit(uint8_t bit)
 {
-  CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN);         // High
+  CC1100_SET_OUT;         // High
   my_delay_us(bit ? FS20_ONE : FS20_ZERO);
 
-  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN);       // Low
+  CC1100_CLEAR_OUT;       // Low
   my_delay_us(bit ? FS20_ONE : FS20_ZERO);
 }
 
@@ -107,11 +107,13 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
 
 #ifdef HAS_MORITZ
   uint8_t restore_moritz = 0;
+#ifndef CC1100_MORITZ
   if(moritz_on) {
     restore_moritz = 1;
     moritz_on = 0;
     set_txreport("21");
   }
+#endif
 #endif
 
   if(!cc_on)
