@@ -53,7 +53,7 @@ THUMBFLAGS = -mthumb
 
 COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC) 
 
-#-include Makefile.local
+-include Makefile.local
 
 ###############################################################
 #####

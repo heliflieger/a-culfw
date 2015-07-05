@@ -18,7 +18,7 @@
 #####
 ###############################################################
 
-ARMBASE = F:/Tools/GNU_Tools_ARM_Embedded/4.8
+ARMBASE = G:/Tools/GNU_Tools_ARM_Embedded/4.8
 
 INCLUDEPATH = $(ARMBASE)/arm-none-eabi/include
 LIBPATH = $(ARMBASE)/arm-none-eabi/lib
@@ -55,7 +55,7 @@ THUMBFLAGS = -mthumb
 
 COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC) 
 
-#-include Makefile.local
+-include Makefile.local
 
 ###############################################################
 #####
