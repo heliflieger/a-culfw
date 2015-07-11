@@ -29,6 +29,7 @@
 #define HAS_USB
 #define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
 #define USB_DESCRIPTOR_SN	'1'
+#define HAS_XRAM
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -95,10 +96,10 @@
 */
 #define BOOTLOADER_PIN		(1<<14)
 
-//#define HAS_ETHERNET            1       // undef or define...1
-//#define HAS_ETHERNET_KEEPALIVE  1
-//#define ETHERNET_KEEPALIVE_TIME 30
-//#define HAS_NTP                 1       // undef or define...1
+#define HAS_ETHERNET            1       // undef or define...1
+#define HAS_ETHERNET_KEEPALIVE  1
+#define ETHERNET_KEEPALIVE_TIME 30
+#define HAS_NTP                 1       // undef or define...1
 
 //------------------------------------------------------------------------------
 //         Headers

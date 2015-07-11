@@ -3,6 +3,8 @@
 
 #include "board.h"
 
+#include <stdint.h>
+
 void ethernet_reset(void);
 void ethernet_init(void);
 void Ethernet_Task(void);

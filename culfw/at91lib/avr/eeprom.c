@@ -173,6 +173,35 @@ void AT45_Read(
 }
 
 //------------------------------------------------------------------------------
+/// Reads data from the At45 inside the provided buffer. Since a continuous
+/// read command is used, there is no restriction on the buffer size and read
+/// address.
+/// \param pAt45  Pointer to a At45 driver instance.
+/// \param pBuffer  Data buffer.
+/// \param size  Number of bytes to read.
+/// \param address  Address at which data shall be read.
+//------------------------------------------------------------------------------
+void AT45_Read_Security(
+    At45 *pAt45,
+    unsigned char *pBuffer,
+    unsigned int size,
+    unsigned int address)
+{
+    unsigned char error;
+
+    // Sanity checks
+    ASSERT(pAt45, "-F- AT45_Read: pAt45 is null\n\r");
+    ASSERT(pBuffer, "-F- AT45_Read: pBuffer is null\n\r");
+
+    // Issue a continuous read array command
+    error = AT45_SendCommand(pAt45, 0x77, 4, pBuffer, size, address, 0, 0);
+    ASSERT(!error, "-F- AT45_Read: Failed to issue command\n\r");
+
+    // Wait for the read command to execute
+    while (AT45_IsBusy(pAt45));
+}
+
+//------------------------------------------------------------------------------
 /// Writes data on the At45 at the specified address. Only one page of
 /// data is written that way; if the address is not at the beginning of the
 /// page, the data is written starting from this address and wraps around to
@@ -376,6 +405,10 @@ void eeprom_write_byte(uint8_t *p, uint8_t v) {
 	uint32_t c = (uint32_t)p;
 	TRACE_INFO("EE_W A:%02x V:%02x   ",(uint8_t)c,v);
 
+	if(eeprom_read_byte(p) == v) {
+		return;
+	}
+
 #ifdef USE_RAM
 	ee_ram[c]=v;
 	return;
@@ -527,6 +560,71 @@ uint8_t eeprom_read_byte(uint8_t *p) {
 #endif
 }
 
+/*
+ * The width of the CRC calculation and result.
+ * Modify the typedef for a 16 or 32-bit CRC standard.
+ */
+
+typedef uint32_t crc;
+#define CRC_POLYNOMIAL 0x8005
+#define CRC_WIDTH  (8 * sizeof(crc))
+#define CRC_TOPBIT (1 << (CRC_WIDTH - 1))
+
+crc CRCs(unsigned char* message, uint16_t count)
+{
+    crc  remainder = 0;
+	int byte;
+	unsigned char bit;
+
+    /*
+     * Perform modulo-2 division, a byte at a time.
+     */
+    for (byte = 0; byte < count; ++byte)
+    {
+        /*
+         * Bring the next byte into the remainder.
+         */
+        remainder ^= (message[byte] << (CRC_WIDTH - 8));
+
+        /*
+         * Perform modulo-2 division, a bit at a time.
+         */
+        for (bit = 8; bit > 0; --bit)
+        {
+            /*
+             * Try to divide the current data bit.
+             */
+            if (remainder & CRC_TOPBIT)
+            {
+                remainder = (remainder << 1) ^ CRC_POLYNOMIAL;
+            }
+            else
+            {
+                remainder = (remainder << 1);
+            }
+        }
+    }
+
+    /*
+     * The final remainder is the CRC result.
+     */
+    return (remainder);
+
+}   /* crcSlow() */
+
+
+uint32_t flash_serial(void) {
+#ifdef USE_DATAFLASH
+	unsigned char v[128];
+
+	AT45_Read_Security(&at45, v,128,0);
+
+	return CRCs(v,128);
+#else
+	return 0x01234567;
+#endif
+}
+
 int16_t flash_init(void) {
 #ifdef USE_RAM
 	return 0;
@@ -568,6 +666,8 @@ int16_t flash_init(void) {
 
 	AT45_Read(&at45, v,2,c);
 	TRACE_INFO("EE Magic: %u %u Start %u\n\r", v[0], v[1],(unsigned int)c);
+
+	TRACE_INFO("Flash Serial: %08x\n\r",flash_serial());
 
 	return 0;
 
