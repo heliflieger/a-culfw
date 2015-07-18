@@ -249,31 +249,6 @@ int main(void)
 	TRACE_INFO("%s\n\r", BOARD_NAME);
 	TRACE_INFO("Compiled: %s %s --\n\r", __DATE__, __TIME__);
 
-    //Configure Reset Controller
-    //AT91C_BASE_RSTC->RSTC_RMR= 0xa5<<24;
-
-
-/*
-    if (1) {
-
-		// Configure PINS
-		//PIO_Configure(emacRstPins, PIO_LISTSIZE(emacRstPins));
-
-		// Execute reset
-		//RSTC_SetExtResetLength(0xd);
-		//RSTC_ExtReset();
-
-		// Wait for end hardware reset
-		//while (!RSTC_GetNrstLevel());
-	}
-
-	{volatile unsigned long x=0x400000;
-		while(x)  {
-			x--;
-		}
-	}
-*/
-
 	//Configure Reset Controller
 	AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
 
@@ -325,12 +300,6 @@ int main(void)
 	fht_init();
 	tx_init();
 
-	#ifdef HAS_ETHERNET
-
-	//ethernet_init();
-
-	#endif
-
 	TRACE_INFO("init USB\n\r");
 	CDCDSerialDriver_Initialize();
 	USBD_Connect();
@@ -343,7 +312,7 @@ int main(void)
 
 	TRACE_INFO("init Complete\n\r");
 
-
+	checkFrequency();
 
     // Main loop
     while (1) {

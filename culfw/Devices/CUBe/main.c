@@ -37,6 +37,7 @@
 #include "display.h"
 #include "fastrf.h"
 #include "rf_router.h"		// rf_router_func
+#include "fband.h"
 
 #ifdef HAS_ETHERNET
 #include "ethernet.h"
@@ -336,7 +337,7 @@ int main(void)
 
 	TRACE_INFO("init Complete\n\r");
 
-
+	checkFrequency();
 
     // Main loop
     while (1) {
