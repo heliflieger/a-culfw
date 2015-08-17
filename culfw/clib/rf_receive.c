@@ -92,8 +92,7 @@ tx_init(void)
   //CC1100_IN_PIN
   CC1100_IN_BASE->PIO_IER = _BV(CC1100_IN_PIN);			//Enable input change interrupt
   CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);			//Enable PIO control
-  AIC_ConfigureIT(AT91C_ID_PIOA, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
-
+  AIC_ConfigureIT(CC1100_IN_PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
 
 #else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
@@ -594,10 +593,8 @@ delbit(bucket_t *b)
 #ifdef ARM
 void ISR_Pio() {
 	// Read PIO controller status
-	AT91C_BASE_PIOA->PIO_ISR;
-#ifdef CUBE
-	AT91C_BASE_PIOB->PIO_ISR;
-#endif
+	CC1100_IN_BASE->PIO_ISR;
+
 #else
 ISR(CC1100_INTVECT)
 {  
