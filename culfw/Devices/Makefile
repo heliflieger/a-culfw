@@ -49,6 +49,14 @@ all:
 	make -C zCSM all
 	make -C rpiaddon clean
 	make -C rpiaddon all
+	make -C CUL-HM-CFG clean
+	make -C CUL-HM-CFG/bootloader clean
+	make -C CUL-HM-CFG
+	make -C CUL-HM-CFG/bootloader
+	make -C CUBe clean
+	make -C CUBe/bootloader clean
+	make -C CUBe
+	make -C CUBe/bootloader
 	find . -name \*.eep | xargs rm
 	find . -name \*.elf | xargs rm
 	find . -name \*.lss | xargs rm
@@ -83,4 +91,8 @@ clean:
 	make -C RFbee clean
 	make -C rpiaddon clean
 	make -C zCSM clean
+	make -C CUL-HM-CFG clean
+	make -C CUL-HM-CFG/bootloader clean
+	make -C CUBe clean
+	make -C CUBe/bootloader clean
 
