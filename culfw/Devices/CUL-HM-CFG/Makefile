@@ -44,7 +44,7 @@ SIZE = $(ARMPATH)$(TOOLPREFIX)size
 
 CPUFLAGS = -mcpu=arm7tdmi-s
 OPTFLAGS = -Os
-DEBUGFLAGS = -DTRACE_LEVEL=0 -DDBGU_UNIT_IN
+DEBUGFLAGS = -DTRACE_LEVEL=4 -DDBGU_UNIT_IN
 CFLAGS = -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable -mlong-calls -ffunction-sections -std=c99 -Dflash -D$(OUTPUT) $(DEBUGFLAGS) -g $(GENDEPFLAGS)
 INC = -I. -I../.. -I../../at91lib -I../../at91lib/usb -I../../clib -I../../at91lib/avr -I../../avr-uip/uip -I../../avr-uip -I$(INCLUDEPATH)
 ASFLAGS = -g $(OPTFLAGS) -I. -I../../at91lib -D__ASSEMBLY__ -Dflash
@@ -63,7 +63,7 @@ COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC)
 #####
 ###############################################################
 #OUTPUT = CUBE
-OUTPUT = HM_CFG
+OUTPUT = HM_CFG_BL
 
 ###############################################################
 #####
