@@ -18,29 +18,29 @@
 #####
 ###############################################################
 
-ARMBASE = F:/Tools/GNU_Tools_ARM_Embedded/4.8
+#ARMBASE = F:/Tools/GNU_Tools_ARM_Embedded/4.8
 
 INCLUDEPATH = $(ARMBASE)/arm-none-eabi/include
 LIBPATH = $(ARMBASE)/arm-none-eabi/lib
-ARMPATH = $(ARMBASE)/bin
+#ARMPATH = $(ARMBASE)/bin
 TOOLPREFIX = arm-none-eabi-
 OPENOCDPATH = F:\Tools\OpenOCD
 OPENOCD = $(OPENOCDPATH)\openocd.exe -f $(OPENOCDPATH)\target\sam7x256.cfg -f $(OPENOCDPATH)\interface\uniprog.cfg
 
 GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
-
+	
 ###############################################################
 #####
 ##### Compiler, Linker and Tools
 #####
 ###############################################################
 
-CC = $(ARMPATH)/$(TOOLPREFIX)gcc
-AS = $(ARMPATH)/$(TOOLPREFIX)gcc
-LD = $(ARMPATH)/$(TOOLPREFIX)gcc
-OC = $(ARMPATH)/$(TOOLPREFIX)objcopy
-OD = $(ARMPATH)/$(TOOLPREFIX)objdump
-SIZE = $(ARMPATH)/$(TOOLPREFIX)size
+CC = $(ARMPATH)$(TOOLPREFIX)gcc
+AS = $(ARMPATH)$(TOOLPREFIX)gcc
+LD = $(ARMPATH)$(TOOLPREFIX)gcc
+OC = $(ARMPATH)$(TOOLPREFIX)objcopy
+OD = $(ARMPATH)$(TOOLPREFIX)objdump
+SIZE = $(ARMPATH)$(TOOLPREFIX)size
 
 CPUFLAGS = -mcpu=arm7tdmi-s
 OPTFLAGS = -Os

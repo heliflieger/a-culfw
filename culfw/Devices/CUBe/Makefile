@@ -18,11 +18,11 @@
 #####
 ###############################################################
 
-ARMBASE = G:/Tools/GNU_Tools_ARM_Embedded/4.8
+#ARMBASE = G:/Tools/GNU_Tools_ARM_Embedded/4.8
 
 INCLUDEPATH = $(ARMBASE)/arm-none-eabi/include
 LIBPATH = $(ARMBASE)/arm-none-eabi/lib
-ARMPATH = $(ARMBASE)/bin
+#ARMPATH = $(ARMBASE)/bin
 TOOLPREFIX = arm-none-eabi-
 OPENOCDPATH = F:\Tools\OpenOCD
 OPENOCD = $(OPENOCDPATH)\openocd.exe -f $(OPENOCDPATH)\target\sam7x256.cfg -f $(OPENOCDPATH)\interface\uniprog.cfg
@@ -35,12 +35,12 @@ GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
 #####
 ###############################################################
 
-CC = $(ARMPATH)/$(TOOLPREFIX)gcc
-AS = $(ARMPATH)/$(TOOLPREFIX)gcc
-LD = $(ARMPATH)/$(TOOLPREFIX)gcc
-OC = $(ARMPATH)/$(TOOLPREFIX)objcopy
-OD = $(ARMPATH)/$(TOOLPREFIX)objdump
-SIZE = $(ARMPATH)/$(TOOLPREFIX)size
+CC = $(ARMPATH)$(TOOLPREFIX)gcc
+AS = $(ARMPATH)$(TOOLPREFIX)gcc
+LD = $(ARMPATH)$(TOOLPREFIX)gcc
+OC = $(ARMPATH)$(TOOLPREFIX)objcopy
+OD = $(ARMPATH)$(TOOLPREFIX)objdump
+SIZE = $(ARMPATH)$(TOOLPREFIX)size
 
 CPUFLAGS = -mcpu=arm7tdmi-s
 OPTFLAGS = -Os
@@ -62,7 +62,7 @@ COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC)
 ##### output
 #####
 ###############################################################
-#OUTPUT = CUBE
+OUTPUT = CUBE
 
 ###############################################################
 #####
@@ -138,7 +138,7 @@ clean:
 	-rm -Rf obj/*
 	-rm -Rf .dep/*
 	-rm -Rf .dep
-	-rm -f $(OBJS) *.elf *.bin *.hex *.map *~
+	-rm -f $(OBJS) *.elf *.bin *.hex *.map *~ ../../at91lib/*.o 
 
 clean2:
 	-rm -Rf obj/*
