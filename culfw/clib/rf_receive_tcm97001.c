@@ -80,8 +80,17 @@ uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
   if (IS433MHZ && b->state == STATE_RESET) {
     if ((*hightime < TSCALE(640) && *hightime > TSCALE(410)) &&
 				     (*lowtime  < TSCALE(9500) && *lowtime > TSCALE(8200)) ) {
+#ifdef ARM
+    		AT91C_BASE_TC1->TC_RC = 1950;
+    		  AT91C_BASE_TC1->TC_SR;
+			  #ifdef LONG_PULSE
+    		  AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+			  #endif
+			  AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+#else
 		    OCR1A = 5200; //End of message
 			  TIMSK1 = _BV(OCIE1A);
+#endif
 			  b->sync=0;
         
 			  b->state = STATE_TCM97001;

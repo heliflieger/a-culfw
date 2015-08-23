@@ -505,20 +505,26 @@ void ISR_Timer1() {
 #else
 ISR(TIMER1_COMPA_vect)
 {
-#endif
 #ifdef LONG_PULSE
   uint16_t tmp;
 #endif
+#endif
 #ifdef ARM
   AT91C_BASE_AIC->AIC_IDCR = 1<< AT91C_ID_TC1;	//Disable Interrupt
+
+#ifdef LONG_PULSE
+  AT91C_BASE_TC1->TC_RC = TWRAP/8*3;    // Wrap Timer
+  AT91C_BASE_TC1->TC_CMR |= AT91C_TC_CPCTRG;
+#endif
 #else
   TIMSK1 = 0;                           // Disable "us"
-#endif
 #ifdef LONG_PULSE
   tmp=OCR1A;
   OCR1A = TWRAP;                        // Wrap Timer
   TCNT1=tmp;                            // reinitialize timer to measure times > SILENCE
 #endif
+#endif
+
   if(tx_report & REP_MONITOR)
     DC('.');
 
@@ -597,11 +603,13 @@ void ISR_Pio() {
 
 #else
 ISR(CC1100_INTVECT)
-{  
+{
+#endif
+
 #ifdef HAS_OREGON3
   static uint8_t count_half;
 #endif
-#endif
+
 #ifdef HAS_FASTRF
   if(fastrf_on) {
     fastrf_on = 2;
@@ -891,6 +899,9 @@ retry_sync:
 
 #ifdef ARM
         AT91C_BASE_TC1->TC_SR;
+		#ifdef LONG_PULSE
+        AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+		#endif
         AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
 #else
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data

@@ -5,7 +5,7 @@
 #define bit_is_set(sfr, bit) ((sfr) & _BV(bit))
 
 
-//#define LONG_PULSE
+#define LONG_PULSE
 
 #define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
 
@@ -57,6 +57,8 @@
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
 
+//#define _433MHZ
+
 #  if defined(_433MHZ)
 #    define HAS_TCM97001
 #    define HAS_IT
@@ -74,9 +76,9 @@
 #define SPI_SCLK			(1<<18)
 
 //additional CC1101 Transceiver
-#define CC1100_ASKSIN		2
-#define CC1100_MORITZ		3
-#define CC1100_MAICO		1
+//#define CC1100_ASKSIN		2
+//#define CC1100_MORITZ		3
+//#define CC1100_MAICO		1
 
 //Internal Transceiver
 #define CC1100_0_CS_PIN		12
