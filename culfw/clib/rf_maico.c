@@ -335,6 +335,7 @@ maico_sendraw(uint8_t *dec)
       CCSTROBE(CC1100_STX);
     } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_TX);
 
+
   //Wait for sending to finish (CC1101 will go to RX state automatically
   //after sending
   uint8_t i;

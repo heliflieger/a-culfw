@@ -308,7 +308,7 @@ ccRX(void)
         (ccStrobe(CC1100_SRX) & CC1100_STATUS_STATE_BM) != CC1100_STATE_RX)
     my_delay_us(10);
 #ifdef ARM
-	AT91C_BASE_AIC->AIC_IECR = 1 << CC1100_IN_PIO_ID;
+    AT91C_BASE_AIC->AIC_IECR = 1 << CC1100_IN_PIO_ID;
 #else
   EIMSK |= _BV(CC1100_INT);
 #endif
@@ -324,18 +324,12 @@ ccreg(char *in)
   if(fromhex(in+1, &hb, 1)) {
 
     if(hb == 0x99) {
-      for(uint8_t i = 0; i < 0x32; i++) {
+      for(uint8_t i = 0; i < 0x30; i++) {
         DH2(cc1100_readReg(i));
         if((i&7) == 7)
           DNL();
       }
- /*   } else if(hb == 0x98) {
-        for(uint8_t i = 0; i < 0x32; i++) {
-          DH2(cc1100_readReg2(i,&CCtransceiver[1]));
-          if((i&7) == 7)
-            DNL();
-        }*/
-      } else {
+    } else {
       out = cc1100_readReg(hb);
       DC('C');                    // prefix
       DH2(hb);                    // register number

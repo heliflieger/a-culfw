@@ -5,7 +5,7 @@
 #define bit_is_set(sfr, bit) ((sfr) & _BV(bit))
 
 
-#define LONG_PULSE
+//#define LONG_PULSE
 
 #define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
 

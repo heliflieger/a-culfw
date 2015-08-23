@@ -94,6 +94,7 @@ tx_init(void)
   CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);			//Enable PIO control
   AIC_ConfigureIT(CC1100_IN_PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
 
+
 #else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
   CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);
@@ -524,7 +525,6 @@ ISR(TIMER1_COMPA_vect)
   TCNT1=tmp;                            // reinitialize timer to measure times > SILENCE
 #endif
 #endif
-
   if(tx_report & REP_MONITOR)
     DC('.');
 

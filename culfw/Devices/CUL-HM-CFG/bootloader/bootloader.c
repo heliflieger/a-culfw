@@ -185,9 +185,9 @@ static void UsbDataReceived(unsigned int unused,
 
     // Restart USB read
    CDCDSerialDriver_Read(usbBuffer,
-						 DATABUFFERSIZE,
-						 (TransferCallback) UsbDataReceived,
-						 0);
+                         DATABUFFERSIZE,
+                         (TransferCallback) UsbDataReceived,
+                         0);
 
 }
 
@@ -212,173 +212,173 @@ void
 CDC_Task(void)
 {
 
-	unsigned char x;
+  unsigned char x;
 
-	if(!USB_IsConnected)
-		return;
+  if(!USB_IsConnected)
+    return;
 
-	switch(xmodem) {
-	case 0:
-		while(TTY_Rx_Buffer.nbytes && !xmodem) {
-			x=rb_get(&TTY_Rx_Buffer);
-			if(x==SOH) {
-				//Beginn Übertragung
-				xmodem=2;
-				lasttimestamp=timestamp;
-				nak_timeout=0;
-				packetcounter=0;
-				packetcounterL=0;
-				writeaddress=TARGETSTART;
-				cmdbuffercounter=0;
-				cmdbuffer[cmdbuffercounter++]=x;
-				lasttimestamp=timestamp;
-				TRACE_INFO("-- Xmodem start\n\r");
-			} else {
-				switch(x) {
-				case 'V':
-					puts2("\n\rCUBELOADER V" VERSION "\n\r");
-					break;
-				default:
-					DBGU_PutChar(x);
-				}
-			}
-		}
-		if(xmodem == 0) {
-			//Alle 5s NAK senden
-			if((timestamp > lasttimestamp+5000) && !packetcounterL) {
-				rb_put(&TTY_Tx_Buffer, NAK);
-				lasttimestamp=timestamp;
-			}
-		}
-		break;
-	case 1:
+  switch(xmodem) {
+  case 0:
+    while(TTY_Rx_Buffer.nbytes && !xmodem) {
+      x=rb_get(&TTY_Rx_Buffer);
+      if(x==SOH) {
+        //Beginn Übertragung
+        xmodem=2;
+        lasttimestamp=timestamp;
+        nak_timeout=0;
+        packetcounter=0;
+        packetcounterL=0;
+        writeaddress=TARGETSTART;
+        cmdbuffercounter=0;
+        cmdbuffer[cmdbuffercounter++]=x;
+        lasttimestamp=timestamp;
+        TRACE_INFO("-- Xmodem start\n\r");
+      } else {
+        switch(x) {
+        case 'V':
+          puts2("\n\rCUBELOADER V" VERSION "\n\r");
+          break;
+        default:
+          DBGU_PutChar(x);
+        }
+      }
+    }
+    if(xmodem == 0) {
+      //Alle 5s NAK senden
+      if((timestamp > lasttimestamp+5000) && !packetcounterL) {
+        rb_put(&TTY_Tx_Buffer, NAK);
+        lasttimestamp=timestamp;
+      }
+    }
+    break;
+  case 1:
 
-		if(nak_timeout > 10) {
-			//Nach 10 NAK abbrechen
-			xmodem=0;
-			TRACE_INFO("-- Xmodem abort; nak_timeout\n\r");
-		}
+    if(nak_timeout > 10) {
+      //Nach 10 NAK abbrechen
+      xmodem=0;
+      TRACE_INFO("-- Xmodem abort; nak_timeout\n\r");
+    }
 
-		if(TTY_Rx_Buffer.nbytes) {
-			x=rb_get(&TTY_Rx_Buffer);
-			if(x==SOH) {
-				xmodem=2;
-				cmdbuffercounter=0;
-				cmdbuffer[cmdbuffercounter++]=x;
-				lasttimestamp=timestamp;
-				TRACE_INFO("-- Xmodem SOH\n\r");
-				nak_timeout=0;
-			} else if (x==EOT) {
-				xmodem=3;
-				TRACE_INFO("-- Xmodem EOT; send ACK\n\r");
-				rb_put(&TTY_Tx_Buffer, ACK);
-				if(packetscount) {
-					TRACE_INFO("-- Xmodemwrite flash; %08X:\n\r",writeaddress);
-					FLASHD_Write(writeaddress,writebuffer,packetscount * XDATALEN);
-					writeaddress+=packetscount * XDATALEN;
-					packetscount=0;
-				}
-			} else {
+    if(TTY_Rx_Buffer.nbytes) {
+      x=rb_get(&TTY_Rx_Buffer);
+      if(x==SOH) {
+        xmodem=2;
+        cmdbuffercounter=0;
+        cmdbuffer[cmdbuffercounter++]=x;
+        lasttimestamp=timestamp;
+        TRACE_INFO("-- Xmodem SOH\n\r");
+        nak_timeout=0;
+      } else if (x==EOT) {
+        xmodem=3;
+        TRACE_INFO("-- Xmodem EOT; send ACK\n\r");
+        rb_put(&TTY_Tx_Buffer, ACK);
+        if(packetscount) {
+          TRACE_INFO("-- Xmodemwrite flash; %08X:\n\r",writeaddress);
+          FLASHD_Write(writeaddress,writebuffer,packetscount * XDATALEN);
+          writeaddress+=packetscount * XDATALEN;
+          packetscount=0;
+        }
+      } else {
 
-			}
-		} else {
-			if(timestamp > lasttimestamp+5000) {
-				//Nach 5s inaktivität abbrechen
-				xmodem=0;
-				TRACE_INFO("-- Xmodem abort; timeout\n\r");
-			}
-		}
-		break;
-	case 2:
-		while((TTY_Rx_Buffer.nbytes) && (xmodem==2)) {
-			cmdbuffer[cmdbuffercounter++]=rb_get(&TTY_Rx_Buffer);
+      }
+    } else {
+      if(timestamp > lasttimestamp+5000) {
+        //Nach 5s inaktivität abbrechen
+        xmodem=0;
+        TRACE_INFO("-- Xmodem abort; timeout\n\r");
+      }
+    }
+    break;
+  case 2:
+    while((TTY_Rx_Buffer.nbytes) && (xmodem==2)) {
+      cmdbuffer[cmdbuffercounter++]=rb_get(&TTY_Rx_Buffer);
 
-			if(cmdbuffercounter==CMDBUFFERLEN) {
-				unsigned char checksum=0;
-				for(unsigned long i=0;i<XDATALEN;i++) {
-					checksum+=cmdbuffer[i+XDATA];
-				}
-				if(cmdbuffer[XPACKET]==packetcounter) {
-					//Paket bereits empfangen
-					rb_put(&TTY_Tx_Buffer, ACK);
-					TRACE_INFO("-- Xmodem packet %02u received again; send ACK:\n\r",cmdbuffer[XPACKET]);
-				} else if (cmdbuffer[XPACKET]!=(unsigned char)(packetcounter+1)) {
-					//Falsche Paketnummer
-					nak_timeout++;
-					rb_put(&TTY_Tx_Buffer, NAK);
-					TRACE_INFO("-- Xmodem wrong packet %02u received; send NAK:\n\r",cmdbuffer[XPACKET]);
-				} else if (cmdbuffer[XCHKSUM]!=checksum) {
-					//Falsche Paketnummer
-					nak_timeout++;
-					rb_put(&TTY_Tx_Buffer, NAK);
-					TRACE_INFO("-- Xmodem wrong checksum; send NAK:\n\r");
-				} else {
-					//Paket OK
-					TRACE_INFO("-- Xmodem packet %02u received; send ACK\n\r",cmdbuffer[XPACKET]);
-					for(unsigned long i=0; i<XDATALEN;i++) {
-						writebuffer[i+(XDATALEN * packetscount)]=cmdbuffer[i+XDATA];
-					}
-					packetscount++;
+      if(cmdbuffercounter==CMDBUFFERLEN) {
+        unsigned char checksum=0;
+        for(unsigned long i=0;i<XDATALEN;i++) {
+          checksum+=cmdbuffer[i+XDATA];
+        }
+        if(cmdbuffer[XPACKET]==packetcounter) {
+          //Paket bereits empfangen
+          rb_put(&TTY_Tx_Buffer, ACK);
+          TRACE_INFO("-- Xmodem packet %02u received again; send ACK:\n\r",cmdbuffer[XPACKET]);
+        } else if (cmdbuffer[XPACKET]!=(unsigned char)(packetcounter+1)) {
+          //Falsche Paketnummer
+          nak_timeout++;
+          rb_put(&TTY_Tx_Buffer, NAK);
+          TRACE_INFO("-- Xmodem wrong packet %02u received; send NAK:\n\r",cmdbuffer[XPACKET]);
+        } else if (cmdbuffer[XCHKSUM]!=checksum) {
+          //Falsche Paketnummer
+          nak_timeout++;
+          rb_put(&TTY_Tx_Buffer, NAK);
+          TRACE_INFO("-- Xmodem wrong checksum; send NAK:\n\r");
+        } else {
+          //Paket OK
+          TRACE_INFO("-- Xmodem packet %02u received; send ACK\n\r",cmdbuffer[XPACKET]);
+          for(unsigned long i=0; i<XDATALEN;i++) {
+            writebuffer[i+(XDATALEN * packetscount)]=cmdbuffer[i+XDATA];
+          }
+          packetscount++;
 
-					if(packetscount==WRITE_PACKETS) {
+          if(packetscount==WRITE_PACKETS) {
 
-						TRACE_INFO("-- Xmodemwrite flash; %08X:\n\r",writeaddress);
-						FLASHD_Write(writeaddress,writebuffer,WRITEBUFFERLEN);
-						writeaddress+=WRITEBUFFERLEN;
-						packetscount=0;
-					}
-					nak_timeout=0;
-					packetcounter++;
-					packetcounterL++;
-					cmdbuffercounter=0;
-					rb_put(&TTY_Tx_Buffer, ACK);
+            TRACE_INFO("-- Xmodemwrite flash; %08X:\n\r",writeaddress);
+            FLASHD_Write(writeaddress,writebuffer,WRITEBUFFERLEN);
+            writeaddress+=WRITEBUFFERLEN;
+            packetscount=0;
+          }
+          nak_timeout=0;
+          packetcounter++;
+          packetcounterL++;
+          cmdbuffercounter=0;
+          rb_put(&TTY_Tx_Buffer, ACK);
 
-				}
-				xmodem=1;
-			}
-			lasttimestamp=timestamp;
-		}
-		if(timestamp > lasttimestamp+5000) {
-			//Nach 5s inaktivität NAK senden
-			nak_timeout++;
-			lasttimestamp=timestamp;
-			rb_put(&TTY_Tx_Buffer, NAK);
-			TRACE_INFO("-- Xmodem receive timeout; send NAK\n\r");
-			xmodem=1;
-		}
-		break;
-	case 3:
-		//Reset
-		TRACE_INFO("Restart\n\r");
-		{
-			unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
-			unsigned int timeout;
+        }
+        xmodem=1;
+      }
+      lasttimestamp=timestamp;
+    }
+    if(timestamp > lasttimestamp+5000) {
+      //Nach 5s inaktivität NAK senden
+      nak_timeout++;
+      lasttimestamp=timestamp;
+      rb_put(&TTY_Tx_Buffer, NAK);
+      TRACE_INFO("-- Xmodem receive timeout; send NAK\n\r");
+      xmodem=1;
+    }
+    break;
+  case 3:
+    //Reset
+    TRACE_INFO("Restart\n\r");
+    {
+      unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
+      unsigned int timeout;
 
-			USBD_Disconnect();
-			timeout=timestamp;
-			while(timestamp<timeout+1000){
-				LED_TOGGLE();
-			}
+      USBD_Disconnect();
+      timeout=timestamp;
+      while(timestamp<timeout+1000){
+        LED_TOGGLE();
+      }
 
-			*ram = 0x55;
-			AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
-			while (1);
-		}
-		xmodem=0;
-	}
+      *ram = 0x55;
+      AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
+      while (1);
+    }
+    xmodem=0;
+  }
 
 
-	if(TTY_Tx_Buffer.nbytes) {
-		unsigned long i=0;
+  if(TTY_Tx_Buffer.nbytes) {
+    unsigned long i=0;
 
-		while(TTY_Tx_Buffer.nbytes && i<DATABUFFERSIZEOUT) {
+    while(TTY_Tx_Buffer.nbytes && i<DATABUFFERSIZEOUT) {
 
-			 usbBufferOut[i++]=rb_get(&TTY_Tx_Buffer);
-		}
+       usbBufferOut[i++]=rb_get(&TTY_Tx_Buffer);
+    }
 
-		while (CDCDSerialDriver_Write(usbBufferOut,i, 0, 0) != USBD_STATUS_SUCCESS);
+    while (CDCDSerialDriver_Write(usbBufferOut,i, 0, 0) != USBD_STATUS_SUCCESS);
 
-	}
+  }
 
 
 }
@@ -391,22 +391,22 @@ CDC_Task(void)
 
 void checkbootloader() {
 
-	unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
-	uint32_t volatile * const fl = (uint32_t *) TARGETSTART;
+  unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
+  uint32_t volatile * const fl = (uint32_t *) TARGETSTART;
 
-	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
-	AT91C_BASE_PIOA->PIO_PER = BOOTLOADER_PIN;			//Enable PIO control
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
+  AT91C_BASE_PIOA->PIO_PER = BOOTLOADER_PIN;			//Enable PIO control
 
-	if(*fl != 0xffffffff) {
-		if((AT91C_BASE_PIOA->PIO_PDSR & BOOTLOADER_PIN)) {
-			if(*ram != 0xaa) {
-				jump_to_target();
-			}
-		}
-		if(*ram == 0x55) {
-			jump_to_target();
-		}
-	}
+  if(*fl != 0xffffffff) {
+    if((AT91C_BASE_PIOA->PIO_PDSR & BOOTLOADER_PIN)) {
+      if(*ram != 0xaa) {
+        jump_to_target();
+      }
+    }
+    if(*ram == 0x55) {
+      jump_to_target();
+    }
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -416,12 +416,12 @@ void checkbootloader() {
 //------------------------------------------------------------------------------
 int main(void)
 {
-	unsigned long LEDcounter=0;
+  unsigned long LEDcounter=0;
 
-	// DBGU configuration
-	TRACE_CONFIGURE(DBGU_STANDARD, 115200, BOARD_MCK);
-	puts("\n\rCUBELOADER gestartet\n\r");
-	TRACE_INFO("-- Compiled: %s %s --\n\r", __DATE__, __TIME__);
+  // DBGU configuration
+  TRACE_CONFIGURE(DBGU_STANDARD, 115200, BOARD_MCK);
+  puts("\n\rCUBELOADER gestartet\n\r");
+  TRACE_INFO("-- Compiled: %s %s --\n\r", __DATE__, __TIME__);
 
     //Configure Reset Controller
     AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
@@ -431,101 +431,102 @@ int main(void)
     FLASHD_Initialize(BOARD_MCK);
 
     rb_reset(&TTY_Rx_Buffer);
-	rb_reset(&TTY_Tx_Buffer);
+  rb_reset(&TTY_Tx_Buffer);
 
-	TRACE_INFO("-- init USB\n\r");
-	CDCDSerialDriver_Initialize();
-	USBD_Connect();
+  TRACE_INFO("-- init USB\n\r");
+  CDCDSerialDriver_Initialize();
+  USBD_Connect();
 
-	led_init();
+  led_init();
 
-	//Watchdog off
-	AT91C_BASE_WDTC->WDTC_WDMR = AT91C_WDTC_WDDIS;
+  //Watchdog off
+  AT91C_BASE_WDTC->WDTC_WDMR = AT91C_WDTC_WDDIS;
 
-	//Unlock flash
-	unsigned char fl=FLASHD_IsLocked(AT91C_IFLASH + AT91C_IFLASH_LOCK_REGION_SIZE, AT91C_IFLASH + AT91C_IFLASH_SIZE);
-	TRACE_INFO("Flash lock %02x\n\r",fl);
-	if(fl) {
-		FLASHD_Unlock(AT91C_IFLASH + AT91C_IFLASH_LOCK_REGION_SIZE, AT91C_IFLASH + AT91C_IFLASH_SIZE, 0, 0);
-		TRACE_INFO("Flash unlocked \n\r");
-	}
+  //Unlock flash
+  unsigned char fl=FLASHD_IsLocked(AT91C_IFLASH + AT91C_IFLASH_LOCK_REGION_SIZE, AT91C_IFLASH + AT91C_IFLASH_SIZE);
+  TRACE_INFO("Flash lock %02x\n\r",fl);
+  if(fl) {
+    FLASHD_Unlock(AT91C_IFLASH + AT91C_IFLASH_LOCK_REGION_SIZE, AT91C_IFLASH + AT91C_IFLASH_SIZE, 0, 0);
+    TRACE_INFO("Flash unlocked \n\r");
+  }
 
     // Main loop
     while (1) {
 
-    	CDC_Task();
+      CDC_Task();
 
-    	if(DBGU_IsRxReady()){
-    		unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
-    		unsigned char x;
-    		unsigned int timeout;
+#ifdef DBGU_UNIT_IN
+      if(DBGU_IsRxReady()){
+        unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
+        unsigned char x;
+        unsigned int timeout;
 
-    		x=DBGU_GetChar();
-    		switch(x) {
+        x=DBGU_GetChar();
+        switch(x) {
 
-    		case 'd':
-    			puts("USB disconnect\n\r");
-    			USBD_Disconnect();
-    			break;
-    		case 'c':
-    			USBD_Connect();
-    			puts("USB Connect\n\r");
-    			break;
-			case 'S':
-				USBD_Disconnect();
-				timeout=timestamp;
-				while(timestamp<timeout+1000){
-					LED_TOGGLE();
-				}
-				//Reset
-				*ram = 0x55;
-				AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
-				while (1);
-    			break;
-    		case 'X':
-				USBD_Disconnect();
-				timeout=timestamp;
-				while(timestamp<timeout+1000){
-					LED_TOGGLE();
-				}
+        case 'd':
+          puts("USB disconnect\n\r");
+          USBD_Disconnect();
+          break;
+        case 'c':
+          USBD_Connect();
+          puts("USB Connect\n\r");
+          break;
+      case 'S':
+        USBD_Disconnect();
+        timeout=timestamp;
+        while(timestamp<timeout+1000){
+          LED_TOGGLE();
+        }
+        //Reset
+        *ram = 0x55;
+        AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
+        while (1);
+          break;
+        case 'X':
+        USBD_Disconnect();
+        timeout=timestamp;
+        while(timestamp<timeout+1000){
+          LED_TOGGLE();
+        }
 
-				//Reset
-				*ram = 0x00;
-				AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
-				while (1);
-				break;
+        //Reset
+        *ram = 0x00;
+        AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
+        while (1);
+        break;
 
-    		default:
-    			rb_put(&TTY_Tx_Buffer, x);
-    		}
-    	}
+        default:
+          rb_put(&TTY_Tx_Buffer, x);
+        }
+      }
+#endif
 
-
-		if (USBD_GetState() == USBD_STATE_CONFIGURED) {
-			if( USBState == STATE_IDLE ) {
-				CDCDSerialDriver_Read(usbBuffer,
-									  DATABUFFERSIZE,
-									  (TransferCallback) UsbDataReceived,
-									  0);
-				USBState=STATE_RX;
-			}
-		}
-		if( USBState == STATE_SUSPEND ) {
-			TRACE_INFO("suspend  !\n\r");
-			//LowPowerMode();
-			USBState = STATE_IDLE;
-		}
-		if( USBState == STATE_RESUME ) {
-			// Return in normal MODE
-			TRACE_INFO("resume !\n\r");
-			//NormalPowerMode();
-			USBState = STATE_IDLE;
-		}
-
-		if(timestamp>LEDcounter + 125) {
-			LEDcounter=timestamp;
-			LED_TOGGLE();
-		}
+    if (USBD_GetState() == USBD_STATE_CONFIGURED) {
+      if( USBState == STATE_IDLE ) {
+        CDCDSerialDriver_Read(usbBuffer,
+                              DATABUFFERSIZE,
+                              (TransferCallback) UsbDataReceived,
+                              0);
+        USBState=STATE_RX;
+      }
     }
+    if( USBState == STATE_SUSPEND ) {
+      TRACE_INFO("suspend  !\n\r");
+      //LowPowerMode();
+      USBState = STATE_IDLE;
+    }
+    if( USBState == STATE_RESUME ) {
+      // Return in normal MODE
+      TRACE_INFO("resume !\n\r");
+      //NormalPowerMode();
+      USBState = STATE_IDLE;
+    }
+
+    if(timestamp>LEDcounter + 125) {
+      LEDcounter=timestamp;
+      LED_TOGGLE();
+    }
+  }
 }
 
