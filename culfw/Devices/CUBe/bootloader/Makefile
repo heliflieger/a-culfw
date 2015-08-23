@@ -44,7 +44,7 @@ SIZE = $(ARMPATH)/$(TOOLPREFIX)size
 
 CPUFLAGS = -mcpu=arm7tdmi-s
 OPTFLAGS = -Os
-CFLAGS = -Wall -mlong-calls -ffunction-sections -std=c99 -Dflash -DTRACE_LEVEL=0 -D$(OUTPUT) -g $(GENDEPFLAGS)
+CFLAGS = -Wall -mlong-calls -ffunction-sections -std=c99 -Dflash -DTRACE_LEVEL=0 -DDBGU_UNIT_IN -D$(OUTPUT) -g $(GENDEPFLAGS)
 INC = -I. -I../ -I../../../at91lib -I../../../clib -I../../../at91lib/usb -I$(INCLUDEPATH)
 ASFLAGS = -g $(OPTFLAGS) -I. -I../ -I../../../at91lib -D__ASSEMBLY__ -Dflash
 LDFLAGS = -g -nostartfiles -Wl,--gc-sections -T"$(OUTPUT)_flash.lds"  -Xlinker -Map=$(OUTPUT).map

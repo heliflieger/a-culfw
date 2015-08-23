@@ -126,7 +126,7 @@
 
 //------------------------------------------------------------------------------
 
-#define PINS_DBGU  { (1<<9)|(1<<10), AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_PERIPH_A, PIO_DEFAULT}
+#define PINS_DBGU  { (1<<9)|(1<<10), AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_PERIPH_A, PIO_PULLUP}
 
 /// LED #0 pin definition.A8
 #define PIN_LED_0  {1 << 24, AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_OUTPUT_1, PIO_DEFAULT}
