@@ -92,7 +92,7 @@ tx_init(void)
   //CC1100_IN_PIN
   CC1100_IN_BASE->PIO_IER = _BV(CC1100_IN_PIN);			//Enable input change interrupt
   CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);			//Enable PIO control
-  AIC_ConfigureIT(AT91C_ID_PIOA, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
+  AIC_ConfigureIT(CC1100_IN_PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
 
 
 #else
@@ -506,19 +506,24 @@ void ISR_Timer1() {
 #else
 ISR(TIMER1_COMPA_vect)
 {
-#endif
 #ifdef LONG_PULSE
   uint16_t tmp;
 #endif
+#endif
 #ifdef ARM
   AT91C_BASE_AIC->AIC_IDCR = 1<< AT91C_ID_TC1;	//Disable Interrupt
+
+#ifdef LONG_PULSE
+  AT91C_BASE_TC1->TC_RC = TWRAP/8*3;    // Wrap Timer
+  AT91C_BASE_TC1->TC_CMR |= AT91C_TC_CPCTRG;
+#endif
 #else
   TIMSK1 = 0;                           // Disable "us"
-#endif
 #ifdef LONG_PULSE
   tmp=OCR1A;
   OCR1A = TWRAP;                        // Wrap Timer
   TCNT1=tmp;                            // reinitialize timer to measure times > SILENCE
+#endif
 #endif
   if(tx_report & REP_MONITOR)
     DC('.');
@@ -594,17 +599,17 @@ delbit(bucket_t *b)
 #ifdef ARM
 void ISR_Pio() {
 	// Read PIO controller status
-	AT91C_BASE_PIOA->PIO_ISR;
-#ifdef CUBE
-	AT91C_BASE_PIOB->PIO_ISR;
-#endif
+	CC1100_IN_BASE->PIO_ISR;
+
 #else
 ISR(CC1100_INTVECT)
-{  
+{
+#endif
+
 #ifdef HAS_OREGON3
   static uint8_t count_half;
 #endif
-#endif
+
 #ifdef HAS_FASTRF
   if(fastrf_on) {
     fastrf_on = 2;
@@ -894,6 +899,9 @@ retry_sync:
 
 #ifdef ARM
         AT91C_BASE_TC1->TC_SR;
+		#ifdef LONG_PULSE
+        AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+		#endif
         AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
 #else
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data

@@ -64,7 +64,11 @@ uint8_t sync_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 	      b->one.lowtime = *hightime;
       } else {
         b->sync=1;
-        OCR1A = 2200; // end of message
+#ifdef ARM
+      	AT91C_BASE_TC1->TC_RC = 825;
+#else
+      	OCR1A = 2200; // end of message
+#endif
         b->zero.hightime = *hightime; 
         b->zero.lowtime = *lowtime+1;
         b->one.hightime = *lowtime+1;
@@ -83,24 +87,48 @@ uint8_t is_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
   if(IS433MHZ && (*hightime < TSCALE(600) && *hightime > TSCALE(140))) {
     if ((*lowtime < TSCALE(2750) && *lowtime > TSCALE(2350))) {
       b->state = STATE_ITV3;
+#ifdef ARM
+      AT91C_BASE_TC1->TC_RC = 1200;
+#else
       OCR1A = 3200; // end of message
+#endif
 #ifdef HAS_HOMEEASY
     } else if ((*lowtime < TSCALE(5250) && *lowtime > TSCALE(4750))) {
       b->state = STATE_ITV3;
+#ifdef ARM
+      AT91C_BASE_TC1->TC_RC = 1200;
+#else
       OCR1A = 2800; // end of message
+#endif
     } else if ((*lowtime < TSCALE(9250) && *lowtime > TSCALE(9000))) {
       b->state = STATE_ITV3;
+#ifdef ARM
+      AT91C_BASE_TC1->TC_RC = 1050;
+#else
       OCR1A = 3200; // end of message
+#endif
 #endif
     } else if (*lowtime < TSCALE(15000) && *lowtime > TSCALE(6000)) {
       //DC('0');
       b->state = STATE_IT;
+#ifdef ARM
+      AT91C_BASE_TC1->TC_RC = 1200;
+#else
       OCR1A = 3200; // end of message
+#endif
     } else {
       return 0;
     }
     
+#ifdef ARM
+    AT91C_BASE_TC1->TC_SR;
+	#ifdef LONG_PULSE
+    AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+	#endif
+    AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+#else
     TIMSK1 = _BV(OCIE1A);
+#endif
     b->sync=0;
     
     b->byteidx = 0;

@@ -17,6 +17,8 @@ uint8_t eeprom_read_byte(uint8_t *p);
 uint16_t eeprom_read_word(uint16_t *p);
 int16_t flash_init(void);
 
+uint32_t flash_serial(void);
+
 void dump_flash(void);
 
 #endif /* __PGMSPACE_H_ */

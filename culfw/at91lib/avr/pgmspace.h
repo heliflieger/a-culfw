@@ -13,10 +13,12 @@
 #define __LPM_dword(addr)   *(addr)
 #define __LPM_float(addr)   *(addr)
 
-# define PSTR(s) s
+#define PSTR(s) s
 
 #define strcpy_P	strcpy
 
 #define pgm_read_byte(address_short)    (*address_short)
+
+#define PGM_P const char *
 
 #endif /* __PGMSPACE_H_ */

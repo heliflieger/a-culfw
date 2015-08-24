@@ -39,6 +39,7 @@
 #include <emac/emac.h>
 #include <utility/trace.h>
 #include <utility/assert.h>
+#include <avr/wdt.h>
 
 //-----------------------------------------------------------------------------
 //         Definitions
@@ -408,6 +409,8 @@ unsigned char DM9161_AutoNegotiate(Dm9161 *pDm)
     // Check AutoNegotiate complete
     while (1) {
 
+    	wdt_reset();
+
         rc  = EMAC_ReadPhy(phyAddress, DM9161_BMSR, &value, retryMax);
         if (rc == 0) {
 
@@ -426,7 +429,7 @@ unsigned char DM9161_AutoNegotiate(Dm9161 *pDm)
             if (++ retryCount >= retryMax) {
 
                 DM9161_DumpRegisters(pDm);
-                TRACE_FATAL("TimeOut\n\r");
+                //TRACE_FATAL("TimeOut\n\r");
                 goto AutoNegotiateExit;
             }
         }
@@ -503,7 +506,7 @@ unsigned char DM9161_GetLinkSpeed(Dm9161 *pDm, unsigned char applySetting)
 
     if ((stat1 & DM9161_LINK_STATUS) == 0) {
 
-        TRACE_ERROR("Pb: LinkStat: 0x%x\n\r", stat1);
+        //TRACE_ERROR("Pb: LinkStat: 0x%x\n\r", stat1);
 
         rc = 0;
         goto GetLinkSpeedExit;

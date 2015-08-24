@@ -154,7 +154,7 @@ rf_maico_init(void)
 {
 #ifdef ARM
 #ifndef CC_ID
-  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;	// disable INT - we'll poll...
+  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID;	// disable INT - we'll poll...
 #endif
 
   CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
@@ -182,7 +182,7 @@ rf_maico_init(void)
       cc1100_sendbyte(erb(cfg++));
   }
   CC1100_DEASSERT;
-
+/*
   uint8_t *pa = EE_CC1100_PA;
     CC1100_ASSERT;                             // setup PA table
     cc1100_sendbyte( CC1100_PATABLE | CC1100_WRITE_BURST );
@@ -190,6 +190,7 @@ rf_maico_init(void)
       cc1100_sendbyte(erb(pa++));
     }
     CC1100_DEASSERT;
+    */
 #endif
 
   // load configuration
@@ -280,7 +281,7 @@ maico_sendraw(uint8_t *dec)
   //1kb/s = 1 bit/ms. we send 1 sec preamble + hblen*8 bits
   uint32_t sum = (hblen*8)/10;
   if (credit_10ms < sum) {
-    DS_P(PSTR("LOVF\r\n"));
+    DS_P(PSTR("LOVF\n\r"));
     return;
   }
   credit_10ms -= sum;
@@ -357,9 +358,6 @@ maico_sendraw(uint8_t *dec)
     rf_maico_init();
   }
 
-  TRACE_INFO("Maico send %02X\r\n", hblen);
-
-
   if(!maico_on) {
     set_txrestore();
   }
@@ -376,8 +374,8 @@ maico_func(char *in)
     uint8_t dec[0x0b];
     uint8_t hblen = fromhex(in+2, dec, 0x0b);
     if ((hblen) != 0x0b) {
-      DS_P(PSTR("LENERR\r\n"));
-      TRACE_INFO("LENERR %02X\r\n", hblen);
+      DS_P(PSTR("LENERR\n\r"));
+      TRACE_INFO("LENERR %02X\n\r", hblen);
       return;
     }
     maico_sendraw(dec);

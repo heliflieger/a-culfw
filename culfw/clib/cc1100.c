@@ -172,7 +172,7 @@ ccInitChip(uint8_t *cfg)
 #endif
 
 #ifdef ARM
-  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;
+  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID;
   CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN); 	//Enable pullup
   CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);		//Enable output
   CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);		//Enable PIO control
@@ -286,7 +286,7 @@ ccTX(void)
 {
   uint8_t cnt = 0xff;
 #ifdef ARM
-  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;
+  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID;
 #else
   EIMSK  &= ~_BV(CC1100_INT);
 #endif
@@ -308,7 +308,7 @@ ccRX(void)
         (ccStrobe(CC1100_SRX) & CC1100_STATUS_STATE_BM) != CC1100_STATE_RX)
     my_delay_us(10);
 #ifdef ARM
-	AT91C_BASE_AIC->AIC_IECR = 1 << AT91C_ID_PIOA;
+    AT91C_BASE_AIC->AIC_IECR = 1 << CC1100_IN_PIO_ID;
 #else
   EIMSK |= _BV(CC1100_INT);
 #endif

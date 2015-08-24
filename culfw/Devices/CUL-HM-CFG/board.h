@@ -37,7 +37,7 @@
 #define HAS_UNIROLL
 #define HAS_HOERMANN
 #define HAS_SOMFY_RTS
-//#define HAS_MAICO
+#define HAS_MAICO
 
 //#define HAS_MBUS
 //#define HAS_MEMFN
@@ -70,6 +70,7 @@
 #define CC1100_IN_PIN       19
 #define CC1100_IN_BASE		AT91C_BASE_PIOA
 #define CC1100_IN_PORT      AT91C_BASE_PIOA->PIO_PDSR
+#define CC1100_IN_PIO_ID	AT91C_ID_PIOA
 
 #define BOOTLOADER_PIN		(1<<9)
 
@@ -125,7 +126,7 @@
 
 //------------------------------------------------------------------------------
 
-#define PINS_DBGU  { (1<<9)|(1<<10), AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_PERIPH_A, PIO_DEFAULT}
+#define PINS_DBGU  { (1<<9)|(1<<10), AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_PERIPH_A, PIO_PULLUP}
 
 /// LED #0 pin definition.A8
 #define PIN_LED_0  {1 << 24, AT91C_BASE_PIOA, AT91C_ID_PIOA, PIO_OUTPUT_1, PIO_DEFAULT}

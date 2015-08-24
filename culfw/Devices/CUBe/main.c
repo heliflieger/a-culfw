@@ -37,6 +37,7 @@
 #include "display.h"
 #include "fastrf.h"
 #include "rf_router.h"		// rf_router_func
+#include "fband.h"
 
 #ifdef HAS_ETHERNET
 #include "ethernet.h"
@@ -116,8 +117,8 @@ volatile unsigned int timestamp = 0;
 //------------------------------------------------------------------------------
 void USBDCallbacks_Resumed(void)
 {
-	LED3_ON();
-    USBState = STATE_RESUME;
+  LED3_ON();
+  USBState = STATE_RESUME;
 }
 
 //------------------------------------------------------------------------------
@@ -125,8 +126,8 @@ void USBDCallbacks_Resumed(void)
 //------------------------------------------------------------------------------
 void USBDCallbacks_Suspended(void)
 {
-	LED3_OFF();
-    USBState = STATE_SUSPEND;
+  LED3_OFF();
+  USBState = STATE_SUSPEND;
 }
 
 //------------------------------------------------------------------------------
@@ -137,31 +138,29 @@ static void UsbDataReceived(unsigned int unused,
                             unsigned int received,
                             unsigned int remaining)
 {
-    // Check that data has been received successfully
-    if (status == USBD_STATUS_SUCCESS) {
+  // Check that data has been received successfully
+  if (status == USBD_STATUS_SUCCESS) {
 
-    	for(unsigned int i=0;i<received;i++) {
-    		rb_put(&TTY_Rx_Buffer, usbBuffer[i]);
-    	}
-
-        // Check if bytes have been discarded
-        if ((received == DATABUFFERSIZE) && (remaining > 0)) {
-
-            TRACE_WARNING(
-                      "UsbDataReceived: %u bytes discarded\n\r",
-                      remaining);
-        }
-    }
-    else {
-
-        TRACE_WARNING( "UsbDataReceived: Transfer error\n\r");
+    for(unsigned int i=0;i<received;i++) {
+      rb_put(&TTY_Rx_Buffer, usbBuffer[i]);
     }
 
-    // Restart USB read
-   CDCDSerialDriver_Read(usbBuffer,
-						 DATABUFFERSIZE,
-						 (TransferCallback) UsbDataReceived,
-						 0);
+      // Check if bytes have been discarded
+      if ((received == DATABUFFERSIZE) && (remaining > 0)) {
+
+        TRACE_WARNING("UsbDataReceived: %u bytes discarded\n\r",remaining);
+      }
+  }
+  else {
+
+    TRACE_WARNING( "UsbDataReceived: Transfer error\n\r");
+  }
+
+  // Restart USB read
+  CDCDSerialDriver_Read(usbBuffer,
+           DATABUFFERSIZE,
+           (TransferCallback) UsbDataReceived,
+           0);
 
 }
 
@@ -236,7 +235,7 @@ const t_fntab fntab[] = {
 //-----------------------------------------------------------------------------
 void uip_log(char *m)
 {
-    TRACE_INFO_WP("-uIP- %s\n\r", m);
+  TRACE_INFO_WP("-uIP- %s\n\r", m);
 }
 
 static const Pin emacRstPins[] = {BOARD_EMAC_RST_PINS};
@@ -250,201 +249,183 @@ int main(void)
 {
 
 
-	// DBGU configuration
-	TRACE_CONFIGURE(DBGU_STANDARD, 115200, BOARD_MCK);
-	TRACE_INFO_WP("\n\r");
-	TRACE_INFO("Getting new Started Project --\n\r");
-	TRACE_INFO("%s\n\r", BOARD_NAME);
-	TRACE_INFO("Compiled: %s %s --\n\r", __DATE__, __TIME__);
+  // DBGU configuration
+  TRACE_CONFIGURE(DBGU_STANDARD, 115200, BOARD_MCK);
+  TRACE_INFO_WP("\n\r");
+  TRACE_INFO("Getting new Started Project --\n\r");
+  TRACE_INFO("%s\n\r", BOARD_NAME);
+  TRACE_INFO("Compiled: %s %s --\n\r", __DATE__, __TIME__);
 
-    //Configure Reset Controller
-    //AT91C_BASE_RSTC->RSTC_RMR= 0xa5<<24;
+  //Configure Reset Controller
+  AT91C_BASE_RSTC->RSTC_RMR= 0xa5<<24;
 
+  // Configure EMAC PINS
+  PIO_Configure(emacRstPins, PIO_LISTSIZE(emacRstPins));
 
-/*
-    if (1) {
+  // Execute reset
+  RSTC_SetExtResetLength(0xd);
+  RSTC_ExtReset();
 
-		// Configure PINS
-		//PIO_Configure(emacRstPins, PIO_LISTSIZE(emacRstPins));
+  // Wait for end hardware reset
+  while (!RSTC_GetNrstLevel());
 
-		// Execute reset
-		//RSTC_SetExtResetLength(0xd);
-		//RSTC_ExtReset();
+  TRACE_INFO("init Flash\n\r");
+  flash_init();
 
-		// Wait for end hardware reset
-		//while (!RSTC_GetNrstLevel());
-	}
+  TRACE_INFO("init Timer\n\r");
+  // Configure timer 0
+  ticks=0;
+  extern void ISR_Timer0();
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC0);
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
+  AT91C_BASE_TC0->TC_IDR = 0xFFFFFFFF;
+  AT91C_BASE_TC0->TC_SR;
+  AT91C_BASE_TC0->TC_CMR = AT91C_TC_CLKS_TIMER_DIV5_CLOCK | AT91C_TC_CPCTRG;
+  AT91C_BASE_TC0->TC_RC = 375;
+  AT91C_BASE_TC0->TC_IER = AT91C_TC_CPCS;
+  AIC_ConfigureIT(AT91C_ID_TC0, AT91C_AIC_PRIOR_LOWEST, ISR_Timer0);
+  AIC_EnableIT(AT91C_ID_TC0);
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
 
-	{volatile unsigned long x=0x400000;
-		while(x)  {
-			x--;
-		}
-	}
-*/
+  // Configure timer 1
+  extern void ISR_Timer1();
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC1);
+  AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKDIS;	//Stop clock
+  AT91C_BASE_TC1->TC_IDR = 0xFFFFFFFF;		//Disable Interrupts
+  AT91C_BASE_TC1->TC_SR;						//Read Status register
+  AT91C_BASE_TC1->TC_CMR = AT91C_TC_CLKS_TIMER_DIV4_CLOCK | AT91C_TC_CPCTRG;  // Timer1: 2,666us = 48MHz/128
+  AT91C_BASE_TC1->TC_RC = 0xffff;
+  AT91C_BASE_TC1->TC_IER = AT91C_TC_CPCS;
+  AIC_ConfigureIT(AT91C_ID_TC1, 1, ISR_Timer1);
+  AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
 
-	//Configure Reset Controller
-	AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
+  led_init();
 
-	TRACE_INFO("init Flash\n\r");
-	flash_init();
+  TRACE_INFO("init EEprom\n\r");
+  eeprom_init();
 
-    TRACE_INFO("init Timer\n\r");
-    // Configure timer 0
-    ticks=0;
-    extern void ISR_Timer0();
-    AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC0);
-	AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
-	AT91C_BASE_TC0->TC_IDR = 0xFFFFFFFF;
-	AT91C_BASE_TC0->TC_SR;
-	AT91C_BASE_TC0->TC_CMR = AT91C_TC_CLKS_TIMER_DIV5_CLOCK | AT91C_TC_CPCTRG;
-    AT91C_BASE_TC0->TC_RC = 375;
-    AT91C_BASE_TC0->TC_IER = AT91C_TC_CPCS;
-    AIC_ConfigureIT(AT91C_ID_TC0, AT91C_AIC_PRIOR_LOWEST, ISR_Timer0);
-    AIC_EnableIT(AT91C_ID_TC0);
-    AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+  rb_reset(&TTY_Rx_Buffer);
+  rb_reset(&TTY_Tx_Buffer);
 
-    // Configure timer 1
-    extern void ISR_Timer1();
-	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC1);
-	AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKDIS;	//Stop clock
-	AT91C_BASE_TC1->TC_IDR = 0xFFFFFFFF;		//Disable Interrupts
-	AT91C_BASE_TC1->TC_SR;						//Read Status register
-	AT91C_BASE_TC1->TC_CMR = AT91C_TC_CLKS_TIMER_DIV4_CLOCK | AT91C_TC_CPCTRG;  // Timer1: 2,666us = 48MHz/128
-	AT91C_BASE_TC1->TC_RC = 0xffff;
-	AT91C_BASE_TC1->TC_IER = AT91C_TC_CPCS;
-	AIC_ConfigureIT(AT91C_ID_TC1, 1, ISR_Timer1);
-	AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+  input_handle_func = analyze_ttydata;
 
-	led_init();
+  LED_OFF();
+  LED2_OFF();
+  LED3_ON();
 
-	TRACE_INFO("init EEprom\n\r");
-	eeprom_init();
+  spi_init();
+  fht_init();
+  tx_init();
 
-	rb_reset(&TTY_Rx_Buffer);
-	rb_reset(&TTY_Tx_Buffer);
+  #ifdef HAS_ETHERNET
 
-	input_handle_func = analyze_ttydata;
+  ethernet_init();
 
-	LED_OFF();
-	LED2_ON();
-	LED3_ON();
+  #endif
 
-	spi_init();
-	fht_init();
-	tx_init();
+  TRACE_INFO("init USB\n\r");
+  CDCDSerialDriver_Initialize();
+  USBD_Connect();
 
-	#ifdef HAS_ETHERNET
+  wdt_enable(WDTO_2S);
 
-	//ethernet_init();
+  fastrf_on=0;
 
-	#endif
+  display_channel = DISPLAY_USB;
 
-	TRACE_INFO("init USB\n\r");
-	CDCDSerialDriver_Initialize();
-	USBD_Connect();
+  TRACE_INFO("init Complete\n\r");
 
-	wdt_enable(WDTO_2S);
+  checkFrequency();
 
-	fastrf_on=0;
+  // Main loop
+  while (1) {
 
-	display_channel = DISPLAY_USB;
+    CDC_Task();
+    Minute_Task();
+    RfAnalyze_Task();
 
-	TRACE_INFO("init Complete\n\r");
+    #ifdef HAS_FASTRF
+      FastRF_Task();
+    #endif
+    #ifdef HAS_RF_ROUTER
+      rf_router_task();
+    #endif
+    #ifdef HAS_ASKSIN
+      rf_asksin_task();
+    #endif
+    #ifdef HAS_MORITZ
+      rf_moritz_task();
+    #endif
+    #ifdef HAS_RWE
+      rf_rwe_task();
+    #endif
+    #ifdef HAS_MBUS
+      rf_mbus_task();
+    #endif
+    #ifdef HAS_MAICO
+      rf_maico_task();
+    #endif
 
+    #ifdef HAS_ETHERNET
+      Ethernet_Task();
+    #endif
 
+#ifdef DBGU_UNIT_IN
+    if(DBGU_IsRxReady()){
+      unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
+      unsigned char x;
 
-    // Main loop
-    while (1) {
+      x=DBGU_GetChar();
+      switch(x) {
 
-    	CDC_Task();
-    	Minute_Task();
-    	RfAnalyze_Task();
+      case 'd':
+        puts("USB disconnect\n\r");
+        USBD_Disconnect();
+        break;
+      case 'c':
+        USBD_Connect();
+        puts("USB Connect\n\r");
+        break;
+      case 'r':
+        //Configure Reset Controller
+        AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
+        break;
+      case 'S':
+        USBD_Disconnect();
 
-		#ifdef HAS_FASTRF
-			FastRF_Task();
-		#endif
-		#ifdef HAS_RF_ROUTER
-			rf_router_task();
-		#endif
-		#ifdef HAS_ASKSIN
-			rf_asksin_task();
-		#endif
-		#ifdef HAS_MORITZ
-			rf_moritz_task();
-		#endif
-		#ifdef HAS_RWE
-			rf_rwe_task();
-		#endif
-		#ifdef HAS_MBUS
-			rf_mbus_task();
-		#endif
-		#ifdef HAS_MAICO
-			rf_maico_task();
-		#endif
+        my_delay_ms(250);
+        my_delay_ms(250);
 
-		#ifdef HAS_ETHERNET
-			//Ethernet_Task();
-		#endif
-
-		if(DBGU_IsRxReady()){
-			unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
-			unsigned char x;
-
-			x=DBGU_GetChar();
-			switch(x) {
-
-			case 'd':
-				puts("USB disconnect\n\r");
-				USBD_Disconnect();
-				break;
-			case 'c':
-				USBD_Connect();
-				puts("USB Connect\n\r");
-				break;
-
-			case 'w':
-				ewb(0x1e, 0x55);
-				break;
-			case 'S':
-				USBD_Disconnect();
-
-				my_delay_ms(250);
-				my_delay_ms(250);
-
-				//Reset
-				*ram = 0xaa;
-				AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
-				while (1);
-				break;
-
-			case 'r':
-				dump_flash();
-
-				break;
-			default:
-				rb_put(&TTY_Tx_Buffer, x);
-			}
-		}
-
-		if (USBD_GetState() == USBD_STATE_CONFIGURED) {
-			if( USBState == STATE_IDLE ) {
-				CDCDSerialDriver_Read(usbBuffer,
-									  DATABUFFERSIZE,
-									  (TransferCallback) UsbDataReceived,
-									  0);
-				LED3_ON();
-				USBState=STATE_RX;
-			}
-		}
-		if( USBState == STATE_SUSPEND ) {
-			TRACE_INFO("suspend  !\n\r");
-			USBState = STATE_IDLE;
-		}
-		if( USBState == STATE_RESUME ) {
-			TRACE_INFO("resume !\n\r");
-			USBState = STATE_IDLE;
-		}
-
+        //Reset
+        *ram = 0xaa;
+        AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
+        while (1);
+        break;
+      default:
+        rb_put(&TTY_Tx_Buffer, x);
+      }
     }
+#endif
+
+    if (USBD_GetState() == USBD_STATE_CONFIGURED) {
+      if( USBState == STATE_IDLE ) {
+        CDCDSerialDriver_Read(usbBuffer,
+                              DATABUFFERSIZE,
+                              (TransferCallback) UsbDataReceived,
+                              0);
+        LED3_ON();
+        USBState=STATE_RX;
+      }
+    }
+    if( USBState == STATE_SUSPEND ) {
+      TRACE_INFO("suspend  !\n\r");
+      USBState = STATE_IDLE;
+    }
+    if( USBState == STATE_RESUME ) {
+      TRACE_INFO("resume !\n\r");
+      USBState = STATE_IDLE;
+    }
+
+  }
 }
 
