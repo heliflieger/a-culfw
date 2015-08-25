@@ -81,7 +81,7 @@ void
 ethernet_reset(void)
 {
   char buf[21];
-  uint16_t serial = 0;
+  
 
   buf[1] = 'i';
   buf[2] = 'd'; strcpy_P(buf+3, PSTR("1"));             write_eeprom(buf);//DHCP
@@ -128,6 +128,7 @@ ethernet_reset(void)
 //  tohex(bsbg(0x10)+bsbg(0x11), (uint8_t*)buf+11);
 //  tohex(bsbg(0x12)+bsbg(0x13), (uint8_t*)buf+13);
 
+  uint16_t serial = 0;
   for (uint8_t i = 0x00; i < 0x20; i++) 
        serial += bsbg(i);
 

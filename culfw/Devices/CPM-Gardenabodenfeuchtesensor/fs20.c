@@ -702,7 +702,7 @@ uint8_t check_ks(airdata_t *d, airmsg_t *am) {
 
 	  B = AD_POP( d, 4, 0 );
 
-//	  if (d->bits>5) {
+//	  if (d->bits>5) 
 	       crc = crc ^ B;
 	       sum = sum + B;
 //	  }

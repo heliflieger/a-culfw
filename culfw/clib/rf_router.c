@@ -33,14 +33,14 @@ uint16_t nr_t, nr_f, nr_e, nr_k, nr_h, nr_r, nr_plus;
 #undef RFR_USBECHO
 
 
-void
+/*void
 usbMsg(char *s)
 {
   display_channel = DISPLAY_USB;
   display_string(s);
   DNL();
   display_channel = 0xff;
-}
+}*/
 
 void
 rf_router_init()
