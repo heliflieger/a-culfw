@@ -132,7 +132,7 @@ uint16_t AD_POP( airdata_t *d, uint8_t b, uint8_t msb ) {
      return val;
 }
 
-void AD_DUMP( airdata_t *d, uint8_t b ) {
+/*void AD_DUMP( airdata_t *d, uint8_t b ) {
      for (uint8_t i=0;i<b;i++) {
 	  if ( AD_BIT_IS_SET( d, i ) ) {
 	       printf_P( PSTR("1"));
@@ -142,7 +142,7 @@ void AD_DUMP( airdata_t *d, uint8_t b ) {
      }
 
      printf_P( PSTR("\r\n"));
-}
+}*/
 
 void fs20_init(void) {
 

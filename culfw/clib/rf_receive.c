@@ -666,9 +666,9 @@ ISR(CC1100_INTVECT)
   if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
 
 #if defined (HAS_HMS) || defined (HAS_ESA)
-    if(
+    if( IS868MHZ &&  (
 #ifdef HAS_HMS
-(IS868MHZ &&  (b->state == STATE_HMS))
+      (b->state == STATE_HMS)
 #endif
 #ifdef HAS_ESA
 #ifdef HAS_HMS
@@ -676,7 +676,7 @@ ISR(CC1100_INTVECT)
 #endif
      (IS868MHZ && b->state == STATE_ESA) 
 #endif
-    ) {
+    )) {
       addbit(b, 1);
 #ifdef ARM
       AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
@@ -740,12 +740,15 @@ ISR(CC1100_INTVECT)
   DC('*');*/
 
 #if defined (HAS_HMS) || defined (HAS_ESA)
-  if(
+  if( IS868MHZ && (
 #ifdef HAS_HMS
-      IS868MHZ && ((b->state == STATE_HMS)
+      (b->state == STATE_HMS)
 #endif
 #ifdef HAS_ESA
-     || (b->state == STATE_ESA) 
+#ifdef HAS_HMS
+     || 
+#endif
+     (b->state == STATE_ESA) 
 #endif
   )) {
     addbit(b, 0);
