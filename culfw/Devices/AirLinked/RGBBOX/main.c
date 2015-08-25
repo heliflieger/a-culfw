@@ -202,7 +202,6 @@ void pin_set( uint8_t value ) {
 }
 
 int main(void) {
-  int16_t d;
   uint8_t loop = 0;
 
   wdt_disable();

@@ -1,12 +1,16 @@
-Alternative culfw for cul devices
+# Alternative culfw for cul devices
 
-The orginal fimware is cloned from www.culfw.de (thanks for the work to R.K.)
+**The orginal fimware is cloned from www.culfw.de (thanks for the work to R.K.)
 
 This alternative firmware has additional send receive methods and code cleanups.
 The compiled firmware can be found at 
-https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
+[MediaFire](https://www.mediafire.com/folder/tf16radvztfd9/a-culfw)
+**
 
-Changelog:
+## Changelog:
+1.05.04
+- ARM Models: Add ethernet, add multi CC1101 support
+- Code Cleanup
 1.05.03
 - Fix timing for IT-V1 sending and receive timing for temp sensors 
 1.05.02
