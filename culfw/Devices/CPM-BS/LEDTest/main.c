@@ -8,7 +8,6 @@ int main(void) {
 
      DDRA = _BV( PA3 );
      
-     uint8_t x = 0;
      
      while (1) {
 

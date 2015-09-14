@@ -254,7 +254,7 @@ void TransmittKoppBlk(uint8_t sendmsg01[15], uint8_t blkTXcode_i)
    int count = 0;
    int count2 = 1;
  
-   count2=1;														// each block / telegram will be written n times (n = 13 see below)
+   //count2 = 1;														// each block / telegram will be written n times (n = 13 see below)
    sendmsg01[3] = blkctr;                                   		// Write BlockCounter (was incremented) and Transmitt Code (=Transmitter Key) to Array
    sendmsg01[4] = blkTXcode_i;                              		// -----------------------------------------------------------------------------------   
 
