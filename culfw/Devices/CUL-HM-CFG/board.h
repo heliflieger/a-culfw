@@ -147,7 +147,7 @@
 /// Indicates chip has an EFC.
 #define BOARD_FLASH_EFC
 /// Address of the IAP function in ROM.
-#define BOARD_FLASH_IAP_ADDRESS         0x300008
+//#define BOARD_FLASH_IAP_ADDRESS         0x300008
 //------------------------------------------------------------------------------
 
 #endif //#ifndef BOARD_H

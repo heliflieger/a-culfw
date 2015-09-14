@@ -28,7 +28,7 @@
 //         Local definitions
 //------------------------------------------------------------------------------
 //Cubeloader Version
-#define VERSION 	"1.0"
+#define VERSION 	"1.01"
 
 /// PIT period value in µseconds.
 #define PIT_PERIOD          1000

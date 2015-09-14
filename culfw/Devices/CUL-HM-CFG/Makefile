@@ -93,7 +93,7 @@ $(eval $(call expand_dir,))
 
 OBJS := $(patsubst %.S,%.o,$(ALLSRCS:%.c=%.o)) $(ALLTHUMBSRCS:.c=.thumb.o)
 
-target:	$(OUTPUT).bin $(OUTPUT).hex
+target:	$(OUTPUT).bin
 	$(SIZE) $(OUTPUT).elf
 
 HM_CFG_BL:
