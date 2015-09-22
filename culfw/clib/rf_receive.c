@@ -254,7 +254,7 @@ analyze(bucket_t *b, uint8_t t, uint8_t *oby)
  */
 void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
 #if defined (HAS_IT) || defined (HAS_TCM97001)
-  if (*datatype == TYPE_IT || (*datatype == TYPE_TCM97001)) { 
+  if (*datatype == TYPE_IT) { // || (*datatype == TYPE_TCM97001)) { 
       if (packetCheckValues.isrep == 1 && packetCheckValues.isnotrep == 0) { 
         packetCheckValues.isnotrep = 1;
         packetCheckValues.packageOK = 1;
@@ -827,14 +827,14 @@ retry_sync:
         // Invalid Package
         return;
       }
-     
+      //DC('o');
       b->zero.hightime = hightime;
       b->zero.lowtime = lowtime;
       b->sync  = 1;
       b->state = STATE_SYNC;
       break;
     case STATE_SYNC:  // sync: lots of zeroes
-
+      //DC('s');
       if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
         b->zero.hightime = makeavg(b->zero.hightime, hightime);
         b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
@@ -843,6 +843,7 @@ retry_sync:
         b->syncbit.lowtime=b->zero.lowtime;
 #endif
         b->sync++;
+        //DC('.');
       } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
 #ifdef ARM
       	AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
@@ -850,6 +851,7 @@ retry_sync:
         OCR1A = SILENCE;
 #endif
 #ifdef HAS_HMS
+        //DC('h');
         if (b->sync >= 12 && (b->zero.hightime + b->zero.lowtime) > TSCALE(1600)) {
           b->state = STATE_HMS;
 
@@ -857,16 +859,19 @@ retry_sync:
 #endif
 #ifdef HAS_OREGON3
       if (b->sync >= 12) { // erwarte 12 der 24 Preamble Bits
+        //DC('O');
+        //DU(b->sync,         3);
         if (hightime>TSCALE(1200) || lowtime>TSCALE(1400))
           reset_input();
         b->state = STATE_OREGON3;
         count_half=1;
         // first sync bit added later
-        } else
+      } else
 #endif
   #ifdef HAS_ESA
               if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
           b->state = STATE_ESA;
+          //DU(b->sync,         3);
 #ifdef ARM
           AT91C_BASE_TC1->TC_RC = 375;
 #else
@@ -887,6 +892,8 @@ retry_sync:
         } else
   #endif
         {
+          //DC('c');
+          //DU(b->sync,         3);
           /*DC('S');
           DU(hightime*16, 5);
           DC('-');

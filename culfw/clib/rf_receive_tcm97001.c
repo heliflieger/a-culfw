@@ -78,8 +78,8 @@ void sync_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 uint8_t is_tcm97001(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
   if (IS433MHZ && b->state == STATE_RESET) {
-    if ((*hightime < TSCALE(640) && *hightime > TSCALE(410)) &&
-				     (*lowtime  < TSCALE(9500) && *lowtime > TSCALE(8200)) ) {
+    if ((*hightime < TSCALE(640) && *hightime > TSCALE(330)) &&
+				     (*lowtime  < TSCALE(9700) && *lowtime > TSCALE(8200)) ) {
 #ifdef ARM
     		AT91C_BASE_TC1->TC_RC = 1950;
     		  AT91C_BASE_TC1->TC_SR;
