@@ -57,7 +57,7 @@
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
 
-//#define _433MHZ
+#define _433MHZ
 
 #  if defined(_433MHZ)
 #    define HAS_TCM97001

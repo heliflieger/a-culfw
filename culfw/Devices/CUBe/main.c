@@ -311,7 +311,7 @@ int main(void)
 
   LED_OFF();
   LED2_OFF();
-  LED3_ON();
+  LED3_OFF();
 
   spi_init();
   fht_init();
