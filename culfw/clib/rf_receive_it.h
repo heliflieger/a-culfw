@@ -1,6 +1,21 @@
 /* 
- * Copyright by B.Hempel
- * License: GPL v2
+ * a-culfw
+ * Copyright (C) 2015 B. Hempel
+ *
+ * This program is free software; you can redistribute it and/or modify it under  
+ * the terms of the GNU General Public License as published by the Free Software  
+ * Foundation; either version 2 of the License, or (at your option) any later  
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but  
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for  
+ * more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with  
+ * this program; if not, write to the  
+ * Free Software Foundation, Inc.,  
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  */
 
 #ifndef _RF_RECEIVE_IT_H
@@ -19,8 +34,6 @@
 #define TYPE_IT  	    'i'
 
 
-#define TDIFFIT    TSCALE(350) // tolerated diff to previous/avg high/low/total
-
 /*
  * Analyse IT packet.
  * Parameter:
@@ -32,28 +45,6 @@
  */
 void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby);
 
-/*
- * Sync the IT received packet
- * return 1 if rf_receive routine must be restarted
- * return 0 if routine must not be restarted or it is no it
- */
-uint8_t sync_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
-
-/*
- * Check if received packat is a Intertechno packet
- * hightime the received hightime
- * lowtime the received lowtime
- * return 1 (true) if packet ist OK
- * return 0 (false) if packet is not Intertechno 
- */
-uint8_t is_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
-
-/*
- * Add the the bit to the bucket if it is a Intertechno bit.
- * hightime the received hightime
- * lowtime the received lowtime
- */
-void addbit_intertechno_v3(bucket_t *b, pulse_t *hightime, pulse_t *lowtime);
 
 #endif
 #endif

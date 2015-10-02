@@ -6,6 +6,11 @@ ___
 _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/folder/tf16radvztfd9/a-culfw)_
 
 ## Changelog:
+#### 1.10.00
+- ARM Models: Fix bootloader for AT91SAM7 REV C
+              Activate 433MHZ protocols
+- Rewrite of receive method for TCM/IT/HE 
+
 #### 1.05.04
 - ARM Models: Add ethernet, add multi CC1101 support
 - Code Cleanup
