@@ -1047,6 +1047,7 @@ retry_sync:
           DC('/');
           DU(b->syncbit.lowtime*16, 5);
           DC('\n');*/
+          OCR1A = SILENCE;
           b->state = STATE_COLLECT;
         }
 
