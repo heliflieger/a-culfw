@@ -19,7 +19,7 @@
  */
 
 #include "rf_receive_bucket.h"
-//#include "display.h"
+#include "display.h"
 
 uint8_t makeavg(uint8_t i, uint8_t j)
 {
@@ -79,6 +79,7 @@ void addbit(bucket_t *b, uint8_t bit)
     b->data[++b->byteidx] = 0;
   }
   b->valCount = b->valCount + 1;
+
 }
 
 /*

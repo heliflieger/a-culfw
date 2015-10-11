@@ -89,11 +89,9 @@ extern void reset_input(void);
 typedef struct {
   pulse_t hightime, lowtime;
 } wave_t;
-#ifdef DEBUG_SYNC
 typedef struct {
   uint16_t hightime, lowtime;
 } wave_t16;
-#endif
 
 // One bucket to collect the "raw" bits
 typedef struct {
@@ -102,10 +100,11 @@ typedef struct {
 //  pulseVal_t dataVals[MAXMSGVALS];
   uint8_t valCount;
   wave_t zero, one, two; 
-#ifdef DEBUG_SYNC
+#if defined(HAS_IT) || defined(HAS_TCM97001) 
   wave_t16 syncbit;
 #endif
 } bucket_t;
+
 
 /*
  * Copy the data from bucket to receive buffer

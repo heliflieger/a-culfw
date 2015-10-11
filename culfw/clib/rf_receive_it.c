@@ -30,33 +30,34 @@
  */
 void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
-  if (IS433MHZ && *datatype == 0) {
+  if (IS433MHZ && *datatype == 0 && b->state == STATE_SYNC_PACKAGE) {
     if ((b->valCount == 24 // IT V1
       || b->valCount == 28 // HE800
       || b->valCount == 57 // HE_EU
       || b->valCount == 65 // IT V3
       || b->valCount == 73) // IT V3 Dim
-      && b->one.lowtime < TSCALE(2000) && b->zero.lowtime < TSCALE(3000)) {
+      && b->one.lowtime < TSCALE(2000) && b->two.lowtime < TSCALE(2000)) {
       // IT V1 (48), V3 (128)
       if (b->valCount == 24) {
-        copyData(b->byteidx, b->bitidx, b->data, obuf, oby, false);
+        copyData(b->byteidx, b->bitidx, b->data, obuf, oby, true);
+        // inverse the bits in bucket
         b->state = STATE_IT;
 #ifdef HAS_HOMEEASY
       } else if (b->valCount == 28 || b->valCount == 57) {
         // HE 800
         // inverse the bits in bucket
-        copyData(b->byteidx, b->bitidx, b->data, obuf, oby, true);
+        copyData(b->byteidx, b->bitidx, b->data, obuf, oby, false);
         b->state = STATE_HE;
 #endif
       } else if (b->valCount == 65 || b->valCount == 73) {
         // IT V3
-        if (b->zero.lowtime > TSCALE(2100)) {
+        if (b->zero.lowtime > TSCALE(1500)) {
           // has startbit
           // remove the startbit from bucket.
           // inverse the bits in bucket
           uint8_t i;
           for (i=0;i<b->byteidx;i++)  {
-            if (i+1==b->byteidx) {
+           /* if (i+1==b->byteidx) {
               obuf[i]= ~b->data[i]<<1;
               if (b->bitidx != 7) {
                 obuf[i+1] = ~b->data[i+1];
@@ -64,11 +65,20 @@ void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t 
               }
             } else {    
               obuf[i]= ((~b->data[i])<<1) + (((~b->data[i+1])>>7) & 1);
+            }*/
+            if (i+1==b->byteidx) {
+              obuf[i]= b->data[i]<<1;
+              if (b->bitidx != 7) {
+                obuf[i+1] = b->data[i+1];
+                obuf[i] = obuf[i] + ((b->data[i+1]>>7) & 1);
+              }
+            } else {    
+              obuf[i]= ((b->data[i])<<1) + (((b->data[i+1])>>7) & 1);
             }
 
-            b->data[i] = obuf[i];
+            //b->data[i] = obuf[i];
           }
-          b->bitidx++; // remove last bit
+          //b->bitidx++; // remove last bit
           *oby = i;
           b->state = STATE_ITV3;
         }
