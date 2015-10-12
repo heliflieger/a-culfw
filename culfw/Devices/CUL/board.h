@@ -45,7 +45,7 @@
 #    define HAS_HOMEEASY
 #    define HAS_OREGON3
 #    define HAS_BELFOX
-#    define DEBUG_SYNC
+#    define HAS_REVOLT
 #  endif
 
 #if defined(_868MHZ)

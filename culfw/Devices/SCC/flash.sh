@@ -63,8 +63,8 @@ if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o 
 	echo in > /sys/class/gpio/gpio18/direction
 	echo 18 > /sys/class/gpio/unexport
    
-  echo "Call now ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}:i"
-  ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}:i
+  echo "Call now ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -Uflash:w:./${FLASH_FILE}:i"
+  ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -Uflash:w:./${FLASH_FILE}:i
 
   echo 0 > /sys/class/gpio/gpio17/value
 	sleep 1

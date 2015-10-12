@@ -65,7 +65,6 @@
 #    define HAS_HOMEEASY
 #    define HAS_OREGON3
 #    define HAS_BELFOX
-#    define DEBUG_SYNC
 #  endif
 
 //#define HAS_MBUS

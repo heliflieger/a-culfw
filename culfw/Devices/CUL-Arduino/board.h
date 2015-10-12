@@ -40,6 +40,7 @@
 
 #  if defined(_433MHZ)
 #    define HAS_TCM97001
+#    define HAS_REVOLT
 #    define HAS_IT
 #    define HAS_HOMEEASY
 #    define HAS_OREGON3
@@ -56,7 +57,6 @@
 #    define OFF_LACROSSE_HMS_EMU          // if you like HMS emulation for LaCrosse temp devices
 #endif
 
-#define DEBUG_SYNC
 
 #endif
 

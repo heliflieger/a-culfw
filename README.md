@@ -6,6 +6,17 @@ ___
 _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/folder/tf16radvztfd9/a-culfw)_
 
 ## Changelog:
+#### 1.10.00
+- ARM Models: Fix bootloader for AT91SAM7 REV C
+              Activate 433MHZ protocols
+- Rewrite of receive method for TCM/IT/HE
+  Receive the protocolls more stable
+  Receive additional sync protocols like Eurochron EAS800
+- Change receive datarate in slowrf to 5,603 kBaud.
+  (You must make a reset of the cul eeprom, use command 
+  "set CUL-NAME raw e" in fhem)
+- Fix receiving of revolt.
+
 #### 1.05.04
 - ARM Models: Add ethernet, add multi CC1101 support
 - Code Cleanup
