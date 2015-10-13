@@ -542,7 +542,6 @@ void reset_input(void)
 #else
         OCR1A = 0;
 #endif
-  
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -670,19 +669,16 @@ void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool syncHig
       maxLevel = *lowtime;
     }
     if (b->valCount == 7 && maxLevel != 0) {
-        //DC('s');
 #ifdef ARM
         uint32_t ocrVal = 0;
 #else
         uint16_t ocrVal = 0;
 #endif
-        if (syncHighTime) {
-         // DC('a');      
+        if (syncHighTime) {    
           ocrVal = (((b->syncbit.hightime - maxLevel)/2)+maxLevel);
         } else {
           ocrVal = (((b->syncbit.lowtime - maxLevel)/2)+maxLevel);
-        }
-        //DU(ocrVal, 5);      
+        }    
         
 #ifdef ARM
         ocrVal = ((ocrVal * 100) / 266);

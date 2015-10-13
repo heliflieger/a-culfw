@@ -34,7 +34,7 @@
 #define TYPE_SYNC_PACKAGE       '?'
 
 /* public prototypes */
-#if defined(HAS_ESA) || defined (HAS_OREGON3)
+#if defined(HAS_ESA) || defined (HAS_OREGON3) || defined(HAS_REVOLT)
 #define MAXMSG 20               // ESA messages
 //#define MAXMSGVALS (MAXMSG*8)
 #else

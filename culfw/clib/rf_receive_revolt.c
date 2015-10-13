@@ -40,8 +40,7 @@ void analyze_revolt(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
     }
 
     *oby = i;
-
-    //DC('*');    
+ 
     if (sum!=b->data[11])
         return; // failed
     *datatype = TYPE_REVOLT;
@@ -78,33 +77,6 @@ bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
 void addbit_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
   if (IS433MHZ) {
-
-    /*if (*lowtime>8 && *lowtime<19    // gemessen 176-256
-        && *hightime<19 ) {           // gemessen 32-240
-      if ((*hightime < 11)) { // 176
-        addbit(b,0);
-        b->zero.hightime = makeavg(b->zero.hightime, *hightime);
-        b->zero.lowtime  = makeavg(b->zero.lowtime,  *lowtime);
-      } else {
-        addbit(b,1);
-        b->one.hightime = makeavg(b->one.hightime, *hightime);
-        b->one.lowtime  = makeavg(b->one.lowtime,  *lowtime);
-      }
-    } else {
-//      cc1100_writeReg(0x10,0x55);
-      reset_input();
-      DC('r');
-    }*/
-    /*if (*lowtime > TSCALE(400) || *hightime > TSCALE(400)) {
-      DC('.');
-      return;
-    }*/
-    /*DC('*');
-    DU(*hightime*16, 5);
-    DC(':');
-    DU(*lowtime *16, 5);
-    DC('-');
-    */
     if ((*hightime < 11)) { // 176
         addbit(b,0);
         //b->zero.hightime = makeavg(b->zero.hightime, *hightime);
@@ -114,7 +86,6 @@ void addbit_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
         //b->one.hightime = makeavg(b->one.hightime, *hightime);
         //b->one.lowtime  = makeavg(b->one.lowtime,  *lowtime);
       }
-    //}
   }
 }
 

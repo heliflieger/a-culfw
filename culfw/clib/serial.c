@@ -5,7 +5,7 @@
 #include "ttydata.h"
 #include "display.h"
     
-#include "led.h"
+//#include "led.h"
 #include "serial.h"
 
 void (*usbinfunc)(void);
@@ -29,7 +29,7 @@ ISR(USART_UDRE_vect)
 ISR(USART_RX_vect)
 {
 
-     LED_TOGGLE();
+     //LED_TOGGLE();
 
      /* read UART status register and UART data register */ 
      uint8_t data = UDR0;
