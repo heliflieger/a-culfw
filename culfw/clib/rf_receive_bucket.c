@@ -19,7 +19,6 @@
  */
 
 #include "rf_receive_bucket.h"
-#include "display.h"
 
 uint8_t makeavg(uint8_t i, uint8_t j)
 {
@@ -48,19 +47,6 @@ void copyData(uint8_t byteidx, uint8_t bitidx, uint8_t *data, uint8_t *obuf, uin
       *oby = i;
 }
 
-/*
- * Add timing value to bucket
- */
-/*void addTimeValBit(bucket_t *b, pulseVal_t valueh, pulseVal_t valuel) {
-  if((b->valCount+2)>=160){ //sizeof(b->dataVals)){
-    reset_input();
-    //DC('r');
-    return;
-  }
-  b->dataVals[b->valCount] = valueh;
-  b->dataVals[++b->valCount] = valuel;
-  b->valCount = b->valCount + 1;
-}*/
 
 /*
  * Description in header
