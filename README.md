@@ -6,8 +6,13 @@ ___
 _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/folder/tf16radvztfd9/a-culfw)_
 
 ## Changelog:
+#### 1.10.02
+- Fix ethernet on CUBe
+- Fix UNKNOWNCODE ZERR30D (Forum #332883)
+
 #### 1.10.01
 - Fix receiving of revolt for all devices.
+
 #### 1.10.00
 - ARM Models: Fix bootloader for AT91SAM7 REV C
               Activate 433MHZ protocols
