@@ -143,10 +143,14 @@ unsigned int
 network_read(void)
 {
     unsigned int pkt_len = 0;
-    if( EMAC_RX_OK != EMAC_Poll( (unsigned char*)uip_buf,
-                                  UIP_CONF_BUFFER_SIZE,
-                                  &pkt_len) ) {
-
+    unsigned char error = EMAC_Poll( (unsigned char*)uip_buf, UIP_CONF_BUFFER_SIZE, &pkt_len);
+    if (error == EMAC_RX_FRAME_SIZE_TOO_SMALL)
+    {
+        EMAC_Discard_Fragments();
+        pkt_len = 0;
+    }
+    else if(error != EMAC_RX_OK) 
+    {
         pkt_len = 0;
     }
 
