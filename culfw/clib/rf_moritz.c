@@ -367,11 +367,15 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
   //Wait for sending to finish (CC1101 will go to RX state automatically
   //after sending
   uint8_t i;
-  for(i=0; i< 200;++i) {
-    if( CC1100_READREG( CC1100_MARCSTATE ) == MARCSTATE_RX)
+  uint8_t stat1,stat2;
+  for(i=0; i< 250;++i) {
+    stat1=cc1100_readReg( CC1100_MARCSTATE );
+    stat2=cc1100_readReg( CC1100_MARCSTATE );
+    if(stat1!=stat2) 
+        continue;
+    if( stat1 == MARCSTATE_RX)
       break; //now in RX, good
-    if( CC1100_READREG( CC1100_MARCSTATE ) != MARCSTATE_TX)
-      break; //neither in RX nor TX, probably some error
+  
     my_delay_ms(1);
   }
 
@@ -382,6 +386,8 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
     DC('R');
     DC('3');
     DH2(CC1100_READREG( CC1100_MARCSTATE ));
+    DH2(stat1);
+    DH2(i);
     DNL();
     rf_moritz_init();
   }
