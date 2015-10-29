@@ -159,5 +159,8 @@ extern unsigned char EMAC_Poll(unsigned char *pFrame,
 
 extern void EMAC_GetStatistics(EmacStats *pStats, unsigned char reset);
 
+
+void EMAC_Discard_Fragments(void);
+
 #endif // #ifndef EMAC_H
 
