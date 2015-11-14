@@ -20,7 +20,7 @@
  */
 
 #include "rf_receive_tcm97001.h"
-#include "display.h"
+//#include "display.h"
 
 
 #ifdef HAS_TCM97001
@@ -33,28 +33,12 @@ void analyze_tcm97001(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *ob
      if (b->valCount == 24
         || b->valCount == 28 // Mebus
         || b->valCount == 36
-        || b->valCount == 37) { 
+        || b->valCount == 37
+        || b->valCount == 42) { // TF Dostmann
       copyData(b->byteidx, b->bitidx, b->data, obuf, oby, false);
       b->state = STATE_TCM97001;
       *datatype = TYPE_TCM97001;
     }
-      /*
-    if ((b->byteidx != 3 && b->byteidx != 4) || (b->bitidx != 7 && b->bitidx != 3 && b->bitidx != 2) || b->state != STATE_TCM97001) {
-		  return;
-    }
-    
-    uint8_t i;
-   // uint8_t checksum = 0;
-    
-    for (i=0;i<b->byteidx;i++) {
-      obuf[i]=b->data[i];
-    }
-    if (7-b->bitidx != 0) {
-      obuf[i]=b->data[i];
-      i++;
-    }
-    *oby = i;
-    *datatype = TYPE_TCM97001;*/
   }
 }
 

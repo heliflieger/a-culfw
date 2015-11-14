@@ -127,7 +127,7 @@ const PROGMEM t_fntab fntab[] = {
 };
 
 
-void
+void static
 start_bootloader(void)
 {
   cli();

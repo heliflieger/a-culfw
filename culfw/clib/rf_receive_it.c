@@ -57,15 +57,6 @@ void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t 
           // inverse the bits in bucket
           uint8_t i;
           for (i=0;i<b->byteidx;i++)  {
-           /* if (i+1==b->byteidx) {
-              obuf[i]= ~b->data[i]<<1;
-              if (b->bitidx != 7) {
-                obuf[i+1] = ~b->data[i+1];
-                obuf[i] = obuf[i] + ((~b->data[i+1]>>7) & 1);
-              }
-            } else {    
-              obuf[i]= ((~b->data[i])<<1) + (((~b->data[i+1])>>7) & 1);
-            }*/
             if (i+1==b->byteidx) {
               obuf[i]= b->data[i]<<1;
               if (b->bitidx != 7) {
@@ -75,10 +66,7 @@ void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t 
             } else {    
               obuf[i]= ((b->data[i])<<1) + (((b->data[i+1])>>7) & 1);
             }
-
-            //b->data[i] = obuf[i];
           }
-          //b->bitidx++; // remove last bit
           *oby = i;
           b->state = STATE_ITV3;
         }

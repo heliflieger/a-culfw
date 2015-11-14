@@ -43,7 +43,7 @@
 #    define HAS_REVOLT
 #    define HAS_IT
 #    define HAS_HOMEEASY
-#    define HAS_OREGON3
+#    define HAS_MANCHESTER
 #    define HAS_BELFOX
 #  endif
 

@@ -11,7 +11,6 @@
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
 
-#include <string.h>
 
 #include "board.h"
 
