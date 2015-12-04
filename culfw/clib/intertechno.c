@@ -79,7 +79,7 @@ const PROGMEM const uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
    0x00, // 28 RCCTRL0   00    00    
 };
 
-uint16_t it_interval = 420;
+uint16_t it_interval = 250;
 uint8_t itv3_start_bit = 235;
 uint16_t itv3_bit = 275;
 uint16_t itv3_latch = 2650;
@@ -159,32 +159,32 @@ send_IT_bit(uint8_t bit)
 {
 	if (bit == 1) {
   	CC1100_SET_OUT;         // High
-  	my_delay_us(it_interval * 3);
+  	my_delay_us(it_interval * 4);
  	  CC1100_CLEAR_OUT;       // Low
 	  my_delay_us(it_interval);
 
   	CC1100_SET_OUT;         // High
-  	my_delay_us(it_interval * 3);
+  	my_delay_us(it_interval * 4);
  	  CC1100_CLEAR_OUT;       // Low
 	  my_delay_us(it_interval);
   } else if (bit == 0) {
   	CC1100_SET_OUT;         // High
   	my_delay_us(it_interval);
  	  CC1100_CLEAR_OUT;       // Low
-	  my_delay_us(it_interval * 3);
+	  my_delay_us(it_interval * 4);
 
   	CC1100_SET_OUT;         // High
   	my_delay_us(it_interval);
  	  CC1100_CLEAR_OUT;       // Low
-	  my_delay_us(it_interval * 3);
+	  my_delay_us(it_interval * 4);
   } else {
   	CC1100_SET_OUT;         // High
   	my_delay_us(it_interval);
  	  CC1100_CLEAR_OUT;       // Low
-	  my_delay_us(it_interval * 3);
+	  my_delay_us(it_interval * 4);
 
   	CC1100_SET_OUT;         // High
-  	my_delay_us(it_interval * 3);
+  	my_delay_us(it_interval * 4);
  	  CC1100_CLEAR_OUT;       // Low
 	  my_delay_us(it_interval);  	
   }
@@ -339,7 +339,7 @@ it_send (char *in, uint8_t datatype) {
           CC1100_SET_OUT;         // High
           my_delay_us(it_interval);
           CC1100_CLEAR_OUT;       // Low
-          for(k = 0; k < 31; k++)  {
+          for(k = 0; k < 40; k++)  {
             my_delay_us(it_interval);
           }
         }

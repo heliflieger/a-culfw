@@ -490,6 +490,14 @@ RfAnalyze_Task(void)
         DH(obuf[oby]&0xf,1);
       if(tx_report & REP_RSSI)
         DH2(cc1100_readReg(CC1100_RSSI));
+#if defined(HAS_TCM97001)
+        if (b->state == STATE_TCM97001) {
+		  DC(';');
+		  DU(b->syncbit.hightime  *16, 5);
+		  DC(':');
+		  DU(b->syncbit.lowtime  *16, 5);
+	    }
+#endif
       DNL();
       
     }
@@ -813,20 +821,19 @@ ISR(CC1100_INTVECT)
         if (hightime < (b->clockTime >> 1) || hightime > (b->clockTime << 1) + b->clockTime) { // read as: duration < 0.5 * clockTime || duration > 3 * clockTime
 			// Fail. Abort.
 			b->state = STATE_SYNC;
+			//DC('f');
 			return;
 		}
-        if (count_half==1) {
-            addbit(b,0);
-            b->one.hightime=hightime;
-            count_half+=2;
-        } else {
-            if (hightime > ((b->zero.hightime+b->one.hightime)>>1)) { 
-              b->one.hightime = makeavg(b->one.hightime,hightime);
-              count_half+=2;
+        if (hightime+(b->clockTime) > ((b->zero.hightime+b->one.hightime)>>1)) {
+            b->one.hightime = makeavg(b->one.hightime,hightime);
+            if (b->clockTime>hightime-10 && b->clockTime<hightime+10) {
+                count_half+=1;
             } else {
-              b->zero.hightime = makeavg(b->zero.hightime,hightime);
-              count_half+=1;
+                count_half+=2;
             }
+        } else {
+          b->zero.hightime = makeavg(b->zero.hightime,hightime);
+          count_half+=1;
         }
         if (count_half&1) { // ungerade
             addbit(b,1);
@@ -886,13 +893,17 @@ retry_mc:
         // Edge is not too long, nor too short?
 		if (lowtime < (b->clockTime >> 1) || lowtime > (b->clockTime << 1) + b->clockTime) { // read as: duration < 0.5 * clockTime || duration > 3 * clockTime
 			// Fail. Abort.
+		//	DC('F');
 			b->state = STATE_SYNC;
 		} else {
-
 		    // Only process every second half bit, i.e. every whole bit.
-		    if (lowtime > ((b->zero.lowtime+b->one.lowtime)>>1)) { 
+		    if (lowtime+(b->clockTime) > ((b->zero.lowtime+b->one.lowtime)>>1)) { 
                 b->one.lowtime = makeavg(b->one.lowtime,lowtime);
-                count_half+=2;
+                if (b->clockTime>lowtime-10 && b->clockTime<lowtime+10) {
+                    count_half+=1;
+                } else {
+                    count_half+=2;
+                }
             } else {
                 b->zero.lowtime = makeavg(b->zero.lowtime,lowtime);
                 count_half+=1;
@@ -954,7 +965,9 @@ retry_sync:
              // Invalid Package
             return;
         }
-        
+     /*   DNL();
+        DC('R');
+     */
       b->zero.hightime = hightime;
       b->zero.lowtime = lowtime;
       b->sync  = 1;
@@ -964,11 +977,19 @@ retry_sync:
          || (hightime>lowtime*2-10 && hightime<lowtime*2+10)
          || (hightime>lowtime/2-10 && hightime<lowtime/2+10)) {
         b->state = STATE_MC;
+        
         // Automatic clock detection. One clock-period is half the duration of the first edge.
-        b->clockTime = hightime >> 1;
+        b->clockTime = (hightime >> 1);
+        count_half=1;
+        if (b->clockTime < TSCALE(300)) {
+            // If clock time is lower than 300, than it should be an Oregon3
+            b->clockTime = hightime;
+        }
+
         // Some sanity checking, very short (<200us) or very long (>1000us) signals are ignored.
         if (b->clockTime < TSCALE(200) || b->clockTime > TSCALE(1000)) {
             b->state = STATE_SYNC;
+            //DC('s');
         }
         #ifdef ARM
             AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
@@ -984,10 +1005,10 @@ retry_sync:
         #else
             TIMSK1 = _BV(OCIE1A);
         #endif
-        b->zero.lowtime = lowtime;
-        b->zero.hightime = hightime;
+        b->one.lowtime = lowtime;
+        b->one.hightime = hightime;
         addbit(b,1);
-        count_half=1;
+        
         goto retry_mc;
 	}
 #endif
