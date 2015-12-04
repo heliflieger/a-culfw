@@ -28,7 +28,7 @@
 //         Local definitions
 //------------------------------------------------------------------------------
 //Cubeloader Version
-#define VERSION 	"1.0"
+#define VERSION 	"1.01"
 
 /// PIT period value in µseconds.
 #define PIT_PERIOD          1000
@@ -213,7 +213,7 @@ CDC_Task(void)
 {
 
   unsigned char x;
-
+  unsigned char result;
   if(!USB_IsConnected)
     return;
 
@@ -273,8 +273,14 @@ CDC_Task(void)
         TRACE_INFO("-- Xmodem EOT; send ACK\n\r");
         rb_put(&TTY_Tx_Buffer, ACK);
         if(packetscount) {
-          TRACE_INFO("-- Xmodemwrite flash; %08X:\n\r",writeaddress);
-          FLASHD_Write(writeaddress,writebuffer,packetscount * XDATALEN);
+          unsigned long i;
+          unsigned char* fl;
+          result=FLASHD_Write(writeaddress,writebuffer,packetscount * XDATALEN);
+          fl=writeaddress;
+          for (i=0;i<packetscount * XDATALEN;i++) {
+            if (fl[i] != writebuffer[i]) break;
+          }
+          TRACE_INFO("-- Xmodemwrite flash; %08X: %X : %X\n\r",writeaddress,result,i);
           writeaddress+=packetscount * XDATALEN;
           packetscount=0;
         }
@@ -321,9 +327,14 @@ CDC_Task(void)
           packetscount++;
 
           if(packetscount==WRITE_PACKETS) {
-
-            TRACE_INFO("-- Xmodemwrite flash; %08X:\n\r",writeaddress);
-            FLASHD_Write(writeaddress,writebuffer,WRITEBUFFERLEN);
+            unsigned long i;
+            unsigned char* fl;
+            result=FLASHD_Write(writeaddress,writebuffer,packetscount * XDATALEN);
+            fl=writeaddress;
+            for (i=0;i<packetscount * XDATALEN;i++) {
+              if (fl[i] != writebuffer[i]) break;
+            }
+            TRACE_INFO("-- Xmodemwrite flash; %08X: %X : %X\n\r",writeaddress,result,i);
             writeaddress+=WRITEBUFFERLEN;
             packetscount=0;
           }
@@ -397,6 +408,8 @@ void checkbootloader() {
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
   AT91C_BASE_PIOA->PIO_PER = BOOTLOADER_PIN;			//Enable PIO control
 
+  AT91C_BASE_PIOA->PIO_IFER = *ram;
+
   if(*fl != 0xffffffff) {
     if((AT91C_BASE_PIOA->PIO_PDSR & BOOTLOADER_PIN)) {
       if(*ram != 0xaa) {
@@ -449,6 +462,23 @@ int main(void)
     FLASHD_Unlock(AT91C_IFLASH + AT91C_IFLASH_LOCK_REGION_SIZE, AT91C_IFLASH + AT91C_IFLASH_SIZE, 0, 0);
     TRACE_INFO("Flash unlocked \n\r");
   }
+
+  uint32_t volatile * const fl1 = (uint32_t *) TARGETSTART;
+
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
+  AT91C_BASE_PIOA->PIO_PER = BOOTLOADER_PIN;      //Enable PIO control
+
+  TRACE_INFO("Flash memory %08X:%08X\n\r",TARGETSTART,*fl1);
+  TRACE_INFO("RAM memory %08X:%02X\n\r",AT91C_ISRAM,AT91C_BASE_PIOA->PIO_IFSR & 0xff);
+
+  if((AT91C_BASE_PIOA->PIO_PDSR & BOOTLOADER_PIN)) {
+    TRACE_INFO("TA2 off\n\r");
+  } else {
+    TRACE_INFO("TA2 on\n\r");
+  }
+
+  TRACE_INFO("Chip ID %08X\n\r",AT91C_BASE_DBGU->DBGU_CIDR );
+  TRACE_INFO("Chip ID Extention %08X\n\r",AT91C_BASE_DBGU->DBGU_EXID );
 
   // Main loop
   while (1) {

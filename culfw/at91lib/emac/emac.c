@@ -829,4 +829,22 @@ void EMAC_Clear_TxWakeUpCb(void)
     txTd.wakeupCb = (EMAC_WakeupCallback) 0;
 }
     
+void EMAC_Discard_Fragments(void) {
+    unsigned int   tmpIdx = rxTd.idx;
+    volatile EmacRxTDescriptor *pRxTd = rxTd.td + rxTd.idx;
 
+	do {
+		if ((pRxTd->addr & EMAC_RX_OWNERSHIP_BIT) != EMAC_RX_OWNERSHIP_BIT) {
+			break;
+		}
+
+		pRxTd->addr &= ~(EMAC_RX_OWNERSHIP_BIT);
+		CIRC_INC(rxTd.idx, RX_BUFFERS);
+
+		pRxTd = rxTd.td + rxTd.idx;
+
+		if ((pRxTd->status & EMAC_RX_SOF_BIT) == EMAC_RX_SOF_BIT) {
+			break;
+		}
+	} while (tmpIdx != rxTd.idx);
+}

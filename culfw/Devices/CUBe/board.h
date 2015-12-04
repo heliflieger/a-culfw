@@ -57,7 +57,7 @@
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
 
-//#define _433MHZ
+#define _433MHZ
 
 #  if defined(_433MHZ)
 #    define HAS_TCM97001
@@ -278,7 +278,7 @@
 /// Indicates chip has an EFC.
 #define BOARD_FLASH_EFC
 /// Address of the IAP function in ROM.
-#define BOARD_FLASH_IAP_ADDRESS         0x300008
+//#define BOARD_FLASH_IAP_ADDRESS         0x300008
 //------------------------------------------------------------------------------
 
 #endif //#ifndef BOARD_H

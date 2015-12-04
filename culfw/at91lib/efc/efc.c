@@ -356,7 +356,8 @@ unsigned char EFC_PerformCommand(
 
 #ifdef BOARD_FLASH_IAP_ADDRESS
     // Pointer on IAP function in ROM
-    static void (*IAP_PerformCommand)(unsigned int, unsigned int);
+    //static void (*IAP_PerformCommand)(unsigned int, unsigned int);
+    static void (*IAP_PerformCommand)(unsigned int); // has only one parameter, used to be two
     unsigned int index = 0;
 #ifdef AT91C_BASE_EFC1
     if (pEfc == AT91C_BASE_EFC1) {
@@ -364,13 +365,16 @@ unsigned char EFC_PerformCommand(
         index = 1;
     }
 #endif
-    IAP_PerformCommand = (void (*)(unsigned int, unsigned int)) *((unsigned int *) BOARD_FLASH_IAP_ADDRESS);
+    //IAP_PerformCommand = (void (*)(unsigned int, unsigned int)) *((unsigned int *) BOARD_FLASH_IAP_ADDRESS);
+    IAP_PerformCommand = (void (*)(unsigned int)) *((unsigned int *) BOARD_FLASH_IAP_ADDRESS);
 
     // Check if IAP function is implemented (opcode in SWI != 'b' or 'ldr') */
     if ((((((unsigned long) IAP_PerformCommand >> 24) & 0xFF) != 0xEA) &&
         (((unsigned long) IAP_PerformCommand >> 24) & 0xFF) != 0xE5)) {
 
-        IAP_PerformCommand(index, (0x5A << 24) | (argument << 8) | command);
+        //IAP_PerformCommand(index, (0x5A << 24) | (argument << 8) | command);
+        IAP_PerformCommand((0x5A << 24) | (argument << 8) | command);
+
         AT91C_BASE_AIC->AIC_IECR=mask;
         return (pEfc->EFC_FSR & (AT91C_MC_LOCKE | AT91C_MC_PROGE));
     }

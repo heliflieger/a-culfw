@@ -7,10 +7,15 @@ _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/fol
 
 ## Changelog:
 
+
 #### 1.20.00
 - Implement receive of Manchester coded signals linke Oregon2, Oregon3 or Hideki
 - Enable receive of revolt for all devices
 - Change IT V1 send timing to old 1.05.01 timing
+
+#### 1.10.02
+- Fix ethernet on CUBe
+- Fix UNKNOWNCODE ZERR30D (Forum #332883)
 
 #### 1.10.01
 - Fix receiving of revolt for all devices.
