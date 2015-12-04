@@ -1,13 +1,33 @@
 /* 
  * Copyright by R.Koenig
+ * Copyright 2015 B. Hempel 
  * Inspired by code from Dirk Tostmann
- * License: GPL v2
+ *
+ * License: 
+ *
+ * This program is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU General Public License as published by the Free Software 
+ * Foundation; either version 2 of the License, or (at your option) any later 
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along with 
+ * this program; if not, write to the 
+ * Free Software Foundation, Inc., 
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
+ *
  */
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
 #include <util/parity.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "board.h"
 #include "delay.h"
@@ -64,6 +84,7 @@ static uint8_t bucket_nrused;             // Number of unprocessed buckets
 static uint8_t nibble; // parity-stripped output
 static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime;
+static uint16_t maxLevel;
 
 
 static void delbit(bucket_t *b);
@@ -254,7 +275,7 @@ analyze(bucket_t *b, uint8_t t, uint8_t *oby)
  */
 void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
 #if defined (HAS_IT) || defined (HAS_TCM97001)
-  if (*datatype == TYPE_IT || (*datatype == TYPE_TCM97001)) { 
+  if ((*datatype == TYPE_IT) || (*datatype == TYPE_TCM97001)) { 
       if (packetCheckValues.isrep == 1 && packetCheckValues.isnotrep == 0) { 
         packetCheckValues.isnotrep = 1;
         packetCheckValues.packageOK = 1;
@@ -273,7 +294,24 @@ void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
 #endif
 }
 
-
+#ifdef HAS_MANCHESTER
+static void analyseMC(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby) {    
+    if (IS433MHZ && *datatype == 0) {
+        if ((b->state == STATE_MC)) {
+	        uint8_t i;
+	        for (i=0;i<b->byteidx;i++) {
+	          obuf[i]=b->data[i];
+	        }
+	        if (7-b->bitidx != 0) {
+		        obuf[i]=b->data[i];
+		        i++;
+	        }
+	        *oby = i;
+	        *datatype = TYPE_MC;
+	    }
+    }
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////
 void
@@ -323,14 +361,28 @@ RfAnalyze_Task(void)
 #ifdef HAS_REVOLT
   analyze_revolt(b, &datatype, obuf, &oby);
 #endif
-#ifdef HAS_OREGON3
-  analyze_oregon3(b, &datatype, obuf, &oby);
-#endif
 #ifdef HAS_ESA
   analyze_esa(b, &datatype, obuf, &oby);
 #endif
 #ifdef HAS_HMS
   analyze_hms(b, &datatype, obuf, &oby);
+#endif
+#ifdef HAS_MANCHESTER
+    analyseMC(b, &datatype, obuf, &oby);
+#endif
+#if defined(HAS_IT) || defined(HAS_TCM97001) 
+  if(datatype == 0 && b->state == STATE_SYNC_PACKAGE) {
+    // unknown sync package
+    uint8_t ix;
+    for (ix=0;ix<b->byteidx;ix++)
+      obuf[ix]=b->data[ix];
+
+    if (7-b->bitidx != 0) {
+      obuf[ix]=b->data[ix];
+      ix++; 
+    }    
+    oby = ix;
+  }
 #endif
 
   if (b->state == STATE_COLLECT) {
@@ -425,6 +477,11 @@ RfAnalyze_Task(void)
         DC('h');
       }
 #endif
+#ifdef HAS_MANCHESTER
+    if (b->state == STATE_MC) {
+		  DC('m');
+	}
+#endif
       if(nibble)
         oby--;
       for(uint8_t i=0; i < oby; i++)
@@ -433,7 +490,16 @@ RfAnalyze_Task(void)
         DH(obuf[oby]&0xf,1);
       if(tx_report & REP_RSSI)
         DH2(cc1100_readReg(CC1100_RSSI));
+#if defined(HAS_TCM97001)
+        if (b->state == STATE_TCM97001) {
+		  DC(';');
+		  DU(b->syncbit.hightime  *16, 5);
+		  DC(':');
+		  DU(b->syncbit.lowtime  *16, 5);
+	    }
+#endif
       DNL();
+      
     }
 
   }
@@ -445,14 +511,20 @@ RfAnalyze_Task(void)
     DU(b->zero.lowtime *16, 5);
     DU(b->one.hightime *16, 5);
     DU(b->one.lowtime  *16, 5);
+    DU(b->two.hightime *16, 5);
+    DU(b->two.lowtime  *16, 5);
+    DU(b->valCount,     4);
     DU(b->sync,         3);
     DU(b->byteidx,      3);
     DU(7-b->bitidx,     2);
-#ifdef DEBUG_SYNC
+#if defined(HAS_IT) || defined(HAS_TCM97001) 
+    DC(' ');
     DU(b->syncbit.hightime *16, 5);
     DC(' ');
     DU(b->syncbit.lowtime  *16, 5);
+    DC(' ');
 #endif
+    DU(b->clockTime  *16, 5);
     DC(' ');
     if(tx_report & REP_RSSI) {
       DH2(cc1100_readReg(CC1100_RSSI));
@@ -464,10 +536,11 @@ RfAnalyze_Task(void)
     for(uint8_t i=0; i < b->byteidx; i++)
        DH2(b->data[i]);
     DNL();
-
   }
 
   b->state = STATE_RESET;
+  b->valCount = 0;
+  maxLevel=0;
   
   bucket_nrused--;
   bucket_out++;
@@ -485,6 +558,7 @@ RfAnalyze_Task(void)
 
 void reset_input(void)
 {
+  maxLevel=0;
 #ifdef ARM
   AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_TC1;	//Disable Interrupt
 #else
@@ -493,6 +567,11 @@ void reset_input(void)
   bucket_array[bucket_in].state = STATE_RESET;
 #if defined (HAS_IT) || defined (HAS_TCM97001)
   packetCheckValues.isnotrep = 0;
+#endif
+#ifdef ARM
+      	AT91C_BASE_TC1->TC_RC = 0;
+#else
+        OCR1A = 0;
 #endif
 }
 
@@ -556,11 +635,6 @@ ISR(TIMER1_COMPA_vect)
 uint8_t wave_equals(wave_t *a, uint8_t htime, uint8_t ltime, uint8_t state)
 {
   uint8_t tdiffVal = TDIFF;
-#ifdef HAS_IT
-  if(state == STATE_IT)
-    tdiffVal = TDIFFIT;
-#endif
-
   int16_t dlow = a->lowtime-ltime;
   int16_t dhigh = a->hightime-htime;
   int16_t dcomplete  = (a->lowtime+a->hightime) - (ltime+htime);
@@ -585,6 +659,25 @@ check_rf_sync(uint8_t l, uint8_t s)
           l > s);
 }
 
+/*
+void addBresserBit(bucket_t *b, uint8_t hightime, uint8_t lowtime) {
+   if (lowtime < TSCALE(5500)) {
+      if ((hightime < lowtime)) {
+      //if ((lowtime < hightime)) {
+        addbit(b,0);
+        //DC('0');
+        //b->zero.hightime = makeavg(b->zero.hightime, hightime);
+        //b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+      } else {
+        addbit(b,1);
+       // DC('1');
+        //b->one.hightime = makeavg(b->one.hightime, hightime);
+        //b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
+      }
+  }
+}
+*/
+
 static void
 delbit(bucket_t *b)
 {
@@ -593,6 +686,45 @@ delbit(bucket_t *b)
     b->byteidx--;
   }
 }
+
+#if defined(HAS_IT) || defined(HAS_TCM97001) 
+/*
+ * Calculate the end off message time
+ */
+static void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool syncHighTime) {
+  if (b->valCount < 8) {
+    if (maxLevel<*hightime) {
+      maxLevel = *hightime; 
+    } 
+    if (maxLevel<*lowtime) {
+      maxLevel = *lowtime;
+    }
+    if (b->valCount == 7 && maxLevel != 0) {
+#ifdef ARM
+        uint32_t ocrVal = 0;
+#else
+        uint16_t ocrVal = 0;
+#endif
+        if (syncHighTime) {    
+          ocrVal = (((b->syncbit.hightime - maxLevel)>>2)+maxLevel);
+        } else {
+          ocrVal = (((b->syncbit.lowtime - maxLevel)>>2)+maxLevel);
+        }    
+#ifdef ARM
+        ocrVal = ((ocrVal * 100) / 266);
+        AT91C_BASE_TC1->TC_RC = ocrVal * 16;
+#else
+        OCR1A = ocrVal * 16;
+#endif
+
+    }   
+  }
+}
+#endif
+
+#ifdef HAS_MANCHESTER
+  static uint16_t count_half;
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // "Edge-Detected" Interrupt Handler
@@ -605,11 +737,6 @@ void ISR_Pio() {
 ISR(CC1100_INTVECT)
 {
 #endif
-
-#ifdef HAS_OREGON3
-  static uint8_t count_half;
-#endif
-
 #ifdef HAS_FASTRF
   if(fastrf_on) {
     fastrf_on = 2;
@@ -636,6 +763,7 @@ ISR(CC1100_INTVECT)
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
   #endif
 #endif
+
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
@@ -687,57 +815,44 @@ ISR(CC1100_INTVECT)
 #endif
 
     hightime = c;
-#ifdef HAS_OREGON3
-    if (b->state == STATE_OREGON3) {
-      // zero.hightime - short hightime
-      // zero.lowtime  - short lowtime
-      // one.hightime  - long hightime
-      // one.lowtime   - long lowtime
-      if (hightime>TSCALE(1400) || hightime<TSCALE(200))
-        reset_input();
-      if (count_half==1) {//sync nibble: learn long pulse
-        addbit(b,0);
-        b->one.hightime=hightime;
-        count_half+=2;
-      } else {
-        if (hightime > ((b->zero.hightime+b->one.hightime)>>1)) { 
-          b->one.hightime = makeavg(b->one.hightime,hightime);
-          count_half+=2;
+
+#ifdef HAS_MANCHESTER
+    if (b->state == STATE_MC) {
+        if (hightime < (b->clockTime >> 1) || hightime > (b->clockTime << 1) + b->clockTime) { // read as: duration < 0.5 * clockTime || duration > 3 * clockTime
+			// Fail. Abort.
+			b->state = STATE_SYNC;
+			//DC('f');
+			return;
+		}
+        if (hightime+(b->clockTime) > ((b->zero.hightime+b->one.hightime)>>1)) {
+            b->one.hightime = makeavg(b->one.hightime,hightime);
+            if (b->clockTime>hightime-10 && b->clockTime<hightime+10) {
+                count_half+=1;
+            } else {
+                count_half+=2;
+            }
         } else {
           b->zero.hightime = makeavg(b->zero.hightime,hightime);
           count_half+=1;
         }
-      }
-      if (count_half&1) { // ungerade
-        addbit(b,1);
-      }
+        if (count_half&1) { // ungerade
+            addbit(b,1);
+        }
+        
     }
 #endif
+
     return;
   }
 
   lowtime = c-hightime;
+
 #ifdef ARM
   AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
 #else
   TCNT1 = 0;                          // restart timer
 #endif
-/*
- DC('-');
-          DU(hightime*16, 5);
-        DC(',');  
-          DU(lowtime *16, 5);
-   DC('-');
-*/
-#ifdef HAS_IT
-  if (sync_intertechno(b, &hightime, &lowtime)) {
-    return;
-  }
-#endif
 
-  /*DU(hightime *16, 6);
-  DU(lowtime*16, 6);
-  DC('*');*/
 
 #if defined (HAS_HMS) || defined (HAS_ESA)
   if( IS868MHZ && (
@@ -756,92 +871,153 @@ ISR(CC1100_INTVECT)
   }
 #endif
 
+
+/*  if (b->state == STATE_BRESSER && hightime>TSCALE(650) ) {//|| lowtime>TSCALE(700))
+        
+        DC('S');
+        DNL();
+        return;
+  }*/
+
+
+
   ///////////////////////
   // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
 #ifndef ARM
   TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
 #endif
 
-#ifdef HAS_OREGON3
-    if (b->state == STATE_OREGON3) {
-      // zero.hightime - short hightime
-      // zero.lowtime  - short lowtime
-      // one.hightime  - long hightime
-      // one.lowtime   - long lowtime
-      if (lowtime>TSCALE(1400) || lowtime<TSCALE(200))
-        reset_input();
-      if (lowtime > ((b->zero.lowtime+b->one.lowtime)>>1)) { 
-        b->one.lowtime = makeavg(b->one.lowtime,lowtime);
-        count_half+=2;
-      } else {
-        b->zero.lowtime = makeavg(b->zero.lowtime,lowtime);
-        count_half+=1;
-      }
-      if (count_half&1) { // ungerade
-          addbit(b,0);
-      }
-      return;
+#ifdef HAS_MANCHESTER
+    if (b->state == STATE_MC) {
+retry_mc:
+        // Edge is not too long, nor too short?
+		if (lowtime < (b->clockTime >> 1) || lowtime > (b->clockTime << 1) + b->clockTime) { // read as: duration < 0.5 * clockTime || duration > 3 * clockTime
+			// Fail. Abort.
+		//	DC('F');
+			b->state = STATE_SYNC;
+		} else {
+		    // Only process every second half bit, i.e. every whole bit.
+		    if (lowtime+(b->clockTime) > ((b->zero.lowtime+b->one.lowtime)>>1)) { 
+                b->one.lowtime = makeavg(b->one.lowtime,lowtime);
+                if (b->clockTime>lowtime-10 && b->clockTime<lowtime+10) {
+                    count_half+=1;
+                } else {
+                    count_half+=2;
+                }
+            } else {
+                b->zero.lowtime = makeavg(b->zero.lowtime,lowtime);
+                count_half+=1;
+            }
+            if (count_half&1) { // ungerade
+                  addbit(b,0);
+            }
+            return;
+	   }
+    
     }
 #endif
-  
-#ifdef HAS_REVOLT
-  if (IS433MHZ && (hightime > TSCALE(9000)) && (hightime < TSCALE(12000)) &&
-      (lowtime  > TSCALE(150))   && (lowtime  < TSCALE(540))) {
-    // Revolt
-    b->zero.hightime = 6;
-    b->zero.lowtime = 14;
-    b->one.hightime = 19;
-    b->one.lowtime = 14;
-    b->sync=1;
-    b->state = STATE_REVOLT;
-    b->byteidx = 0;
-    b->bitidx  = 7;
-    b->data[0] = 0;
-    OCR1A = SILENCE;
-    TIMSK1 = _BV(OCIE1A);
-    return;
-  }
-#endif
+
   switch(b->state)
   {
     case STATE_RESET: // first sync bit, cannot compare yet   
 retry_sync:
-#ifdef DEBUG_SYNC
-        b->syncbit.hightime=0;
-        b->syncbit.lowtime=0;
+    b->zero.hightime=0;
+    b->zero.lowtime=0;
+    b->one.hightime=0;
+    b->one.lowtime=0;
+    b->two.hightime=0;
+    b->two.lowtime=0;
+#ifdef HAS_MANCHESTER
+    count_half = 0;
 #endif
-#ifdef HAS_TCM97001
-      if (is_tcm97001(b, &hightime, &lowtime)) {
+    b->clockTime = 0;
+    b->valCount = 0;
+    b->byteidx=0;
+    b->bitidx  = 7;
+    b->data[0] = 0;
+#ifdef HAS_REVOLT
+      if (is_revolt(b, &hightime, &lowtime)) {
         return;
-      }	else 
+      } 
+#endif    
+#if defined(HAS_IT) || defined(HAS_TCM97001) 
+    b->syncbit.hightime=hightime;
+    b->syncbit.lowtime=lowtime;
+    if ((hightime < TSCALE(840) && hightime > TSCALE(145)) &&
+				         (lowtime  < TSCALE(14000) && lowtime > TSCALE(3200)) ) {
+	   	  // sync bit received
+          b->state = STATE_SYNC_PACKAGE;
+          b->sync  = 1;
+
+      #ifdef ARM
+          AT91C_BASE_TC1->TC_SR;
+	      #ifdef LONG_PULSE
+          AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+	      #endif
+          AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+      #else
+          TIMSK1 = _BV(OCIE1A);
+      #endif
+      return;
+    }
 #endif
-#ifdef HAS_IT
-      if (is_intertechno(b, &hightime, &lowtime)) {
-        /*DC('O');
-        DU(b->state, 2);
-*/        
-        return;
-      } else 
-#endif 
-      if(hightime > TSCALE(1600) || lowtime > TSCALE(1600)) {
-        // Invalid Package
-        return;
-      }
-     
+        if(hightime > TSCALE(1600) || lowtime > TSCALE(1600)) {
+             // Invalid Package
+            return;
+        }
+     /*   DNL();
+        DC('R');
+     */
       b->zero.hightime = hightime;
       b->zero.lowtime = lowtime;
       b->sync  = 1;
       b->state = STATE_SYNC;
+#ifdef HAS_MANCHESTER
+      if ((hightime>lowtime-10 && hightime<lowtime+10)
+         || (hightime>lowtime*2-10 && hightime<lowtime*2+10)
+         || (hightime>lowtime/2-10 && hightime<lowtime/2+10)) {
+        b->state = STATE_MC;
+        
+        // Automatic clock detection. One clock-period is half the duration of the first edge.
+        b->clockTime = (hightime >> 1);
+        count_half=1;
+        if (b->clockTime < TSCALE(300)) {
+            // If clock time is lower than 300, than it should be an Oregon3
+            b->clockTime = hightime;
+        }
+
+        // Some sanity checking, very short (<200us) or very long (>1000us) signals are ignored.
+        if (b->clockTime < TSCALE(200) || b->clockTime > TSCALE(1000)) {
+            b->state = STATE_SYNC;
+            //DC('s');
+        }
+        #ifdef ARM
+            AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+        #else
+            OCR1A = SILENCE;
+        #endif
+        #ifdef ARM
+            AT91C_BASE_TC1->TC_SR;
+            #ifdef LONG_PULSE
+                AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+            #endif
+            AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+        #else
+            TIMSK1 = _BV(OCIE1A);
+        #endif
+        b->one.lowtime = lowtime;
+        b->one.hightime = hightime;
+        addbit(b,1);
+        
+        goto retry_mc;
+	}
+#endif
       break;
     case STATE_SYNC:  // sync: lots of zeroes
-
       if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
         b->zero.hightime = makeavg(b->zero.hightime, hightime);
         b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-#ifdef DEBUG_SYNC
-        b->syncbit.hightime=b->zero.hightime;
-        b->syncbit.lowtime=b->zero.lowtime;
-#endif
+        b->clockTime = 0;
         b->sync++;
       } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
 #ifdef ARM
@@ -855,18 +1031,10 @@ retry_sync:
 
       } else 
 #endif
-#ifdef HAS_OREGON3
-      if (b->sync >= 12) { // erwarte 12 der 24 Preamble Bits
-        if (hightime>TSCALE(1200) || lowtime>TSCALE(1400))
-          reset_input();
-        b->state = STATE_OREGON3;
-        count_half=1;
-        // first sync bit added later
-        } else
-#endif
   #ifdef HAS_ESA
               if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
           b->state = STATE_ESA;
+          //DU(b->sync,         3);
 #ifdef ARM
           AT91C_BASE_TC1->TC_RC = 375;
 #else
@@ -875,6 +1043,8 @@ retry_sync:
 
         } else 
   #endif
+
+        
   #ifdef HAS_RF_ROUTER
           if(rf_router_myid &&
                   check_rf_sync(hightime, lowtime) &&
@@ -887,13 +1057,6 @@ retry_sync:
         } else
   #endif
         {
-          /*DC('S');
-          DU(hightime*16, 5);
-          DC('-');
-          DU(lowtime *16, 5);
-          DC('-');
-          DU(b->sync, 2);
-          DC('\n');*/
           b->state = STATE_COLLECT;
         }
 
@@ -913,50 +1076,97 @@ retry_sync:
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
 #endif
 
-      } else {                            // too few sync bits
-        b->state = STATE_RESET;
+      } else {                          // too few sync bits
+    	  //DC('j');
+    	  b->state = STATE_RESET;
         goto retry_sync;
 
       }
       break;
-#ifdef HAS_REVOLT
-    case STATE_REVOLT: //STATE_REVOLTT
-      if ((hightime < 11)) {
-        addbit(b,0);
-        b->zero.hightime = makeavg(b->zero.hightime, hightime);
-        b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
-      } else {
-        addbit(b,1);
-        b->one.hightime = makeavg(b->one.hightime, hightime);
-        b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
+    /*case STATE_BRESSER:
+    
+      addBresserBit(b, hightime, lowtime);
+     
+      break;*/
+#if defined(HAS_IT) || defined(HAS_TCM97001) 
+    case STATE_SYNC_PACKAGE:
+      if (lowtime < TSCALE(5500)) {
+#ifdef HAS_MANCHESTER      
+    	if (hightime>lowtime-10 && hightime<lowtime+10 && b->valCount < 1) {
+		  // Wrong message, seams to be a Oregon Sync package
+		  b->state = STATE_RESET;
+		  goto retry_sync;
+		}
+#endif
+
+        calcOcrValue(b, &hightime, &lowtime, false);
+        
+        if (b->valCount == 0) {
+          b->zero.hightime=hightime;
+          b->zero.lowtime=lowtime;
+        } 
+        if (lowtime < TSCALE(1800) && b->syncbit.lowtime > TSCALE(4500)) { 
+            // IT
+            if (hightime + TDIFF > lowtime) {
+                addbit(b, 0);
+                b->one.hightime=hightime;
+                b->one.lowtime=lowtime;
+            } else {
+                addbit(b, 1);
+                b->two.hightime=hightime;
+                b->two.lowtime=lowtime;
+            }
+        } else {
+          // TCM
+          if (lowtime < TSCALE(2500) && b->syncbit.lowtime > TSCALE(5000)) {
+              addbit(b, 0);
+              b->two.hightime=hightime;
+              b->two.lowtime=lowtime;
+          } else if (lowtime < TSCALE(1500) && b->syncbit.lowtime < TSCALE(5000)) {
+              addbit(b, 0);
+              b->two.hightime=hightime;
+              b->two.lowtime=lowtime;
+          } else {
+              addbit(b, 1);
+              b->one.hightime=hightime;
+              b->one.lowtime=lowtime;
+          }
+        }
       }
       break;
 #endif
-#ifdef HAS_TCM97001
-    case STATE_TCM97001:
-      sync_tcm97001(b, &hightime, &lowtime);
-      addbit_tcm97001(b, &hightime, &lowtime);
+#ifdef HAS_REVOLT
+    case STATE_REVOLT: //STATE_REVOLTT
+      //calcOcrValue(b, &hightime, &lowtime, true);
+      addbit_revolt(b, &hightime, &lowtime);
       break;
 #endif
-#ifdef HAS_IT
-    case STATE_ITV3: 
-      addbit_intertechno_v3(b, &hightime, &lowtime);
-      break;
-#endif
+
     default:
+      /* TODO: Receive other sync packages
+      if (b->state == STATE_COLLECT) {
+        DU(hightime*16, 5);
+        DC(':');
+        DU(lowtime *16, 5);
+        DC(',');
+      }*/
       if(wave_equals(&b->one, hightime, lowtime, b->state)) {
         addbit(b, 1);
         b->one.hightime = makeavg(b->one.hightime, hightime);
         b->one.lowtime  = makeavg(b->one.lowtime,  lowtime);
       } else if(wave_equals(&b->zero, hightime, lowtime, b->state)) {
+      //} else {
         addbit(b, 0);
         b->zero.hightime = makeavg(b->zero.hightime, hightime);
         b->zero.lowtime  = makeavg(b->zero.lowtime,  lowtime);
+     /* TODO: Receive other sync packages
+      } else if(hightime > lowtime) {
+        addbit(b, 1);*/
       } else {
-//#ifdef HAS_IT
-          //if (b->state!=STATE_IT) 
-//#endif
-            reset_input();
+      /*  addbit(b, 0);*/
+      /*  b->two.hightime = makeavg(b->zero.hightime, hightime);
+        b->two.lowtime  = makeavg(b->zero.lowtime,  lowtime);*/
+        reset_input();
       }
       break;
   }

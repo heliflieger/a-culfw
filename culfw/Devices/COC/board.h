@@ -61,6 +61,8 @@
 #define HAS_INTERTECHNO
 #define HAS_HOMEEASY
 #define HAS_TCM97001
+#define HAS_MANCHESTER
+#define HAS_REVOLT
 #define HAS_HOERMANN
 #define HAS_MBUS
 #define HAS_MEMFN

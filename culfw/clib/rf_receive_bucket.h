@@ -1,15 +1,47 @@
+/* 
+ * a-culfw
+ * Copyright (C) 2015 B. Hempel
+ * 
+ * This program is free software; you can redistribute it and/or modify it under  
+ * the terms of the GNU General Public License as published by the Free Software  
+ * Foundation; either version 2 of the License, or (at your option) any later  
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but  
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for  
+ * more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with  
+ * this program; if not, write to the  
+ * Free Software Foundation, Inc.,  
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
+ *
+ * 
+ */
+
 #ifndef _RF_RECEIVE_BUCKET_H
 #define _RF_RECEIVE_BUCKET_H
 
 #include <avr/io.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "board.h"
 
+
+#define STATE_SYNC_PACKAGE      11
+//#define STATE_BRESSER 12
+#define STATE_MC                13
+#define TYPE_SYNC_PACKAGE       '?'
+#define TYPE_MC                 'o'
+
 /* public prototypes */
-#if defined(HAS_ESA) || defined (HAS_OREGON3)
-#define MAXMSG 20               // ESA messages
+#if defined(HAS_ESA) || defined (HAS_MANCHESTER) || defined(HAS_REVOLT)
+#define MAXMSG 50               // ESA messages
+//#define MAXMSGVALS (MAXMSG*8)
 #else
 #define MAXMSG 12               // EMEM messages
+//#define MAXMSGVALS (MAXMSG*8)
 #endif
 
 #define TSCALE(x)  (x/16)      // Scaling time to enable 8bit arithmetic
@@ -29,11 +61,14 @@ typedef uint16_t pulse_t;
 typedef uint8_t pulse_t;
 #endif
 
+typedef uint16_t pulseVal_t;
+
 /*
  * The input struct
  */
 typedef struct  {
   uint8_t *data;
+  uint8_t *dataVals;
   uint8_t byte, bit;
 } input_t;
 
@@ -56,22 +91,33 @@ extern void reset_input(void);
 typedef struct {
   pulse_t hightime, lowtime;
 } wave_t;
-#ifdef DEBUG_SYNC
 typedef struct {
   uint16_t hightime, lowtime;
 } wave_t16;
-#endif
 
 // One bucket to collect the "raw" bits
 typedef struct {
   uint8_t state, byteidx, sync, bitidx; 
   uint8_t data[MAXMSG];         // contains parity and checksum, but no sync
-  wave_t zero, one; 
-#ifdef DEBUG_SYNC
+//  pulseVal_t dataVals[MAXMSGVALS];
+  uint8_t valCount;
+  wave_t zero, one, two; 
+#if defined(HAS_IT) || defined(HAS_TCM97001) 
   wave_t16 syncbit;
 #endif
+  uint16_t clockTime;
 } bucket_t;
 
+
+/*
+ * Copy the data from bucket to receive buffer
+ */
+void copyData(uint8_t byteidx, uint8_t bitidx, uint8_t *data, uint8_t *obuf, uint8_t *oby, bool reverseBits);
+
+/*
+ * Add timing value to bucket
+ */
+void addTimeValBit(bucket_t *b, pulseVal_t valueh, pulseVal_t valuel);
 
 /*
  * Add bit to bucket

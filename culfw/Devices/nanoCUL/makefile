@@ -30,7 +30,6 @@ SRC = nanoCUL.c                                            \
 		../../clib/rf_receive_revolt.c                       \
 		../../clib/rf_receive_esa.c                          \
 		../../clib/rf_receive_hms.c                          \
-		../../clib/rf_receive_oregon.c                       \
 		../../clib/rf_native.c                               \
 		../../clib/lacrosse.c                                \
 		../../clib/helper.c                                  \

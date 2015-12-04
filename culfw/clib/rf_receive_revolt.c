@@ -1,6 +1,21 @@
 /* 
- * Copyright by B.Hempel
- * License: GPL v2
+ * a-culfw
+ * Copyright (C) 2015 B. Hempel
+ *
+ * This program is free software; you can redistribute it and/or modify it under  
+ * the terms of the GNU General Public License as published by the Free Software  
+ * Foundation; either version 2 of the License, or (at your option) any later  
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but  
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for  
+ * more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with  
+ * this program; if not, write to the  
+ * Free Software Foundation, Inc.,  
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  */
 
 #include "rf_receive_revolt.h"
@@ -13,10 +28,11 @@
 void analyze_revolt(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
   if (IS433MHZ && *datatype == 0) {
-    uint8_t sum=0;
+    
     if (b->byteidx != 12 || b->state != STATE_REVOLT || b->bitidx != 0)
       return;
 
+    uint8_t sum=0;
     uint8_t i;
     for (i=0;i<11;i++) {
       sum+=b->data[i];
@@ -24,11 +40,64 @@ void analyze_revolt(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
     }
 
     *oby = i;
-
-    
+ 
     if (sum!=b->data[11])
         return; // failed
     *datatype = TYPE_REVOLT;
+  }
+}
+
+/*
+ * Description in header
+ */
+bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
+{
+  if (IS433MHZ && (*hightime > TSCALE(9000)) && (*hightime < TSCALE(12000)) &&
+      (*lowtime  > TSCALE(150))   && (*lowtime  < TSCALE(540))) {
+    // Revolt
+    b->zero.hightime = 9; // = 144
+    b->zero.lowtime = 14; // = 224
+    b->one.hightime = 16; // = 256
+    b->one.lowtime = 14;  // = 224
+    b->sync=1;
+    b->state = STATE_REVOLT;
+    b->byteidx = 0;
+    b->bitidx  = 7;
+    b->data[0] = 0;
+    #ifdef ARM
+        AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+    #else
+        OCR1A = SILENCE;
+    #endif
+    #ifdef ARM
+        AT91C_BASE_TC1->TC_SR;
+        #ifdef LONG_PULSE
+            AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+        #endif
+        AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+    #else
+        TIMSK1 = _BV(OCIE1A);
+    #endif
+    return true;
+  }
+  return false;
+}
+
+/*
+ * Description in header
+ */
+void addbit_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
+{
+  if (IS433MHZ) {
+    if ((*hightime < 11)) { // 176
+        addbit(b,0);
+        //b->zero.hightime = makeavg(b->zero.hightime, *hightime);
+        //b->zero.lowtime  = makeavg(b->zero.lowtime,  *lowtime);
+      } else {
+        addbit(b,1);
+        //b->one.hightime = makeavg(b->one.hightime, *hightime);
+        //b->one.lowtime  = makeavg(b->one.lowtime,  *lowtime);
+      }
   }
 }
 

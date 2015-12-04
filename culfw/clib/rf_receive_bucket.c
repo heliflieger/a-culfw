@@ -1,14 +1,53 @@
 /* 
- * Copyright by B.Hempel
- * License: GPL v2
+ * a-culfw
+ * Copyright (C) 2015 B. Hempel
+ *
+ * This program is free software; you can redistribute it and/or modify it under  
+ * the terms of the GNU General Public License as published by the Free Software  
+ * Foundation; either version 2 of the License, or (at your option) any later  
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but  
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for  
+ * more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with  
+ * this program; if not, write to the  
+ * Free Software Foundation, Inc.,  
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  */
 
 #include "rf_receive_bucket.h"
+#include "display.h"
 
 uint8_t makeavg(uint8_t i, uint8_t j)
 {
   return (i+i+i+j)/4;
 }
+
+/*
+ * Copy the data from bucket to receive buffer
+ */
+void copyData(uint8_t byteidx, uint8_t bitidx, uint8_t *data, uint8_t *obuf, uint8_t *oby, bool reverseBits) {
+      uint8_t i;
+      for (i=0;i<byteidx;i++) {
+        if (reverseBits) {
+          data[i] = ~data[i];
+        }
+        obuf[i]=data[i];
+      }
+
+      if (7-bitidx != 0) {
+        if (reverseBits) {
+          data[i] = ~data[i] & (0xFF<<(bitidx+1));
+        }
+        obuf[i]=data[i];
+        i++;
+      }
+      *oby = i;
+}
+
 
 /*
  * Description in header
@@ -17,6 +56,7 @@ void addbit(bucket_t *b, uint8_t bit)
 {
   if(b->byteidx>=sizeof(b->data)){
     reset_input();
+  //  DC('f');
     return;
   }
   if(bit)
@@ -26,6 +66,8 @@ void addbit(bucket_t *b, uint8_t bit)
     b->bitidx = 7;
     b->data[++b->byteidx] = 0;
   }
+  b->valCount = b->valCount + 1;
+
 }
 
 /*

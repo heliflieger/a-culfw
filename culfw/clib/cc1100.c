@@ -61,12 +61,14 @@ const PROGMEM const uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    0x00, // 09 ADDR      00    00    
    0x00, // 0A CHANNR    00    00    
    0x06, // 0B FSCTRL1  *0F    06    152kHz IF Frquency
-   0x00, // 0C FSCTRL0   00    00    
+   0x00, // 0C FSCTRL0   00    00     
    0x21, // 0D FREQ2    *1E    21    868.3 (def:800MHz)
    0x65, // 0E FREQ1    *C4    65    
    0x6a, // 0F FREQ0    *EC    e8    
-   0x55, // 10 MDMCFG4  *8C    55    bWidth 325kHz
-   0xe4, // 11 MDMCFG3  *22   *43    Drate:1500 ((256+228)*2^5)*26000000/2^28
+   //0x55, // 10 MDMCFG4  *8C    55    bWidth 325kHz
+   0x57, // 10 MDMCFG4  *8C    55    bWidth 325kHz
+   //0xe4, // 11 MDMCFG3  *22   *43    Drate:1500 ((256+228)*2^5)*26000000/2^28
+   0xC4, // 11 MDMCFG3 (x)   DataRate: 5603,79 Baud ((256+196)*2^7)*26000000/(2^28)
    0x30, // 12 MDMCFG2  *02   *B0    Modulation: ASK
    0x23, // 13 MDMCFG1  *22    23    
    0xb9, // 14 MDMCFG0  *F8    b9    ChannelSpace: 350kHz

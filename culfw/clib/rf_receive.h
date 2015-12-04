@@ -22,7 +22,6 @@
 #ifdef HAS_HMS
 #include "rf_receive_hms.h"
 #endif
-#include "rf_receive_oregon.h"
 
 #define TYPE_EM      'E'
 

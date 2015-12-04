@@ -1,164 +1,82 @@
 /* 
- * Copyright by B.Hempel
- * License: GPL v2
+ * a-culfw
+ * Copyright (C) 2015 B. Hempel
+ *
+ * This program is free software; you can redistribute it and/or modify it under  
+ * the terms of the GNU General Public License as published by the Free Software  
+ * Foundation; either version 2 of the License, or (at your option) any later  
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but  
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY  
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for  
+ * more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with  
+ * this program; if not, write to the  
+ * Free Software Foundation, Inc.,  
+ * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  */
 
 #include "rf_receive_it.h"
 #include "display.h"
 
+
 #ifdef HAS_IT
+
+
 /*
  * Description in header
  */
 void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
 {
-  if (IS433MHZ && *datatype == 0) {
-    if ((b->state != STATE_IT || b->byteidx != 3 || b->bitidx != 7) 
-        && (b->state != STATE_ITV3 || (b->byteidx != 8 && b->byteidx != 9) || b->bitidx != 7)
+  if (IS433MHZ && *datatype == 0 && b->state == STATE_SYNC_PACKAGE) {
+    if ((b->valCount == 24 // IT V1
+      || b->valCount == 28 // HE800
+      || b->valCount == 57 // HE_EU
+      || b->valCount == 65 // IT V3
+      || b->valCount == 73) // IT V3 Dim
+      && b->one.lowtime < TSCALE(2000) && b->two.lowtime < TSCALE(2000)) {
+      // IT V1 (48), V3 (128)
+      if (b->valCount == 24) {
+        copyData(b->byteidx, b->bitidx, b->data, obuf, oby, true);
+        // inverse the bits in bucket
+        b->state = STATE_IT;
 #ifdef HAS_HOMEEASY
-        && (b->state != STATE_ITV3 || b->byteidx != 7 ||  b->bitidx != 6) // unknown protocol (mybe HE EU)
-        && (b->state != STATE_ITV3 || b->byteidx != 3 ||  b->bitidx != 3) // HE800 rolling code
+      } else if (b->valCount == 28 || b->valCount == 57) {
+        // HE 800
+        // inverse the bits in bucket
+        copyData(b->byteidx, b->bitidx, b->data, obuf, oby, false);
+        b->state = STATE_HE;
 #endif
-) {
-        return;
-    }
-
-    uint8_t i;
-    for (i=0;i<b->byteidx;i++)
-      obuf[i]=b->data[i];
-
-    if (7-b->bitidx != 0) {
-      obuf[i]=b->data[i];
-      i++;
-    }
-    *oby = i;
-    if (b->byteidx == 7 || ( b->byteidx == 3 &&  b->bitidx == 3 )) {
-      b->state = STATE_HE;
-    } 
-    *datatype = TYPE_IT;
-    
-  }
-}
-
-
-/*
- * Description in header
- */
-uint8_t sync_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
-{
-   if(IS433MHZ && (b->state == STATE_IT || b->state == STATE_ITV3)) {
-    if (*lowtime > TSCALE(15000)) { 
-        return 1;
-    } else if (*lowtime > TSCALE(2100) || *hightime == 0) {
-        b->sync = 0;
-    } 
-    if (b->sync == 0) {
-      if (*lowtime > TSCALE(2100) && *lowtime < TSCALE(3400)) { 
-        b->state = STATE_ITV3;
-        return 1;
-      } else if (b->state == STATE_ITV3) {
-        b->sync=1;
-        b->zero.hightime = *hightime; 
-		    b->zero.lowtime = *lowtime;
-        b->one.hightime = *hightime;
-	      b->one.lowtime = *hightime;
-      } else {
-        b->sync=1;
-#ifdef ARM
-      	AT91C_BASE_TC1->TC_RC = 825;
-#else
-      	OCR1A = 2200; // end of message
-#endif
-        b->zero.hightime = *hightime; 
-        b->zero.lowtime = *lowtime+1;
-        b->one.hightime = *lowtime+1;
-        b->one.lowtime = *hightime;
-      }
+      } else if (b->valCount == 65 || b->valCount == 73) {
+        // IT V3
+        if (b->zero.lowtime > TSCALE(1500)) {
+          // has startbit
+          // remove the startbit from bucket.
+          // inverse the bits in bucket
+          uint8_t i;
+          for (i=0;i<b->byteidx;i++)  {
+            if (i+1==b->byteidx) {
+              obuf[i]= b->data[i]<<1;
+              if (b->bitidx != 7) {
+                obuf[i+1] = b->data[i+1];
+                obuf[i] = obuf[i] + ((b->data[i+1]>>7) & 1);
+              }
+            } else {    
+              obuf[i]= ((b->data[i])<<1) + (((b->data[i+1])>>7) & 1);
+            }
+          }
+          *oby = i;
+          b->state = STATE_ITV3;
+        }
+        
+      } 
+        *datatype = TYPE_IT;
+      return;
     }
   }
-  return 0;
-}
 
-/*
- * Description in header
- */
-uint8_t is_intertechno(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
-{
-  if(IS433MHZ && (*hightime < TSCALE(600) && *hightime > TSCALE(140))) {
-    if ((*lowtime < TSCALE(2750) && *lowtime > TSCALE(2350))) {
-      b->state = STATE_ITV3;
-#ifdef ARM
-      AT91C_BASE_TC1->TC_RC = 1200;
-#else
-      OCR1A = 3200; // end of message
-#endif
-#ifdef HAS_HOMEEASY
-    } else if ((*lowtime < TSCALE(5250) && *lowtime > TSCALE(4750))) {
-      b->state = STATE_ITV3;
-#ifdef ARM
-      AT91C_BASE_TC1->TC_RC = 1200;
-#else
-      OCR1A = 2800; // end of message
-#endif
-    } else if ((*lowtime < TSCALE(9250) && *lowtime > TSCALE(9000))) {
-      b->state = STATE_ITV3;
-#ifdef ARM
-      AT91C_BASE_TC1->TC_RC = 1050;
-#else
-      OCR1A = 3200; // end of message
-#endif
-#endif
-    } else if (*lowtime < TSCALE(15000) && *lowtime > TSCALE(6000)) {
-      //DC('0');
-      b->state = STATE_IT;
-#ifdef ARM
-      AT91C_BASE_TC1->TC_RC = 1200;
-#else
-      OCR1A = 3200; // end of message
-#endif
-    } else {
-      return 0;
-    }
-    
-#ifdef ARM
-    AT91C_BASE_TC1->TC_SR;
-	#ifdef LONG_PULSE
-    AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
-	#endif
-    AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
-#else
-    TIMSK1 = _BV(OCIE1A);
-#endif
-    b->sync=0;
-    
-    b->byteidx = 0;
-    b->bitidx  = 7;
-    b->data[0] = 0;   
-#ifdef DEBUG_SYNC
-    b->syncbit.hightime=*hightime;
-    b->syncbit.lowtime=*lowtime;
-#endif
-    return 1;
-	}
-  return 0;
-}
-
-/*
- * Description in header
- */
-void addbit_intertechno_v3(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
-{
-  if (IS433MHZ) {
-    b->one.hightime = makeavg(b->one.hightime,*hightime);
-    b->zero.hightime = makeavg(b->one.hightime,*hightime);
-    if(*lowtime > TDIFF + *hightime) {
-      addbit(b, 1);
-       b->one.lowtime = makeavg(b->one.lowtime,*lowtime);
-    } else {
-      addbit(b, 0);
-      b->zero.lowtime = makeavg(b->zero.lowtime,*lowtime);
-    }
-  }
 }
 
 #endif

@@ -43,9 +43,9 @@
 #    define HAS_TCM97001
 #    define HAS_IT
 #    define HAS_HOMEEASY
-#    define HAS_OREGON3
+#    define HAS_MANCHESTER
 #    define HAS_BELFOX
-#    define DEBUG_SYNC
+#    define HAS_REVOLT
 #  endif
 
 #if defined(_868MHZ)
