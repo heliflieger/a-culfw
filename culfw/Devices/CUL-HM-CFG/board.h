@@ -51,8 +51,6 @@
 #define HAS_HMS
 #define HAS_TX3
 #define HAS_INTERTECHNO
-#define HAS_MANCHESTER
-#define HAS_REVOLT
 #define HAS_UNIROLL
 #define HAS_HOERMANN
 #define HAS_SOMFY_RTS
@@ -65,8 +63,9 @@
 #    define HAS_TCM97001
 #    define HAS_IT
 #    define HAS_HOMEEASY
-#    define HAS_OREGON3
 #    define HAS_BELFOX
+#    define HAS_MANCHESTER
+#    define HAS_REVOLT
 #  endif
 
 //#define HAS_MBUS
