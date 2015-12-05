@@ -31,11 +31,13 @@
 
 #define STATE_SYNC_PACKAGE      11
 //#define STATE_BRESSER 12
+#define STATE_MC                13
 #define TYPE_SYNC_PACKAGE       '?'
+#define TYPE_MC                 'o'
 
 /* public prototypes */
-#if defined(HAS_ESA) || defined (HAS_OREGON3) || defined(HAS_REVOLT)
-#define MAXMSG 20               // ESA messages
+#if defined(HAS_ESA) || defined (HAS_MANCHESTER) || defined(HAS_REVOLT)
+#define MAXMSG 50               // ESA messages
 //#define MAXMSGVALS (MAXMSG*8)
 #else
 #define MAXMSG 12               // EMEM messages
@@ -103,6 +105,7 @@ typedef struct {
 #if defined(HAS_IT) || defined(HAS_TCM97001) 
   wave_t16 syncbit;
 #endif
+  uint16_t clockTime;
 } bucket_t;
 
 

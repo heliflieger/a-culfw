@@ -36,6 +36,8 @@
 #define HAS_TCM97001
 #define HAS_HOMEEASY
 #define HAS_HMS
+#define HAS_MANCHESTER
+#define HAS_REVOLT
 
 #ifdef CURV3
 #  include "board_v3.h"

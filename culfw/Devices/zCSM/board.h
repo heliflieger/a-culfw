@@ -62,6 +62,8 @@
 #define HAS_TCM97001
 #define HAS_HMS
 #define HAS_HOMEEASY
+#define HAS_MANCHESTER
+#define HAS_REVOLT
 
 #define BOARD_ID_STR            "CSM868"
 #define BOARD_ID_STR433         "CSM433"

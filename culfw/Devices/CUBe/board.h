@@ -65,8 +65,9 @@
 #    define HAS_TCM97001
 #    define HAS_IT
 #    define HAS_HOMEEASY
-#    define HAS_OREGON3
 #    define HAS_BELFOX
+#    define HAS_MANCHESTER
+#    define HAS_REVOLT
 #  endif
 
 //#define HAS_MBUS

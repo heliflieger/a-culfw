@@ -64,8 +64,20 @@ bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     b->byteidx = 0;
     b->bitidx  = 7;
     b->data[0] = 0;
-    OCR1A = SILENCE;
-    TIMSK1 = _BV(OCIE1A);
+    #ifdef ARM
+        AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+    #else
+        OCR1A = SILENCE;
+    #endif
+    #ifdef ARM
+        AT91C_BASE_TC1->TC_SR;
+        #ifdef LONG_PULSE
+            AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+        #endif
+        AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+    #else
+        TIMSK1 = _BV(OCIE1A);
+    #endif
     return true;
   }
   return false;

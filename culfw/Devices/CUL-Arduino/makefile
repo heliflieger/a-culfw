@@ -4,54 +4,56 @@ OBJDIR = .
 
 F_CPU = 16000000
 
+CLIB_DIR = ../../clib
+LUFA_DIR = ../../lufa
+
 SRC =           CUL.c\
-		../../clib/Descriptors.c                             \
-		../../clib/cc1100.c                                  \
-		../../clib/cc1101_pllcheck.c                         \
-		../../clib/cdcLUFA.c                                 \
-		../../clib/clock.c                                   \
-		../../clib/belfox.c                                  \
-		../../clib/delay.c                                   \
-		../../clib/display.c                                 \
-		../../clib/stringfunc.c                              \
-		../../clib/fncollection.c                            \
-		../../clib/ringbuffer.c                              \
-		../../clib/fband.c                                   \
-		../../clib/helper.c                                  \
-		../../clib/rf_send.c                                 \
-		../../clib/rf_receive.c                              \
-		../../clib/rf_receive_bucket.c                       \
-		../../clib/rf_receive_it.c                           \
-		../../clib/rf_receive_tcm97001.c                     \
-		../../clib/rf_receive_tx3.c                          \
-		../../clib/rf_receive_revolt.c                       \
-		../../clib/rf_receive_esa.c                          \
-		../../clib/rf_receive_hms.c                          \
-		../../clib/rf_receive_oregon.c                       \
-		../../clib/rf_native.c                               \
-		../../clib/lacrosse.c                                \
-		../../clib/rf_router.c                               \
-		../../clib/rf_asksin.c                               \
-		../../clib/rf_moritz.c                               \
-		../../clib/rf_rwe.c                                  \
-		../../clib/intertechno.c                             \
-		../../clib/somfy_rts.c                               \
-		../../clib/kopp-fc.c				                				 \
-		../../clib/fht.c                                     \
-		../../clib/fastrf.c                                  \
-		../../clib/ttydata.c                                 \
-		../../clib/spi.c                                     \
-		../../clib/memory.c                                  \
-		../../lufa/Drivers/USB/LowLevel/DevChapter9.c        \
-		../../lufa/Drivers/USB/LowLevel/Endpoint.c           \
-		../../lufa/Drivers/USB/LowLevel/Host.c               \
-		../../lufa/Drivers/USB/LowLevel/HostChapter9.c       \
-		../../lufa/Drivers/USB/LowLevel/LowLevel.c           \
-		../../lufa/Drivers/USB/LowLevel/Pipe.c               \
-		../../lufa/Drivers/USB/HighLevel/Events.c            \
-		../../lufa/Drivers/USB/HighLevel/USBInterrupt.c      \
-		../../lufa/Drivers/USB/HighLevel/USBTask.c           \
-		../../lufa/Drivers/USB/HighLevel/ConfigDescriptor.c  \
+		$(CLIB_DIR)/Descriptors.c                             \
+		$(CLIB_DIR)/cc1100.c                                  \
+		$(CLIB_DIR)/cc1101_pllcheck.c                         \
+		$(CLIB_DIR)/cdcLUFA.c                                 \
+		$(CLIB_DIR)/clock.c                                   \
+		$(CLIB_DIR)/belfox.c                                  \
+		$(CLIB_DIR)/delay.c                                   \
+		$(CLIB_DIR)/display.c                                 \
+		$(CLIB_DIR)/stringfunc.c                              \
+		$(CLIB_DIR)/fncollection.c                            \
+		$(CLIB_DIR)/ringbuffer.c                              \
+		$(CLIB_DIR)/fband.c                                   \
+		$(CLIB_DIR)/helper.c                                  \
+		$(CLIB_DIR)/rf_send.c                                 \
+		$(CLIB_DIR)/rf_receive.c                              \
+		$(CLIB_DIR)/rf_receive_bucket.c                       \
+		$(CLIB_DIR)/rf_receive_it.c                           \
+		$(CLIB_DIR)/rf_receive_tcm97001.c                     \
+		$(CLIB_DIR)/rf_receive_tx3.c                          \
+		$(CLIB_DIR)/rf_receive_revolt.c                       \
+		$(CLIB_DIR)/rf_receive_esa.c                          \
+		$(CLIB_DIR)/rf_receive_hms.c                          \
+		$(CLIB_DIR)/rf_native.c                               \
+		$(CLIB_DIR)/lacrosse.c                                \
+		$(CLIB_DIR)/rf_router.c                               \
+		$(CLIB_DIR)/rf_asksin.c                               \
+		$(CLIB_DIR)/rf_moritz.c                               \
+		$(CLIB_DIR)/rf_rwe.c                                  \
+		$(CLIB_DIR)/intertechno.c                             \
+		$(CLIB_DIR)/somfy_rts.c                               \
+		$(CLIB_DIR)/kopp-fc.c				                				 \
+		$(CLIB_DIR)/fht.c                                     \
+		$(CLIB_DIR)/fastrf.c                                  \
+		$(CLIB_DIR)/ttydata.c                                 \
+		$(CLIB_DIR)/spi.c                                     \
+		$(CLIB_DIR)/memory.c                                  \
+		$(LUFA_DIR)/Drivers/USB/LowLevel/DevChapter9.c        \
+		$(LUFA_DIR)/Drivers/USB/LowLevel/Endpoint.c           \
+		$(LUFA_DIR)/Drivers/USB/LowLevel/Host.c               \
+		$(LUFA_DIR)/Drivers/USB/LowLevel/HostChapter9.c       \
+		$(LUFA_DIR)/Drivers/USB/LowLevel/LowLevel.c           \
+		$(LUFA_DIR)/Drivers/USB/LowLevel/Pipe.c               \
+		$(LUFA_DIR)/Drivers/USB/HighLevel/Events.c            \
+		$(LUFA_DIR)/Drivers/USB/HighLevel/USBInterrupt.c      \
+		$(LUFA_DIR)/Drivers/USB/HighLevel/USBTask.c           \
+		$(LUFA_DIR)/Drivers/USB/HighLevel/ConfigDescriptor.c  \
 
 
 LUFA_OPTS  = -D USE_NONSTANDARD_DESCRIPTOR_NAMES
@@ -78,7 +80,7 @@ CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
-CFLAGS += -I../../lufa -I../../clib
+CFLAGS += -I$(LUFA_DIR) -I$(CLIB_DIR)
 CFLAGS += -std=gnu99
 #CFLAGS += -Wunreachable-code
 GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
@@ -112,7 +114,7 @@ MSG_CLEANING = Cleaning project:
 OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
 ifeq ($(GCC_TARGET),$(filter $(GCC_TARGET), CUL_ARDUINO))
-SRC += ../../clib/rf_mbus.c ../../clib/mbus/manchester.c ../../clib/mbus/3outof6.c ../../clib/mbus/mbus_packet.c ../../clib/mbus/crc.c
+SRC += $(CLIB_DIR)/rf_mbus.c $(CLIB_DIR)/mbus/manchester.c $(CLIB_DIR)/mbus/3outof6.c $(CLIB_DIR)/mbus/mbus_packet.c $(CLIB_DIR)/mbus/crc.c
 endif
 
 all:
@@ -184,6 +186,7 @@ do_avdude:
 
 $(OBJDIR)/%.o : %.c
 	@echo $(MSG_COMPILING) $<
+	@mkdir -p $(OBJDIR)
 	@$(CC) -c $(ALL_CFLAGS) $< -o $@
 
 mostly_clean:
