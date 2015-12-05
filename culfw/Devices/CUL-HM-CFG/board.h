@@ -8,6 +8,22 @@
 //#define LONG_PULSE
 
 #define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
+
+#if defined(HM_CFG)
+
+#elif defined(HM_CFG_BL)
+#define HM_CFG
+#elif defined(bootloader_HM_CFG)
+#define HM_CFG
+#undef  TTY_BUFSIZE
+#define TTY_BUFSIZE          512
+#else
+#define HM_CFG
+#endif
+
+#define BOARD_NAME 			"CUL-HM-CFG"
+#define BOARD_ID_STR        "CUL-HM-CFG"
+
 #define ARM
 #define HAS_USB
 #define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
@@ -28,6 +44,7 @@
 #define HAS_FASTRF
 #define HAS_ASKSIN
 #define HAS_ASKSIN_FUP
+#define HAS_KOPP_FC
 #define HAS_MORITZ
 #define HAS_RWE
 #define HAS_ESA
@@ -38,25 +55,20 @@
 #define HAS_HOERMANN
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
+#define HAS_RFNATIVE
+
+#define _433MHZ
+
+#  if defined(_433MHZ)
+#    define HAS_TCM97001
+#    define HAS_IT
+#    define HAS_HOMEEASY
+#    define HAS_OREGON3
+#    define HAS_BELFOX
+#  endif
 
 //#define HAS_MBUS
 //#define HAS_MEMFN
-
-#if defined(HM_CFG)
-
-#elif defined(HM_CFG_BL)
-#define HM_CFG
-#elif defined(bootloader_HM_CFG)
-#undef  TTY_BUFSIZE
-#define TTY_BUFSIZE          512
-#define HM_CFG
-#else
-#define HM_CFG
-#endif
-
-#define BOARD_NAME 			"CUL-HM-CFG"
-#define BOARD_ID_STR        "CUL-HM-CFG"
-
 
 #define SPI_SS				(1<<11)
 #define SPI_MISO			(1<<12)

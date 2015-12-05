@@ -46,6 +46,7 @@
 #define HAS_FASTRF
 #define HAS_ASKSIN
 #define HAS_ASKSIN_FUP
+#define HAS_KOPP_FC
 #define HAS_MORITZ
 #define HAS_RWE
 #define HAS_ESA
@@ -56,6 +57,7 @@
 #define HAS_HOERMANN
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
+#define HAS_RFNATIVE
 
 #define _433MHZ
 

@@ -57,6 +57,9 @@
 #ifdef HAS_RWE
 #include "rf_rwe.h"
 #endif
+#ifdef HAS_RFNATIVE
+#include "rf_native.h"
+#endif
 #ifdef HAS_INTERTECHNO
 #include "intertechno.h"
 #endif
@@ -65,6 +68,9 @@
 #endif
 #ifdef HAS_MBUS
 #include "rf_mbus.h"
+#endif
+#ifdef HAS_KOPP_FC
+#include "kopp-fc.h"
 #endif
 #ifdef HAS_MAICO
 #include "rf_maico.h"
@@ -184,8 +190,14 @@ const t_fntab fntab[] = {
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
 #endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
 #ifdef HAS_RWE
   { 'E', rwe_func },
+#endif
+#ifdef HAS_KOPP_FC
+  { 'k', kopp_fc_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
