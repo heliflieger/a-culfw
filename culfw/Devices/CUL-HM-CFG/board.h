@@ -68,7 +68,7 @@
 #    define HAS_REVOLT
 #  endif
 
-//#define HAS_MBUS
+#define HAS_MBUS
 //#define HAS_MEMFN
 
 #define SPI_SS				(1<<11)
@@ -76,14 +76,17 @@
 #define SPI_MOSI			(1<<13)
 #define SPI_SCLK			(1<<14)
 
-#define CC1100_CS_PIN		11
-#define CC1100_CS_BASE		AT91C_BASE_PIOA
+#define CC1100_CS_PIN       11
+#define CC1100_CS_BASE      AT91C_BASE_PIOA
 #define CC1100_OUT_PIN      20
 #define CC1100_OUT_BASE     AT91C_BASE_PIOA
+#define CC1100_OUT_PORT     AT91C_BASE_PIOA->PIO_PDSR
 #define CC1100_IN_PIN       19
-#define CC1100_IN_BASE		AT91C_BASE_PIOA
+#define CC1100_IN_BASE      AT91C_BASE_PIOA
 #define CC1100_IN_PORT      AT91C_BASE_PIOA->PIO_PDSR
-#define CC1100_IN_PIO_ID	AT91C_ID_PIOA
+#define CC1100_IN_PIO_ID    AT91C_ID_PIOA
+#define CC1100_OUT_IN       CC1100_OUT_PORT
+#define CC1100_IN_IN        CC1100_IN_PORT
 
 #define BOOTLOADER_PIN		(1<<9)
 

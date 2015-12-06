@@ -105,14 +105,15 @@ tx_init(void)
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOB);
 #endif
   //CC1100_OUT_PIN
-  CC1100_OUT_BASE->PIO_PPUER = _BV(CC1100_OUT_PIN);		//Enable pullup
-  CC1100_OUT_BASE->PIO_OER = _BV(CC1100_OUT_PIN);		//Enable output
-  CC1100_OUT_BASE->PIO_CODR = _BV(CC1100_OUT_PIN);		//Clear_Bit
-  CC1100_OUT_BASE->PIO_PER = _BV(CC1100_OUT_PIN);		//Enable PIO control
+  CC1100_OUT_BASE->PIO_PPUER = _BV(CC1100_OUT_PIN); //Enable pullup
+  CC1100_OUT_BASE->PIO_OER = _BV(CC1100_OUT_PIN);   //Enable output
+  CC1100_OUT_BASE->PIO_CODR = _BV(CC1100_OUT_PIN);  //Clear_Bit
+  CC1100_OUT_BASE->PIO_PER = _BV(CC1100_OUT_PIN);   //Enable PIO control
 
   //CC1100_IN_PIN
-  CC1100_IN_BASE->PIO_IER = _BV(CC1100_IN_PIN);			//Enable input change interrupt
-  CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);			//Enable PIO control
+  CC1100_IN_BASE->PIO_IER = _BV(CC1100_IN_PIN);     //Enable input change interrupt
+  CC1100_IN_BASE->PIO_ODR = _BV(CC1100_IN_PIN);     //Enable input
+  CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);     //Enable PIO control
   AIC_ConfigureIT(CC1100_IN_PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
 
 
