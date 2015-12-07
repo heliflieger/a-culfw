@@ -58,6 +58,7 @@
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
 #define HAS_RFNATIVE
+#define HAS_ZWAVE
 
 #define _433MHZ
 

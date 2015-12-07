@@ -65,6 +65,9 @@
 #ifdef HAS_KOPP_FC
 #include "kopp-fc.h"
 #endif
+#ifdef HAS_ZWAVE
+#include "rf_zwave.h"
+#endif
 #ifdef HAS_MAICO
 #include "rf_maico.h"
 #endif
@@ -225,6 +228,9 @@ const t_fntab fntab[] = {
   { 'u', rf_router_func },
 #endif
   { 'x', ccsetpa },
+#ifdef HAS_ZWAVE
+  { 'z', zwave_func },
+#endif
 
   { 0, 0 },
 };
@@ -349,13 +355,19 @@ int main(void)
     #ifdef HAS_MBUS
       rf_mbus_task();
     #endif
+    #ifdef HAS_RFNATIVE
+      native_task();
+    #endif
+    #ifdef HAS_KOPP_FC
+      kopp_fc_task();
+    #endif
+    #ifdef HAS_ZWAVE
+      rf_zwave_task();
+    #endif
     #ifdef HAS_MAICO
       rf_maico_task();
     #endif
 
-    #ifdef HAS_ETHERNET
-      //Ethernet_Task();
-    #endif
 
 #ifdef DBGU_UNIT_IN
     if(DBGU_IsRxReady()){
