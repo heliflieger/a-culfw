@@ -105,14 +105,15 @@ tx_init(void)
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOB);
 #endif
   //CC1100_OUT_PIN
-  CC1100_OUT_BASE->PIO_PPUER = _BV(CC1100_OUT_PIN);		//Enable pullup
-  CC1100_OUT_BASE->PIO_OER = _BV(CC1100_OUT_PIN);		//Enable output
-  CC1100_OUT_BASE->PIO_CODR = _BV(CC1100_OUT_PIN);		//Clear_Bit
-  CC1100_OUT_BASE->PIO_PER = _BV(CC1100_OUT_PIN);		//Enable PIO control
+  CC1100_OUT_BASE->PIO_PPUER = _BV(CC1100_OUT_PIN); //Enable pullup
+  CC1100_OUT_BASE->PIO_OER = _BV(CC1100_OUT_PIN);   //Enable output
+  CC1100_OUT_BASE->PIO_CODR = _BV(CC1100_OUT_PIN);  //Clear_Bit
+  CC1100_OUT_BASE->PIO_PER = _BV(CC1100_OUT_PIN);   //Enable PIO control
 
   //CC1100_IN_PIN
-  CC1100_IN_BASE->PIO_IER = _BV(CC1100_IN_PIN);			//Enable input change interrupt
-  CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);			//Enable PIO control
+  CC1100_IN_BASE->PIO_IER = _BV(CC1100_IN_PIN);     //Enable input change interrupt
+  CC1100_IN_BASE->PIO_ODR = _BV(CC1100_IN_PIN);     //Enable input
+  CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);     //Enable PIO control
   AIC_ConfigureIT(CC1100_IN_PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
 
 
@@ -943,7 +944,7 @@ retry_sync:
 #if defined(HAS_IT) || defined(HAS_TCM97001) 
     b->syncbit.hightime=hightime;
     b->syncbit.lowtime=lowtime;
-    if ((hightime < TSCALE(840) && hightime > TSCALE(145)) &&
+    if (IS433MHZ && (hightime < TSCALE(840) && hightime > TSCALE(145)) &&
 				         (lowtime  < TSCALE(14000) && lowtime > TSCALE(3200)) ) {
 	   	  // sync bit received
           b->state = STATE_SYNC_PACKAGE;
@@ -973,9 +974,9 @@ retry_sync:
       b->sync  = 1;
       b->state = STATE_SYNC;
 #ifdef HAS_MANCHESTER
-      if ((hightime>lowtime-10 && hightime<lowtime+10)
+      if (IS433MHZ && ((hightime>lowtime-10 && hightime<lowtime+10)
          || (hightime>lowtime*2-10 && hightime<lowtime*2+10)
-         || (hightime>lowtime/2-10 && hightime<lowtime/2+10)) {
+         || (hightime>lowtime/2-10 && hightime<lowtime/2+10))) {
         b->state = STATE_MC;
         
         // Automatic clock detection. One clock-period is half the duration of the first edge.

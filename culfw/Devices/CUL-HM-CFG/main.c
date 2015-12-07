@@ -50,6 +50,9 @@
 #ifdef HAS_RWE
 #include "rf_rwe.h"
 #endif
+#ifdef HAS_RFNATIVE
+#include "rf_native.h"
+#endif
 #ifdef HAS_INTERTECHNO
 #include "intertechno.h"
 #endif
@@ -58,6 +61,12 @@
 #endif
 #ifdef HAS_MBUS
 #include "rf_mbus.h"
+#endif
+#ifdef HAS_KOPP_FC
+#include "kopp-fc.h"
+#endif
+#ifdef HAS_ZWAVE
+#include "rf_zwave.h"
 #endif
 #ifdef HAS_MAICO
 #include "rf_maico.h"
@@ -131,31 +140,29 @@ static void UsbDataReceived(unsigned int unused,
                             unsigned int received,
                             unsigned int remaining)
 {
-    // Check that data has been received successfully
-    if (status == USBD_STATUS_SUCCESS) {
+  // Check that data has been received successfully
+  if (status == USBD_STATUS_SUCCESS) {
 
-    	for(unsigned int i=0;i<received;i++) {
-    		rb_put(&TTY_Rx_Buffer, usbBuffer[i]);
-    	}
-
-        // Check if bytes have been discarded
-        if ((received == DATABUFFERSIZE) && (remaining > 0)) {
-
-            TRACE_WARNING(
-                      "UsbDataReceived: %u bytes discarded\n\r",
-                      remaining);
-        }
-    }
-    else {
-
-        TRACE_WARNING( "UsbDataReceived: Transfer error\n\r");
+    for(unsigned int i=0;i<received;i++) {
+      rb_put(&TTY_Rx_Buffer, usbBuffer[i]);
     }
 
-    // Restart USB read
-   CDCDSerialDriver_Read(usbBuffer,
-						 DATABUFFERSIZE,
-						 (TransferCallback) UsbDataReceived,
-						 0);
+      // Check if bytes have been discarded
+      if ((received == DATABUFFERSIZE) && (remaining > 0)) {
+
+        TRACE_WARNING("UsbDataReceived: %u bytes discarded\n\r",remaining);
+      }
+  }
+  else {
+
+    TRACE_WARNING( "UsbDataReceived: Transfer error\n\r");
+  }
+
+  // Restart USB read
+  CDCDSerialDriver_Read(usbBuffer,
+           DATABUFFERSIZE,
+           (TransferCallback) UsbDataReceived,
+           0);
 
 }
 
@@ -179,8 +186,14 @@ const t_fntab fntab[] = {
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
 #endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
 #ifdef HAS_RWE
   { 'E', rwe_func },
+#endif
+#ifdef HAS_KOPP_FC
+  { 'k', kopp_fc_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
@@ -215,6 +228,9 @@ const t_fntab fntab[] = {
   { 'u', rf_router_func },
 #endif
   { 'x', ccsetpa },
+#ifdef HAS_ZWAVE
+  { 'z', zwave_func },
+#endif
 
   { 0, 0 },
 };
@@ -230,7 +246,7 @@ const t_fntab fntab[] = {
 //-----------------------------------------------------------------------------
 void uip_log(char *m)
 {
-    TRACE_INFO_WP("-uIP- %s\n\r", m);
+  TRACE_INFO_WP("-uIP- %s\n\r", m);
 }
 
 //------------------------------------------------------------------------------
@@ -255,23 +271,23 @@ int main(void)
   TRACE_INFO("init Flash\n\r");
   flash_init();
 
-    TRACE_INFO("init Timer\n\r");
-    // Configure timer 0
-    ticks=0;
-    extern void ISR_Timer0();
-    AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC0);
+  TRACE_INFO("init Timer\n\r");
+  // Configure timer 0
+  ticks=0;
+  extern void ISR_Timer0();
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC0);
   AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
   AT91C_BASE_TC0->TC_IDR = 0xFFFFFFFF;
   AT91C_BASE_TC0->TC_SR;
   AT91C_BASE_TC0->TC_CMR = AT91C_TC_CLKS_TIMER_DIV5_CLOCK | AT91C_TC_CPCTRG;
-    AT91C_BASE_TC0->TC_RC = 375;
-    AT91C_BASE_TC0->TC_IER = AT91C_TC_CPCS;
-    AIC_ConfigureIT(AT91C_ID_TC0, AT91C_AIC_PRIOR_LOWEST, ISR_Timer0);
-    AIC_EnableIT(AT91C_ID_TC0);
-    AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+  AT91C_BASE_TC0->TC_RC = 375;
+  AT91C_BASE_TC0->TC_IER = AT91C_TC_CPCS;
+  AIC_ConfigureIT(AT91C_ID_TC0, AT91C_AIC_PRIOR_LOWEST, ISR_Timer0);
+  AIC_EnableIT(AT91C_ID_TC0);
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
 
-    // Configure timer 1
-    extern void ISR_Timer1();
+  // Configure timer 1
+  extern void ISR_Timer1();
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC1);
   AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKDIS;	//Stop clock
   AT91C_BASE_TC1->TC_IDR = 0xFFFFFFFF;		//Disable Interrupts
@@ -293,8 +309,8 @@ int main(void)
   input_handle_func = analyze_ttydata;
 
   LED_OFF();
-  LED2_ON();
-  LED3_ON();
+  LED2_OFF();
+  LED3_OFF();
 
   spi_init();
   fht_init();
@@ -314,12 +330,12 @@ int main(void)
 
   checkFrequency();
 
-    // Main loop
-    while (1) {
+  // Main loop
+  while (1) {
 
-      CDC_Task();
-      Minute_Task();
-      RfAnalyze_Task();
+    CDC_Task();
+    Minute_Task();
+    RfAnalyze_Task();
 
     #ifdef HAS_FASTRF
       FastRF_Task();
@@ -339,13 +355,19 @@ int main(void)
     #ifdef HAS_MBUS
       rf_mbus_task();
     #endif
+    #ifdef HAS_RFNATIVE
+      native_task();
+    #endif
+    #ifdef HAS_KOPP_FC
+      kopp_fc_task();
+    #endif
+    #ifdef HAS_ZWAVE
+      rf_zwave_task();
+    #endif
     #ifdef HAS_MAICO
       rf_maico_task();
     #endif
 
-    #ifdef HAS_ETHERNET
-      //Ethernet_Task();
-    #endif
 
 #ifdef DBGU_UNIT_IN
     if(DBGU_IsRxReady()){
@@ -377,11 +399,6 @@ int main(void)
         *ram = 0xaa;
         AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
         while (1);
-        break;
-
-      case 'r':
-        dump_flash();
-
         break;
       default:
         rb_put(&TTY_Tx_Buffer, x);

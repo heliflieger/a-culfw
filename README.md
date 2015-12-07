@@ -8,6 +8,10 @@ _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/fol
 ## Changelog:
 
 
+#### 1.20.01
+- ARM Models: Add kopp-fc, rf_native, MBUS and ZWave protocol
+- Check for manchester and IT protocol only when receiving 433MHz
+
 #### 1.20.00
 - Implement receive of Manchester coded signals linke Oregon2, Oregon3 or Hideki
 - Enable receive of revolt for all devices
