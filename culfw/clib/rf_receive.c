@@ -944,7 +944,7 @@ retry_sync:
 #if defined(HAS_IT) || defined(HAS_TCM97001) 
     b->syncbit.hightime=hightime;
     b->syncbit.lowtime=lowtime;
-    if ((hightime < TSCALE(840) && hightime > TSCALE(145)) &&
+    if (IS433MHZ && (hightime < TSCALE(840) && hightime > TSCALE(145)) &&
 				         (lowtime  < TSCALE(14000) && lowtime > TSCALE(3200)) ) {
 	   	  // sync bit received
           b->state = STATE_SYNC_PACKAGE;
@@ -974,9 +974,9 @@ retry_sync:
       b->sync  = 1;
       b->state = STATE_SYNC;
 #ifdef HAS_MANCHESTER
-      if ((hightime>lowtime-10 && hightime<lowtime+10)
+      if (IS433MHZ && ((hightime>lowtime-10 && hightime<lowtime+10)
          || (hightime>lowtime*2-10 && hightime<lowtime*2+10)
-         || (hightime>lowtime/2-10 && hightime<lowtime/2+10)) {
+         || (hightime>lowtime/2-10 && hightime<lowtime/2+10))) {
         b->state = STATE_MC;
         
         // Automatic clock detection. One clock-period is half the duration of the first edge.
