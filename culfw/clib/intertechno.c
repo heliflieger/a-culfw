@@ -79,7 +79,7 @@ const PROGMEM const uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
    0x00, // 28 RCCTRL0   00    00    
 };
 
-uint16_t it_interval = 250;
+uint16_t it_interval = 420;
 uint8_t itv3_start_bit = 235;
 uint16_t itv3_bit = 275;
 uint16_t itv3_latch = 2650;
@@ -159,32 +159,32 @@ send_IT_bit(uint8_t bit)
 {
 	if (bit == 1) {
   	CC1100_SET_OUT;         // High
-  	my_delay_us(it_interval * 4);
+  	my_delay_us(it_interval * 3);
  	  CC1100_CLEAR_OUT;       // Low
 	  my_delay_us(it_interval);
 
   	CC1100_SET_OUT;         // High
-  	my_delay_us(it_interval * 4);
+  	my_delay_us(it_interval * 3);
  	  CC1100_CLEAR_OUT;       // Low
 	  my_delay_us(it_interval);
   } else if (bit == 0) {
   	CC1100_SET_OUT;         // High
   	my_delay_us(it_interval);
  	  CC1100_CLEAR_OUT;       // Low
-	  my_delay_us(it_interval * 4);
+	  my_delay_us(it_interval * 3);
 
   	CC1100_SET_OUT;         // High
   	my_delay_us(it_interval);
  	  CC1100_CLEAR_OUT;       // Low
-	  my_delay_us(it_interval * 4);
+	  my_delay_us(it_interval * 3);
   } else {
   	CC1100_SET_OUT;         // High
   	my_delay_us(it_interval);
  	  CC1100_CLEAR_OUT;       // Low
-	  my_delay_us(it_interval * 4);
+	  my_delay_us(it_interval * 3);
 
   	CC1100_SET_OUT;         // High
-  	my_delay_us(it_interval * 4);
+  	my_delay_us(it_interval * 3);
  	  CC1100_CLEAR_OUT;       // Low
 	  my_delay_us(it_interval);  	
   }
@@ -291,7 +291,7 @@ it_send (char *in, uint8_t datatype) {
     //while (rf_isreceiving()) {
       //_delay_ms(1);
     //}
-	  int8_t i, j, k;
+	  int8_t i, j;//, k;
 
 		LED_ON();
 
@@ -339,9 +339,10 @@ it_send (char *in, uint8_t datatype) {
           CC1100_SET_OUT;         // High
           my_delay_us(it_interval);
           CC1100_CLEAR_OUT;       // Low
-          for(k = 0; k < 40; k++)  {
-            my_delay_us(it_interval);
-          }
+          //for(k = 0; k < 40; k++)  {
+          //  my_delay_us(it_interval);
+          //}
+          my_delay_us(itv3_sync);
         }
 #ifdef HAS_HOMEEASY
       } else if (datatype == DATATYPE_HE) {
@@ -528,9 +529,8 @@ it_func(char *in)
 		intertechno_on = 0;
 	} else if (in[1] == 'c') {		// Modify Clock-counter
         fromdec (in+1, (uint8_t *)&it_interval);
-        DU(it_interval,0); DNL();
+        //DU(it_interval,0); DNL();
     }
 }
 
 #endif
-
