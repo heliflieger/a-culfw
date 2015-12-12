@@ -7,6 +7,8 @@ _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/fol
 
 ## Changelog:
 
+#### 1.20.02
+- Add the functionality to change ITClock of the Intertechno V1 protocol. The command is ic. Default is ic250
 
 #### 1.20.01
 - ARM Models: Add kopp-fc, rf_native, MBUS and ZWave protocol

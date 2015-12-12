@@ -463,18 +463,18 @@ it_func(char *in)
 			fromdec (in+2, (uint8_t *)&it_interval);
 			DU(it_interval,0); DNL();
 	} else if (in[1] == 's') {
-			if (in[2] == 'r') {		// Modify Repetition-counter
-				fromdec (in+3, (uint8_t *)&it_repetition);
-				DU(it_repetition,0); DNL();
+        if (in[2] == 'r') {		// Modify Repetition-counter
+            fromdec (in+3, (uint8_t *)&it_repetition);
+            DU(it_repetition,0); DNL();
 #ifdef HAS_HOMEEASY
-      } else if (in[2] == 'h') {		// HomeEasy
-        it_send (in, DATATYPE_HE);	
-      } else if (in[2] == 'e') {		// HomeEasy EU
-        it_send (in, DATATYPE_HEEU);	
+            } else if (in[2] == 'h') {		// HomeEasy
+                it_send (in, DATATYPE_HE);	
+            } else if (in[2] == 'e') {		// HomeEasy EU
+                it_send (in, DATATYPE_HEEU);	
 #endif	
-			} else {
-				it_send (in, DATATYPE_IT);				// Sending real data
-		} //sending real data
+        } else {
+            it_send (in, DATATYPE_IT);				// Sending real data
+        } //sending real data
 	} else if (in[1] == 'r') { // Start of "Set Frequency" (f)
 		#ifdef HAS_ASKSIN
 			if (asksin_on) {
@@ -526,7 +526,10 @@ it_func(char *in)
 			}
 		}
 		intertechno_on = 0;
-	}
+	} else if (in[1] == 'c') {		// Modify Clock-counter
+        fromdec (in+1, (uint8_t *)&it_interval);
+        DU(it_interval,0); DNL();
+    }
 }
 
 #endif
