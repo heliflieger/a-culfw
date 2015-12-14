@@ -8,6 +8,10 @@ _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/fol
 ## Changelog:
 
 #### 1.20.02
+- Make the Intertechno send compatible to original culfw. 
+  The default clock is now 420
+
+#### 1.20.02
 - Add the functionality to change ITClock of the Intertechno V1 protocol. The command is ic. Default is ic250
 
 #### 1.20.01
