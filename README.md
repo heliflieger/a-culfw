@@ -7,6 +7,10 @@ _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/fol
 
 ## Changelog:
 
+#### 1.20.04
+- CUBe: Move serial console to UART0 if USB is not connected
+- ARM Models: Remove malloc
+  
 #### 1.20.02
 - Make the Intertechno send compatible to original culfw. 
   The default clock is now 420
