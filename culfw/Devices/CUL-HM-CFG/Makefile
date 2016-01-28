@@ -100,8 +100,8 @@ HM_CFG_BL:
 	make OUTPUT=HM_CFG_BL target
 	
 all:
-#	make OUTPUT=HM_CFG clean2 target
-	make OUTPUT=HM_CFG_BL clean2 target
+	make clean2
+	make OUTPUT=HM_CFG_BL target
 	make clean3
 
 %.bin: %.elf

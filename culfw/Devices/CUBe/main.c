@@ -38,6 +38,9 @@
 #include "fastrf.h"
 #include "rf_router.h"		// rf_router_func
 #include "fband.h"
+#ifdef HAS_UART
+#include "serial.h"
+#endif
 
 #ifdef HAS_ETHERNET
 #include "ethernet.h"
@@ -336,14 +339,16 @@ int main(void)
   tx_init();
 
   #ifdef HAS_ETHERNET
-
   ethernet_init();
-
   #endif
 
   TRACE_INFO("init USB\n\r");
   CDCDSerialDriver_Initialize();
   USBD_Connect();
+
+  #ifdef HAS_UART
+  uart_init(UART_BAUD_RATE);
+  #endif
 
   wdt_enable(WDTO_2S);
 
@@ -359,6 +364,10 @@ int main(void)
   while (1) {
 
     CDC_Task();
+    #ifdef HAS_UART
+    if(!USB_IsConnected)
+      uart_task();
+    #endif
     Minute_Task();
     RfAnalyze_Task();
 
@@ -408,6 +417,7 @@ int main(void)
       case 'd':
         puts("USB disconnect\n\r");
         USBD_Disconnect();
+        LED3_OFF();
         break;
       case 'c':
         USBD_Connect();
@@ -416,6 +426,10 @@ int main(void)
       case 'r':
         //Configure Reset Controller
         AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
+        break;
+      case 'H':
+
+
         break;
       case 'S':
         USBD_Disconnect();
