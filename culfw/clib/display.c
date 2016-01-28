@@ -105,7 +105,11 @@ display_char(char data)
 #endif
 
 #ifdef HAS_UART
+#ifdef ARM
+  if(!USB_IsConnected && (display_channel & DISPLAY_USB)) {
+#else
   if(display_channel & DISPLAY_USB) {
+#endif
     if((TTY_Tx_Buffer.nbytes  < TTY_BUFSIZE-2) ||
        (TTY_Tx_Buffer.nbytes  < TTY_BUFSIZE && (data == '\r' || data == '\n')))
     rb_put(&TTY_Tx_Buffer, data);

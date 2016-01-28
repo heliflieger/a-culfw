@@ -228,7 +228,11 @@ static void somfy_rts_send(char *in) {
 	// key | ctrl+cks | rolling_code | address
 
 	uint8_t buf = 0;
+#ifdef ARM
+	somfy_rts_frame_t airdata[SOMFY_RTS_FRAME_SIZE];
+#else
 	somfy_rts_frame_t *airdata = malloc(SOMFY_RTS_FRAME_SIZE);
+#endif
 
 	fromhex(in+2, &buf, 1);// key
 	airdata[0] = buf;
@@ -255,7 +259,11 @@ static void somfy_rts_send(char *in) {
 	airdata[1] |= (somfy_rts_calc_checksum(airdata) & 0x0F);
 	
 	// save unencrypted data to return later
+#ifdef ARM
+	somfy_rts_frame_t unencrypted[SOMFY_RTS_FRAME_SIZE];
+#else
 	somfy_rts_frame_t *unencrypted = malloc(SOMFY_RTS_FRAME_SIZE);
+#endif
 	memcpy(unencrypted, airdata, SOMFY_RTS_FRAME_SIZE);
 
 	// "encrypt"
@@ -343,9 +351,11 @@ static void somfy_rts_send(char *in) {
 		display_hex2(unencrypted[j]);
 	}
 	DNL();
-	
+
+#ifndef ARM
 	free(unencrypted);
 	free(airdata);
+#endif
 }
 
 void somfy_rts_func(char *in) {

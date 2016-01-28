@@ -102,7 +102,8 @@ CUBE_BL:
 	make OUTPUT=CUBE_BL target
 	
 all:
-	make OUTPUT=CUBE clean2 target
+	make clean2
+	make OUTPUT=CUBE target
 	make OUTPUT=CUBE_BL target
 	make clean3
 

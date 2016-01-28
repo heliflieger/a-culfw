@@ -4,7 +4,7 @@
 #include <sys/types.h>
 
 extern int  _bss_end;
-
+/*
 caddr_t _sbrk ( int incr )
 {
   static unsigned char *heap = NULL;
@@ -14,9 +14,10 @@ caddr_t _sbrk ( int incr )
     heap = (unsigned char *)&_bss_end;
   }
   prev_heap = heap;
-  /* check removed to show basic approach */
+  // check removed to show basic approach
 
   heap += incr;
 
   return (caddr_t) prev_heap;
 }
+*/
