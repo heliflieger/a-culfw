@@ -126,7 +126,7 @@
 
 
 #if defined(CUL_ARDUINO) 
-#  define CUL_HW_REVISION "CUL_MicroPro_3.3V_8MHz"
+#  define CUL_HW_REVISION "CUL_ProMicro_3.3V_8MHz"
 #else
 //#  define CUL_HW_REVISION "CUL_V2"    // No more mem for this feature
 #endif
