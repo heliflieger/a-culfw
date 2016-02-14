@@ -21,7 +21,6 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  */
-
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>

@@ -19,6 +19,10 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW	// PROGMEM:  22b
 
 #if defined(CUL_ARDUINO)
+#  define CUL_V3
+#endif
+
+#if defined(CUL_ARDUINO)
 #  define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
 #  define HAS_FHT_TF
 #  define FHTBUF_SIZE          174      //                 RAM: 174b

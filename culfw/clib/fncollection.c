@@ -167,10 +167,9 @@ write_eeprom(char *in)
     // If there are still bytes left, then write them too
     in += (2*d+1);
     while(in[0]) {
-      addr++;
       if(!fromhex(in, hb, 1))
         return;
-      ewb((uint8_t*)addr++, hb[0]);
+      ewb((uint8_t*)++addr, hb[0]);
       in += 2;
     }
   }
