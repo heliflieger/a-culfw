@@ -7,6 +7,13 @@ _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/fol
 
 ## Changelog:
 
+#### 1.20.05
+- Code upgrade from culfw Version 1.66 (2015-11-29)
+- CULV3/V4: add ZWave receive
+- ZWave: receive+send @ 40k, 100k
+- Cw: Write CC1101 register directly
+- ZWave: receive+send(?) @ 9600
+
 #### 1.20.04
 - CUBe: Move serial console to UART0 if USB is not connected
 - ARM Models: Remove malloc
