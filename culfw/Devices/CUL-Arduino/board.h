@@ -18,7 +18,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG		// PROGMEM:  22b
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW	// PROGMEM:  22b
 
-#if defined(CUL_ARDUINO)
+#if defined(CUL_V3_ZWAVE)
 #  define CUL_V3
 #endif
 
@@ -52,13 +52,15 @@
 #  endif
 
 #if defined(_868MHZ)
-#    define HAS_HMS
+//#    define HAS_HMS
 #    define HAS_ESA
 #    define HAS_MORITZ
 //#    define HAS_HOERMANN
-#    define HAS_MBUS
-#    define MBUS_NO_TX                    // MBUS TX eats up lots of memory, OFF by default
-#    define OFF_LACROSSE_HMS_EMU          // if you like HMS emulation for LaCrosse temp devices
+#  define HAS_MBUS                      // PROGMEM: 2536
+#  define MBUS_NO_TX                       // PROGMEM:  962
+#  define HAS_RFNATIVE                  // PROGMEM:  580
+//#  define LACROSSE_HMS_EMU              // PROGMEM: 2206
+#  define HAS_KOPP_FC                   // PROGMEM: 3370
 #endif
 
 
