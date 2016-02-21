@@ -4,10 +4,6 @@ FORMAT = ihex
 TARGET = miniCUL
 OBJDIR = .
 
-VERS=1.61
-DATE=$(shell date +%Y-%m-%d)
-DESTDIR=culfw-miniCUL.$(VERS)
-
 SRC = $(TARGET).c                                                    \
 		../../clib/cc1100.c                                  \
 		../../clib/cc1101_pllcheck.c                         \
@@ -27,15 +23,29 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_receive_revolt.c                       \
 		../../clib/rf_receive_esa.c                          \
 		../../clib/rf_receive_hms.c                          \
+		../../clib/rf_native.c 				     \
+		../../clib/lacrosse.c 				     \
 		../../clib/helper.c                                  \
 		../../clib/rf_router.c                               \
+		../../clib/rf_asksin.c 				     \
+		../../clib/rf_moritz.c 				     \
+		../../clib/rf_rwe.c 	   			     \
+		../../clib/rf_zwave.c                                \
 		../../clib/intertechno.c                             \
+		../../clib/somfy_rts.c 				     \
+		../../clib/kopp-fc.c 				     \
+		../../clib/belfox.c 				     \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
 		../../clib/memory.c                                  \
 		../../clib/serial.c                                  \
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
+		../../clib/rf_mbus.c                                 \
+		../../clib/rf_mbus.c                                 \
+		../../clib/mbus/3outof6.c                            \
+		../../clib/mbus/mbus_packet.c                        \
+		../../clib/mbus/crc.c                                \
 
 CFLAGS  = -D$(TARGET)
 CFLAGS += -DF_CPU=$(F_CPU)UL
@@ -63,9 +73,9 @@ LDFLAGS += -Wl,--relax
 LDFLAGS += -Wl,--gc-sections
 LDFLAGS += $(EXTMEMOPTS)
 
-AVRDUDE_PROGRAMMER = arduino -b 19200
+AVRDUDE_PROGRAMMER = arduino -b 57600
 AVRDUDE_PORT = /dev/ttyUSB0
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
+AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex:i
 AVRDUDE_FLAGS = -p m328p -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
 
 CC = avr-gcc
