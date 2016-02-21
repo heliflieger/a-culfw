@@ -9,7 +9,7 @@
 FLASH_FILE=miniCUL.hex
 
 # The MCU
-MCU=m328p
+MCU=atmega328p
 
 # working dir
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -17,7 +17,7 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 # Default Port
 PORT=/dev/ttyUSB0
 # Programming baudrate
-BAUD=19200
+BAUD=57600
 # The programmer
 PROGRAMMER=avrdude
 
@@ -44,11 +44,8 @@ echo "The device will now be flashed"
 read -p "Continue (y/n)?" flashdevice
 
 if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then  
-  echo "Call now ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}:i"
-  ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}:i
+  echo "Call now ${PROGRAMMER} -p ${MCU} -c arduino -P ${port} -b ${BAUD} -D -U flash:w:./${FLASH_FILE}:i"
+  ${PROGRAMMER} -p ${MCU} -c arduino -P ${port} -b ${BAUD} -D -U flash:w:./${FLASH_FILE}:i
 else
   echo "Abort flash"
 fi
-
-
-
