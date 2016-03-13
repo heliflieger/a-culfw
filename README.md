@@ -7,9 +7,13 @@ _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/fol
 
 ## Changelog:
 
+#### 1.20.07
+- rpiaddon: Code cleanup 
+- rpiaddon: added ZWave
+
 #### 1.20.06
 - miniCUL: Code cleanup 
-- miniCUL: add more protocols (e.g. Belfox, Hoermann, Kopp FC, Somfy)
+- miniCUL: added more protocols (e.g. Belfox, Hoermann, Kopp FC, Somfy)
 
 #### 1.20.05
 - Code upgrade from culfw Version 1.66 (2015-11-29)
