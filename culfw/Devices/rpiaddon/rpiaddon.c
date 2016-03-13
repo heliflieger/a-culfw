@@ -110,7 +110,7 @@ const PROGMEM t_fntab fntab[] = {
   { 'U', ur_send },
 #endif
 #ifdef HAS_SOMFY_RTS
-  { 'Y', somfy_rts_func }
+  { 'Y', somfy_rts_func },
 #endif
 #ifdef HAS_ONEWIRE
   { 'O', onewire_func },
