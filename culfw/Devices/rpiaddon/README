@@ -7,7 +7,7 @@ for details.
 
 FLASHING FIRMWARE
 
-To update firmware with culfw execute:
+To update firmware with a-culfw execute:
 
     make program
 
