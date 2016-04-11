@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
+
 
 #include "delay.h"
 #include "display.h"
