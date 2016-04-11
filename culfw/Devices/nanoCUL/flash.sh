@@ -4,7 +4,6 @@
 #
 # To init call ./flash.sh
 #
-
 # The file for flashing the device
 FLASH_FILE=nanoCUL433.hex
 
@@ -12,7 +11,7 @@ FLASH_FILE=nanoCUL433.hex
 MCU=atmega328p
 
 # working dir
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 # Default Port
 PORT=/dev/ttyUSB0
@@ -34,14 +33,14 @@ echo "Please choose a device:"
 echo " 1 = nanoCUL868"
 echo " 2 = nanoCUL433"
 read -p "Please select device (1-2): " device
-if [ "X$device" == "X" -o "$device" != "1" -a "$device" != "2" ] ; then
+if [ "X$device" = "X" -o "$device" != "1" -a "$device" != "2" ] ; then
    echo "Abort"
    exit
 fi
-if [ "$device" == "1" ] ; then
+if [ "$device" = "1" ] ; then
   MCU=atmega328p
   FLASH_FILE=nanoCUL868.hex
-elif [ "$device" == "2" ] ; then
+elif [ "$device" = "2" ] ; then
   MCU=atmega328p
   FLASH_FILE=nanoCUL433.hex
 fi
@@ -51,7 +50,7 @@ echo "This program flash the cul device with new firmware."
 echo "Please change the device into the bootloader"
 echo "-------------------------------------------------------------"
 read -p "Please insert the port for your device [default $PORT]: " port
-if [ "X$port" == "X" ] ; then
+if [ "X$port" = "X" ] ; then
    port="$PORT"
 fi
 if [ ! -e "$port" ] ; then
@@ -63,7 +62,7 @@ echo ""
 echo "The device will now be flashed"
 read -p "Continue (y/n)?" flashdevice
 
-if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then  
+if [ "$flashdevice" = "y" -o "$flashdevice" = "Y" -o "$flashdevice" = "j" -o "$flashdevice" = "J" ] ; then  
   echo "Call now ${PROGRAMMER} -p ${MCU} -c arduino -P ${port} -b ${BAUD} -D -Uflash:w:./${FLASH_FILE}:i"
   ${PROGRAMMER} -p ${MCU} -c arduino -P ${port} -b ${BAUD} -D -Uflash:w:./${FLASH_FILE}:i
 else

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
+#include <avr/io.h>
 
 #include "delay.h"
 #include "display.h"
