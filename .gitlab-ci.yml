@@ -45,6 +45,7 @@ deploy-job:
     - mkdir -p tmp
     - mediafire-fuse tmp
     - cp -f ${ZIPNAME} tmp/builds/a-culfw
+    - sleep 10
     - fusermount -u tmp
   dependencies:
     - build:a-culfw
