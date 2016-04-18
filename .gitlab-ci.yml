@@ -41,11 +41,11 @@ deploy-job:
     - zip -u ${ZIPNAME} CHANGELOG
     - zip -u ${ZIPNAME} LICENSE
     - zip -u ${ZIPNAME} README.md
-    - cp  ${ZIPNAME} /tmp
+#    - cp  ${ZIPNAME} /tmp
     - mkdir -p tmp
     - mediafire-fuse tmp
-    - cp -f ${ZIPNAME} tmp/builds/a-culfw
-    - sleep 10
+    - cp -rfv ${ZIPNAME} tmp/builds/a-culfw
+    - sleep 15
     - fusermount -u tmp
   dependencies:
     - build:a-culfw
