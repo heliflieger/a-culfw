@@ -11,23 +11,27 @@ build:a-culfw:
     - cd Devices
     - make
     - VERSION=`grep "VERSION " ../version.h | cut -d '"' -f 2`
-    - ZIPNAME=a-culfw_${VERSION}_build_${CI_BUILD_ID}_${CI_BUILD_TAG}.zip
+    - ZIPNAME=a-culfw_${VERSION}_build_${CI_BUILD_ID}_${CI_BUILD_REF_NAME}.zip
     - find . -name "*.hex" -exec zip -u "${ZIPNAME}" {} \;
     - find . -name "*.bin" -exec zip -u "${ZIPNAME}" {} \;
     - find . -name "README*" -exec zip -u "${ZIPNAME}" {} \;
     - find . -name "*.sh" -exec zip -u "${ZIPNAME}" {} \;
   artifacts:
     paths:
-      - ${ZIPNAME}
+      - culfw/${ZIPNAME}
 
 deploy-job:
   stage: deploy
   script:
+    - mkdir tmp
+    - cd tmp
+    - unzip ../culfw/*.zip 
     - echo "TODO Push to mediafire"
   dependencies:
     - build:a-culfw
   artifacts:
+    name: "a-culfw_${CI_BUILD_TAG}.zip"
     paths:
-      - /*.zip
+      - tmp/*
     only:
       - tags
