@@ -1,0 +1,33 @@
+before_script:
+  - hostname
+
+build:a-culfw:
+  stage: build
+  script:
+    - cd culfw
+    - BUILD_TIMESTAMP=`date +'%Y-%m-%d_%H-%M-%S'`
+    - sed -i "s/BUILD_DATE.*/BUILD_DATE \"$BUILD_TIMESTAMP\"/" version.h
+    - sed -i "s/BUILD_NUMBER.*/BUILD_NUMBER \"$BUILD_NUMBER\"/" version.h
+    - cd Devices
+    - make
+    - VERSION=`grep "VERSION " ../version.h | cut -d '"' -f 2`
+    - ZIPNAME=a-culfw_${VERSION}_build_${CI_BUILD_ID}_${CI_BUILD_TAG}.zip
+    - find . -name "*.hex" -exec zip -u "${ZIPNAME}" {} \;
+    - find . -name "*.bin" -exec zip -u "${ZIPNAME}" {} \;
+    - find . -name "README*" -exec zip -u "${ZIPNAME}" {} \;
+    - find . -name "*.sh" -exec zip -u "${ZIPNAME}" {} \;
+  artifacts:
+    paths:
+      - ${ZIPNAME}
+
+deploy-job:
+  stage: deploy
+  script:
+    - echo "TODO Push to mediafire"
+  dependencies:
+    - build:a-culfw
+  artifacts:
+    paths:
+      - /*.zip
+    only:
+      - tags
