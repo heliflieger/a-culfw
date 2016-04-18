@@ -1,3 +1,8 @@
+# 
+# Buildscript for the a-culfw
+# B. Hempel
+#
+
 before_script:
   - hostname
 
