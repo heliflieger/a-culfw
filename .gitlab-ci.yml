@@ -10,32 +10,38 @@ build:a-culfw:
     - sed -i "s/BUILD_NUMBER.*/BUILD_NUMBER \"${CI_BUILD_ID}\"/" version.h
     - cd Devices
     - make
-    - VERSION=`grep "VERSION " ../version.h | cut -d '"' -f 2`
-    - ZIPNAME=a-culfw_${VERSION}_build_${CI_BUILD_ID}_${CI_BUILD_REF_NAME}.zip
-    - find . -name "*.hex" -exec zip -u "${ZIPNAME}" {} \;
-    - find . -name "*.bin" -exec zip -u "${ZIPNAME}" {} \;
-    - find . -name "README*" -exec zip -u "${ZIPNAME}" {} \;
-    - find . -name "*.sh" -exec zip -u "${ZIPNAME}" {} \;
+#    - VERSION=`grep "VERSION " ../version.h | cut -d '"' -f 2`
+#    - ZIPNAME=a-culfw_${VERSION}_build_${CI_BUILD_ID}_${CI_BUILD_REF_NAME}.zip
+#    - find . -name "*.hex" -exec zip -u "${ZIPNAME}" {} \;
+#    - find . -name "*.bin" -exec zip -u "${ZIPNAME}" {} \;
+#    - find . -name "README*" -exec zip -u "${ZIPNAME}" {} \;
+#    - find . -name "*.sh" -exec zip -u "${ZIPNAME}" {} \;
   artifacts:
-    name: a-culfw_${VERSION}_build_${CI_BUILD_ID}_${CI_BUILD_REF_NAME}.zip
+    name: a-culfw_build_${CI_BUILD_ID}_${CI_BUILD_REF_NAME}.zip
     paths:
       - culfw/Devices/**/*.hex
       - culfw/Devices/**/*.bin
       - culfw/Devices/**/README
       - culfw/Devices/**/*.sh
+      - CHANGELOG
+      - LICENSE
+      - README.md
 
 deploy-job:
   stage: deploy
   script:
-    - mkdir tmp
-    - cd tmp
-    - unzip ../culfw/Devices/*.zip 
     - echo "TODO Push to mediafire"
   dependencies:
     - build:a-culfw
   artifacts:
     name: "a-culfw_${CI_BUILD_TAG}.zip"
     paths:
-      - tmp/*
+      - culfw/Devices/**/*.hex
+      - culfw/Devices/**/*.bin
+      - culfw/Devices/**/README
+      - culfw/Devices/**/*.sh
+      - CHANGELOG
+      - LICENSE
+      - README.md
     only:
       - tags
