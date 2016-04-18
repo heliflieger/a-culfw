@@ -1,10 +1,5 @@
-# 
-# Buildscript for the a-culfw
-# B. Hempel
-#
-
 before_script:
-  - hostname
+  - echo "Building a-culfw"
 
 build:a-culfw:
   stage: build
@@ -35,18 +30,19 @@ build:a-culfw:
 deploy-job:
   stage: deploy
   script:
-    - echo "TODO Push to mediafire"
+    - echo "Push to mediafire"
+    - cd culfw/Devices
+    - ZIPNAME=a-culfw_${VERSION}_build_${CI_BUILD_ID}_${CI_BUILD_REF_NAME}.zip
+    - find . -name "*.hex" -exec zip -u "../../${ZIPNAME}" {} \;
+    - find . -name "*.bin" -exec zip -u "../../${ZIPNAME}" {} \;
+    - find . -name "README*" -exec zip -u "../../${ZIPNAME}" {} \;
+    - find . -name "*.sh" -exec zip -u "../../${ZIPNAME}" {} \;
+    - cd ../../
+    - zip -u ${ZIPNAME} CHANGELOG
+    - zip -u ${ZIPNAME} LICENSE
+    - zip -u ${ZIPNAME} README.md
+    - cp  ${ZIPNAME} /tmp
   dependencies:
     - build:a-culfw
-  artifacts:
-    name: "a-culfw_${CI_BUILD_TAG}.zip"
-    paths:
-      - culfw/Devices/**/*.hex
-      - culfw/Devices/**/*.bin
-      - culfw/Devices/**/README
-      - culfw/Devices/**/*.sh
-      - CHANGELOG
-      - LICENSE
-      - README.md
-    only:
-      - tags
+  only:
+    - tags
