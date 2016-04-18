@@ -7,7 +7,7 @@ build:a-culfw:
     - cd culfw
     - BUILD_TIMESTAMP=`date +'%Y-%m-%d_%H-%M-%S'`
     - sed -i "s/BUILD_DATE.*/BUILD_DATE \"$BUILD_TIMESTAMP\"/" version.h
-    - sed -i "s/BUILD_NUMBER.*/BUILD_NUMBER \"$BUILD_NUMBER\"/" version.h
+    - sed -i "s/BUILD_NUMBER.*/BUILD_NUMBER \"${CI_BUILD_ID}\"/" version.h
     - cd Devices
     - make
     - VERSION=`grep "VERSION " ../version.h | cut -d '"' -f 2`
@@ -17,15 +17,19 @@ build:a-culfw:
     - find . -name "README*" -exec zip -u "${ZIPNAME}" {} \;
     - find . -name "*.sh" -exec zip -u "${ZIPNAME}" {} \;
   artifacts:
+    name: a-culfw_${VERSION}_build_${CI_BUILD_ID}_${CI_BUILD_REF_NAME}.zip
     paths:
-      - culfw/${ZIPNAME}
+      - culfw/Devices/**/*.hex
+      - culfw/Devices/**/*.bin
+      - culfw/Devices/**/README
+      - culfw/Devices/**/*.sh
 
 deploy-job:
   stage: deploy
   script:
     - mkdir tmp
     - cd tmp
-    - unzip ../culfw/*.zip 
+    - unzip ../culfw/Devices/*.zip 
     - echo "TODO Push to mediafire"
   dependencies:
     - build:a-culfw
