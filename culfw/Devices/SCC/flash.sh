@@ -12,7 +12,7 @@ FLASH_FILE=SCC.hex
 MCU=atmega1284p
 
 # working dir
-DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)d )
+DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 # Default Port
 PORT=/dev/ttyAMA0
