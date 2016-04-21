@@ -1,4 +1,3 @@
-/* 
  * Copyright by R.Koenig
  * Copyright 2015 B. Hempel 
  * Inspired by code from Dirk Tostmann
@@ -950,7 +949,7 @@ retry_sync:
           b->sync  = 1;
 	  #ifdef ARM
          	//AT91C_BASE_TC1->TC_RC = 825;
-          ocrVal = ((lowtime * 100) / 266);
+          uint32_t ocrVal = ((lowtime * 100) / 266);
           AT91C_BASE_TC1->TC_RC = (ocrVal - 16) * 16;
 
           AT91C_BASE_TC1->TC_RC = 1950;
