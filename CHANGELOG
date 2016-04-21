@@ -1,5 +1,8 @@
 ## Changelog:
 
+#### 1.21.00
+- Fix receive of GT-WT-02
+
 #### 1.20.08
 - Fix flash scripts
 - Fix build errors
