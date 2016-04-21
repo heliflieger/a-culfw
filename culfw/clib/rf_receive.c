@@ -1,3 +1,4 @@
+/* 
  * Copyright by R.Koenig
  * Copyright 2015 B. Hempel 
  * Inspired by code from Dirk Tostmann
@@ -949,10 +950,11 @@ retry_sync:
           b->sync  = 1;
 	  #ifdef ARM
          	//AT91C_BASE_TC1->TC_RC = 825;
-          uint32_t ocrVal = ((lowtime * 100) / 266);
+          uint32_t ocrVal = 0;
+          ocrVal = ((lowtime * 100) / 266);
           AT91C_BASE_TC1->TC_RC = (ocrVal - 16) * 16;
 
-          AT91C_BASE_TC1->TC_RC = 1950;
+          //AT91C_BASE_TC1->TC_RC = 1950;
       #else
           OCR1A = (lowtime - 16) * 16; //End of message
          	//OCR1A = 2200; // end of message
