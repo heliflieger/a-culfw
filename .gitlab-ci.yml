@@ -32,7 +32,7 @@ deploy-job:
   script:
     - echo "Push to mediafire"
     - cd culfw/Devices
-    - ZIPNAME=a-culfw_build_${CI_BUILD_ID}_${CI_BUILD_REF_NAME}.zip
+    - ZIPNAME=a-culfw_${CI_BUILD_REF_NAME}_build_${CI_BUILD_ID}.zip
     - find . -name "*.hex" -exec zip -u "../../${ZIPNAME}" {} \;
     - find . -name "*.bin" -exec zip -u "../../${ZIPNAME}" {} \;
     - find . -name "README*" -exec zip -u "../../${ZIPNAME}" {} \;
