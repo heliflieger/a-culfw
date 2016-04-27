@@ -51,30 +51,46 @@
 #define HAS_FASTRF 		// PROGMEM:  468b  RAM:  1b
 #define HAS_ASKSIN
 #define HAS_ASKSIN_FUP
-#define HAS_MORITZ
-#define HAS_ESA
-#define HAS_KOPP_FC
 #define HAS_RWE
 #define HAS_TX3
 #define HAS_INTERTECHNO
 #define HAS_UNIROLL
-#define HAS_HOERMANN
 #define HAS_MEMFN
 #define HAS_SOMFY_RTS
-#define HAS_HMS
-#define HAS_RFNATIVE
 #define LACROSSE_HMS_EMU
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
-#define HAS_IT
-#define HAS_TCM97001
-#define HAS_REVOLT
-#define HAS_HOMEEASY
-#define HAS_MANCHESTER
-#define HAS_BELFOX
-//#define HAS_MBUS
-#define MBUS_NO_TX		// MBUS TX eats up lots of memory, OFF by default
-//#define HAS_ZWAVE
+
+
+#  if defined(_433MHZ)
+#    define HAS_TCM97001
+#    define HAS_REVOLT
+#    define HAS_IT
+#    define HAS_HOMEEASY
+#    define HAS_MANCHESTER
+#    define HAS_BELFOX
+#  endif
+
+#if defined(_868MHZ)
+//#    define HAS_HMS
+#    define HAS_ESA
+#    define HAS_MORITZ
+//#    define HAS_HOERMANN
+//#  define HAS_MBUS                      // PROGMEM: 2536
+#  define MBUS_NO_TX                       // PROGMEM:  962
+#  define HAS_RFNATIVE                  // PROGMEM:  580
+//#  define LACROSSE_HMS_EMU              // PROGMEM: 2206
+#  define HAS_KOPP_FC                   // PROGMEM: 3370
+#endif
+
+
+#define MARK433_PORT            PORTC
+#define MARK433_PIN             PINC
+#define MARK433_BIT             0
+#define MARK915_PORT            PORTC
+#define MARK915_PIN             PINC
+#define MARK915_BIT             1
+
 
 #endif

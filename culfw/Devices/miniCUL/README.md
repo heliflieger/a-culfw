@@ -4,6 +4,12 @@ See
 http://forum.fhem.de/index.php/topic,42998.0.html
 for details.
 
+------------------------------------------------------------------------
+Hint:
+To create a 433MHz miniCUL insert a resistor of 4,7k at pin A0 (PC0) to GND
+------------------------------------------------------------------------
+
+
 FLASHING FIRMWARE
 
 For programming the device simple call ./flash.sh
