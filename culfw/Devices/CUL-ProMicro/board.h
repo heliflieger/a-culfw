@@ -89,14 +89,15 @@
 #  define PD2 PORTD2
 #  define PD3 PORTD3
 #endif  // CUL_ARDUINO
-
+									/* ProMicro 				-> CC1101 */
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
-#define SPI_SS			PB6 		/* kej  Pin 10, mit 10k PullUp*/
-#define SPI_MISO		PB3
-#define SPI_MOSI		PB2
-#define SPI_SCLK		PB1
-
+#define SPI_SS			PB6 		/* Pin 10, mit 10k PullUp 	->  */
+#define SPI_MISO		PB3 		/* Pin 14  					->  SO */
+#define SPI_MOSI		PB2 		/* Pin 16 					->  SI */
+#define SPI_SCLK		PB1 		/* Pin 15 					->	SCLK */
+									/* Pin GND 					->  GND */
+									/* Pin VCC 					-> 	VCC */
 
 #if defined(CUL_ARDUINO)
 #  define CC1100_CS_DDR		SPI_DDR
@@ -104,11 +105,11 @@
 #  define CC1100_CS_PIN		SPI_SS
 #  define CC1100_OUT_DDR        DDRD
 #  define CC1100_OUT_PORT       PORTD
-#  define CC1100_OUT_PIN        PD3
+#  define CC1100_OUT_PIN        PD3 	/* Pin 3 				->	GDO0 */
 #  define CC1100_OUT_IN         PIND
 #  define CC1100_IN_DDR		DDRD
 #  define CC1100_IN_PORT        PIND
-#  define CC1100_IN_PIN         PD2
+#  define CC1100_IN_PIN         PD2 	/* Pin 2 				->	GDO2 */
 #  define CC1100_IN_IN          PIND
 #  define CC1100_INT		INT2
 #  define CC1100_INTVECT        INT2_vect

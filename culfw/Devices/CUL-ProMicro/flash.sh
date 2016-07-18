@@ -15,7 +15,7 @@ MCU=atmega32u4
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # Default Port
-PORT=/dev/ttyACM0
+PORT=/dev/ttyACM2
 # Programming baudrate
 BAUD=57600
 # The programmer
