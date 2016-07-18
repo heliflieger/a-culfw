@@ -92,7 +92,7 @@
 									/* ProMicro 				-> CC1101 */
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
-#define SPI_SS			PB6 		/* Pin 10, mit 10k PullUp 	->  */
+#define SPI_SS			PB6 		/* Pin 10, mit 10k PullUp 	->  CSn */
 #define SPI_MISO		PB3 		/* Pin 14  					->  SO */
 #define SPI_MOSI		PB2 		/* Pin 16 					->  SI */
 #define SPI_SCLK		PB1 		/* Pin 15 					->	SCLK */
