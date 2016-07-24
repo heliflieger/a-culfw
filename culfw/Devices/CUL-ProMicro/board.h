@@ -105,11 +105,11 @@
 #  define CC1100_CS_PIN		SPI_SS
 #  define CC1100_OUT_DDR        DDRD
 #  define CC1100_OUT_PORT       PORTD
-#  define CC1100_OUT_PIN        PD3 	/* Pin 3 				->	GDO0 */
+#  define CC1100_OUT_PIN        PD3 	/* Pin TXO 				->	GDO0 */
 #  define CC1100_OUT_IN         PIND
 #  define CC1100_IN_DDR		DDRD
 #  define CC1100_IN_PORT        PIND
-#  define CC1100_IN_PIN         PD2 	/* Pin 2 				->	GDO2 */
+#  define CC1100_IN_PIN         PD2 	/* Pin TXI				->	GDO2 */
 #  define CC1100_IN_IN          PIND
 #  define CC1100_INT		INT2
 #  define CC1100_INTVECT        INT2_vect
