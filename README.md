@@ -11,6 +11,7 @@ ___
 **This alternative firmware has additional send receive methods and code cleanups.**  
 _The compiled firmware can be found at [MediaFire](https://www.mediafire.com/folder/tf16radvztfd9/a-culfw)_
 
+<<<<<<< HEAD
 #### License
 ```
 This program is free software; you can redistribute it and/or modify it under  
@@ -28,3 +29,6 @@ this program; if not, write to the
 Free Software Foundation, Inc.,  
 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
 ```
+=======
+
+>>>>>>> refs/remotes/heliflieger/master

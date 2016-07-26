@@ -1,13 +1,8 @@
 MCU = atmega644p
-BOARD  =
 F_CPU = 8000000
 FORMAT = ihex
 TARGET = rpiaddon
 OBJDIR = .
-
-VERS=1.61
-DATE=$(shell date +%Y-%m-%d)
-DESTDIR=culfw-rpiaddon.$(VERS)
 
 SRC = $(TARGET).c                                                    \
 		../../clib/cc1100.c                                  \
@@ -23,6 +18,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_asksin.c                               \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_receive.c                              \
+		../../clib/rf_router.c                               \
 		../../clib/rf_receive_bucket.c                       \
 		../../clib/rf_receive_tcm97001.c                     \
 		../../clib/rf_receive_it.c                           \
@@ -31,9 +27,10 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_receive_esa.c                          \
 		../../clib/rf_receive_hms.c                          \
 		../../clib/helper.c                                  \
-		../../clib/rf_router.c                               \
 		../../clib/rf_rwe.c                                  \
+		../../clib/rf_zwave.c                                \
 		../../clib/somfy_rts.c                               \
+		../../clib/kopp-fc.c                                 \
 		../../clib/intertechno.c                             \
 		../../clib/fht.c                                     \
 		../../clib/fastrf.c                                  \
@@ -43,6 +40,9 @@ SRC = $(TARGET).c                                                    \
 		../../clib/twimaster.c                               \
 		../../clib/onewire.c                                 \
 		../../clib/spi.c                                     \
+		../../clib/rf_native.c                               \
+		../../clib/lacrosse.c                                \
+		../../clib/belfox.c                                  \
 		../../clib/ir.c                                      \
 		../../clib/irmp.c                                    \
 		../../clib/irsnd.c                                   \

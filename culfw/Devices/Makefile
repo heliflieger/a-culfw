@@ -1,10 +1,10 @@
 all:
-	make -C AirLinked/PWMBOX clean
-	make -C AirLinked/PWMBOX all
-	make -C AirLinked/RGBBOX clean
-	make -C AirLinked/RGBBOX all
-	make -C AirLinked/UVCBOX clean
-	make -C AirLinked/UVCBOX all
+	#make -C AirLinked/PWMBOX clean
+	#make -C AirLinked/PWMBOX all
+	#make -C AirLinked/RGBBOX clean
+	#make -C AirLinked/RGBBOX all
+	#make -C AirLinked/UVCBOX clean
+	#make -C AirLinked/UVCBOX all
 	make -C CCD clean
 	make -C CCD all
 	make -C CUL clean

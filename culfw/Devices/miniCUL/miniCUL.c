@@ -128,21 +128,22 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
-
   { 0, 0 },
 };
 
 int
 main(void)
 {
-  wdt_disable();
+//  wdt_disable();
+
+  clock_prescale_set(clock_div_1);
+
+  MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
+  MARK915_PORT |= _BV( MARK915_BIT ); // Pull 915MHz marker
 
   led_init();
 
   spi_init();
-
-  //eeprom_factory_reset("xx");
-  eeprom_init();
 
   // Setup the timers. Are needed for watchdog-reset
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz
@@ -153,7 +154,8 @@ main(void)
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
 
-  clock_prescale_set(clock_div_1);
+  //eeprom_factory_reset("xx");
+  eeprom_init();
 
   MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
   wdt_enable(WDTO_2S);

@@ -48,6 +48,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/mbus/crc.c                                \
 
 CFLAGS  = -D$(TARGET)
+CFLAGS += -D$(FREQUENCE)
 CFLAGS += -DF_CPU=$(F_CPU)UL
 CFLAGS += -Os
 CFLAGS += -funsigned-char       #   12 Byte (shorter code)
@@ -68,7 +69,7 @@ GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
 ALL_CFLAGS = -mmcu=$(MCU) -I. $(CFLAGS) $(GENDEPFLAGS)
 
 EXTMEMOPTS =
-LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
+LDFLAGS = -Wl,-Map=$(TARGET)$(FREQUENCE).map,--cref
 LDFLAGS += -Wl,--relax 
 LDFLAGS += -Wl,--gc-sections
 LDFLAGS += $(EXTMEMOPTS)
@@ -101,21 +102,23 @@ MSG_CLEANING = Cleaning project:
 OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
 
-all: mostly_clean build size
+all: 
+	make TARGET=miniCUL FREQUENCE=_433MHZ MCU=atmega328p mostly_clean build size
+	make TARGET=miniCUL FREQUENCE=_868MHZ MCU=atmega328p mostly_clean build size
 
 build: elf hex eep lss sym
 
-elf: $(TARGET).elf
-hex: $(TARGET).hex
-eep: $(TARGET).eep
-lss: $(TARGET).lss
-sym: $(TARGET).sym
+elf: $(TARGET)$(FREQUENCE).elf
+hex: $(TARGET)$(FREQUENCE).hex
+eep: $(TARGET)$(FREQUENCE).eep
+lss: $(TARGET)$(FREQUENCE).lss
+sym: $(TARGET)$(FREQUENCE).sym
 
 
-ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf
+ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET)$(FREQUENCE).elf
 
 size:
-	@if test -f $(TARGET).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
+	@if test -f $(TARGET)$(FREQUENCE).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
 	2>/dev/null; echo; fi
 
 
@@ -125,14 +128,23 @@ program: $(TARGET).hex
 usbprogram:
 	@echo 'specify one of: usbprogram_minicul'
 
-usbprogram_minicul: TARGET=miniCUL
-usbprogram_minicul: MCU=atmega32u4
-usbprogram_minicul: do_usbprogram
+avdude_arduino868Mhz: TARGET=miniCUL
+avdude_arduino868Mhz: FREQUENCE=_868MHZ
+avdude_arduino868Mhz: MCU=atmega32u4
+avdude_arduino868Mhz: PORT=/dev/ttyACM0
+avdude_arduino868Mhz: BAUD=57600
+avdude_arduino868Mhz: do_avdude
 
-do_usbprogram:
-	dfu-programmer $(MCU) erase || true
-	dfu-programmer $(MCU) flash $(TARGET).hex
-	dfu-programmer $(MCU) start
+avdude_arduino433Mhz: TARGET=miniCUL
+avdude_arduino433Mhz: FREQUENCE=_433MHZ
+avdude_arduino433Mhz: MCU=atmega32u4
+avdude_arduino433Mhz: PORT=/dev/ttyACM0
+avdude_arduino433Mhz: BAUD=57600
+avdude_arduino433Mhz: do_avdude
+
+
+do_avdude:
+	avrdude -p$(MCU) -cavr109 -P$(PORT) -b$(BAUD) -D -Uflash:w:./$(TARGET)$(FREQUENCE).hex
 
 %.hex: %.elf
 	@echo $(MSG_FLASH) $@
@@ -153,7 +165,7 @@ do_usbprogram:
 
 
 
-.SECONDARY : $(TARGET).elf
+.SECONDARY : $(TARGET)$(FREQUENCE).elf
 .PRECIOUS : $(OBJ)
 %.elf: $(OBJ)
 	@echo $(MSG_LINKING) $@
@@ -166,13 +178,13 @@ $(OBJDIR)/%.o : %.c
 
 mostly_clean:
 	@echo $(MSG_CLEANING)
-	@$(REMOVE) $(TARGET).hex
-	@$(REMOVE) $(TARGET).eep
-	@$(REMOVE) $(TARGET).cof
-	@$(REMOVE) $(TARGET).elf
-	@$(REMOVE) $(TARGET).map
-	@$(REMOVE) $(TARGET).sym
-	@$(REMOVE) $(TARGET).lss
+	@$(REMOVE) $(TARGET)$(FREQUENCE).hex
+	@$(REMOVE) $(TARGET)$(FREQUENCE).eep
+	@$(REMOVE) $(TARGET)$(FREQUENCE).cof
+	@$(REMOVE) $(TARGET)$(FREQUENCE).elf
+	@$(REMOVE) $(TARGET)$(FREQUENCE).map
+	@$(REMOVE) $(TARGET)$(FREQUENCE).sym
+	@$(REMOVE) $(TARGET)$(FREQUENCE).lss
 	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
 	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
 	@$(REMOVE) $(SRC:.c=.s)
