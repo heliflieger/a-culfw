@@ -10,7 +10,7 @@
 #include <avr/io.h>
 #include "led.h"
 
-#ifdef ARM
+#ifdef SAM7
 
 typedef struct {
 	AT91PS_PIO 	CS_base;
@@ -194,12 +194,19 @@ extern uint8_t cc_on;
 
 #include "board.h"
 
-#ifdef ARM
-
+#ifdef SAM7
 #define CC1100_DEASSERT  	CC1100_CS_BASE->PIO_SODR = (1<<CC1100_CS_PIN)
 #define CC1100_ASSERT    	CC1100_CS_BASE->PIO_CODR = (1<<CC1100_CS_PIN)
 #define CC1100_SET_OUT		CC1100_OUT_BASE->PIO_SODR = (1<<CC1100_OUT_PIN)
 #define CC1100_CLEAR_OUT	CC1100_OUT_BASE->PIO_CODR = (1<<CC1100_OUT_PIN)
+
+#elif defined STM32
+
+#define CC1100_DEASSERT
+#define CC1100_ASSERT
+#define CC1100_SET_OUT
+#define CC1100_CLEAR_OUT
+
 #else
 #define CC1100_DEASSERT  	SET_BIT( CC1100_CS_PORT, CC1100_CS_PIN )
 #define CC1100_ASSERT    	CLEAR_BIT( CC1100_CS_PORT, CC1100_CS_PIN )

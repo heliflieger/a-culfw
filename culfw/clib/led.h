@@ -4,13 +4,17 @@
 #define HI8(x)  ((uint8_t)((x) >> 8))
 #define LO8(x)  ((uint8_t)(x))
 
+#ifndef SET_BIT
 #define SET_BIT(PORT, BITNUM) ((PORT) |= (1<<(BITNUM)))
+#endif
+#ifndef SET_BIT
 #define CLEAR_BIT(PORT, BITNUM) ((PORT) &= ~(1<<(BITNUM)))
+#endif
 #define TOGGLE_BIT(PORT, BITNUM) ((PORT) ^= (1<<(BITNUM)))
 
 #include "board.h"
 
-#ifdef ARM
+#ifdef SAM7
 
 #include <pio/pio.h>
 
@@ -43,6 +47,21 @@ static const Pin pinsLeds[] = {PINS_LEDS};
 #define LED2_TOGGLE()
 #define LED3_TOGGLE()
 #endif
+
+#elif defined STM32
+#define LED_ON()
+#define LED_OFF()
+#define LED_TOGGLE()
+#define led_init()
+
+#define LED2_ON()
+#define LED2_OFF()
+
+#define LED3_ON()
+#define LED3_OFF()
+
+#define LED2_TOGGLE()
+#define LED3_TOGGLE()
 
 #else
 

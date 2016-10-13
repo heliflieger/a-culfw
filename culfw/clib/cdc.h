@@ -6,7 +6,8 @@
 #include <avr/interrupt.h>
 
 #include "ringbuffer.h"
-#ifdef ARM
+
+#ifdef SAM7
 #include <usb/device/cdc-serial/CDCDSerialDriverDescriptors.h>
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
 #include "ttydata.h"
@@ -14,6 +15,15 @@
 /// Size in bytes of the buffer used for reading data from the USB
 #define DATABUFFERSIZEOUT \
     BOARD_USB_ENDPOINTS_MAXPACKETSIZE(CDCDSerialDriverDescriptors_DATAOUT)
+
+#elif defined STM32
+#include <usb_device.h>
+#include <usbd_cdc_if.h>
+#include "ttydata.h"
+
+#define USBD_STATUS_SUCCESS   USBD_OK
+#define DATABUFFERSIZEOUT     128
+
 #else
 #include "Descriptors.h"
 

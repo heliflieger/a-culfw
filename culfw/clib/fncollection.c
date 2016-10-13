@@ -10,9 +10,11 @@
 #include "cc1100.h"
 #include "../version.h"
 #ifdef HAS_USB
-#ifdef ARM
+#ifdef SAM7
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
 #include <utility/trace.h>
+#elif defined STM32
+
 #else
 #include <Drivers/USB/USB.h>
 #endif
@@ -288,7 +290,7 @@ prepare_boot(char *in)
   if(bl == 0xff)             // Allow testing
     while(1);
     
-#ifdef ARM
+#ifdef SAM7
 
 	unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
 
@@ -303,6 +305,8 @@ prepare_boot(char *in)
 	my_delay_ms(250);
 	AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
 	while (1);
+
+#elif defined STM32
 
 #else
   if(bl)                     // Next reboot we'd like to jump to the bootloader.
