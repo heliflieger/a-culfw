@@ -35,7 +35,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hal_spi.h"
 
-#include "gpio.h"
+#include "hal_gpio.h"
 
 /* USER CODE BEGIN 0 */
 

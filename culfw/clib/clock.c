@@ -46,7 +46,7 @@ void ISR_Timer0()
 	// Clear status bit to acknowledge interrupt
 	AT91C_BASE_TC0->TC_SR;
 #elif defined STM32
-void HAL_SYSTICK_Callback(void)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 #else
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)

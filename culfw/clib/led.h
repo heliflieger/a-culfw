@@ -24,7 +24,7 @@ static const Pin pinsLeds[] = {PINS_LEDS};
 #define LED_OFF()     	PIO_Set(&pinsLeds[0])
 #define LED_TOGGLE()	{if (PIO_GetOutputDataStatus(&pinsLeds[0])) {PIO_Clear(&pinsLeds[0]);} else {PIO_Set(&pinsLeds[0]);}}
 
-#ifdef CUBE
+#ifdef SAM7
 #define led_init() 		PIO_Configure(&pinsLeds[0], 1);PIO_Configure(&pinsLeds[1], 1);PIO_Configure(&pinsLeds[2], 1)
 
 #define LED2_ON()    	PIO_Clear(&pinsLeds[1])
@@ -49,10 +49,13 @@ static const Pin pinsLeds[] = {PINS_LEDS};
 #endif
 
 #elif defined STM32
-#define LED_ON()
-#define LED_OFF()
-#define LED_TOGGLE()
-#define led_init()
+
+#include <hal_gpio.h>
+
+#define LED_ON()        HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET)
+#define LED_OFF()       HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET)
+#define LED_TOGGLE()    HAL_GPIO_TogglePin(LED_PORT, LED_PIN)
+#define led_init()      HAL_LED_Init()
 
 #define LED2_ON()
 #define LED2_OFF()

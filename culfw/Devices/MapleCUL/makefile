@@ -29,7 +29,6 @@ DEBUG ?= GDB
 #####
 ###############################################################
 
-SRCS := gpio.c
 SRCS += main.c
 
 SRCS += stm32f1xx_hal_msp.c
@@ -44,17 +43,22 @@ SRCS += ../../clib/fncollection.c
 SRCS += ../../clib/cc1100.c
 SRCS += ../../clib/stringfunc.c
 SRCS += ../../clib/fband.c
+SRCS += ../../clib/rf_send.c
 
 
 SRCS += ../../STM32/hal_usart.c
 SRCS += ../../STM32/hal_spi.c
+SRCS += ../../STM32/hal_gpio.c
 SRCS += ../../STM32/usb_device.c
 SRCS += ../../STM32/usbd_cdc_if.c
 SRCS += ../../STM32/usbd_conf.c
 SRCS += ../../STM32/usbd_desc.c
+SRCS += ../../STM32/tim.c
 
 SRCS += ../../STM32/avr/interrupt.c
 SRCS += ../../STM32/avr/eeprom.c
+SRCS += ../../STM32/avr/wdt.c
+SRCS += ../../STM32/util/parity.c
 
 SRCS += ../../STM32/Drivers/$(MCU_FAMILY)xx_HAL_Driver/Src/stm32f1xx_hal.c
 SRCS += ../../STM32/Drivers/$(MCU_FAMILY)xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c

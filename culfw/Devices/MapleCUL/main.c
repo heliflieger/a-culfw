@@ -12,7 +12,8 @@
 #include <hal_spi.h>
 #include <hal_usart.h>
 #include <usb_device.h>
-#include <gpio.h>
+#include <hal_gpio.h>
+#include <tim.h>
 #include <utility/trace.h>
 
 //#include "pio/pio.h"
@@ -292,6 +293,7 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
@@ -299,6 +301,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_USB_DEVICE_Init();
+  MX_TIM1_Init();
 
   led_init();
 
@@ -348,7 +351,7 @@ int main(void)
     if(!USB_IsConnected)
       uart_task();
     #endif
-    //Minute_Task();
+    Minute_Task();
     //RfAnalyze_Task();
 
     #ifdef HAS_FASTRF

@@ -193,9 +193,13 @@ typedef enum
 /** @addtogroup Exported_macros
   * @{
   */
+#ifndef SET_BIT
 #define SET_BIT(REG, BIT)     ((REG) |= (BIT))
+#endif
 
+#ifndef CLEAR_BIT
 #define CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
+#endif
 
 #define READ_BIT(REG, BIT)    ((REG) & (BIT))
 
