@@ -56,7 +56,6 @@ extern void Error_Handler(void);
 void MX_SPI1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

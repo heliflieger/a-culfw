@@ -36,7 +36,7 @@
 #include <hal_gpio.h>
 #include <board.h>
 /* USER CODE BEGIN 0 */
-
+#include "stm32f103xb.h"
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -79,15 +79,41 @@ void HAL_LED_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_GPIO, _BV(LED_PIN), GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PB1 PB9 */
-  GPIO_InitStruct.Pin = LED_PIN;
+  GPIO_InitStruct.Pin = _BV(LED_PIN);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
+  HAL_GPIO_Init(LED_GPIO, &GPIO_InitStruct);
 
 }
+
+void hal_CC_GDO_init(void) {
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  /*Configure CS pin */
+  HAL_GPIO_WritePin(CC1100_CS_GPIO, _BV(CC1100_CS_PIN), GPIO_PIN_SET);
+  GPIO_InitStruct.Pin = _BV(CC1100_CS_PIN);
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(CC1100_CS_GPIO, &GPIO_InitStruct);
+
+  /*Configure out pin */
+  HAL_GPIO_WritePin(CC1100_OUT_GPIO, _BV(CC1100_OUT_PIN), GPIO_PIN_RESET);
+  GPIO_InitStruct.Pin = _BV(CC1100_OUT_PIN);
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(CC1100_OUT_GPIO, &GPIO_InitStruct);
+
+  /*Configure in pin */
+  GPIO_InitStruct.Pin = _BV(CC1100_IN_PIN);
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(CC1100_IN_GPIO, &GPIO_InitStruct);
+
+}
+
 /* USER CODE END 2 */
 
 /**

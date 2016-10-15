@@ -9,6 +9,7 @@
 #include "display.h"
 #include "fncollection.h"
 #include "cc1100.h"
+#include "spi.h"
 
 #include "rf_asksin.h"  // asksin_on
 #include "rf_moritz.h"  // moritz_on
@@ -161,8 +162,7 @@ cc1100_sendbyte(uint8_t data)
   while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_RDRF) == 0);
   return AT91C_BASE_SPI0->SPI_RDR & 0xFF;
 #elif defined STM32
-  //TODO SPI send
-  return 0;
+  return spi_send(data);
 #else
   SPDR = data;		        // send byte
   while (!(SPSR & _BV (SPIF)));	// wait until transfer finished
@@ -184,8 +184,7 @@ ccInitChip(uint8_t *cfg)
   CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);		//Enable output
   CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);		//Enable PIO control
 #elif defined STM32
-  //TODO STM32 init SPI
-
+  hal_CC_GDO_init();
 #else
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
@@ -298,7 +297,7 @@ ccTX(void)
 #ifdef SAM7
   AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID;
 #elif defined STM32
-  //TODO STM32 enable CC1100_IN INT
+  //TODO STM32 disable CC1100_IN INT
 #else
   EIMSK  &= ~_BV(CC1100_INT);
 #endif
@@ -322,7 +321,7 @@ ccRX(void)
 #ifdef SAM7
     AT91C_BASE_AIC->AIC_IECR = 1 << CC1100_IN_PIO_ID;
 #elif defined STM32
-    //TODO STM32 disable CC1100_IN INT
+    //TODO STM32 enable CC1100_IN INT
 #else
   EIMSK |= _BV(CC1100_INT);
 #endif

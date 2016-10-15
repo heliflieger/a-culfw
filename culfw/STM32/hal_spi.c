@@ -38,7 +38,7 @@
 #include "hal_gpio.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "board.h"
 /* USER CODE END 0 */
 
 SPI_HandleTypeDef hspi1;
@@ -54,7 +54,7 @@ void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -78,7 +78,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* spiHandle)
     /* Peripheral clock enable */
     __HAL_RCC_SPI1_CLK_ENABLE();
   
-    /**SPI1 GPIO Configuration    
+    /**SPI1 GPIO Configuration
+    PA4     ------> SPI1_CS
     PA5     ------> SPI1_SCK
     PA6     ------> SPI1_MISO
     PA7     ------> SPI1_MOSI 
@@ -124,7 +125,19 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef* spiHandle)
 } 
 
 /* USER CODE BEGIN 1 */
+void spi_init(void) {
+  MX_SPI1_Init();
+}
 
+uint8_t
+spi_send(uint8_t data)
+{
+  uint8_t ret;
+
+  HAL_SPI_TransmitReceive(&hspi1, &data, &ret, 1, 100);
+
+  return ret;
+}
 /* USER CODE END 1 */
 
 /**

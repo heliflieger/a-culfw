@@ -37,11 +37,11 @@
 #include "cdc.h"
 #include "clock.h"
 #include "fncollection.h"
-//#include "rf_receive.h"
-//#include "spi.h"
+#include "rf_receive.h"
+#include "spi.h"
 //#include "fht.h"
-//#include "rf_send.h"		// fs20send
-//#include "cc1100.h"
+#include "rf_send.h"		// fs20send
+#include "cc1100.h"
 #include "display.h"
 //#include "fastrf.h"
 //#include "rf_router.h"		// rf_router_func
@@ -197,7 +197,7 @@ const t_fntab fntab[] = {
 #ifdef HAS_MBUS
   { 'b', rf_mbus_func },
 #endif
-//  { 'C', ccreg },
+  { 'C', ccreg },
 //  { 'F', fs20send },
 #ifdef HAS_INTERTECHNO
   { 'i', it_func },
@@ -235,7 +235,7 @@ const t_fntab fntab[] = {
 //  { 'T', fhtsend },
   { 'V', version },
 //  { 'W', write_eeprom },
-//  { 'X', set_txreport },
+  { 'X', set_txreport },
 
 //  { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
@@ -296,7 +296,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_SPI1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
@@ -317,9 +316,9 @@ int main(void)
   LED2_OFF();
   LED3_OFF();
 
-  //spi_init();
+  spi_init();
   //fht_init();
-  //tx_init();
+  tx_init();
 
   #ifdef HAS_ETHERNET
   ethernet_init();

@@ -51,9 +51,11 @@
 #include "rf_mbus.h"
 #endif
 
-#ifdef ARM
+#ifdef SAM7
 #include <aic/aic.h>
 void ISR_Pio();
+#elif defined STM32
+#include <hal_gpio.h>
 #endif
 //////////////////////////
 // With a CUL measured RF timings, in us, high/low sum
@@ -97,7 +99,7 @@ void
 tx_init(void)
 {
 
-#ifdef ARM
+#ifdef SAM7
 
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
 #ifdef CUBE
@@ -115,7 +117,8 @@ tx_init(void)
   CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);     //Enable PIO control
   AIC_ConfigureIT(CC1100_IN_PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
 
-
+#elif defined STM32
+  hal_CC_GDO_init();
 #else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
   CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);
@@ -559,8 +562,10 @@ RfAnalyze_Task(void)
 void reset_input(void)
 {
   maxLevel=0;
-#ifdef ARM
+#ifdef SAM7
   AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_TC1;	//Disable Interrupt
+#elif defined STM32
+  //TODO STM32 disable interrupt
 #else
   TIMSK1 = 0;
 #endif
@@ -568,8 +573,10 @@ void reset_input(void)
 #if defined (HAS_IT) || defined (HAS_TCM97001)
   packetCheckValues.isnotrep = 0;
 #endif
-#ifdef ARM
+#ifdef SAM7
       	AT91C_BASE_TC1->TC_RC = 0;
+#elif defined STM32
+      	//TODO STM32
 #else
         OCR1A = 0;
 #endif
@@ -578,10 +585,12 @@ void reset_input(void)
 //////////////////////////////////////////////////////////////////////
 // Timer Compare Interrupt Handler. If we are called, then there was no
 // data for SILENCE time, and we can put the data to be analysed
-#ifdef ARM
+#ifdef SAM7
 void ISR_Timer1() {
 	// Clear status bit to acknowledge interrupt
 	AT91C_BASE_TC1->TC_SR;
+#elif defined STM32
+	void ISR_Timer1() {
 #else
 ISR(TIMER1_COMPA_vect)
 {
@@ -589,13 +598,18 @@ ISR(TIMER1_COMPA_vect)
   uint16_t tmp;
 #endif
 #endif
-#ifdef ARM
+#ifdef SAM7
   AT91C_BASE_AIC->AIC_IDCR = 1<< AT91C_ID_TC1;	//Disable Interrupt
 
 #ifdef LONG_PULSE
   AT91C_BASE_TC1->TC_RC = TWRAP/8*3;    // Wrap Timer
   AT91C_BASE_TC1->TC_CMR |= AT91C_TC_CPCTRG;
 #endif
+
+#elif defined STM32
+  //TODO STM32 timer1 ISR
+
+
 #else
   TIMSK1 = 0;                           // Disable "us"
 #ifdef LONG_PULSE
@@ -710,9 +724,11 @@ static void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool 
         } else {
           ocrVal = (((b->syncbit.lowtime - maxLevel)>>2)+maxLevel);
         }    
-#ifdef ARM
+#ifdef SAM7
         ocrVal = ((ocrVal * 100) / 266);
         AT91C_BASE_TC1->TC_RC = ocrVal * 16;
+#elif defined STM32
+        //TODO STM32 timer1 ISR
 #else
         OCR1A = ocrVal * 16;
 #endif
@@ -728,11 +744,13 @@ static void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool 
 
 //////////////////////////////////////////////////////////////////////
 // "Edge-Detected" Interrupt Handler
-#ifdef ARM
+#ifdef SAM7
 void ISR_Pio() {
 	// Read PIO controller status
 	CC1100_IN_BASE->PIO_ISR;
 
+#elif defined STM32
+	void ISR_Pio() {
 #else
 ISR(CC1100_INTVECT)
 {
@@ -751,14 +769,20 @@ ISR(CC1100_INTVECT)
   }
 #endif
 #ifdef LONG_PULSE
-  #ifdef ARM
+  #ifdef SAM7
   uint16_t c = AT91C_BASE_TC1->TC_CV / 6;   // catch the time and make it smaller
+  #elif defined STM32
+  uint16_t c = 0;
+  //TODO STM32 catch the time and make it smaller
   #else
   uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
   #endif
 #else
-  #ifdef ARM
+  #ifdef SAM7
   uint8_t c = AT91C_BASE_TC1->TC_CV / 6;   // catch the time and make it smaller
+  #elif defined STM32
+  uint8_t c = 0;
+  //TODO STM32 catch the time and make it smaller
   #else
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
   #endif
@@ -806,8 +830,10 @@ ISR(CC1100_INTVECT)
 #endif
     )) {
       addbit(b, 1);
-#ifdef ARM
+#ifdef SAM7
       AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
+#elif defined STM32
+      //TODO STM32 restart timer
 #else
       TCNT1 = 0;
 #endif
@@ -847,8 +873,10 @@ ISR(CC1100_INTVECT)
 
   lowtime = c-hightime;
 
-#ifdef ARM
+#ifdef SAM7
   AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
+#elif defined STM32
+      //TODO STM32 restart timer
 #else
   TCNT1 = 0;                          // restart timer
 #endif
@@ -948,24 +976,26 @@ retry_sync:
 	   	  // sync bit received
           b->state = STATE_SYNC_PACKAGE;
           b->sync  = 1;
-	  #ifdef ARM
-         	//AT91C_BASE_TC1->TC_RC = 825;
+	    #ifdef ARM
           uint32_t ocrVal = 0;
           ocrVal = ((lowtime * 100) / 266);
           AT91C_BASE_TC1->TC_RC = (ocrVal - 16) * 16;
-
-          //AT91C_BASE_TC1->TC_RC = 1950;
+      #elif defined STM32
+          //TODO STM32
+          uint32_t ocrVal = 0;
       #else
           OCR1A = (lowtime - 16) * 16; //End of message
          	//OCR1A = 2200; // end of message
           //OCR1A = b->syncbit.lowtime*16 - 1000;
       #endif
-      #ifdef ARM
+      #ifdef SAM7
           AT91C_BASE_TC1->TC_SR;
 	      #ifdef LONG_PULSE
           AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
 	      #endif
           AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+      #elif defined STM32
+          //TODO STM32
       #else
           TIMSK1 = _BV(OCIE1A);
       #endif
@@ -1031,8 +1061,10 @@ retry_sync:
         b->clockTime = 0;
         b->sync++;
       } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
-#ifdef ARM
+#ifdef SAM7
       	AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+#elif defined STM32
+      	//TODO STM32
 #else
         OCR1A = SILENCE;
 #endif
@@ -1046,8 +1078,10 @@ retry_sync:
               if (b->sync >= 10 && (b->zero.hightime + b->zero.lowtime) < TSCALE(600)) {
           b->state = STATE_ESA;
           //DU(b->sync,         3);
-#ifdef ARM
+#ifdef SAM7
           AT91C_BASE_TC1->TC_RC = 375;
+#elif defined STM32
+          //TODO STM32
 #else
           OCR1A = 1000;
 #endif
@@ -1077,12 +1111,14 @@ retry_sync:
         b->bitidx  = 7;
         b->data[0] = 0;
 
-#ifdef ARM
+#ifdef SAM7
         AT91C_BASE_TC1->TC_SR;
 		#ifdef LONG_PULSE
         AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
 		#endif
         AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+#elif defined STM32
+        //TODO STM32
 #else
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
 #endif

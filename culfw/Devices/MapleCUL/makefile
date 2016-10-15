@@ -44,7 +44,9 @@ SRCS += ../../clib/cc1100.c
 SRCS += ../../clib/stringfunc.c
 SRCS += ../../clib/fband.c
 SRCS += ../../clib/rf_send.c
-
+SRCS += ../../clib/rf_receive.c
+SRCS += ../../clib/rf_asksin.c
+SRCS += ../../clib/delay.c
 
 SRCS += ../../STM32/hal_usart.c
 SRCS += ../../STM32/hal_spi.c
