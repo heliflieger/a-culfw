@@ -39,11 +39,11 @@
 #include "fncollection.h"
 #include "rf_receive.h"
 #include "spi.h"
-//#include "fht.h"
+#include "fht.h"
 #include "rf_send.h"		// fs20send
 #include "cc1100.h"
 #include "display.h"
-//#include "fastrf.h"
+#include "fastrf.h"
 //#include "rf_router.h"		// rf_router_func
 #include "fband.h"
 #ifdef HAS_UART
@@ -188,8 +188,6 @@ void CDCDSerialDriver_Receive_Callback(uint8_t* Buf, uint32_t *Len)
     }
 }
 
-//#include "delay.h"
-
 
 const t_fntab fntab[] = {
 
@@ -198,7 +196,7 @@ const t_fntab fntab[] = {
   { 'b', rf_mbus_func },
 #endif
   { 'C', ccreg },
-//  { 'F', fs20send },
+  { 'F', fs20send },
 #ifdef HAS_INTERTECHNO
   { 'i', it_func },
 #endif
@@ -218,9 +216,9 @@ const t_fntab fntab[] = {
   { 'k', kopp_fc_func },
 #endif
 #ifdef HAS_RAWSEND
-//  { 'G', rawsend },
-//  { 'M', em_send },
-//  { 'K', ks_send },
+  { 'G', rawsend },
+  { 'M', em_send },
+  { 'K', ks_send },
 #endif
 #ifdef HAS_MAICO
   { 'L', maico_func },
@@ -231,13 +229,13 @@ const t_fntab fntab[] = {
 #ifdef HAS_SOMFY_RTS
   { 'Y', somfy_rts_func },
 #endif
-//  { 'R', read_eeprom },
-//  { 'T', fhtsend },
+  { 'R', read_eeprom },
+  { 'T', fhtsend },
   { 'V', version },
-//  { 'W', write_eeprom },
+  { 'W', write_eeprom },
   { 'X', set_txreport },
 
-//  { 'e', eeprom_factory_reset },
+  { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
@@ -249,7 +247,7 @@ const t_fntab fntab[] = {
 #ifdef HAS_RF_ROUTER
   { 'u', rf_router_func },
 #endif
-//  { 'x', ccsetpa },
+  { 'x', ccsetpa },
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
@@ -301,11 +299,14 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USB_DEVICE_Init();
   MX_TIM1_Init();
+  MX_TIM2_Init();
+
 
   led_init();
 
   TRACE_INFO("init EEprom\n\r");
-  //eeprom_init();
+  eeprom_init();
+
 
   rb_reset(&TTY_Rx_Buffer);
   rb_reset(&TTY_Tx_Buffer);
@@ -317,7 +318,7 @@ int main(void)
   LED3_OFF();
 
   spi_init();
-  //fht_init();
+  fht_init();
   tx_init();
 
   #ifdef HAS_ETHERNET
@@ -334,13 +335,13 @@ int main(void)
 
   //wdt_enable(WDTO_2S);
 
-  //fastrf_on=0;
+  fastrf_on=0;
 
   display_channel = DISPLAY_USB;
 
   TRACE_INFO("init Complete\n\r");
 
-  //checkFrequency();
+  checkFrequency();
 
   // Main loop
   while (1) {
@@ -351,7 +352,7 @@ int main(void)
       uart_task();
     #endif
     Minute_Task();
-    //RfAnalyze_Task();
+    RfAnalyze_Task();
 
     #ifdef HAS_FASTRF
       FastRF_Task();

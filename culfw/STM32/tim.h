@@ -54,6 +54,7 @@ extern TIM_HandleTypeDef htim1;
 extern void Error_Handler(void);
 
 void MX_TIM1_Init(void);
+void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 

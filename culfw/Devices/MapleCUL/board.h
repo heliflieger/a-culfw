@@ -25,33 +25,33 @@
 //#define HAS_UART                1
 
 //#define HAS_FHT_80b
-//#define HAS_FHT_8v
+#define HAS_FHT_8v
 //#define HAS_RF_ROUTER
 //#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
-//#define HAS_CC1101_PLL_LOCK_CHECK_MSG
-//#define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG
+#define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
-//#define FHTBUF_SIZE          174
+#define FHTBUF_SIZE          174
 #define RCV_BUCKETS            4      //                 RAM: 25b * bucket
 //#define RFR_DEBUG
-//#define FULL_CC1100_PA
-//#define HAS_RAWSEND
-//#define HAS_FASTRF
+#define FULL_CC1100_PA
+#define HAS_RAWSEND
+#define HAS_FASTRF
 #define HAS_ASKSIN
-//#define HAS_ASKSIN_FUP
-//#define HAS_KOPP_FC
-//#define HAS_MORITZ
-//#define HAS_RWE
-//#define HAS_ESA
-//#define HAS_HMS
-//#define HAS_TX3
-//#define HAS_INTERTECHNO
-//#define HAS_UNIROLL
-//#define HAS_HOERMANN
-//#define HAS_SOMFY_RTS
-//#define HAS_MAICO
-//#define HAS_RFNATIVE
-//#define HAS_ZWAVE
+#define HAS_ASKSIN_FUP
+#define HAS_KOPP_FC
+#define HAS_MORITZ
+#define HAS_RWE
+#define HAS_ESA
+#define HAS_HMS
+#define HAS_TX3
+#define HAS_INTERTECHNO
+#define HAS_UNIROLL
+#define HAS_HOERMANN
+#define HAS_SOMFY_RTS
+#define HAS_MAICO
+#define HAS_RFNATIVE
+#define HAS_ZWAVE
 
 //#define _433MHZ
 

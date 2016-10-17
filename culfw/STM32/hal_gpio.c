@@ -37,6 +37,7 @@
 #include <board.h>
 /* USER CODE BEGIN 0 */
 #include "stm32f103xb.h"
+#include "led.h"
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -109,11 +110,48 @@ void hal_CC_GDO_init(void) {
   /*Configure in pin */
   GPIO_InitStruct.Pin = _BV(CC1100_IN_PIN);
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(CC1100_IN_GPIO, &GPIO_InitStruct);
+
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
 }
 
+//hal_enable_CC_GDOin_int(FALSE);
+
+void hal_enable_CC_GDOin_int(uint8_t enable) {
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  /*Configure in pin */
+  GPIO_InitStruct.Pin = _BV(CC1100_IN_PIN);
+  if (enable)
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  else
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_DeInit(CC1100_IN_GPIO, _BV(CC1100_IN_PIN));
+  HAL_GPIO_Init(CC1100_IN_GPIO, &GPIO_InitStruct);
+}
+
+__weak void CC1100_in_callback()
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the HAL_GPIO_EXTI_Callback could be implemented in the user file
+   */
+}
+
+/**
+  * @brief EXTI line detection callbacks
+  * @retval None
+  */
+void hal_GPIO_EXTI_IRQHandler(void)
+{
+  if(__HAL_GPIO_EXTI_GET_IT(_BV(CC1100_IN_PIN)) != RESET) {
+    __HAL_GPIO_EXTI_CLEAR_IT(_BV(CC1100_IN_PIN));
+    CC1100_in_callback();
+  }
+}
 /* USER CODE END 2 */
 
 /**

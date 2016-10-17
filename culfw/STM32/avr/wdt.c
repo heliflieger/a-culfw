@@ -4,7 +4,7 @@
 
 #define WATCHDOG_KEY (0xA5 << 24)
 
-//TODO STM31 Watchdog
+//TODO STM32 Watchdog
 
 void wdt_reset(void) {
 

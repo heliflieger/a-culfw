@@ -47,7 +47,13 @@
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
+#ifndef TRUE
+#define TRUE 1
+#endif
 
+#ifndef FALSE
+#define FALSE 0
+#endif
 /* USER CODE END Private defines */
 
 void MX_GPIO_Init(void);
@@ -55,7 +61,9 @@ void MX_GPIO_Init(void);
 /* USER CODE BEGIN Prototypes */
 void HAL_LED_Init(void);
 void hal_CC_GDO_init(void);
+void hal_enable_CC_GDOin_int(uint8_t enable);
 /* USER CODE END Prototypes */
+void hal_GPIO_EXTI_IRQHandler(void);
 
 #ifdef __cplusplus
 }

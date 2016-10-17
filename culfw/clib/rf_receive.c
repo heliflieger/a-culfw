@@ -56,6 +56,7 @@
 void ISR_Pio();
 #elif defined STM32
 #include <hal_gpio.h>
+#include "stm32f1xx_it.h"
 #endif
 //////////////////////////
 // With a CUL measured RF timings, in us, high/low sum
@@ -119,6 +120,7 @@ tx_init(void)
 
 #elif defined STM32
   hal_CC_GDO_init();
+  hal_enable_CC_GDOin_int(TRUE);
 #else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
   CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);
@@ -566,6 +568,7 @@ void reset_input(void)
   AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_TC1;	//Disable Interrupt
 #elif defined STM32
   //TODO STM32 disable interrupt
+  hal_enable_CC_timer_int(FALSE);
 #else
   TIMSK1 = 0;
 #endif
@@ -577,6 +580,7 @@ void reset_input(void)
       	AT91C_BASE_TC1->TC_RC = 0;
 #elif defined STM32
       	//TODO STM32
+      	TIM2->ARR = 0xffff;
 #else
         OCR1A = 0;
 #endif
@@ -590,7 +594,7 @@ void ISR_Timer1() {
 	// Clear status bit to acknowledge interrupt
 	AT91C_BASE_TC1->TC_SR;
 #elif defined STM32
-	void ISR_Timer1() {
+void TIM2_PeriodElapsedCallback() {
 #else
 ISR(TIMER1_COMPA_vect)
 {
@@ -608,7 +612,10 @@ ISR(TIMER1_COMPA_vect)
 
 #elif defined STM32
   //TODO STM32 timer1 ISR
-
+  hal_enable_CC_timer_int(FALSE);       //Disable Interrupt
+#ifdef LONG_PULSE
+  //TODO STM32 Long Pulse
+#endif
 
 #else
   TIMSK1 = 0;                           // Disable "us"
@@ -750,7 +757,7 @@ void ISR_Pio() {
 	CC1100_IN_BASE->PIO_ISR;
 
 #elif defined STM32
-	void ISR_Pio() {
+	void CC1100_in_callback() {
 #else
 ISR(CC1100_INTVECT)
 {
@@ -781,13 +788,16 @@ ISR(CC1100_INTVECT)
   #ifdef SAM7
   uint8_t c = AT91C_BASE_TC1->TC_CV / 6;   // catch the time and make it smaller
   #elif defined STM32
-  uint8_t c = 0;
+  uint8_t c = (TIM2->CNT)>>4;
   //TODO STM32 catch the time and make it smaller
   #else
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
   #endif
 #endif
 
+
+  if(c)
+    LED_TOGGLE();
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
@@ -834,6 +844,8 @@ ISR(CC1100_INTVECT)
       AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
 #elif defined STM32
       //TODO STM32 restart timer
+      TIM2->CNT = 0;
+      TIM2->CR1|=(TIM_CR1_CEN);
 #else
       TCNT1 = 0;
 #endif
@@ -876,7 +888,8 @@ ISR(CC1100_INTVECT)
 #ifdef SAM7
   AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
 #elif defined STM32
-      //TODO STM32 restart timer
+  //TODO STM32 restart timer
+  TIM2->CNT=0;
 #else
   TCNT1 = 0;                          // restart timer
 #endif
@@ -1065,6 +1078,7 @@ retry_sync:
       	AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
 #elif defined STM32
       	//TODO STM32
+      	TIM2->ARR = SILENCE;
 #else
         OCR1A = SILENCE;
 #endif
@@ -1082,6 +1096,7 @@ retry_sync:
           AT91C_BASE_TC1->TC_RC = 375;
 #elif defined STM32
           //TODO STM32
+          TIM2->ARR = 1000;
 #else
           OCR1A = 1000;
 #endif
@@ -1119,6 +1134,7 @@ retry_sync:
         AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
 #elif defined STM32
         //TODO STM32
+        hal_enable_CC_timer_int(TRUE);
 #else
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
 #endif

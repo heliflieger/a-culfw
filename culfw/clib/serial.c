@@ -4,7 +4,7 @@
 #include "ringbuffer.h"
 #include "ttydata.h"
 #include "display.h"
-#ifdef ARM
+#ifdef SAM7
 #include <usart/usart.h>
 #include "board.h"
 #include <pio/pio.h>
@@ -24,7 +24,7 @@ static const Pin pins[] = {
 
 void (*usbinfunc)(void);
 
-#ifdef ARM
+#ifdef SAM7
 void ISR_Usart0(void)
 {
     unsigned int status;
@@ -52,6 +52,8 @@ void ISR_Usart0(void)
     }
 
 }
+#elif defined STM32
+
 #else
 // TX complete (data buffer empty) 
 ISR(USART_UDRE_vect)
@@ -86,7 +88,7 @@ ISR(USART_RX_vect)
 
 void uart_init(unsigned int baudrate) 
 {
-#ifdef ARM
+#ifdef SAM7
     unsigned int mode = AT91C_US_USMODE_NORMAL
                       | AT91C_US_CLKS_CLOCK
                       | AT91C_US_CHRL_8_BITS
@@ -111,7 +113,8 @@ void uart_init(unsigned int baudrate)
     // Enable receiver & transmitter
     USART_SetTransmitterEnabled(AT91C_BASE_US0, 1);
     USART_SetReceiverEnabled(AT91C_BASE_US0, 1);
-
+#elif defined STM32
+    //TODO STM32 UART init
 #else
      /* Set baud rate */
      if ( baudrate & 0x8000 ) 
@@ -139,9 +142,11 @@ void uart_task(void)
 
 void uart_flush(void) 
 {
-#ifdef ARM
+#ifdef SAM7
   if (!bit_is_set(AT91C_BASE_US0->US_IMR, AT91C_US_TXRDY) && TTY_Tx_Buffer.nbytes)
     AT91C_BASE_US0->US_IER = AT91C_US_TXRDY;
+#elif defined STM32
+  //TODO STM32 UART flush
 #else
      if (!bit_is_set(UCSR0B, UDRIE0) && TTY_Tx_Buffer.nbytes)
 	  UCSR0B |= _BV(UDRIE0);

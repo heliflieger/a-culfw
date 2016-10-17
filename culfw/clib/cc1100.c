@@ -3,7 +3,9 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
-
+#ifdef ARM
+#include <hal.h>
+#endif
 
 #include "delay.h"
 #include "display.h"
@@ -297,7 +299,7 @@ ccTX(void)
 #ifdef SAM7
   AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID;
 #elif defined STM32
-  //TODO STM32 disable CC1100_IN INT
+  hal_enable_CC_GDOin_int(FALSE);
 #else
   EIMSK  &= ~_BV(CC1100_INT);
 #endif
@@ -321,7 +323,7 @@ ccRX(void)
 #ifdef SAM7
     AT91C_BASE_AIC->AIC_IECR = 1 << CC1100_IN_PIO_ID;
 #elif defined STM32
-    //TODO STM32 enable CC1100_IN INT
+    hal_enable_CC_GDOin_int(TRUE);
 #else
   EIMSK |= _BV(CC1100_INT);
 #endif

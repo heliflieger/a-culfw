@@ -2,8 +2,7 @@
 #include "spi.h"
 #include "board.h"
 
-__weak void
-spi_init(void)
+__attribute__((weak)) void spi_init(void)
 {
 #ifdef SAM7
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_SPI0);
@@ -39,8 +38,7 @@ spi_init(void)
 
 }
 
-__weak uint8_t
-spi_send(uint8_t data)
+__attribute__((weak)) uint8_t spi_send(uint8_t data)
 {
 #ifdef SAM7
   // Send data
@@ -49,7 +47,7 @@ spi_send(uint8_t data)
   while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_RDRF) == 0);
   return AT91C_BASE_SPI0->SPI_RDR & 0xFF;
 #elif defined STM32
-
+  return 0;
 #else
   SPDR = data;
   while (!(SPSR & _BV(SPIF)));
