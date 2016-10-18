@@ -2,9 +2,6 @@
 #ifdef HAS_RWE
 #include <string.h>
 #include <avr/pgmspace.h>
-#ifdef ARM
-#include <hal.h>
-#endif
 #include "fband.h"
 #include "cc1100.h"
 #include "delay.h"

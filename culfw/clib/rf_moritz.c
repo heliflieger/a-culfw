@@ -4,9 +4,6 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
-#ifdef ARM
-#include <hal.h>
-#endif
 #include "fband.h"
 #include "cc1100.h"
 #include "delay.h"

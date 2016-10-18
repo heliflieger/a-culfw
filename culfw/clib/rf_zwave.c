@@ -2,9 +2,6 @@
 #ifdef HAS_ZWAVE
 #include <string.h>
 #include <avr/pgmspace.h>
-#ifdef ARM
-#include <hal.h>
-#endif
 #include "delay.h"
 #include "display.h"
 #include "clock.h"

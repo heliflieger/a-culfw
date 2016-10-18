@@ -57,6 +57,7 @@ void MX_TIM1_Init(void);
 void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void hal_enable_CC_timer_int(uint8_t enable);
 
 /* USER CODE END Prototypes */
 

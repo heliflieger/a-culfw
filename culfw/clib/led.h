@@ -57,13 +57,20 @@ static const Pin pinsLeds[] = {PINS_LEDS};
 #define LED_TOGGLE()    HAL_GPIO_TogglePin(LED_GPIO, _BV(LED_PIN))
 #define led_init()      HAL_LED_Init()
 
+#ifdef LED2_GPIO
+#define LED2_ON()       HAL_GPIO_WritePin(LED2_GPIO, _BV(LED2_PIN), GPIO_PIN_SET)
+#define LED2_OFF()      HAL_GPIO_WritePin(LED2_GPIO, _BV(LED2_PIN), GPIO_PIN_RESET)
+#define LED2_TOGGLE()   HAL_GPIO_TogglePin(LED2_GPIO, _BV(LED2_PIN))
+#else
 #define LED2_ON()
 #define LED2_OFF()
+#define LED2_TOGGLE()
+#endif
 
 #define LED3_ON()
 #define LED3_OFF()
 
-#define LED2_TOGGLE()
+
 #define LED3_TOGGLE()
 
 #else

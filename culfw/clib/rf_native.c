@@ -12,9 +12,6 @@
 #ifdef HAS_RFNATIVE
 #include <string.h>
 #include <avr/pgmspace.h>
-#ifdef ARM
-#include <hal.h>
-#endif
 #include "cc1100.h"
 #include "delay.h"
 #include "rf_receive.h"

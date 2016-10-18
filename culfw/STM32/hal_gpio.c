@@ -88,6 +88,17 @@ void HAL_LED_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(LED_GPIO, &GPIO_InitStruct);
 
+  #ifdef LED2_GPIO
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LED2_GPIO, _BV(LED2_PIN), GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : PB1 PB9 */
+  GPIO_InitStruct.Pin = _BV(LED2_PIN);
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(LED2_GPIO, &GPIO_InitStruct);
+
+  #endif
 }
 
 void hal_CC_GDO_init(void) {

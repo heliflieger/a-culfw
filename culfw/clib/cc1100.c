@@ -3,9 +3,6 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
-#ifdef ARM
-#include <hal.h>
-#endif
 
 #include "delay.h"
 #include "display.h"

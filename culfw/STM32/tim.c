@@ -87,7 +87,7 @@ void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 71;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 60000;
+  htim2.Init.Period = 4000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
@@ -157,6 +157,7 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 void hal_enable_CC_timer_int(uint8_t enable) {
   if (enable) {
+    __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
     if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK) {
       Error_Handler();
     }

@@ -5,7 +5,7 @@
 #define bit_is_set(sfr, bit) ((sfr) & _BV(bit))
 
 
-//#define LONG_PULSE
+#define LONG_PULSE
 
 #define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
 
@@ -24,7 +24,7 @@
 #define UART_BAUD_RATE          115200
 //#define HAS_UART                1
 
-//#define HAS_FHT_80b
+#define HAS_FHT_80b
 #define HAS_FHT_8v
 //#define HAS_RF_ROUTER
 //#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
@@ -53,7 +53,7 @@
 #define HAS_RFNATIVE
 #define HAS_ZWAVE
 
-//#define _433MHZ
+#define _433MHZ
 
 #  if defined(_433MHZ)
 #    define HAS_TCM97001
@@ -155,6 +155,8 @@
 #define LED_GPIO              GPIOB
 #define LED_PIN               1
 
+#define LED2_GPIO             GPIOB
+#define LED2_PIN              0
 
 
 #endif //#ifndef BOARD_H
