@@ -43,7 +43,7 @@ OD = $(ARMPATH)$(TOOLPREFIX)objdump
 SIZE = $(ARMPATH)$(TOOLPREFIX)size
 
 CPUFLAGS = -mcpu=arm7tdmi-s
-OPTFLAGS = -Os
+OPTFLAGS = -O2 -fno-isolate-erroneous-paths-dereference
 CFLAGS = -Wall -mlong-calls -ffunction-sections -std=c99 -Dflash -DTRACE_LEVEL=0 -DDBGU_UNIT_IN -D$(OUTPUT) -g $(GENDEPFLAGS)
 INC = -I. -I../ -I../../../at91lib -I../../../clib -I../../../at91lib/usb -I$(INCLUDEPATH)
 ASFLAGS = -g $(OPTFLAGS) -I. -I../ -I../../../at91lib -D__ASSEMBLY__ -Dflash

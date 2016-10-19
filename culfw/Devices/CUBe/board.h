@@ -26,6 +26,7 @@
 #define BOARD_ID_STR        "CUBe"
 
 #define ARM
+#define SAM7
 #define HAS_USB
 #define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
 #define USB_DESCRIPTOR_SN	'1'

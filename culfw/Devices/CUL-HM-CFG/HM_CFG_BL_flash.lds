@@ -53,6 +53,7 @@ SECTIONS
         *(.data.__malloc_trim_threshold)
         *(.data.__malloc_sbrk_base)
         *(.data.__ctype_ptr__)
+        *(.data.__global_locale)
         . = ALIGN(4);
         _efixed = .;
     } >flash
