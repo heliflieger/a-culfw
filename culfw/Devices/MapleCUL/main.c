@@ -268,29 +268,7 @@ const t_fntab fntab[] = {
 //------------------------------------------------------------------------------
 int main(void)
 {
-
-
-  // DBGU configuration
-
-  TRACE_INFO_WP("\n\r");
-  TRACE_INFO("Getting new Started Project --\n\r");
-  TRACE_INFO("%s\n\r", BOARD_NAME);
-  TRACE_INFO("Compiled: %s %s --\n\r", __DATE__, __TIME__);
-
-
-  TRACE_INFO("init Flash\n\r");
-  //flash_init();
-
-  TRACE_INFO("init Timer\n\r");
-  // Configure timer 0
-  ticks=0;
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* Configure the system clock */
-  SystemClock_Config();
-
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -301,12 +279,25 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
 
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  TRACE_INFO_WP("\n\r");
+  TRACE_INFO("Getting new Started Project --\n\r");
+  TRACE_INFO("%s\n\r", BOARD_NAME);
+  TRACE_INFO("Compiled: %s %s --\n\r", __DATE__, __TIME__);
+
+  TRACE_INFO("init Flash\n\r");
+  //flash_init();
+
+  TRACE_INFO("init Timer\n\r");
+  // Configure timer
+  ticks=0;
 
   led_init();
 
   TRACE_INFO("init EEprom\n\r");
   eeprom_init();
-
 
   rb_reset(&TTY_Rx_Buffer);
   rb_reset(&TTY_Tx_Buffer);
