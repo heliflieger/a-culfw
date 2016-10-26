@@ -60,7 +60,9 @@ void MX_USART2_UART_Init(void);
 void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void DBGU_init(void);
+unsigned int DBGU_IsRxReady(void);
+unsigned char DBGU_GetChar(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

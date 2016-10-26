@@ -46,6 +46,7 @@
 extern PCD_HandleTypeDef hpcd_USB_FS;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
+extern UART_HandleTypeDef huart1;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -216,6 +217,14 @@ void TIM2_IRQHandler(void)
 void EXTI0_IRQHandler(void)
 {
   hal_GPIO_EXTI_IRQHandler();
+}
+
+/**
+* @brief This function handles USART1 global interrupt.
+*/
+void USART1_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart1);
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

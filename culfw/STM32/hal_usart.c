@@ -34,12 +34,18 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hal_usart.h"
-
 #include "hal_gpio.h"
+#include "ringbuffer.h"
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
+
+
+static uint8_t DBGU_RxByte;
+static uint8_t DBGU_RxReady;
+
+static uint8_t inbyte;
 
 /* USART1 init function */
 
@@ -121,6 +127,13 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
+
+  /* USER CODE BEGIN USART1_MspInit 1 */
+
   }
   else if(uartHandle->Instance==USART2)
   {
@@ -220,6 +233,37 @@ signed int fputs(const char *pStr, FILE *pStream)
     return num;
 }
 
+void DBGU_init(void) {
+  HAL_UART_Receive_IT(&huart1, &inbyte, 1);
+}
+
+unsigned int DBGU_IsRxReady()
+{
+    return DBGU_RxReady;
+}
+
+
+unsigned char DBGU_GetChar(void)
+{
+  DBGU_RxReady = 0;
+  return DBGU_RxByte;
+}
+
+/**
+  * @brief  Rx Transfer completed callback
+  * @param  UartHandle: UART handle
+  * @note   This example shows a simple way to report end of DMA Rx transfer, and
+  *         you can add your own implementation.
+  * @retval None
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+  /* Set transmission flag: transfer complete */
+  DBGU_RxByte = inbyte;
+  DBGU_RxReady = 1;
+  HAL_UART_Receive_IT(&huart1, &inbyte, 1);
+  return;
+}
 /**
   * @}
   */

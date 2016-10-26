@@ -142,15 +142,16 @@ OBJS := $(patsubst %.s,%.o,$(SRCS:%.c=%.o))
 
 ifeq ($(DEBUG),GDB)
 OPTIMIZE	 = -O0
-LTO_FLAGS	 = $(OPTIMIZE)
+LTO_FLAGS	 = $(OPTIMIZE) -DTRACE_LEVEL=4
 else
 OPTIMIZE	 = -Os
 LTO_FLAGS	 =  -flto -fuse-linker-plugin $(OPTIMIZE)
 endif
 
+
 CFLAGS := -mcpu=$(CPU) -mthumb
-CFLAGS := $(CFLAGS) -D$(DEVICE_ID) -D$(MCU_FAMILY) -D$(BOARD) -DSTM32 -DDEBUG -DUSE_HAL_DRIVER -D$(MPU_TYPE)
-CFLAGS := $(CFLAGS) -std=c99 -DTRACE_LEVEL=4
+CFLAGS := $(CFLAGS) -D$(DEVICE_ID) -D$(MCU_FAMILY) -D$(BOARD) -DSTM32 -DDBGU_UNIT_IN -DUSE_HAL_DRIVER -D$(MPU_TYPE)
+CFLAGS := $(CFLAGS) -std=c99 
 CFLAGS := $(CFLAGS) $(foreach d,$(H_SUBDIRS),-I$(d))
 CFLAGS := $(CFLAGS) $(LTO_FLAGS) -g3 -Wall -fmessage-length=0 -ffunction-sections -c 
 GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d

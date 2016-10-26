@@ -25,7 +25,7 @@
 //#include <utility/trace.h>
 //#include <usb/device/cdc-serial/CDCDSerialDriver.h>
 //#include <usb/device/cdc-serial/CDCDSerialDriverDescriptors.h>
-//#include <avr/eeprom.h>
+#include <avr/eeprom.h>
 //#include <avr/wdt.h>
 //#include <rstc/rstc.h>
 
@@ -279,6 +279,8 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
 
+  DBGU_init();
+
   /* Configure the system clock */
   SystemClock_Config();
 
@@ -288,7 +290,7 @@ int main(void)
   TRACE_INFO("Compiled: %s %s --\n\r", __DATE__, __TIME__);
 
   TRACE_INFO("init Flash\n\r");
-  //flash_init();
+  flash_init();
 
   TRACE_INFO("init Timer\n\r");
   // Configure timer
@@ -382,7 +384,6 @@ int main(void)
 
 #ifdef DBGU_UNIT_IN
     if(DBGU_IsRxReady()){
-      unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
       unsigned char x;
 
       x=DBGU_GetChar();
@@ -390,31 +391,20 @@ int main(void)
 
       case 'd':
         puts("USB disconnect\n\r");
-        USBD_Disconnect();
-        LED3_OFF();
+        //USBD_Disconnect();
+        //LED3_OFF();
         break;
       case 'c':
-        USBD_Connect();
+        //USBD_Connect();
         puts("USB Connect\n\r");
         break;
       case 'r':
         //Configure Reset Controller
-        AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
+        //AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
         break;
       case 'H':
 
 
-        break;
-      case 'S':
-        USBD_Disconnect();
-
-        my_delay_ms(250);
-        my_delay_ms(250);
-
-        //Reset
-        *ram = 0xaa;
-        AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
-        while (1);
         break;
       default:
         rb_put(&TTY_Tx_Buffer, x);

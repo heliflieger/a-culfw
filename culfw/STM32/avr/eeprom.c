@@ -2,7 +2,7 @@
 
 #include <utility/trace.h>
 #include <board.h>
-
+#include "stm32f1xx_hal.h"
 
 //#define NUM_PAGES	64
 //(AT91C_IFLASH_NB_OF_PAGES / AT91C_IFLASH_NB_OF_LOCK_BITS)
@@ -13,29 +13,153 @@
 //#define ROUND(n)    ((((n) % 10) >= 5) ? (((n) / 10) + 1) : ((n) / 10))
 //#define FMCN_FLASH(mck)         ((((mck) / 2000000) * 3) << 16)
 
-typedef struct _EE_MEMORY {
-	union {
-	uint32_t value[64];
-	uint8_t byte[256];
-	};
+#define EE_START        ADDR_FLASH_PAGE_124
+#define EE_PAGES        4
+#define WORDS_PER_PAGE  (FLASH_PAGE_SIZE/2)
 
+static uint8_t startpage;
+static uint16_t nbytes;
+
+typedef struct _EE_MEMORY {
+	uint8_t address;
+	uint8_t data;
 } EE_MEMORY;
 
-typedef struct _uint32u8_t {
+typedef struct _uint16u8_t {
 	union {
-	uint32_t dbword;
-	uint8_t byte[4];
+	uint16_t word;
+	EE_MEMORY byte;
 	};
+} uint16u8_t;
 
-} uint32u8_t;
-
-#define USE_RAM
+//#define USE_RAM
 
 #if defined(USE_RAM)
 uint8_t ee_ram[256];
-
 #endif
 
+static void erase_pages(uint32_t address, uint8_t count) {
+  FLASH_EraseInitTypeDef EraseInitStruct;
+  uint32_t PAGEError = 0;
+
+  TRACE_DEBUG("EE erase page %x : %x\n\r",address,count);
+
+  EraseInitStruct.TypeErase   = FLASH_TYPEERASE_PAGES;
+  EraseInitStruct.PageAddress = address;
+  EraseInitStruct.NbPages     = count;
+
+  HAL_FLASH_Unlock();
+  HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError);
+  HAL_FLASH_Lock();
+
+  startpage = 0;
+}
+
+static void reset_flash(void) {
+  erase_pages(EE_START, EE_PAGES);
+
+  TRACE_DEBUG("EE reset flash\n\r");
+
+  HAL_FLASH_Unlock();
+  HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD, EE_START, 0xFEFF);
+  HAL_FLASH_Lock();
+}
+
+static uint8_t get_startpage() {
+  uint16_t *address = (uint16_t*)EE_START;
+  uint8_t x;
+
+  for( x=0; x < EE_PAGES; x++) {
+    if (address[WORDS_PER_PAGE * x] == 0xFEFF) {
+      return x;
+    }
+  }
+
+  reset_flash();
+
+  return 0;
+}
+
+static uint16_t get_flashdata(uint16_t pos) {
+  uint16_t index;
+  uint16_t *address = (uint16_t*)EE_START;
+  uint32_t offset = startpage * WORDS_PER_PAGE;
+
+  index = (pos + offset + 1) % (WORDS_PER_PAGE * EE_PAGES);
+
+  return address[index];
+}
+
+static uint8_t seek_flashdata(uint8_t address) {
+  uint16_t x = nbytes;
+  uint16u8_t value;
+
+  do {
+    value.word = get_flashdata(x);
+    if (value.byte.address == address) {
+      return value.byte.data;
+    }
+  } while (x--);
+
+  return 0xFF;
+}
+
+static void reorg_flashdata(void) {
+  uint8_t newstartpage = (startpage + EE_PAGES - 1) % EE_PAGES;;
+  uint16_t *address = (uint16_t*)EE_START;
+  uint32_t offset = newstartpage * WORDS_PER_PAGE;
+  uint16_t newnbytes = 0;
+  uint16u8_t value;
+
+  TRACE_DEBUG("EE reorg flash, start old:%x new:%x\n\r",startpage,newstartpage);
+
+  if (address[offset] != 0xFFFF) {
+    reset_flash();
+    return;
+  }
+
+  HAL_FLASH_Unlock();
+
+  HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD, (uint32_t)&address[offset++ + newnbytes], 0xFEFF);
+  for(uint8_t x = 0; x < 0xff; x++) {
+    value.byte.data = seek_flashdata(x);
+    if(value.byte.data != 0xff) {
+      value.byte.address  = x;
+      HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD, (uint32_t)&address[offset + newnbytes++], value.word);
+    }
+  }
+
+  if(newstartpage) {
+    erase_pages(EE_START, newstartpage);
+  }
+  if((newstartpage + 1) < EE_PAGES) {
+    erase_pages(EE_START + ((newstartpage + 1) * FLASH_PAGE_SIZE) ,EE_PAGES - newstartpage - 1);
+  }
+
+  HAL_FLASH_Lock();
+
+  startpage = newstartpage;
+  nbytes = newnbytes;
+
+}
+
+static void push_flashdata(uint16_t data) {
+  uint16_t index;
+  uint16_t *address = (uint16_t*)EE_START;
+  uint32_t offset = startpage * WORDS_PER_PAGE;
+
+  index = (nbytes + offset + 1) % (WORDS_PER_PAGE * EE_PAGES);
+
+  HAL_FLASH_Unlock();
+  HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD, (uint32_t)&address[index], data);
+  HAL_FLASH_Lock();
+
+  nbytes++;
+
+  if(nbytes > WORDS_PER_PAGE * (EE_PAGES-1) - 2) {
+    reorg_flashdata();
+  }
+}
 
 //------------------------------------------------------------------------------
 //         Exported functions
@@ -45,113 +169,27 @@ uint8_t ee_ram[256];
 void eeprom_write_byte(uint8_t *p, uint8_t v) {
 
 	uint32_t c = (uint32_t)p;
-	TRACE_INFO("EE_W A:%02x V:%02x   ",(uint8_t)c,v);
+	//TRACE_DEBUG("EE_W A:%02x V:%02x   ",(uint8_t)c,v);
 
 	if(eeprom_read_byte(p) == v) {
 		return;
 	}
 
+  if(c >= 0xff) {
+    return;
+  }
+
 #ifdef USE_RAM
 	ee_ram[c]=v;
 	return;
 #else
-#ifdef USE_DATAFLASH
+	uint16u8_t value;
 
-	c += FLASHPAGE * AT45_PageSize(&at45);
+	value.byte.address = c;
+  value.byte.data = v;
 
-	AT45_Write(&at45, &v,1,c);
+  push_flashdata(value.word);
 
-	c = FLASHPAGE * AT45_PageSize(&at45);
-
-	AT45_Read(&at45, &v,1,c);
-	if(v != 0x01) {
-		TRACE_INFO("Flash ERROR ");
-	}
-
-#else
-	uint32u8_t value;
-	int16_t active_page;
-	EE_MEMORY *ee_mem = (void*)EE_BASE;
-	uint32u8_t verify;
-
-	active_page=get_active_page();
-
-	TRACE_INFO_WP("P%02x ",active_page);
-
-	if(active_page < 0) {
-		active_page=flash_init();
-	}
-
-	value.dbword = ee_mem[active_page].value[c>>2];
-	value.byte[c & 0x03]=v;
-
-	//Check if bits have to be set
-	if(v & ~(ee_mem[active_page].byte[c])) {
-		TRACE_INFO_WP("!= ");
-		int16_t new_page = get_free_page();
-		disable_page(active_page);
-
-		if(new_page < 0) {
-			//clean all pages except active page
-			clean_pages(active_page);
-			new_page = get_free_page();
-		}
-
-		if(new_page < 0) {
-			new_page=0;
-			AT91C_BASE_MC->MC_FMR &= ~AT91C_MC_NEBP;
-		}
-
-		init_page(active_page,new_page);
-		active_page=new_page;
-
-	} else {
-		//Fill Buffer
-		TRACE_INFO_WP("== ");
-		for (unsigned int i = 0; i < (AT91C_IFLASH_PAGE_SIZE/4) ;i++) {
-			//temp=ee_mem[active_page].value[i];
-			ee_mem[active_page].value[i]=0xffffffff;
-		}
-	}
-
-
-	ee_mem[active_page].value[c>>2] = value.dbword;
-	TRACE_INFO_WP("P%02x ",active_page);
-
-	TRACE_INFO_WP("W:%02x%02x%02x%02x  ",value.byte[3],value.byte[2],value.byte[1],value.byte[0]);
-
-	//AT91C_BASE_MC->MC_FMR &= ~AT91C_MC_NEBP;
-	AT91C_BASE_MC->MC_FMR |= AT91C_MC_NEBP;
-	EFC_PerformCommand1(AT91C_MC_FCMD_START_PROG, FIRSTPAGE + active_page);
-
-
-	verify.dbword = ee_mem[active_page].value[c>>2];
-	TRACE_INFO_WP("R:%02x%02x%02x%02x ",verify.byte[3],verify.byte[2],verify.byte[1],verify.byte[0]);
-
-	if(value.dbword != verify.dbword) {
-		TRACE_INFO_WP("Error ");
-		volatile uint32_t temp;
-		//Try again
-		for (unsigned int i = 0; i < (AT91C_IFLASH_PAGE_SIZE/4) ;i++) {
-			temp=ee_mem[active_page].value[i];
-			ee_mem[active_page].value[i]=temp;
-		}
-		ee_mem[active_page].value[c>>2] = value.dbword;
-		AT91C_BASE_MC->MC_FMR &= ~AT91C_MC_NEBP;
-		EFC_PerformCommand1(AT91C_MC_FCMD_START_PROG, FIRSTPAGE + active_page);
-
-		verify.dbword = ee_mem[active_page].value[c>>2];
-
-		if(value.dbword != verify.dbword) {
-				TRACE_INFO_WP("Error \n\r");
-		} else {
-			TRACE_INFO_WP("OK \n\r");
-		}
-	} else {
-		TRACE_INFO_WP("\n\r");
-	}
-	AT91C_BASE_MC->MC_FMR |= AT91C_MC_NEBP;
-#endif
 #endif
 }
 
@@ -167,179 +205,72 @@ uint16_t eeprom_read_word(uint16_t *p) {
 }
 
 uint8_t eeprom_read_byte(uint8_t *p) {
-	uint32_t c = (uint32_t)p;
+  uint32_t c = (uint32_t)p;
+
+  if(c >= 0xff) {
+    return 0xff;
+  }
 
 #ifdef USE_RAM
 	return ee_ram[c];
 #else
-#ifdef USE_DATAFLASH
-	uint8_t v;
-
-	c += FLASHPAGE * AT45_PageSize(&at45);
-
-	AT45_Read(&at45, &v,1,c);
-	return v;
-
-#else
-	EE_MEMORY *ee_mem = (void*)EE_BASE;
 	uint8_t value;
-	int16_t active_page;
 
-
-	active_page=get_active_page();
-	TRACE_INFO("P%02x ",active_page);
-
-	if(active_page < 0) {
-		active_page=flash_init();
-	}
-
-	value= ee_mem[active_page].byte[c];
-	TRACE_INFO_WP("P%02x ",active_page);
-
-	TRACE_INFO_WP("EE_R A:%x V:%x   \n\r",(uint8_t)c,value);
+	value = seek_flashdata(c);
 	return value;
-#endif
-#endif
-}
-
-/*
- * The width of the CRC calculation and result.
- * Modify the typedef for a 16 or 32-bit CRC standard.
- */
-
-typedef uint32_t crc;
-#define CRC_POLYNOMIAL 0x8005
-#define CRC_WIDTH  (8 * sizeof(crc))
-#define CRC_TOPBIT (1 << (CRC_WIDTH - 1))
-
-crc CRCs(unsigned char* message, uint16_t count)
-{
-    crc  remainder = 0;
-	int byte;
-	unsigned char bit;
-
-    /*
-     * Perform modulo-2 division, a byte at a time.
-     */
-    for (byte = 0; byte < count; ++byte)
-    {
-        /*
-         * Bring the next byte into the remainder.
-         */
-        remainder ^= (message[byte] << (CRC_WIDTH - 8));
-
-        /*
-         * Perform modulo-2 division, a bit at a time.
-         */
-        for (bit = 8; bit > 0; --bit)
-        {
-            /*
-             * Try to divide the current data bit.
-             */
-            if (remainder & CRC_TOPBIT)
-            {
-                remainder = (remainder << 1) ^ CRC_POLYNOMIAL;
-            }
-            else
-            {
-                remainder = (remainder << 1);
-            }
-        }
-    }
-
-    /*
-     * The final remainder is the CRC result.
-     */
-    return (remainder);
-
-}   /* crcSlow() */
 
 
-uint32_t flash_serial(void) {
-#ifdef USE_DATAFLASH
-	unsigned char v[128];
-
-	AT45_Read_Security(&at45, v,128,0);
-
-	return CRCs(v,128);
-#else
-	return 0x01234567;
 #endif
 }
 
 int16_t flash_init(void) {
-#ifdef USE_RAM
-	return 0;
-#else
-#ifdef USE_DATAFLASH
-	const At45Desc *pDesc;
+  startpage = get_startpage();
 
-	// Configure pins
-	PIO_Configure(pins, PIO_LISTSIZE(pins));
-
-	// SPI and At45 driver initialization
-	TRACE_INFO("Initializing the SPI and AT45 drivers\n\r");
-	AIC_ConfigureIT(BOARD_AT45_A_SPI_ID, 0, ISR_Spi);
-	SPID_Configure(&spid, BOARD_AT45_A_SPI_BASE, BOARD_AT45_A_SPI_ID);
-	SPID_ConfigureCS(&spid, BOARD_AT45_A_NPCS, AT45_CSR(BOARD_MCK, SPCK));
-	AT45_Configure(&at45, &spid, BOARD_AT45_A_NPCS);
-	TRACE_INFO("At45 enabled\n\r");
-	AIC_EnableIT(BOARD_AT45_A_SPI_ID);
-	TRACE_INFO("SPI interrupt enabled\n\r");
-
-	// Identify the At45 device
-	TRACE_INFO("Waiting for a dataflash to be connected ...\n\r");
-	pDesc = 0;
-
-	while (!pDesc) {
-
-		pDesc = AT45_FindDevice(&at45, AT45_GetStatus(&at45));
-	}
-	TRACE_INFO("%s detected\n\r", at45.pDesc->name);
-
-	// Output JEDEC identifier of device
-	TRACE_INFO("Device identifier: 0x%08X\n\r", AT45_GetJedecId(&at45));
-
-
-	unsigned char v[2];
-	uint32_t c;
-
-	c = FLASHPAGE * AT45_PageSize(&at45);
-
-	AT45_Read(&at45, v,2,c);
-	TRACE_INFO("EE Magic: %u %u Start %u\n\r", v[0], v[1],(unsigned int)c);
-
-	TRACE_INFO("Flash Serial: %08x\n\r",flash_serial());
-
-	return 0;
-
-#else
-	int16_t active_page;
-
-	//no erase before write
-	AT91C_BASE_MC->MC_FMR |= AT91C_MC_NEBP;
-
-	//Unlock last page
-	EFC_PerformCommand1(AT91C_MC_FCMD_UNLOCK, FIRSTPAGE);
-
-	active_page=get_active_page();
-
-	if (active_page < 0) {
-
-		active_page = 0;
-		init_page(-1,active_page);
-
-		//erase before write and write page
-		AT91C_BASE_MC->MC_FMR &= ~AT91C_MC_NEBP;
-		EFC_PerformCommand1(AT91C_MC_FCMD_START_PROG, FIRSTPAGE + active_page);
-
-		TRACE_INFO("Init Flash P%i",active_page);
+	for(uint16_t x = 0; x < ((WORDS_PER_PAGE * EE_PAGES) -1); x++) {
+	  if(get_flashdata(x) == 0xFFFF) {
+	    nbytes = x;
+	    break;
+	  }
 	}
 
-	return active_page;
-#endif
-#endif
+	return 0;
 }
+
+/*
+void test_flash() {
+  uint8_t value;
+
+
+  get_flashdata(0);
+
+  for(uint8_t x = 0; x<0xff;x++) {
+    eeprom_write_byte((uint8_t*)x, 0xAA - x);
+  }
+  for(uint8_t x = 0; x<0xFF;x++) {
+    value = eeprom_read_byte((uint8_t*)x);
+    uint8_t temp = 0xAA - x;
+    if(value != temp) {
+      TRACE_DEBUG("EE fail1 at %x v:%x t:%x\n\r",x,value,temp);
+      value = eeprom_read_byte((uint8_t*)x);
+      return;
+    }
+  }
+
+  for(uint8_t x = 0; x<0xff;x++) {
+    eeprom_write_byte((uint8_t*)x, 0x55 - x);
+  }
+  for(uint8_t x = 0; x<0xff;x++) {
+    value = eeprom_read_byte((uint8_t*)x);
+    uint8_t temp = 0x55 - x;
+    if(value != temp) {
+      TRACE_DEBUG("EE fail2 at %x v:%x t:%x\n\r",x,value,temp);
+      value = eeprom_read_byte((uint8_t*)x);
+      return;
+    }
+  }
+  TRACE_DEBUG("EE test OK\n\r");
+}
+*/
 
 void dump_flash(void) {
 
