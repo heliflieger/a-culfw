@@ -47,6 +47,10 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 /* USB_Device init function */	
 void MX_USB_DEVICE_Init(void);
 
+void USBD_Disconnect(void);
+void USBD_Connect(void);
+unsigned char USBD_GetState(void);
+
 #ifdef __cplusplus
 }
 #endif

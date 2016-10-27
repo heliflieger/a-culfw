@@ -56,23 +56,26 @@
 */
 void MX_GPIO_Init(void)
 {
-
-  GPIO_InitTypeDef GPIO_InitStruct;
-
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+}
+
+void hal_UCBD_connect_init(void)
+{
+#ifdef USBD_CONNECT_PIN
+  GPIO_InitTypeDef GPIO_InitStruct;
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(USBD_CONNECT_PORT, _BV(USBD_CONNECT_PIN), GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PB1 PB9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  /*Configure GPIO pins*/
+  GPIO_InitStruct.Pin = _BV(USBD_CONNECT_PIN);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
+  HAL_GPIO_Init(USBD_CONNECT_PORT, &GPIO_InitStruct);
+#endif
 }
 
 /* USER CODE BEGIN 2 */

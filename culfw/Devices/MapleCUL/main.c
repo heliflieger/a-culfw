@@ -391,11 +391,11 @@ int main(void)
 
       case 'd':
         puts("USB disconnect\n\r");
-        //USBD_Disconnect();
+        USBD_Disconnect();
         //LED3_OFF();
         break;
       case 'c':
-        //USBD_Connect();
+        USBD_Connect();
         puts("USB Connect\n\r");
         break;
       case 'r':

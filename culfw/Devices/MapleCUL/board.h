@@ -17,8 +17,7 @@
 #define ARM
 
 #define HAS_USB
-//TODO USB connect
-#define USB_IsConnected		1
+#define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
 //#define USB_DESCRIPTOR_SN	'1'
 #define HAS_XRAM
 #define UART_BAUD_RATE          115200
@@ -158,6 +157,8 @@
 #define LED2_GPIO             GPIOB
 #define LED2_PIN              0
 
+#define USBD_CONNECT_PORT     GPIOB
+#define USBD_CONNECT_PIN      9
 
 #endif //#ifndef BOARD_H
 

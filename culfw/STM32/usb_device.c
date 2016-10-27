@@ -39,6 +39,8 @@
 #include "usbd_desc.h"
 #include "usbd_cdc.h"
 #include "usbd_cdc_if.h"
+#include "hal_gpio.h"
+#include "board.h"
 
 /* USB Device Core handle declaration */
 USBD_HandleTypeDef hUsbDeviceFS;
@@ -55,6 +57,24 @@ void MX_USB_DEVICE_Init(void)
 
   USBD_Start(&hUsbDeviceFS);
 
+  hal_UCBD_connect_init();
+
+}
+void USBD_Disconnect(void) {
+#ifdef USBD_CONNECT_PIN
+  HAL_GPIO_WritePin(USBD_CONNECT_PORT, _BV(USBD_CONNECT_PIN), GPIO_PIN_SET);
+#endif
+}
+
+void USBD_Connect(void) {
+#ifdef USBD_CONNECT_PIN
+  HAL_GPIO_WritePin(USBD_CONNECT_PORT, _BV(USBD_CONNECT_PIN), GPIO_PIN_RESET);
+#endif
+}
+
+unsigned char USBD_GetState(void)
+{
+    return hUsbDeviceFS.dev_state;
 }
 /**
   * @}
