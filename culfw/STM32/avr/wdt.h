@@ -5,8 +5,8 @@
 
 #include <stdint.h>
 
-#define WDTO_15MS	15
-#define WDTO_2S		2000
+#define WDTO_15MS 19
+#define WDTO_2S   2500
 
 void wdt_reset(void);
 void wdt_enable(uint16_t ms);

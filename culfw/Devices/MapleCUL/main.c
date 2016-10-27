@@ -26,7 +26,7 @@
 //#include <usb/device/cdc-serial/CDCDSerialDriver.h>
 //#include <usb/device/cdc-serial/CDCDSerialDriverDescriptors.h>
 #include <avr/eeprom.h>
-//#include <avr/wdt.h>
+#include <avr/wdt.h>
 //#include <rstc/rstc.h>
 
 
@@ -326,7 +326,7 @@ int main(void)
   uart_init(UART_BAUD_RATE);
   #endif
 
-  //wdt_enable(WDTO_2S);
+  wdt_enable(WDTO_2S);
 
   fastrf_on=0;
 
@@ -402,8 +402,8 @@ int main(void)
         //Configure Reset Controller
         //AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
         break;
-      case 'H':
-
+      case 'w':
+        //wdt_enable(WDTO_2S);
 
         break;
       default:
