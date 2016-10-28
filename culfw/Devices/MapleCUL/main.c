@@ -15,20 +15,8 @@
 #include <hal_gpio.h>
 #include <tim.h>
 #include <utility/trace.h>
-
-//#include "pio/pio.h"
-
-//#include <dbgu/dbgu.h>
-//#include <stdio.h>
-//#include <pio/pio_it.h>
-//#include <aic/aic.h>
-//#include <utility/trace.h>
-//#include <usb/device/cdc-serial/CDCDSerialDriver.h>
-//#include <usb/device/cdc-serial/CDCDSerialDriverDescriptors.h>
 #include <avr/eeprom.h>
 #include <avr/wdt.h>
-//#include <rstc/rstc.h>
-
 
 #include "led.h"
 
@@ -99,14 +87,6 @@
 //         Local variables
 //------------------------------------------------------------------------------
 
-/// Global timestamp in milliseconds since start of application.
-//volatile unsigned int timestamp = 0;
-
- /// State of USB, for suspend and resume
- //unsigned char USBState = STATE_IDLE;
-
- /// Buffer for storing incoming USB data.
- //static unsigned char usbBuffer[DATABUFFERSIZE];
 
 //------------------------------------------------------------------------------
 //         Local functions
@@ -165,12 +145,9 @@ void SystemClock_Config(void)
   */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler */
-  /* User can add his own implementation to report the HAL error return state */
   while(1)
   {
   }
-  /* USER CODE END Error_Handler */
 }
 
 //------------------------------------------------------------------------------
@@ -275,7 +252,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
-  MX_USB_DEVICE_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
 
@@ -292,8 +268,8 @@ int main(void)
   TRACE_INFO("init Flash\n\r");
   flash_init();
 
+  //Configure timer
   TRACE_INFO("init Timer\n\r");
-  // Configure timer
   ticks=0;
 
   led_init();
@@ -319,8 +295,8 @@ int main(void)
   #endif
 
   TRACE_INFO("init USB\n\r");
-  //CDCDSerialDriver_Initialize();
-  //USBD_Connect();
+  MX_USB_DEVICE_Init();
+  USBD_Connect();
 
   #ifdef HAS_UART
   uart_init(UART_BAUD_RATE);
@@ -392,18 +368,15 @@ int main(void)
       case 'd':
         puts("USB disconnect\n\r");
         USBD_Disconnect();
-        //LED3_OFF();
         break;
       case 'c':
         USBD_Connect();
         puts("USB Connect\n\r");
         break;
       case 'r':
-        //Configure Reset Controller
-        //AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
+
         break;
       case 'w':
-        //wdt_enable(WDTO_2S);
 
         break;
       default:

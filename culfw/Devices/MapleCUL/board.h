@@ -134,10 +134,6 @@
 #define CC1100_IN_PIN       CC1100_0_IN_PIN
 #define CC1100_IN_GPIO     	CC1100_0_IN_GPIO
 #define CC1100_IN_PORT  	  CC1100_0_IN_PORT
-//#define CC1100_OUT_IN       CC1100_0_OUT_PORT
-//#define CC1100_IN_IN        CC1100_0_IN_PORT
-
-//#define BOOTLOADER_PIN		(1<<14)
 
 //#define HAS_ETHERNET            1       // undef or define...1
 //#define HAS_ETHERNET_KEEPALIVE  1

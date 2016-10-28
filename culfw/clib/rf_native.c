@@ -107,6 +107,7 @@ void native_init(uint8_t mode) {
   CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
   CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
 #elif defined STM32
+  hal_CC_GDO_init();
   hal_enable_CC_GDOin_int(FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...

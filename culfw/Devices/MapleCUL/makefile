@@ -78,12 +78,13 @@ SRCS += ../../clib/ttydata.c
 SRCS += ../../STM32/hal_usart.c
 SRCS += ../../STM32/hal_spi.c
 SRCS += ../../STM32/hal_gpio.c
-SRCS += ../../STM32/usb_device.c
-SRCS += ../../STM32/usbd_cdc_if.c
-SRCS += ../../STM32/usbd_conf.c
-SRCS += ../../STM32/usbd_desc.c
 SRCS += ../../STM32/tim.c
 SRCS += ../../STM32/stdio.c
+
+SRCS += ../../STM32/usbd/usb_device.c
+SRCS += ../../STM32/usbd/usbd_cdc_if.c
+SRCS += ../../STM32/usbd/usbd_conf.c
+SRCS += ../../STM32/usbd/usbd_desc.c
 
 SRCS += ../../STM32/avr/interrupt.c
 SRCS += ../../STM32/avr/eeprom.c
@@ -122,9 +123,10 @@ SRCS += ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.
 # Every subdirectory with include files must be described here
 H_SUBDIRS := \
 ../MapleCUL \
-../../STM32 \
-../../STM32/utility \
 ../../clib \
+../../STM32 \
+../../STM32/usbd \
+../../STM32/utility \
 ../../STM32/Drivers/$(MCU_FAMILY)xx_HAL_Driver/Inc \
 ../../STM32/Drivers/CMSIS/Include \
 ../../STM32/Drivers/CMSIS/Device/ST/$(MCU_FAMILY)xx/Include \
