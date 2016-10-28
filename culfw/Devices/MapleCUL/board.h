@@ -26,7 +26,7 @@
 #define HAS_FHT_80b
 #define HAS_FHT_8v
 //#define HAS_RF_ROUTER
-//#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
+#define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
@@ -63,7 +63,7 @@
 #    define HAS_REVOLT
 #  endif
 
-//#define HAS_MBUS
+#define HAS_MBUS
 //#define HAS_MEMFN
 
 //#define SPI_MISO			(1<<16)
@@ -80,6 +80,7 @@
 #define CC1100_0_CS_GPIO	  GPIOA
 #define CC1100_0_OUT_PIN    1
 #define CC1100_0_OUT_GPIO   GPIOA
+#define CC1100_0_OUT_PORT   GPIOA->IDR
 #define CC1100_0_IN_PIN     0
 #define CC1100_0_IN_GPIO    GPIOA
 #define CC1100_0_IN_PORT    GPIOA->IDR
@@ -134,6 +135,8 @@
 #define CC1100_IN_PIN       CC1100_0_IN_PIN
 #define CC1100_IN_GPIO     	CC1100_0_IN_GPIO
 #define CC1100_IN_PORT  	  CC1100_0_IN_PORT
+#define CC1100_OUT_IN       CC1100_0_OUT_PORT
+#define CC1100_IN_IN        CC1100_0_IN_PORT
 
 //#define HAS_ETHERNET            1       // undef or define...1
 //#define HAS_ETHERNET_KEEPALIVE  1

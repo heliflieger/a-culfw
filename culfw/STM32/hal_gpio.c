@@ -104,24 +104,29 @@ void HAL_LED_Init(void) {
   #endif
 }
 
-void hal_CC_GDO_init(void) {
+void hal_CC_GDO_init(uint8_t mode) {
   GPIO_InitTypeDef GPIO_InitStruct;
 
-  /*Configure CS pin */
+  /*Configure GDO0 (out) pin */
+    if(mode == INIT_MODE_IN_CS_IN) {
+      GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+      GPIO_InitStruct.Pull = GPIO_PULLUP;
+    } else {
+      HAL_GPIO_WritePin(CC1100_OUT_GPIO, _BV(CC1100_OUT_PIN), GPIO_PIN_RESET);
+      GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    }
+    GPIO_InitStruct.Pin = _BV(CC1100_OUT_PIN);
+    HAL_GPIO_Init(CC1100_OUT_GPIO, &GPIO_InitStruct);
+
+  /*Configure GDO1 (CS) pin */
   HAL_GPIO_WritePin(CC1100_CS_GPIO, _BV(CC1100_CS_PIN), GPIO_PIN_SET);
   GPIO_InitStruct.Pin = _BV(CC1100_CS_PIN);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(CC1100_CS_GPIO, &GPIO_InitStruct);
 
-  /*Configure out pin */
-  HAL_GPIO_WritePin(CC1100_OUT_GPIO, _BV(CC1100_OUT_PIN), GPIO_PIN_RESET);
-  GPIO_InitStruct.Pin = _BV(CC1100_OUT_PIN);
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(CC1100_OUT_GPIO, &GPIO_InitStruct);
-
-  /*Configure in pin */
+  /*Configure GDO2 (in) pin */
   GPIO_InitStruct.Pin = _BV(CC1100_IN_PIN);
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;

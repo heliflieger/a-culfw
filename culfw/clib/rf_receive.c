@@ -119,7 +119,7 @@ tx_init(void)
   AIC_ConfigureIT(CC1100_IN_PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
 
 #elif defined STM32
-  hal_CC_GDO_init();
+  hal_CC_GDO_init(INIT_MODE_OUT_CS_IN);
   hal_enable_CC_GDOin_int(TRUE);
 #else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);

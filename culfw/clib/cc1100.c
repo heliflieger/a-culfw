@@ -183,7 +183,7 @@ ccInitChip(uint8_t *cfg)
   CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);		//Enable output
   CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);		//Enable PIO control
 #elif defined STM32
-  hal_CC_GDO_init();
+  hal_CC_GDO_init(INIT_MODE_OUT_CS_IN);
 #else
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output

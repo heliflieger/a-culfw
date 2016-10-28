@@ -126,8 +126,7 @@ static void rf_mbus_init(uint8_t mmode, uint8_t rmode) {
   CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
 
 #elif defined STM32
-  //TODO MBUS GDO init
-  hal_CC_GDO_init();
+  hal_CC_GDO_init(INIT_MODE_IN_CS_IN);
   hal_enable_CC_GDOin_int(FALSE); // disable INT - we'll poll...
 
 #else
