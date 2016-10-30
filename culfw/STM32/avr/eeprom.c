@@ -223,6 +223,73 @@ uint8_t eeprom_read_byte(uint8_t *p) {
 #endif
 }
 
+/*
+ * The width of the CRC calculation and result.
+ * Modify the typedef for a 16 or 32-bit CRC standard.
+ */
+
+typedef uint32_t crc;
+#define CRC_POLYNOMIAL 0x8005
+#define CRC_WIDTH  (8 * sizeof(crc))
+#define CRC_TOPBIT (1 << (CRC_WIDTH - 1))
+
+crc CRCs(unsigned char* message, uint16_t count)
+{
+    crc  remainder = 0;
+  int byte;
+  unsigned char bit;
+
+    /*
+     * Perform modulo-2 division, a byte at a time.
+     */
+    for (byte = 0; byte < count; ++byte)
+    {
+        /*
+         * Bring the next byte into the remainder.
+         */
+        remainder ^= (message[byte] << (CRC_WIDTH - 8));
+
+        /*
+         * Perform modulo-2 division, a bit at a time.
+         */
+        for (bit = 8; bit > 0; --bit)
+        {
+            /*
+             * Try to divide the current data bit.
+             */
+            if (remainder & CRC_TOPBIT)
+            {
+                remainder = (remainder << 1) ^ CRC_POLYNOMIAL;
+            }
+            else
+            {
+                remainder = (remainder << 1);
+            }
+        }
+    }
+
+    /*
+     * The final remainder is the CRC result.
+     */
+    return (remainder);
+
+}   /* crcSlow() */
+
+#define STM32_UUID ((uint32_t *)UID_BASE)
+
+uint32_t flash_serial(void) {
+
+  uint32_t v[3];
+
+  v[0] = STM32_UUID[0];
+  v[1] = STM32_UUID[1];
+  v[2] = STM32_UUID[2];
+
+
+  return CRCs((unsigned char*)v,9);
+
+}
+
 int16_t flash_init(void) {
   startpage = get_startpage();
 

@@ -90,7 +90,8 @@ CDC_Task(void)
 			 usbBufferOut[i++]=rb_get(&TTY_Tx_Buffer);
 		}
 
-		while (CDCDSerialDriver_Write(usbBufferOut,i, 0, 0) != USBD_STATUS_SUCCESS);
+		//while (CDCDSerialDriver_Write(usbBufferOut,i, 0, 0) != USBD_STATUS_SUCCESS);
+		CDCDSerialDriver_Write(usbBufferOut,i, 0, 0);
 
 	}
 

@@ -2,7 +2,7 @@
 #define __ETHERNET_H_
 
 #include "board.h"
-
+#include "ringbuffer.h"
 #include <stdint.h>
 
 void ethernet_reset(void);
@@ -14,6 +14,8 @@ void erip(void *ip, uint8_t *addr);      // EEprom read IP
 void udp_appcall(void);
 void tcp_appcall(void);
 void eth_func(char *);
+
+extern rb_t NET_Tx_Buffer;
 
 // NOTE:
 // typedef struct tcplink_state uip_tcp_appstate_t;

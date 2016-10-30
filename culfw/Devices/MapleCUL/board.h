@@ -143,6 +143,8 @@
 //#define ETHERNET_KEEPALIVE_TIME 30
 //#define HAS_NTP                 1       // undef or define...1
 
+#define HAS_W5100
+
 //------------------------------------------------------------------------------
 //         Headers
 //------------------------------------------------------------------------------
@@ -158,6 +160,12 @@
 
 #define USBD_CONNECT_PORT     GPIOB
 #define USBD_CONNECT_PIN      9
+
+#define WIZNET_CS_PIN         12
+#define WIZNET_CS_GPIO        GPIOB
+
+#define WIZNET_RST_PIN        8
+#define WIZNET_RST_GPIO       GPIOA
 
 #endif //#ifndef BOARD_H
 

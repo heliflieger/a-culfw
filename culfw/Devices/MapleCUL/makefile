@@ -4,6 +4,8 @@ OBJCOPY=arm-none-eabi-objcopy
 
 OBJDIR = .
 
+WIZNET_PATH = ../../Wiznet
+
 ###############################################################
 #####
 ##### Target
@@ -75,6 +77,8 @@ SRCS += ../../clib/spi.c
 SRCS += ../../clib/stringfunc.c
 SRCS += ../../clib/ttydata.c
 
+SRCS += ../../clib/ethernet_wiznet.c
+
 SRCS += ../../STM32/hal_usart.c
 SRCS += ../../STM32/hal_spi.c
 SRCS += ../../STM32/hal_gpio.c
@@ -120,6 +124,11 @@ SRCS += ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c
 SRCS += ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c
 SRCS += ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c
 
+SRCS += ../../Wiznet/Ethernet/W5100/w5100.c
+SRCS += ../../Wiznet/Ethernet/socket.c
+SRCS += ../../Wiznet/Ethernet/wizchip_conf.c
+SRCS += ../../Wiznet/Internet/DHCP/dhcp.c
+
 # Every subdirectory with include files must be described here
 H_SUBDIRS := \
 ../MapleCUL \
@@ -131,7 +140,10 @@ H_SUBDIRS := \
 ../../STM32/Drivers/CMSIS/Include \
 ../../STM32/Drivers/CMSIS/Device/ST/$(MCU_FAMILY)xx/Include \
 ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
-../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/
+../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Inc/ \
+../../Wiznet/Ethernet \
+../../Wiznet/Ethernet/W5100 \
+../../Wiznet/Internet 
 
 LD_FILE := $(DEVICE_ID)_FLASH.ld
 

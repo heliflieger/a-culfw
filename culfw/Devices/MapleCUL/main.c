@@ -44,6 +44,10 @@
 #include "ntp.h"
 #endif
 
+#ifdef HAS_W5100
+#include "ethernet.h"
+#endif
+
 #ifdef HAS_MEMFN
 #include "memory.h"		// getfreemem
 #endif
@@ -165,6 +169,9 @@ void CDCDSerialDriver_Receive_Callback(uint8_t* Buf, uint32_t *Len)
     }
 }
 
+//------------------------------------------------------------------------------
+//         Function Table
+//------------------------------------------------------------------------------
 
 const t_fntab fntab[] = {
 
@@ -290,7 +297,8 @@ int main(void)
   fht_init();
   tx_init();
 
-  #ifdef HAS_ETHERNET
+  #ifdef HAS_W5100
+  TRACE_INFO("init Ethernet\n\r");
   ethernet_init();
   #endif
 
@@ -307,6 +315,10 @@ int main(void)
   fastrf_on=0;
 
   display_channel = DISPLAY_USB;
+
+#ifdef HAS_W5100
+  display_channel |= DISPLAY_TCP;
+#endif
 
   TRACE_INFO("init Complete\n\r");
 
@@ -354,7 +366,7 @@ int main(void)
       rf_maico_task();
     #endif
 
-    #ifdef HAS_ETHERNET
+    #ifdef HAS_W5100
       Ethernet_Task();
     #endif
 

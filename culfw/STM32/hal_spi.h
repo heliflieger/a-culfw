@@ -55,6 +55,8 @@ extern void Error_Handler(void);
 
 void MX_SPI1_Init(void);
 
+uint8_t spi2_send(uint8_t data);
+
 /* USER CODE BEGIN Prototypes */
 /* USER CODE END Prototypes */
 

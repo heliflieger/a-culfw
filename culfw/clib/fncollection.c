@@ -70,7 +70,7 @@ display_ee_mac(uint8_t *a)
   display_ee_bytes( a, 6 );
 }
 
-#ifdef HAS_ETHERNET
+#if defined(HAS_ETHERNET) | defined(HAS_W5100)
 static void
 display_ee_ip4(uint8_t *a)
 {
@@ -90,7 +90,7 @@ read_eeprom(char *in)
   uint8_t hb[2], d;
   uint16_t addr;
 
-#ifdef HAS_ETHERNET
+#if defined(HAS_ETHERNET) | defined(HAS_W5100)
   if(in[1] == 'i') {
            if(in[2] == 'm') { display_ee_mac(EE_MAC_ADDR);
     } else if(in[2] == 'd') { DH2(erb(EE_USE_DHCP));
@@ -130,7 +130,7 @@ write_eeprom(char *in)
 {
   uint8_t hb[6], d = 0;
 
-#ifdef HAS_ETHERNET
+#if defined(HAS_ETHERNET) | defined(HAS_W5100)
   if(in[1] == 'i') {
     uint8_t *addr = 0;
            if(in[2] == 'm') { d=6; fromhex(in+3,hb,6); addr=EE_MAC_ADDR;
@@ -230,7 +230,7 @@ eeprom_factory_reset(char *in)
   ewb(EE_BRIGHTNESS, 0x80);
   ewb(EE_SLEEPTIME, 30);
 #endif
-#ifdef HAS_ETHERNET
+#if defined(HAS_ETHERNET) | defined(HAS_W5100)
   ethernet_reset();
 #endif
 #ifdef HAS_FS

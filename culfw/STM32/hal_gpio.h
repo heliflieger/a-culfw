@@ -64,6 +64,9 @@ void MX_GPIO_Init(void);
 /* USER CODE BEGIN Prototypes */
 void hal_UCBD_connect_init(void);
 void HAL_LED_Init(void);
+
+void hal_wiznet_Init(void);
+
 void hal_CC_GDO_init(uint8_t mode);
 void hal_enable_CC_GDOin_int(uint8_t enable);
 /* USER CODE END Prototypes */

@@ -137,7 +137,35 @@ void hal_CC_GDO_init(uint8_t mode) {
 
 }
 
-//hal_enable_CC_GDOin_int(FALSE);
+#ifdef HAS_W5100
+void hal_wiznet_Init(void) {
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  /*Configure CS pin Output Level */
+  HAL_GPIO_WritePin( WIZNET_CS_GPIO, _BV(WIZNET_CS_PIN), GPIO_PIN_SET);
+
+  /*Configure CS pin */
+  GPIO_InitStruct.Pin = _BV(WIZNET_CS_PIN);
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init( WIZNET_CS_GPIO, &GPIO_InitStruct);
+
+  /*Configure RESET pin Output Level */
+  HAL_GPIO_WritePin(WIZNET_RST_GPIO, _BV(WIZNET_RST_PIN), GPIO_PIN_SET);
+
+  /*Configure RESET pin */
+  GPIO_InitStruct.Pin = _BV(WIZNET_RST_PIN);
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(WIZNET_RST_GPIO, &GPIO_InitStruct);
+
+  // Reset chip
+  HAL_GPIO_WritePin(WIZNET_RST_GPIO, _BV(WIZNET_RST_PIN), GPIO_PIN_RESET);
+  my_delay_ms(10);
+  HAL_GPIO_WritePin(WIZNET_RST_GPIO, _BV(WIZNET_RST_PIN), GPIO_PIN_SET);
+
+}
+#endif
 
 void hal_enable_CC_GDOin_int(uint8_t enable) {
   GPIO_InitTypeDef GPIO_InitStruct;

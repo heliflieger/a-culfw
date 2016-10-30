@@ -144,6 +144,8 @@ void eeprom_write_byte(uint8_t *p, uint8_t v);
 uint8_t eeprom_read_byte(uint8_t *p);
 uint16_t eeprom_read_word(uint16_t *p);
 int16_t flash_init(void);
+uint32_t flash_serial(void);
+
 //void test_flash(void);
 
 void dump_flash(void);
