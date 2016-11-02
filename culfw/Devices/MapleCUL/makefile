@@ -2,10 +2,6 @@
 CC=arm-none-eabi-gcc
 OBJCOPY=arm-none-eabi-objcopy
 
-OBJDIR = .
-
-WIZNET_PATH = ../../Wiznet
-
 ###############################################################
 #####
 ##### Target
@@ -21,7 +17,7 @@ MPU_TYPE := STM32F103xB
 MPU_TYPE_LOWER_CASE := stm32f103xb
 CPU := cortex-m3
 
-# Debugger optons, must be empty or GDB
+# Debugger options, must be empty or GDB
 DEBUG ?= 
 
 ###############################################################

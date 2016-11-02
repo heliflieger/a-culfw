@@ -307,7 +307,8 @@ prepare_boot(char *in)
 	while (1);
 
 #elif defined STM32
-
+	USBD_Disconnect();
+	while (1);                 // go to bed, the wathchdog will take us to reset
 #else
   if(bl)                     // Next reboot we'd like to jump to the bootloader.
     ewb( EE_REQBL, 1 );      // Simply jumping to the bootloader from here

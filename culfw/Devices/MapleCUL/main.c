@@ -1,4 +1,4 @@
-/* Copyright Telekatz, 2015.
+/* Copyright Telekatz, 2016.
    Released under the GPL Licence, Version 2
 */
 
@@ -28,28 +28,16 @@
 #include "rf_receive.h"
 #include "spi.h"
 #include "fht.h"
-#include "rf_send.h"		// fs20send
+#include "rf_send.h"
 #include "cc1100.h"
 #include "display.h"
 #include "fastrf.h"
-//#include "rf_router.h"		// rf_router_func
 #include "fband.h"
 #ifdef HAS_UART
 #include "serial.h"
 #endif
-
-#ifdef HAS_ETHERNET
-#include "ethernet.h"
-#include "tcplink.h"
-#include "ntp.h"
-#endif
-
 #ifdef HAS_W5100
 #include "ethernet.h"
-#endif
-
-#ifdef HAS_MEMFN
-#include "memory.h"		// getfreemem
 #endif
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
@@ -259,8 +247,7 @@ const t_fntab fntab[] = {
 
 
 //------------------------------------------------------------------------------
-/// Application entry point. Configures the DBGU, PIT, TC0, LEDs and buttons
-/// and makes LED\#1 blink in its infinite loop, using the Wait function.
+/// Application entry point.
 /// \return Unused (ANSI-C compatibility).
 //------------------------------------------------------------------------------
 int main(void)
