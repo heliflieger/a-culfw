@@ -309,7 +309,11 @@ unsigned char CDCDSerialDriver_Write(void *data,
                                      void* dummy1,
                                      void* dummy2)
 {
-    return CDC_Transmit_FS(data,size);
+  uint8_t ret;
+  ret = CDC_Transmit_FS(data,size);
+  //TODO check for USB disconnect
+
+  return USBD_OK;
 }
 
 
