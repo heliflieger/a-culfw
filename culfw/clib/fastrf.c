@@ -32,7 +32,7 @@ fastrf_func(char *in)
     CC1100_DEASSERT;
     ccTX();
     while(cc1100_readReg(CC1100_TXBYTES) & 0x7f) // Wait for the data to be sent
-      my_delay_us(100);
+      my_delay_ms(1);
     ccRX();                         // set reception again. MCSM1 does not work.
 
   } else {

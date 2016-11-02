@@ -21,7 +21,6 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  */
-
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdio.h>
@@ -949,7 +948,18 @@ retry_sync:
 	   	  // sync bit received
           b->state = STATE_SYNC_PACKAGE;
           b->sync  = 1;
+	  #ifdef ARM
+         	//AT91C_BASE_TC1->TC_RC = 825;
+          uint32_t ocrVal = 0;
+          ocrVal = ((lowtime * 100) / 266);
+          AT91C_BASE_TC1->TC_RC = (ocrVal - 16) * 16;
 
+          //AT91C_BASE_TC1->TC_RC = 1950;
+      #else
+          OCR1A = (lowtime - 16) * 16; //End of message
+         	//OCR1A = 2200; // end of message
+          //OCR1A = b->syncbit.lowtime*16 - 1000;
+      #endif
       #ifdef ARM
           AT91C_BASE_TC1->TC_SR;
 	      #ifdef LONG_PULSE

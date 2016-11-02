@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/eeprom.h>
+
 
 #include "delay.h"
 #include "display.h"
@@ -61,7 +63,7 @@ const PROGMEM const uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    0x00, // 09 ADDR      00    00    
    0x00, // 0A CHANNR    00    00    
    0x06, // 0B FSCTRL1  *0F    06    152kHz IF Frquency
-   0x00, // 0C FSCTRL0   00    00     
+   0x00, // 0C FSCTRL0   00    00    
    0x21, // 0D FREQ2    *1E    21    868.3 (def:800MHz)
    0x65, // 0E FREQ1    *C4    65    
    0x6a, // 0F FREQ0    *EC    e8    
@@ -321,9 +323,15 @@ ccRX(void)
 void
 ccreg(char *in)
 {
-  uint8_t hb, out;
+  uint8_t hb, out, addr;
 
-  if(fromhex(in+1, &hb, 1)) {
+  if(in[1] == 'w' && fromhex(in+2, &addr, 1) && fromhex(in+4, &hb, 1)) {
+    cc1100_writeReg(addr, hb);
+    ccStrobe( CC1100_SCAL );
+    ccRX();
+    DH2(addr); DH2(hb); DNL();
+
+  } else if(fromhex(in+1, &hb, 1)) {
 
     if(hb == 0x99) {
       for(uint8_t i = 0; i < 0x30; i++) {

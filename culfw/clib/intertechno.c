@@ -529,7 +529,6 @@ it_func(char *in)
 		intertechno_on = 0;
 	} else if (in[1] == 'c') {		// Modify Clock-counter
         fromdec (in+1, (uint8_t *)&it_interval);
-        //DU(it_interval,0); DNL();
     }
 }
 

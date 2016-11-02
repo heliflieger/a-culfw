@@ -12,7 +12,7 @@ FLASH_FILE=CUL_ARDUINO
 MCU=atmega32u4
 
 # working dir
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 # Default Port
 PORT=/dev/ttyACM0
@@ -34,7 +34,7 @@ echo "Please a device:"
 echo " 1 = CUL-Arduino 868MHz"
 echo " 2 = CUL-Arduino 433MHz"
 read -p "Please select device (1-2): " frequence
-if [ "X$frequence" == "X" -o "$frequence" != "1" -a "$frequence" != "2" ] ; then
+if [ "X$frequence" = "X" -o "$frequence" != "1" -a "$frequence" != "2" ] ; then
    echo "Abort"
    exit
 fi
@@ -46,7 +46,7 @@ fi
 
 echo "-------------------------------------------------------------"
 read -p "Please insert the port for your device [default $PORT]: " port
-if [ "X$port" == "X" ] ; then
+if [ "X$port" = "X" ] ; then
    port="$PORT"
 fi
 if [ ! -e "$port" ] ; then
@@ -58,7 +58,7 @@ echo ""
 echo "The device will now be flashed"
 read -p "Continue (y/n)?" flashdevice
 
-if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then
+if [ "$flashdevice" = "y" -o "$flashdevice" = "Y" -o "$flashdevice" = "j" -o "$flashdevice" = "J" ] ; then
   echo "Call now ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}${FREQ}.hex:i"
   ${PROGRAMMER} -p${MCU} -cavr109 -P${port} -b${BAUD} -D -Uflash:w:./${FLASH_FILE}${FREQ}.hex:i
 else

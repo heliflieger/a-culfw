@@ -12,7 +12,7 @@ FLASH_FILE=SCC.hex
 MCU=atmega1284p
 
 # working dir
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 # Default Port
 PORT=/dev/ttyAMA0
@@ -32,7 +32,7 @@ echo "This program flash the cul device with new firmware."
 echo "Please change the device into the bootloader"
 echo "-------------------------------------------------------------"
 read -p "Please insert the port for your device [default $PORT]: " port
-if [ "X$port" == "X" ] ; then
+if [ "X$port" = "X" ] ; then
    port="$PORT"
 fi
 if [ ! -e "$port" ] ; then
@@ -45,7 +45,7 @@ echo "The device will now be flashed"
 echo "KEEP THE MICRO BUTTON PRESSED AT DESIRED EXTENSION"
 read -p "Continue (y/n)?" flashdevice
 
-if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then
+if [ "$flashdevice" = "y" -o "$flashdevice" = "Y" -o "$flashdevice" = "j" -o "$flashdevice" = "J" ] ; then
   echo
 	echo calling radio frontends bootloader ...
 	echo

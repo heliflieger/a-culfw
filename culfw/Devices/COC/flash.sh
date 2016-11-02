@@ -12,7 +12,7 @@ FLASH_FILE=COC.hex
 MCU=atmega32u4
 
 # working dir
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+DIR=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 # Default Port
 PORT=/dev/ttyAMA0
@@ -34,20 +34,20 @@ echo "Please choose a device:"
 echo " 1 = COC"
 echo " 2 = COC_radio_only"
 read -p "Please select device (1-2): " device
-if [ "X$device" == "X" -o "$device" != "1" -a "$device" != "2" ] ; then
+if [ "X$device" = "X" -o "$device" != "1" -a "$device" != "2" ] ; then
    echo "Abort"
    exit
 fi
-if [ "$device" == "1" ] ; then
+if [ "$device" = "1" ] ; then
   MCU=atmega1284p
   FLASH_FILE=COC.hex
-elif [ "$device" == "2" ] ; then
+elif [ "$device" = "2" ] ; then
   MCU=atmega1284p
   FLASH_FILE=COC_radio_only.hex
 fi
 
 read -p "Please insert the port for your device [default $PORT]: " port
-if [ "X$port" == "X" ] ; then
+if [ "X$port" = "X" ] ; then
    port="$PORT"
 fi
 if [ ! -e "$port" ] ; then
@@ -59,7 +59,7 @@ echo ""
 echo "The device will now be flashed"
 read -p "Continue (y/n)?" flashdevice
 
-if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then
+if [ "$flashdevice" = "y" -o "$flashdevice" = "Y" -o "$flashdevice" = "j" -o "$flashdevice" == "J" ] ; then
   echo
 	echo calling radio frontends bootloader ...
 	echo

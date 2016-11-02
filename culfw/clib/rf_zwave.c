@@ -2,11 +2,11 @@
 #ifdef HAS_ZWAVE
 #include <string.h>
 #include <avr/pgmspace.h>
-#include "cc1100.h"
 #include "delay.h"
 #include "display.h"
 #include "clock.h"
 #include "rf_zwave.h"
+#include "cc1100.h"
 
 #define MAX_ZWAVE_MSG 64
 
@@ -19,8 +19,8 @@ void zwave_doSend(uint8_t *msg, uint8_t hblen);
 uint8_t zwave_on = 0;
 uint8_t zwave_drate;
 uint8_t zwave_hcid[5];  // HomeId (4byte) + CtrlNodeId (1byte)
-uint8_t sMsg[MAX_ZWAVE_MSG];
-uint32_t sStamp;
+uint8_t zwave_sMsg[MAX_ZWAVE_MSG], zwave_ackState=0, zwave_sLen;
+uint32_t zwave_sStamp;
 
 // See also: ZAD-12837-1, ITU-G.9959
 /*
@@ -42,6 +42,12 @@ freq:
 26000000/(2^16)*0x216666 = 868399.841
 26000000/(2^16)*0x2174ad = 869849.884
 26000000/(2^16)*0x216699 = 868420.074
+
+Msg length in bits for 8 bytes payload:
+9600: 10+2+9+8+1=30 bytes -> 25ms
+40k : 10+2+9+8+1=30 bytes ->  6ms
+100k: 40+2+9+8+2=61 bytes -> 4.9ms
+
 */
 
 
@@ -236,6 +242,9 @@ rf_zwave_task(void)
 
   if(!zwave_on)
     return;
+  if(zwave_ackState && ticks > zwave_sStamp)
+    return zwave_doSend(zwave_sMsg, zwave_sLen);
+
   if(!bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))
     return;
 
@@ -304,14 +313,15 @@ rf_zwave_task(void)
     //DC('C'); DNL();
   }
 
-  if(zwave_on == 'r' && isOk &&
-     ((zwave_drate == DRATE_100k && len > 11) ||
-      (zwave_drate != DRATE_100k && len > 10))) { // ACK
+  if(zwave_on=='r' && isOk && (msg[5]&3) == 3 && zwave_ackState) // got ACK
+    zwave_ackState = 0;
+
+  if(zwave_on=='r' && isOk && (msg[5]&0x40)) { // need to ACK
     my_delay_ms(10); // unsure
 
     msg[8] = msg[4]; // src -> target
     msg[4] = zwave_hcid[4]; // src == ctrlId
-    msg[5] = 0x03; // ??
+    msg[5] = 0x03;
 
     if(zwave_drate == DRATE_100k) {
       msg[7] = 11;        // Len
@@ -378,10 +388,8 @@ zwave_doSend(uint8_t *msg, uint8_t hblen)
     cc1100_sendbyte(0x00);
 
   } else {
-    for(uint8_t i = 0; i < hblen; i++) {
-      uint8_t d = msg[i] ^= 0xff;
-      cc1100_sendbyte(d);
-    }
+    for(uint8_t i = 0; i < hblen; i++)
+      cc1100_sendbyte(msg[i] ^ 0xff);
  
   }
 
@@ -396,6 +404,15 @@ zwave_doSend(uint8_t *msg, uint8_t hblen)
 
   zccRX();
   LED_OFF();
+
+  if(msg[5] & 0x40) {   // ackReq
+    zwave_sStamp = ticks + 6; // 6/125 = 48ms
+    if(++zwave_ackState > 1) {
+      DC('z'); DC('r'); DH2(zwave_ackState); DNL();
+    }
+    if(zwave_ackState >= 3)
+      zwave_ackState = 0;
+  }
 }
 
 void
@@ -407,8 +424,9 @@ zwave_func(char *in)
     rf_zwave_init();
 
   } else if(in[1] == 's') {         // Send
-    uint8_t hblen = fromhex(in+2, sMsg, MAX_ZWAVE_MSG);
-    zwave_doSend(sMsg, hblen);
+    zwave_ackState = 0;
+    zwave_sLen = fromhex(in+2, zwave_sMsg, MAX_ZWAVE_MSG);
+    zwave_doSend(zwave_sMsg, zwave_sLen);
 
   } else if(in[1] == 'i') {         // set homeId and ctrlId
     if(in[2]) {
