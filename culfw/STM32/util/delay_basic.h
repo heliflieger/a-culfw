@@ -11,8 +11,7 @@ static inline void _delay_loop_2(uint16_t __count) __attribute__((always_inline)
 void
 _delay_loop_2(uint16_t __count)
 {
-
-    volatile uint32_t cycles = (SystemCoreClock/1000000L)*__count;
+    volatile uint32_t cycles = (SystemCoreClock/1000000L)*__count>>1;
     volatile uint32_t start = DWT->CYCCNT;
     do  {
     } while(DWT->CYCCNT - start < cycles);

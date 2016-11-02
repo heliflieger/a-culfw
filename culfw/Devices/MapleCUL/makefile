@@ -14,7 +14,6 @@ WIZNET_PATH = ../../Wiznet
 
 # Deduce project name from name of directory in SW4STM32 directory
 # Binaries will be generated with this name (.elf, .bin, .hex, etc)
-PROJ_NAME := MapleCUL
 BOARD := MapleCUL
 MCU_FAMILY := STM32F1
 DEVICE_ID := STM32F103CBTx
@@ -23,7 +22,7 @@ MPU_TYPE_LOWER_CASE := stm32f103xb
 CPU := cortex-m3
 
 # Debugger optons, must be empty or GDB
-DEBUG ?= GDB
+DEBUG ?= 
 
 ###############################################################
 #####
@@ -160,12 +159,13 @@ OPTIMIZE	 = -O0
 LTO_FLAGS	 = $(OPTIMIZE) -DTRACE_LEVEL=4
 else
 OPTIMIZE	 = -Os
-LTO_FLAGS	 =  -flto -fuse-linker-plugin $(OPTIMIZE)
+LTO_FLAGS	 =  -flto -fuse-linker-plugin $(OPTIMIZE) -DTRACE_LEVEL=4
 endif
 
 
 CFLAGS := -mcpu=$(CPU) -mthumb
-CFLAGS := $(CFLAGS) -D$(DEVICE_ID) -D$(MCU_FAMILY) -D$(BOARD) -DSTM32 -DDBGU_UNIT_IN -DUSE_HAL_DRIVER -D$(MPU_TYPE)
+CFLAGS := $(CFLAGS) -D$(DEVICE_ID) -D$(MCU_FAMILY) -D$(TARGET) 
+CFLAGS := $(CFLAGS) -DSTM32 -DDBGU_UNIT_IN -DUSE_HAL_DRIVER -D$(MPU_TYPE)
 CFLAGS := $(CFLAGS) -std=c99 
 CFLAGS := $(CFLAGS) $(foreach d,$(H_SUBDIRS),-I$(d))
 CFLAGS := $(CFLAGS) $(LTO_FLAGS) -g3 -Wall -fmessage-length=0 -ffunction-sections -c 
@@ -177,7 +177,7 @@ ASMFLAGS := $(ASMFLAGS) -g -c
 LDFLAGS := -mcpu=$(CPU) -mthumb 
 
 LDFLAGS := $(LDFLAGS) -T$(LD_FILE)
-LDFLAGS := $(LDFLAGS) -Wl,-Map=$(PROJ_NAME).map -Wl,--gc-sections -lm
+LDFLAGS := $(LDFLAGS) -Wl,-Map=$(TARGET).map -Wl,--gc-sections -lm
 
 COMPILE = $(CC) $(CFLAGS) $(GENDEPFLAGS)
 
@@ -189,9 +189,17 @@ COMPILE = $(CC) $(CFLAGS) $(GENDEPFLAGS)
 
 .PHONY: proj
 
-all: proj
+all:
+	make TARGET=MapleCUL build clean2
+	make TARGET=MapleCUN build clean2
 
-proj: $(PROJ_NAME).elf
+MapleCUL: 
+	make TARGET=MapleCUL build 
+
+MapleCUN: 
+	make TARGET=MapleCUN build 
+		
+build: $(TARGET).elf
 
 %.o: %.c
 	$(COMPILE) -c -o $@ $<
@@ -199,20 +207,24 @@ proj: $(PROJ_NAME).elf
 %.o: %.s
 	$(CC) $(ASMFLAGS) -c -o $@ $<
 
-$(PROJ_NAME).elf: $(OBJS)
+$(TARGET).elf: $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $@ 
-	$(OBJCOPY) -O ihex $(PROJ_NAME).elf $(PROJ_NAME).hex
-	$(OBJCOPY) -O binary $(PROJ_NAME).elf $(PROJ_NAME).bin
-	arm-none-eabi-size $(PROJ_NAME).elf
+	$(OBJCOPY) -O ihex $(TARGET).elf $(TARGET).hex
+	$(OBJCOPY) -O binary $(TARGET).elf $(TARGET).bin
+	arm-none-eabi-size $(TARGET).elf
 
 clean:
 	-rm -Rf .dep/*
 	-rm -Rf .dep
-	rm -f $(OBJS) $(PROJ_NAME).elf $(PROJ_NAME).hex $(PROJ_NAME).bin $(PROJ_NAME).map
+	rm -f $(OBJS) *.elf *.hex *.bin *.map
 
-
+clean2:
+	-rm -Rf .dep/*
+	-rm -Rf .dep
+	rm -f $(OBJS) *.elf *.hex *.map
+	
 info:
-	@echo "Project Name: $(PROJ_NAME)"
+	@echo "Project Name: $(TARGET)"
 	@echo "Board: $(BOARD)"
 	@echo "MCU Family: $(MCU_FAMILY)"
 	@echo "Device Id: $(DEVICE_ID)"

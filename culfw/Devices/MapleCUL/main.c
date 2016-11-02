@@ -140,6 +140,19 @@ void SystemClock_Config(void)
 
   /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+
+
+  /* Enable TRC */
+  CoreDebug->DEMCR &= ~0x01000000;
+  CoreDebug->DEMCR |=  0x01000000;
+
+  /* Enable counter */
+  DWT->CTRL &= ~0x00000001;
+  DWT->CTRL |=  0x00000001;
+
+  /* Reset counter */
+  DWT->CYCCNT = 0;
+
 }
 
 /**

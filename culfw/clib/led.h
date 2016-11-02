@@ -7,7 +7,7 @@
 #ifndef SET_BIT
 #define SET_BIT(PORT, BITNUM) ((PORT) |= (1<<(BITNUM)))
 #endif
-#ifndef SET_BIT
+#ifndef CLEAR_BIT
 #define CLEAR_BIT(PORT, BITNUM) ((PORT) &= ~(1<<(BITNUM)))
 #endif
 #define TOGGLE_BIT(PORT, BITNUM) ((PORT) ^= (1<<(BITNUM)))

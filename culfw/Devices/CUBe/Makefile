@@ -92,14 +92,14 @@ $(eval $(call expand_dir,))
 
 OBJS := $(patsubst %.S,%.o,$(ALLSRCS:%.c=%.o)) $(ALLTHUMBSRCS:.c=.thumb.o)
 
-target:	$(OUTPUT).bin
-	$(SIZE) $(OUTPUT).elf
-
-CUBE:
-	make OUTPUT=CUBE target
-
 CUBE_BL:
 	make OUTPUT=CUBE_BL target
+	
+CUBE:
+	make OUTPUT=CUBE target
+	
+target:	$(OUTPUT).bin
+	$(SIZE) $(OUTPUT).elf
 	
 all:
 	make clean2

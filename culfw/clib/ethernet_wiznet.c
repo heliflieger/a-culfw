@@ -14,12 +14,13 @@
 #include <hal.h>
 #include <utility/trace.h>
 #include "spi.h"
+#include "delay.h"
 
 //////////////////////////////////////////////////
 // Socket & Port number definition for Examples //
 //////////////////////////////////////////////////
 
-#define SOCK_DHCP 3
+#define SOCK_DHCP 1
 
 ////////////////////////////////////////////////
 // Shared Buffer Definition for Loopback test //
@@ -45,10 +46,12 @@ rb_t NET_Tx_Buffer;
 uint8_t run_user_applications = 0;
 
 void wizchip_select(void) {
+  my_delay_us(1);
   HAL_GPIO_WritePin( WIZNET_CS_GPIO, _BV(WIZNET_CS_PIN), GPIO_PIN_RESET);
 }
 
 void wizchip_deselect(void) {
+  my_delay_us(1);
   HAL_GPIO_WritePin( WIZNET_CS_GPIO, _BV(WIZNET_CS_PIN), GPIO_PIN_SET);
 }
 
@@ -148,9 +151,9 @@ void ethernet_init(void) {
 
   /* wizchip initialize*/
   if (ctlwizchip(CW_INIT_WIZCHIP, (void*) memsize) == -1) {
-    TRACE_INFO_WP("WIZCHIP Initialized fail.");
+    TRACE_INFO_WP("WIZCHIP Initialized fail.\n\r");
   } else {
-    TRACE_INFO_WP("WIZCHIP Initialized success.");
+    TRACE_INFO_WP("WIZCHIP Initialized success.\n\r");
   }
   DNL();
 

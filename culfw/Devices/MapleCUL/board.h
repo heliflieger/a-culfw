@@ -4,15 +4,22 @@
 #define _BV(a) (1<<(a))
 #define bit_is_set(sfr, bit) ((sfr) & _BV(bit))
 
-
 #define LONG_PULSE
 
 #define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
 
-#define CUBE
-
-#define BOARD_NAME 			"MapleCUL"
+#ifdef MapleCUN
+#define BOARD_NAME          "MapleCUN"
+#define BOARD_ID_STR        "MapleCUN"
+#elif defined MapleCUL
+#define BOARD_NAME          "MapleCUL"
 #define BOARD_ID_STR        "MapleCUL"
+#else
+#define MapleCUL
+#define BOARD_NAME          "MapleCUL"
+#define BOARD_ID_STR        "MapleCUL"
+#endif
+
 
 #define ARM
 
@@ -65,10 +72,6 @@
 
 #define HAS_MBUS
 //#define HAS_MEMFN
-
-//#define SPI_MISO			(1<<16)
-//#define SPI_MOSI			(1<<17)
-//#define SPI_SCLK			(1<<18)
 
 //additional CC1101 Transceiver
 //#define CC1100_ASKSIN		1
@@ -143,14 +146,16 @@
 //#define ETHERNET_KEEPALIVE_TIME 30
 //#define HAS_NTP                 1       // undef or define...1
 
+#ifdef MapleCUN
 #define HAS_W5100
+#endif
 
 //------------------------------------------------------------------------------
 //         Headers
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-//         Definitions
+//         Pin Definitions
 //------------------------------------------------------------------------------
 #define LED_GPIO              GPIOB
 #define LED_PIN               1
@@ -161,11 +166,15 @@
 #define USBD_CONNECT_PORT     GPIOB
 #define USBD_CONNECT_PIN      9
 
+#ifdef MapleCUN
+
 #define WIZNET_CS_PIN         12
 #define WIZNET_CS_GPIO        GPIOB
 
 #define WIZNET_RST_PIN        8
 #define WIZNET_RST_GPIO       GPIOA
+
+#endif
 
 #endif //#ifndef BOARD_H
 

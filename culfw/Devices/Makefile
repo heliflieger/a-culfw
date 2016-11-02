@@ -57,6 +57,8 @@ all:
 	make -C CUBe
 	make -C CUBe/bootloader clean
 	make -C CUBe/bootloader
+	make -C MapleCUL clean
+	make -C MapleCUL
 	find . -name \*.eep | xargs rm
 	find . -name \*.elf | xargs rm
 	find . -name \*.lss | xargs rm
@@ -95,4 +97,4 @@ clean:
 	make -C CUL-HM-CFG/bootloader clean
 	make -C CUBe clean
 	make -C CUBe/bootloader clean
-
+	make -C MapleCUL clean
