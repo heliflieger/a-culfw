@@ -53,11 +53,11 @@
 #  endif
 
 #if defined(_868MHZ)
-//#    define HAS_HMS
+#    define HAS_HMS
 #    define HAS_ESA
 #    define HAS_MORITZ
 //#    define HAS_HOERMANN
-#  define HAS_MBUS                      // PROGMEM: 2536
+//#  define HAS_MBUS                      // PROGMEM: 2536
 #  define MBUS_NO_TX                       // PROGMEM:  962
 #  define HAS_RFNATIVE                  // PROGMEM:  580
 //#  define LACROSSE_HMS_EMU              // PROGMEM: 2206
