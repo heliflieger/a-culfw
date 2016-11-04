@@ -11,7 +11,9 @@ all:
 	make -C CUL all
 	make -C CUL-Arduino clean
 	make -C CUL-Arduino all
-	make -C CUN clean
+	make -C CUL-ProMicro clean
+	make -C CUL-ProMicro all
+	make -C CUN clean 
 	make -C CUN all
 	make -C CUNO clean 
 	make -C CUNO all 

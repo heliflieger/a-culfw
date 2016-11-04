@@ -274,8 +274,14 @@ analyze(bucket_t *b, uint8_t t, uint8_t *oby)
  * with the same message. Otherwise the package are ignored.
  */
 void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
-#if defined (HAS_IT) || defined (HAS_TCM97001)
+#if defined (HAS_IT) && defined (HAS_TCM97001)
   if ((*datatype == TYPE_IT) || (*datatype == TYPE_TCM97001)) { 
+#elif defined (HAS_TCM97001)
+  if (*datatype == TYPE_TCM97001) {
+#elif defined (HAS_IT)
+  if (*datatype == TYPE_IT) {
+#endif
+#if defined (HAS_IT) || defined (HAS_TCM97001)
       if (packetCheckValues.isrep == 1 && packetCheckValues.isnotrep == 0) { 
         packetCheckValues.isnotrep = 1;
         packetCheckValues.packageOK = 1;
