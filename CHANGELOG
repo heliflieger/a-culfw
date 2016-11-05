@@ -1,5 +1,9 @@
 ## Changelog:
 
+#### 1.22.0
+- Add STM32 support 
+- Add new device: MapleCUL/MapleCUN
+
 #### 1.21.01
 - Fix define dependencies 
 - Add CUL-ProMini with 8Mhz)
