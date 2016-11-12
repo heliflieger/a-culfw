@@ -1,5 +1,8 @@
 ## Changelog:
 
+#### 1.21.02
+- miniCUL: added MULTI_FREQ_DEVICE in the board definition
+
 #### 1.21.01
 - Fix define dependencies 
 - Add CUL-ProMini with 8Mhz)
