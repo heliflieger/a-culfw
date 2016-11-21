@@ -24,6 +24,7 @@
 #define ARM
 
 #define HAS_USB
+#define CDC_COUNT               2
 #define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
 //#define USB_DESCRIPTOR_SN	'1'
 #define HAS_XRAM
