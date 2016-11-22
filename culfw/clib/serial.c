@@ -114,7 +114,7 @@ void uart_init(unsigned int baudrate)
     USART_SetTransmitterEnabled(AT91C_BASE_US0, 1);
     USART_SetReceiverEnabled(AT91C_BASE_US0, 1);
 #elif defined STM32
-    //TODO STM32 UART init
+
 #else
      /* Set baud rate */
      if ( baudrate & 0x8000 ) 

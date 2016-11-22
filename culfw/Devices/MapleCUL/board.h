@@ -24,11 +24,10 @@
 #define ARM
 
 #define HAS_USB
-#define CDC_COUNT               2
-#define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
-//#define USB_DESCRIPTOR_SN	'1'
+#define CDC_COUNT               3
+#define USB_IsConnected		(CDC_isConnected(0))
 #define HAS_XRAM
-#define UART_BAUD_RATE          115200
+//#define UART_BAUD_RATE          115200
 //#define HAS_UART                1
 
 #define HAS_FHT_80b
@@ -151,6 +150,9 @@
 #define HAS_W5100
 #endif
 
+#ifndef CDC_COUNT
+#define CDC_COUNT 1
+#endif
 //------------------------------------------------------------------------------
 //         Headers
 //------------------------------------------------------------------------------

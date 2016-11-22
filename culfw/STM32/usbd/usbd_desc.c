@@ -36,7 +36,7 @@
 #include "usbd_core.h"
 #include "usbd_desc.h"
 #include "usbd_conf.h"
-
+#include "board.h"
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
   */
@@ -57,12 +57,10 @@
   * @{
   */ 
 #define USBD_VID                                1155
-//#define USBD_VID                                0xFF02
-
 #define USBD_LANGID_STRING                      1033
 #define USBD_MANUFACTURER_STRING      (uint8_t*)"STMicroelectronics"
-//#define USBD_PID_FS                             22336
-#define USBD_PID_FS                             0x0001
+#define USBD_PID_FS                             (22336 + CDC_COUNT)
+//#define USBD_PID_FS                             0x0001
 
 
 #define USBD_PRODUCT_STRING_FS        (uint8_t*)"MapleCUL"

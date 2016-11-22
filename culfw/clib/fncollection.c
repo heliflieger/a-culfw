@@ -14,7 +14,7 @@
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
 #include <utility/trace.h>
 #elif defined STM32
-
+#include "usb_device.h"
 #else
 #include <Drivers/USB/USB.h>
 #endif

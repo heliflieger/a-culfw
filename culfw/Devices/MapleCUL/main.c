@@ -70,6 +70,7 @@
 #include "rf_maico.h"
 #endif
 
+#include "cdc_uart.h"
 //------------------------------------------------------------------------------
 //         Local definitions
 //------------------------------------------------------------------------------
@@ -163,11 +164,12 @@ void Error_Handler(void)
 //------------------------------------------------------------------------------
 /// Callback invoked when data has been received on the USB.
 //------------------------------------------------------------------------------
-void CDCDSerialDriver_Receive_Callback(uint8_t* Buf, uint32_t *Len)
+uint8_t CDCDSerialDriver_Receive_Callback0(uint8_t* Buf, uint32_t *Len)
 {
     for(unsigned int i=0;i<*Len;i++) {
       rb_put(&TTY_Rx_Buffer, Buf[i]);
     }
+    return 1;
 }
 
 //------------------------------------------------------------------------------
@@ -256,9 +258,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART1_UART_Init();
-  MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
 
@@ -310,6 +309,10 @@ int main(void)
   uart_init(UART_BAUD_RATE);
   #endif
 
+  #if CDC_COUNT > 1
+  cdc_uart_init();
+  #endif
+
   wdt_enable(WDTO_2S);
 
   fastrf_on=0;
@@ -328,13 +331,12 @@ int main(void)
   while (1) {
 
     CDC_Task();
-    #ifdef HAS_UART
-    if(!USB_IsConnected)
-      uart_task();
-    #endif
     Minute_Task();
     RfAnalyze_Task();
 
+    #if CDC_COUNT > 1
+      cdc_uart_task();
+    #endif
     #ifdef HAS_FASTRF
       FastRF_Task();
     #endif
