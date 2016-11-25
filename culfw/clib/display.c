@@ -21,6 +21,9 @@
 #ifdef HAS_ETHERNET
 #include "tcplink.h"
 #endif
+#ifdef HAS_W5100
+#include "ethernet.h"
+#endif
 #ifdef HAS_DOGM
 #include "dogm16x.h"
 #endif
@@ -82,6 +85,11 @@ display_char(char data)
 #ifdef HAS_ETHERNET
   if(display_channel & DISPLAY_TCP)
     tcp_putchar( data );
+#endif
+
+#ifdef HAS_W5100
+  if(display_channel & DISPLAY_TCP)
+    rb_put(&NET_Tx_Buffer, data);
 #endif
 
 #ifdef HAS_PRIVATE_CHANNEL

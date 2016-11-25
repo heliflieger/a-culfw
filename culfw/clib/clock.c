@@ -28,6 +28,9 @@
 #ifdef HAS_VZ
 #include "vz.h"
 #endif
+#ifdef HAS_W5100
+#include <DHCP/dhcp.h>
+#endif
 
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
 #include "ir.h"
@@ -40,11 +43,14 @@ volatile uint8_t  clock_hsec;
 
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
-#ifdef ARM
+#ifdef SAM7
 void ISR_Timer0() 
 {
 	// Clear status bit to acknowledge interrupt
 	AT91C_BASE_TC0->TC_SR;
+#elif defined STM32
+void TIM1_PeriodElapsedCallback(void)
+{
 #else
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
@@ -186,6 +192,10 @@ Minute_Task(void)
   if(clock_hsec<125)
     return;
   clock_hsec = 0;       // once per second from here on.
+
+#ifdef HAS_W5100
+  DHCP_time_handler();
+#endif
 
 #ifndef XLED
   if(led_mode & 2)

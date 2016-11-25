@@ -1,5 +1,9 @@
 ## Changelog:
 
+#### 1.22.0
+- Add STM32 support 
+- Add new device: MapleCUL/MapleCUN
+
 #### 1.21.02
 - miniCUL: added MULTI_FREQ_DEVICE in the board definition
 

@@ -136,7 +136,7 @@ cc1101_toTX_PLLcheck(void)
 
 #ifdef HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 // check if stuck in RX state without PLL Lock and try to recover
-#ifdef ARM
+#ifdef SAM7
 void
 cc1101_RX_check_PLL_wait_task2( transceiver_t* device)
 {

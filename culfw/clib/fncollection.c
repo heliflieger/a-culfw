@@ -10,9 +10,11 @@
 #include "cc1100.h"
 #include "../version.h"
 #ifdef HAS_USB
-#ifdef ARM
+#ifdef SAM7
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
 #include <utility/trace.h>
+#elif defined STM32
+
 #else
 #include <Drivers/USB/USB.h>
 #endif
@@ -68,7 +70,7 @@ display_ee_mac(uint8_t *a)
   display_ee_bytes( a, 6 );
 }
 
-#ifdef HAS_ETHERNET
+#if defined(HAS_ETHERNET) | defined(HAS_W5100)
 static void
 display_ee_ip4(uint8_t *a)
 {
@@ -88,7 +90,7 @@ read_eeprom(char *in)
   uint8_t hb[2], d;
   uint16_t addr;
 
-#ifdef HAS_ETHERNET
+#if defined(HAS_ETHERNET) | defined(HAS_W5100)
   if(in[1] == 'i') {
            if(in[2] == 'm') { display_ee_mac(EE_MAC_ADDR);
     } else if(in[2] == 'd') { DH2(erb(EE_USE_DHCP));
@@ -128,7 +130,7 @@ write_eeprom(char *in)
 {
   uint8_t hb[6], d = 0;
 
-#ifdef HAS_ETHERNET
+#if defined(HAS_ETHERNET) | defined(HAS_W5100)
   if(in[1] == 'i') {
     uint8_t *addr = 0;
            if(in[2] == 'm') { d=6; fromhex(in+3,hb,6); addr=EE_MAC_ADDR;
@@ -228,7 +230,7 @@ eeprom_factory_reset(char *in)
   ewb(EE_BRIGHTNESS, 0x80);
   ewb(EE_SLEEPTIME, 30);
 #endif
-#ifdef HAS_ETHERNET
+#if defined(HAS_ETHERNET) | defined(HAS_W5100)
   ethernet_reset();
 #endif
 #ifdef HAS_FS
@@ -288,7 +290,7 @@ prepare_boot(char *in)
   if(bl == 0xff)             // Allow testing
     while(1);
     
-#ifdef ARM
+#ifdef SAM7
 
 	unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
 
@@ -304,6 +306,9 @@ prepare_boot(char *in)
 	AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
 	while (1);
 
+#elif defined STM32
+	USBD_Disconnect();
+	while (1);                 // go to bed, the wathchdog will take us to reset
 #else
   if(bl)                     // Next reboot we'd like to jump to the bootloader.
     ewb( EE_REQBL, 1 );      // Simply jumping to the bootloader from here

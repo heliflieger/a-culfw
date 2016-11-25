@@ -99,14 +99,16 @@ const uint8_t PROGMEM MODE_CFG[MAX_MODES][20] = {
 
 void native_init(uint8_t mode) {
 
-#ifdef ARM
+#ifdef SAM7
 
   AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID; // disable INT - we'll poll...
 
   CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN);     //Enable pullup
   CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
   CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
-
+#elif defined STM32
+  hal_CC_GDO_init(INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
