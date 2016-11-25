@@ -31,6 +31,7 @@
 #define LED_PORT		PORTD
 #define LED_PIN			4
 
+#define MULTI_FREQ_DEVICE	// available in multiple versions: 433MHz, 868MHz
 #define BOARD_ID_STR		"miniCUL"
 #define BOARD_ID_STR433		"miniCUL433"
 
@@ -62,28 +63,26 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
-
-#  if defined(_433MHZ)
-#    define HAS_TCM97001
-#    define HAS_REVOLT
-#    define HAS_IT
-#    define HAS_HOMEEASY
-#    define HAS_MANCHESTER
-#    define HAS_BELFOX
-#  endif
-
-#if defined(_868MHZ)
-//#    define HAS_HMS
-#    define HAS_ESA
-#    define HAS_MORITZ
-//#    define HAS_HOERMANN
-//#  define HAS_MBUS                      // PROGMEM: 2536
-#  define MBUS_NO_TX                       // PROGMEM:  962
-#  define HAS_RFNATIVE                  // PROGMEM:  580
-//#  define LACROSSE_HMS_EMU              // PROGMEM: 2206
-#  define HAS_KOPP_FC                   // PROGMEM: 3370
+#if defined(_433MHZ)
+#define HAS_TCM97001
+#define HAS_REVOLT
+#define HAS_IT
+#define HAS_HOMEEASY
+#define HAS_MANCHESTER
+#define HAS_BELFOX
 #endif
 
+#if defined(_868MHZ)
+//#define HAS_HMS
+#define HAS_ESA
+#define HAS_MORITZ
+//#define HAS_HOERMANN
+//#define HAS_MBUS                      // PROGMEM: 2536
+#define MBUS_NO_TX                       // PROGMEM:  962
+#define HAS_RFNATIVE                  // PROGMEM:  580
+//#define LACROSSE_HMS_EMU              // PROGMEM: 2206
+#define HAS_KOPP_FC                   // PROGMEM: 3370
+#endif
 
 #define MARK433_PORT            PORTC
 #define MARK433_PIN             PINC
@@ -91,6 +90,5 @@
 #define MARK915_PORT            PORTC
 #define MARK915_PIN             PINC
 #define MARK915_BIT             1
-
 
 #endif

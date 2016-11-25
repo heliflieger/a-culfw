@@ -27,12 +27,12 @@ if [ ! -e "${FLASH_FILE}_433MHZ.hex" ] ; then
 fi 
 
 echo "-------------------------------------------------------------"
-echo "This program flash the cul device with new firmware."
-echo "Please change the device into the bootloader"
+echo "This program flash the miniCUL device with new firmware."
+echo "Please set the device into the bootloader mode"
 echo "-------------------------------------------------------------"
-echo "Please a device:"
-echo " 1 = CUL-Arduino 868MHz"
-echo " 2 = CUL-Arduino 433MHz"
+echo "Please select a device:"
+echo " 1 = miniCUL 868MHz"
+echo " 2 = miniCUL 433MHz"
 read -p "Please select device (1-2): " frequence
 if [ "X$frequence" = "X" -o "$frequence" != "1" -a "$frequence" != "2" ] ; then
    echo "Abort"
