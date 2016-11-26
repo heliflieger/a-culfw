@@ -38,9 +38,9 @@ if [ "X$frequence" = "X" -o "$frequence" != "1" -a "$frequence" != "2" ] ; then
    echo "Abort"
    exit
 fi
-if [ "$frequence" == "1" ] ; then
+if [ "$frequence" = "1" ] ; then
   FREQ=_868MHZ
-elif [ "$frequence" == "2" ] ; then
+elif [ "$frequence" = "2" ] ; then
   FREQ=_433MHZ
 fi
 
@@ -52,16 +52,16 @@ if [ "X$mode" = "X" -o "$mode" != "1" -a "$mode" != "2" ] ; then
    echo "Abort"
    exit
 fi
-if [ "$mode" == "1" ] ; then
+if [ "$mode" = "1" ] ; then
   	read -p "Please insert the port for your device [default $PORT]: " port
-	if [ "X$port" == "X" ] ; then
+	if [ "X$port" = "X" ] ; then
 	   port="$PORT"
 	fi
 	if [ ! -e "$port" ] ; then
 	  echo "ERROR: Port $port does not exists!"
 	  exit 1
 	fi
-elif [ "$mode" == "2" ] ; then
+elif [ "$mode" = "2" ] ; then
 	read -p "Please enter the ipaddress for your device e.g. 192.168.4.1: " ipaddress
 	if [ "X$ipaddress" == "X" ] ; then
 	   echo "ERROR: Please enter a ipaddress"
@@ -75,8 +75,8 @@ echo ""
 echo "The device will now be flashed"
 read -p "Continue (y/n)?" flashdevice
 
-if [ "$flashdevice" == "y" -o "$flashdevice" == "Y" -o "$flashdevice" == "j" -o "$flashdevice" == "J" ] ; then  
-	if [ "$mode" == "1" ] ; then
+if [ "$flashdevice" = "y" -o "$flashdevice" = "Y" -o "$flashdevice" = "j" -o "$flashdevice" = "J" ] ; then  
+	if [ "$mode" = "1" ] ; then
   		echo "Call now ${PROGRAMMER} -p ${MCU} -c arduino -P ${port} -b ${BAUD} -D -U flash:w:./${FLASH_FILE}${FREQ}.hex:i"
 		${PROGRAMMER} -p ${MCU} -c arduino -P ${port} -b ${BAUD} -D -U flash:w:./${FLASH_FILE}${FREQ}.hex:i
 	else
