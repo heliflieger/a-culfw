@@ -37,7 +37,8 @@ SRC = nanoCUL.c                                            \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
 		../../clib/somfy_rts.c                               \
-		../../clib/fastrf.c                                  \
+		../../clib/fastrf.c                               \
+		../../clib/rf_zwave.c                                \
 		../../clib/intertechno.c                             \
 		../../clib/kopp-fc.c                                 \
 		../../clib/memory.c                                  \

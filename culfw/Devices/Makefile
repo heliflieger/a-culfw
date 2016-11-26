@@ -76,6 +76,7 @@ clean:
 	make -C CCD clean
 	make -C CUL clean
 	make -C CUL-Arduino clean
+	make -C CUL-ProMicro clean
 	make -C CUN clean
 	make -C CUNO clean 
 	make -C CUNO2 clean

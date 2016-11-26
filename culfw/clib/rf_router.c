@@ -30,6 +30,9 @@ void rf_debug_out(uint8_t);
 #ifdef RFR_DEBUG
 uint16_t nr_t, nr_f, nr_e, nr_k, nr_h, nr_r, nr_plus;
 #endif
+#ifdef RFR_FILTER
+uint8_t filter[6];
+#endif
 #undef RFR_USBECHO
 
 
@@ -51,6 +54,9 @@ rf_router_init()
     tx_report = 0x21;
     set_txrestore();
   }
+#ifdef RFR_FILTER
+  filter[0] = 0;
+#endif
 }
 
 void
@@ -76,6 +82,16 @@ rf_router_func(char *in)
     DNL();
 #endif
 
+#ifdef RFR_FILTER
+  } else if(in[1] == 'f') {      // uiXXYY: set own id to XX and router id to YY
+    uint8_t i=0;
+    while(i < (sizeof(filter)-1) && in[i+2]) {
+      filter[i] = in[i+2];
+      i++;
+    }
+    filter[i] = 0;
+#endif
+
   } else if(in[1] == 'i') {      // uiXXYY: set own id to XX and router id to YY
     fromhex(in+2, &rf_router_myid, 1);
     ewb(EE_RF_ROUTER_ID, rf_router_myid);
@@ -95,8 +111,10 @@ rf_router_func(char *in)
 #define RF_ROUTER_ZERO_LOW  768
 #define RF_ROUTER_ONE_HIGH  768
 #define RF_ROUTER_ONE_LOW   384
-void sethigh(uint16_t dur) { CC1100_SET_OUT; my_delay_us(dur); }
-void setlow(uint16_t dur) { CC1100_CLEAR_OUT; my_delay_us(dur); }
+#define SET_HIGH CC1100_OUT_PORT |= _BV(CC1100_OUT_PIN)
+#define SET_LOW  CC1100_OUT_PORT &= ~_BV(CC1100_OUT_PIN)
+void sethigh(uint16_t dur) { SET_HIGH; my_delay_us(dur); }
+void setlow(uint16_t dur) { SET_LOW; my_delay_us(dur); }
 
 // Duration is 15ms, more than one tick!
 static void
@@ -113,19 +131,30 @@ rf_router_ping(void)
   sethigh(RF_ROUTER_ONE_HIGH);
   setlow(RF_ROUTER_ONE_LOW);
   sethigh(RF_ROUTER_ONE_LOW);
-  CC1100_CLEAR_OUT;
+  SET_LOW;
 }
 
 static void
 rf_router_send(uint8_t addAddr)
 {
 #ifdef RFR_DEBUG
-       if(RFR_Buffer.buf[5] == 'T') nr_t++;
-  else if(RFR_Buffer.buf[5] == 'F') nr_f++;
-  else if(RFR_Buffer.buf[5] == 'E') nr_e++;
-  else if(RFR_Buffer.buf[5] == 'K') nr_k++;
-  else if(RFR_Buffer.buf[5] == 'H') nr_h++;
+       if(RFR_Buffer.buf[0] == 'T') nr_t++;
+  else if(RFR_Buffer.buf[0] == 'F') nr_f++;
+  else if(RFR_Buffer.buf[0] == 'E') nr_e++;
+  else if(RFR_Buffer.buf[0] == 'K') nr_k++;
+  else if(RFR_Buffer.buf[0] == 'H') nr_h++;
   else                              nr_r++;
+#endif
+
+#ifdef RFR_FILTER
+  uint8_t i;
+  for(i=0; filter[i]; i++)
+    if(RFR_Buffer.buf[0] == filter[i])
+      break;
+  if(i > 0 && filter[i] == 0) { // not found
+    rb_reset(&RFR_Buffer);
+    return;
+  }
 #endif
 
   uint8_t buf[7], l = 1;

@@ -333,6 +333,7 @@ RfAnalyze_Task(void)
   uint8_t oby = 0;
 
   if(lowtime) {
+#ifndef NO_RF_DEBUG
     if(tx_report & REP_LCDMON) {
 #ifdef HAS_LCD
       lcd_txmon(hightime, lowtime);
@@ -352,6 +353,7 @@ RfAnalyze_Task(void)
       DC('r'); if(tx_report & REP_BINTIME) DC(hightime);
       DC('f'); if(tx_report & REP_BINTIME) DC(lowtime);
     }
+#endif // NO_RF_DEBUG
     lowtime = 0;
   }
 
@@ -481,6 +483,11 @@ RfAnalyze_Task(void)
 
     checkForRepeatedPackage(&datatype, b);
 
+#if defined(HAS_RF_ROUTER) && defined(HAS_FHT_80b)
+    if(datatype == TYPE_FHT && rf_router_target && !fht_hc0) // Forum #50756
+      packetCheckValues.packageOK = 0;
+#endif
+
     if(packetCheckValues.packageOK) {
       DC(datatype);
 #ifdef HAS_HOMEEASY
@@ -515,7 +522,9 @@ RfAnalyze_Task(void)
 
   }
 
+#ifndef NO_RF_DEBUG
   if(tx_report & REP_BITS) {
+
     DC('p');
     DU(b->state,        2);
     DU(b->zero.hightime*16, 5);
@@ -547,7 +556,9 @@ RfAnalyze_Task(void)
     for(uint8_t i=0; i < b->byteidx; i++)
        DH2(b->data[i]);
     DNL();
+
   }
+#endif
 
   b->state = STATE_RESET;
   b->valCount = 0;
@@ -629,8 +640,10 @@ ISR(TIMER1_COMPA_vect)
   TCNT1=tmp;                            // reinitialize timer to measure times > SILENCE
 #endif
 #endif
+#ifndef NO_RF_DEBUG
   if(tx_report & REP_MONITOR)
     DC('.');
+#endif
 
   if(bucket_array[bucket_in].state < STATE_COLLECT ||
      bucket_array[bucket_in].byteidx < 2) {    // false alarm
@@ -641,8 +654,10 @@ ISR(TIMER1_COMPA_vect)
 
   if(bucket_nrused+1 == RCV_BUCKETS) {   // each bucket is full: reuse the last
 
+#ifndef NO_RF_DEBUG
     if(tx_report & REP_BITS)
       DS_P(PSTR("BOVF\r\n"));            // Bucket overflow
+#endif
 
     reset_input();
 

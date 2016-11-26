@@ -44,55 +44,63 @@
 #define EM_ONE         800     //   800uS
 #define EM_ZERO        400     //   400uS
 
+#if defined(HAS_HOERMANN_SEND)
+#define HRM_ZERO_H         992 //us
+#define HRM_ZERO_L         448 //us
+#define HRM_ONE_H          528 //us
+#define HRM_ONE_L          928 //us
+#define HRM_EXTRA_SYNC_H  4000 //us  measured with CUL raw read output
+#define HRM_EXTRA_SYNC_L   600 //us  measured with CUL raw read output
+#endif
+
 uint16_t credit_10ms;
 
-#ifdef HAS_RAWSEND
-
-#define MAX_SNDMSG 12
-#define MAX_SNDRAW 12
-
-static uint8_t zerohigh, zerolow, onehigh, onelow;
 #define TMUL(x) (x<<4)
 #define TDIV(x) (x>>4)
 
-static void
-send_bit(uint8_t bit)
-{
-  CC1100_SET_OUT;         // High
-  my_delay_us(bit ? TMUL(onehigh) : TMUL(zerohigh));
 
-  CC1100_CLEAR_OUT;       // Low
-  my_delay_us(bit ? TMUL(onelow) : TMUL(zerolow));
-}
+#if defined(HAS_RAWSEND) || defined(HAS_HOERMANN_SEND)
+
+#  define MAX_SNDMSG 12
+#  define MAX_SNDRAW 12
+
+  static uint8_t zerohigh, zerolow, onehigh, onelow;
+
+  static void
+  send_bit(uint8_t bit)
+  {
+    CC1100_SET_OUT;         // High
+    my_delay_us(bit ? TMUL(onehigh) : TMUL(zerohigh));
+
+    CC1100_CLEAR_OUT;       // Low
+    my_delay_us(bit ? TMUL(onelow) : TMUL(zerolow));
+  }
 
 #else
 
-#define MAX_SNDMSG 6    // FS20: 4 or 5 + CRC, FHT: 5+CRC
-#define MAX_SNDRAW 7    // MAX_SNDMSG*9/8 (parity bit)
+#  define MAX_SNDMSG 6    // FS20: 4 or 5 + CRC, FHT: 5+CRC
+#  define MAX_SNDRAW 7    // MAX_SNDMSG*9/8 (parity bit)
 
-static void
-send_bit(uint8_t bit)
-{
-  CC1100_SET_OUT;         // High
-  my_delay_us(bit ? FS20_ONE : FS20_ZERO);
+  static void
+  send_bit(uint8_t bit)
+  {
+    CC1100_SET_OUT;         // High
+    my_delay_us(bit ? FS20_ONE : FS20_ZERO);
 
-  CC1100_CLEAR_OUT;       // Low
-  my_delay_us(bit ? FS20_ONE : FS20_ZERO);
-}
+    CC1100_CLEAR_OUT;       // Low
+    my_delay_us(bit ? FS20_ONE : FS20_ZERO);
+  }
 
 #endif
-
-static void sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff, 
-                uint8_t repeat, uint8_t pause);
 
 // msg is with parity/checksum already added
 static void
 sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
-                uint8_t repeat, uint8_t pause)
+                uint8_t repeat, uint8_t pause, uint8_t addH, uint8_t addL)
 {
   // 12*800+1200+nbyte*(8*1000)+(bits*1000)+800+10000 
   // message len is < (nbyte+2)*repeat in 10ms units.
-  int8_t i, j, sum = (nbyte+2)*repeat;
+  int8_t i, j, sum = (nbyte+2)*repeat + addH + addL;
   if (credit_10ms < sum) {
     DS_P(PSTR("LOVF\r\n"));
     return;
@@ -120,6 +128,15 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
     set_ccon();
   ccTX();                                       // Enable TX 
   do {
+
+    if(addH>0 || addL>0) {
+      CC1100_SET_OUT;         // High
+      my_delay_us(TMUL(addH));
+
+      CC1100_CLEAR_OUT;       // Low
+      my_delay_us(TMUL(addL));
+    }
+
     for(i = 0; i < sync; i++)                   // sync
       send_bit(0);
     if(sync)
@@ -195,11 +212,11 @@ addParityAndSendData(uint8_t *hb, uint8_t hblen,
     oby++; obi = 7;
   }
 
-#ifdef HAS_RAWSEND
+#if defined(HAS_RAWSEND) || defined(HAS_HOERMANN_SEND)
   zerohigh = zerolow = TDIV(FS20_ZERO);
   onehigh = onelow = TDIV(FS20_ONE);
 #endif
-  sendraw(obuf, 12, oby, obi, repeat, FS20_PAUSE);
+  sendraw(obuf, 12, oby, obi, repeat, FS20_PAUSE, 0, 0);
 }
 
 void
@@ -215,12 +232,12 @@ void
 fs20send(char *in)
 {
 #ifdef HAS_DMX
-  if (dmx_fs20_emu( in ))
-	return;
+  if(dmx_fs20_emu( in ))
+    return;
 #endif
 #ifdef HAS_HELIOS
   if (helios_fs20_emu( in ))
-	return;
+    return;
 #endif
   addParityAndSend(in, 6, 3);
 }
@@ -245,7 +262,7 @@ rawsend(char *in)
   zerolow  = hb[4];
   onehigh  = hb[5];
   onelow   = hb[6];
-  sendraw(hb+7, sync, nby, nbi, repeat, pause);
+  sendraw(hb+7, sync, nby, nbi, repeat, pause, 0, 0);
 }
 
 
@@ -288,7 +305,7 @@ em_send(char *in)
     oby++; obi = 7;
   }
 
-  sendraw(obuf, 12, oby, obi, 3, FS20_PAUSE);
+  sendraw(obuf, 12, oby, obi, 3, FS20_PAUSE, 0, 0);
 }
 
 void
@@ -335,7 +352,7 @@ ks_send(char *in)
     iby++;
   }
 
-  sendraw(obuf, 10, oby, obi, 3, FS20_PAUSE);
+  sendraw(obuf, 10, oby, obi, 3, FS20_PAUSE, 0, 0);
 }
 
 #endif
@@ -355,6 +372,24 @@ ur_send(char *in)
   onehigh  = TDIV(540);
   onelow   = TDIV(1700);
   hb[3] = 0x80;     //10000000
-  sendraw(hb, 0, 3, 6, 3, 15);
+  sendraw(hb, 0, 3, 6, 3, 15, 0, 0);
+}
+#endif
+
+#ifdef HAS_HOERMANN_SEND
+void
+hm_send(char *in)
+{
+  uint8_t hb[MAX_SNDMSG];
+  uint8_t hblen = fromhex(in + 2, hb, MAX_SNDMSG - 1);
+
+  if(hblen != 5)       // LENERR
+    return;
+  zerohigh = TDIV(HRM_ZERO_H);
+  zerolow = TDIV(HRM_ZERO_L);
+  onehigh = TDIV(HRM_ONE_H);
+  onelow = TDIV(HRM_ONE_L);
+
+  sendraw(hb, 8, 4, 4, 5, 0, TDIV(HRM_EXTRA_SYNC_H), TDIV(HRM_EXTRA_SYNC_L));
 }
 #endif

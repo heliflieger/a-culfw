@@ -8,7 +8,11 @@
 #include "rf_zwave.h"
 #include "cc1100.h"
 
-#define MAX_ZWAVE_MSG 64
+#ifdef CUL_V4
+#define MAX_ZWAVE_MSG 64        // 1024k SRAM is not enough: no SEC for CUL_V4
+#else
+#define MAX_ZWAVE_MSG (8+158+2) // 158 == aMacMaxMSDUSizeR3 (G.9959)
+#endif
 
 void zwave_doSend(uint8_t *msg, uint8_t hblen);
 
@@ -320,8 +324,9 @@ rf_zwave_task(void)
   if(zwave_on=='r' && isOk && (msg[5]&3) == 3 && zwave_ackState) // got ACK
     zwave_ackState = 0;
 
-  if(zwave_on=='r' && isOk && (msg[5]&0x40)) { // need to ACK
-    my_delay_ms(10); // unsure
+  if(zwave_on=='r' && isOk && (msg[5]&0x40) &&  // ackReq
+     ((msg[5]&0x80) == 0)) {                    // not routed
+    my_delay_ms(10); // Tested with 1,5,10,15
 
     msg[8] = msg[4]; // src -> target
     msg[4] = zwave_hcid[4]; // src == ctrlId

@@ -1,6 +1,15 @@
 ## Changelog:
 
-#### 1.22.0
+#### 1.23.00
+- Support for EIM-826 (Unitec/Intertek) (Forum #48515 and #45022)
+- Code upgrade from culfw Version 1.67 (2016-11-26)
+- Hoermann Send (activated for CUL + nanoCUL)
+- RFR filter: ufKERV forwards only messages starting with one of KERV
+- intertechno: modify interval
+- ZWave: no ack for routed packages (work in progress)
+- RFR: do not report FHT if T01 is zero and RFR target is on (Forum #50756)
+
+#### 1.22.00
 - Add STM32 support 
 - Add new device: MapleCUL/MapleCUN
 
