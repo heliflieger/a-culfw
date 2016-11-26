@@ -91,7 +91,7 @@
 #define HAS_ZWAVE
 
 /* a maximum of 8 onewire devices is supported */
-#define HAS_ONEWIRE            8      // OneWire Device Buffer, RAM: 10 * 8 Byte
+#define HAS_ONEWIRE         8         // OneWire Device Buffer, RAM: 10 * 8 Byte
 
 #define RPI_TTY_FIX
 
