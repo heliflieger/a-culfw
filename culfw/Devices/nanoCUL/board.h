@@ -102,10 +102,10 @@ extern const uint8_t mark433_pin;
 #  define HAS_TX3
 #  define HAS_UNIROLL
 
-#  define HAS_MEMFN
 #  define HAS_SOMFY_RTS
 #  define HAS_RFNATIVE
 
+//#  define HAS_MEMFN
 
 #if defined (nanoCUL433)
 /* Intertechno Empfang einschalten */
@@ -122,12 +122,11 @@ extern const uint8_t mark433_pin;
 #  define HAS_MORITZ
 #  define HAS_RWE
 #  define HAS_ESA
-#define HAS_HOERMANN
-#define HAS_HOERMANN_SEND
+//#  define HAS_HOERMANN
+//#  define HAS_HOERMANN_SEND
 #  define HAS_HMS
 #  define OFF_LACROSSE_HMS_EMU          // if you like HMS emulation for LaCrosse temp devices
 
-//#define HAS_MEMFN
 //#define HAS_SOMFY_RTS
 //#define HAS_FHT_80b                     // PROGMEM: 1374b, RAM: 90b
 //#define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b

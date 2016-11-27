@@ -11,8 +11,6 @@
 #include <avr/pgmspace.h>
 #include <avr/wdt.h>
 
-#include <string.h>
-
 #include "board.h"
 
 #include "fband.h"
@@ -151,7 +149,6 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
-  { 0, 0 },
   { 0, 0 },
 };
 

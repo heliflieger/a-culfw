@@ -1,5 +1,10 @@
 ## Changelog:
 
+#### 1.23.01
+- Fix nanoCUL device
+- Fix miniCUL flash Skript
+- Change sending for IT V1 D bit (Unitec/Intertek)
+
 #### 1.23.00
 - Support for EIM-826 (Unitec/Intertek) (Forum #48515 and #45022)
 - Code upgrade from culfw Version 1.67 (2016-11-26)
