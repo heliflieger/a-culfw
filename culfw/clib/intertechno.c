@@ -403,7 +403,7 @@ it_send (char *in, uint8_t datatype) {
         } else if (in[j+1] == '2') {
           send_IT_bit_V3(2);
 // Quad
-        } else if (in[j+1] == '3') {
+        } else if (in[j+1] == 'D') {
           if (mode == 1) {
             // Not supported
 	    //send_IT_bit_V3(3);
@@ -470,6 +470,12 @@ it_send (char *in, uint8_t datatype) {
 				DC('1');
 			} else if (in[j+1] == '2') {
 				DC('2');
+                        } else if (in[j+1] == 'D') {
+	  if (mode == 1) {  
+     		// Not supported
+          } else {
+	     DC('D');
+          }
 			} else {
         if (datatype == DATATYPE_IT) {
           if (mode == 1) {  
