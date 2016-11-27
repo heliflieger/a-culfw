@@ -879,7 +879,7 @@ ISR(CC1100_INTVECT)
 	}
         if (hightime+(b->clockTime) > ((b->zero.hightime+b->one.hightime)>>1)) {
             b->one.hightime = makeavg(b->one.hightime,hightime);
-            if (b->clockTime>hightime-15 && b->clockTime<hightime+15) {
+            if (b->clockTime>hightime-10 && b->clockTime<hightime+10) {
                 count_half+=1;
             } else {
                 count_half+=2;
