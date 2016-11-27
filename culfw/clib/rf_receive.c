@@ -872,14 +872,14 @@ ISR(CC1100_INTVECT)
 #ifdef HAS_MANCHESTER
     if (b->state == STATE_MC) {
         if (hightime < (b->clockTime >> 1) || hightime > (b->clockTime << 1) + b->clockTime) { // read as: duration < 0.5 * clockTime || duration > 3 * clockTime
-			// Fail. Abort.
-			b->state = STATE_SYNC;
-			//DC('f');
-			return;
-		}
+	  // Fail. Abort.
+	  b->state = STATE_SYNC;
+	  //DC('f');
+	  return;
+	}
         if (hightime+(b->clockTime) > ((b->zero.hightime+b->one.hightime)>>1)) {
             b->one.hightime = makeavg(b->one.hightime,hightime);
-            if (b->clockTime>hightime-10 && b->clockTime<hightime+10) {
+            if (b->clockTime>hightime-15 && b->clockTime<hightime+15) {
                 count_half+=1;
             } else {
                 count_half+=2;
