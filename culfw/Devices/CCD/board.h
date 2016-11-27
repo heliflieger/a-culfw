@@ -70,6 +70,7 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 #define HAS_IT
+#define HAS_REVOLT
 
 #undef  HAS_RTC
 #define RTC_ADDR                0xd0
