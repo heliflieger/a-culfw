@@ -54,7 +54,7 @@ void analyze_revolt(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
  */
 bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
-  if (IS433MHZ && (*hightime > TSCALE(9000)) && (*hightime < TSCALE(12000)) &&
+  if (IS433MHZ && (*hightime > TSCALE(8900)) && (*hightime < TSCALE(12000)) &&
       (*lowtime  > TSCALE(150))   && (*lowtime  < TSCALE(540))) {
     // Revolt
     b->zero.hightime = 9; // = 144
