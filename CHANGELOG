@@ -1,5 +1,8 @@
 ## Changelog:
 
+#### 1.23.02
+- Fix IT V3 Dimmer - send mode
+
 #### 1.23.01
 - Fix nanoCUL device
 - Fix miniCUL flash Skript

@@ -992,6 +992,8 @@ retry_sync:
     b->data[0] = 0;
 #ifdef HAS_REVOLT
       if (is_revolt(b, &hightime, &lowtime)) {
+        b->syncbit.hightime=hightime;
+        b->syncbit.lowtime=lowtime;
         return;
       } 
 #endif    

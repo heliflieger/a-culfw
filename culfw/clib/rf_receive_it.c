@@ -36,7 +36,7 @@ void analyze_intertechno(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t 
       || b->valCount == 57 // HE_EU
       || b->valCount == 65 // IT V3
       || b->valCount == 73) // IT V3 Dim
-      && b->one.lowtime < TSCALE(2000) && b->two.lowtime < TSCALE(2000)) {
+      && b->one.lowtime < TSCALE(2800) && b->two.lowtime < TSCALE(2000)) {
       // IT V1 (48), V3 (128)
       if (b->valCount == 24) {
         copyData(b->byteidx, b->bitidx, b->data, obuf, oby, true);
