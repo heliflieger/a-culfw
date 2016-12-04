@@ -102,7 +102,7 @@ extern const uint8_t mark433_pin;
 #  define HAS_TX3
 #  define HAS_UNIROLL
 
-#  define HAS_SOMFY_RTS
+//#  define HAS_SOMFY_RTS
 #  define HAS_RFNATIVE
 
 //#  define HAS_MEMFN
