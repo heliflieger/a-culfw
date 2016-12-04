@@ -230,6 +230,9 @@ const t_fntab fntab[] = {
   { 'm', getfreemem },
 #endif
   { 'l', ledfunc },
+#if CDC_COUNT > 1
+  { 'p', cdc_uart_func },
+#endif
   { 't', gettime },
 #ifdef HAS_RF_ROUTER
   { 'u', rf_router_func },

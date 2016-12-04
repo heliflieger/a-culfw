@@ -20,12 +20,12 @@
 // Socket & Port number definition for Examples //
 //////////////////////////////////////////////////
 
-#define SOCK_DHCP 1
+#define SOCK_DHCP 3
 
 ////////////////////////////////////////////////
 // Shared Buffer Definition for Loopback test //
 ////////////////////////////////////////////////
-#define DATA_BUF_SIZE 2048
+#define DATA_BUF_SIZE 1024
 uint8_t gDATABUF[DATA_BUF_SIZE];
 
 ///////////////////////////
@@ -142,12 +142,14 @@ ethernet_reset(void)
 }
 
 void ethernet_init(void) {
-  uint8_t memsize[2][8] = { { 2, 2, 2, 2, 2, 2, 2, 2 }, { 2, 2, 2, 2, 2, 2, 2, 2 } };
+  uint8_t memsize[2][8] = { { 1, 1, 1, 1, 1, 1, 1, 1 }, { 1, 1, 1, 1, 1, 1, 1, 1 } };
   
   hal_wiznet_Init();
 
   reg_wizchip_cs_cbfunc(wizchip_select, wizchip_deselect);
   reg_wizchip_spi_cbfunc(wizchip_read, wizchip_write);
+
+  //reg_wizchip_spiburst_cbfunc(spi2_transmit_burst,spi2_transmit_burst);
 
   /* wizchip initialize*/
   if (ctlwizchip(CW_INIT_WIZCHIP, (void*) memsize) == -1) {
@@ -189,11 +191,6 @@ void ethernet_init(void) {
     Display_Net_Conf();
     run_user_applications = 1; 
   }
-
-#ifdef HAS_PIGATOR
-  RingBuffer_InitBuffer(&PIMtoNET_Buffer, PIMtoNET_Buffer_Data, USART_BUF_SIZE);
-#endif
-
 }
 
 
@@ -232,43 +229,34 @@ int32_t rxtx_0() {
   return 1;
 }
 
-int32_t rxtx_1() {
-#ifdef HAS_PIGATOR
+#define NET_BUF_SIZE  64
+#define NET_COUNT     CDC_COUNT-1
+
+uint8_t net_rx_buffer[NET_COUNT][NET_BUF_SIZE];
+volatile uint8_t net_rx_size[NET_COUNT];
+
+int32_t rxtx(uint8_t net_num) {
   int32_t ret;
   uint16_t size = 0, sentsize=0;
   
-  if((size = getSn_RX_RSR(1)) > 0) {
+  if(!net_rx_size[net_num] && ((size = getSn_RX_RSR(net_num+1)) > 0)) {
 
-    sentsize = USART_BUF_SIZE;
+    sentsize = NET_BUF_SIZE;
     if(size > sentsize) size = sentsize;
-    ret = recv(1, gDATABUF, size);
+
+    ret = recv(net_num+1, net_rx_buffer[net_num], size);
     if(ret <= 0) return ret;
 
-    sentsize = 0;
-    while(size != sentsize)
-      toPIMBuffer(gDATABUF[sentsize++]);
-    
-  }
-
-  sentsize = RingBuffer_GetCount(&PIMtoNET_Buffer);
-  size = 0;
-  while (sentsize--)
-      gDATABUF[size++] = RingBuffer_Remove(&PIMtoNET_Buffer);
-  
-  sentsize = 0;
-  while(size != sentsize) {
-    ret = send(1, gDATABUF+sentsize,size-sentsize);
-    if(ret < 0) {
-      close(1);
-      return ret;
+    net_rx_size[net_num] = size;
+    switch (net_num) {
+    case 0:
+      HAL_UART_Transmit_IT(&huart2, &net_rx_buffer[net_num][0], net_rx_size[net_num]);
+      break;
+    case 1:
+      HAL_UART_Transmit_IT(&huart3, &net_rx_buffer[net_num][0], net_rx_size[net_num]);
     }
-    sentsize += ret; // Don't care SOCKERR_BUSY, because it is zero.
   }
-
   return 1;
-#else 
-  return 1;
-#endif
 }
 
 // TCP Server - does keep the sockets listening
@@ -286,12 +274,12 @@ int32_t tcp_server(uint8_t sn, uint16_t port) {
       setSn_IR(sn,Sn_IR_CON);
     }
 
-    if (sn == 0)
+    if (sn == 0) {
       return rxtx_0();
+    } else if(sn <= NET_COUNT) {
+      return rxtx(sn-1);
+    }
 
-    if (sn == 1)
-      return rxtx_1();
-    
     break;
   case SOCK_CLOSE_WAIT :
     TRACE_INFO_WP("%d:CloseWait\r\n",sn);
@@ -372,11 +360,30 @@ void Ethernet_Task(void) {
     return;
 
   tcp_server( 0, 2323 );
-#ifdef HAS_PIGATOR
+#if NET_COUNT > 0
   tcp_server( 1, 2324 );
 #endif
+#if NET_COUNT > 1
+  tcp_server( 2, 2325 );
+#endif
 }
-	
+
+void NET_Receive_next(uint8_t net_num) {
+  if(net_num < NET_COUNT) {
+    net_rx_size[net_num] = 0;
+  }
+}
+
+void Net_Write(uint8_t *data, uint16_t size,  uint8_t socket) {
+  uint8_t ret;
+
+  if(getSn_SR(socket) == SOCK_ESTABLISHED) {
+    ret = send(socket,data,size);
+    if(ret < 0) {
+      close(socket);
+    }
+  }
+}
 
 #endif
 

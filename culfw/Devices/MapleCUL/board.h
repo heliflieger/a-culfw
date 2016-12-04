@@ -25,10 +25,9 @@
 
 #define HAS_USB
 #define CDC_COUNT               3
-#define USB_IsConnected		(CDC_isConnected(0))
+#define CDC_BAUD_RATE           115200
+#define USB_IsConnected		      (CDC_isConnected(0))
 #define HAS_XRAM
-//#define UART_BAUD_RATE          115200
-//#define HAS_UART                1
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v

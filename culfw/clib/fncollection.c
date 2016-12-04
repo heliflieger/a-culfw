@@ -33,6 +33,9 @@ uint8_t led_mode = 2;   // Start blinking
 #include "xled.h"
 #endif
 
+#if CDC_COUNT > 1
+#include "cdc_uart.h"
+#endif
 //////////////////////////////////////////////////
 // EEprom
 
@@ -239,6 +242,11 @@ eeprom_factory_reset(char *in)
 #ifdef HAS_RF_ROUTER
   ewb(EE_RF_ROUTER_ID, 0x00);
   ewb(EE_RF_ROUTER_ROUTER, 0x00);
+#endif
+
+#ifdef HAS_W5100
+  EE_write_baud(0,CDC_BAUD_RATE);
+  EE_write_baud(1,CDC_BAUD_RATE);
 #endif
 
   if(in[1] != 'x')

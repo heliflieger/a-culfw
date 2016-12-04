@@ -226,9 +226,9 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length, uint
     if((cdc_num < CDC_COUNT) && line_coding->dwDTERate) {
       CDC_connected[cdc_num]=1;
       if(cdc_num == CDC1) {
-        HAL_UART_Set_Baudrate(&huart2,line_coding->dwDTERate);
+        HAL_UART_Set_Baudrate(0,line_coding->dwDTERate);
       } else if(cdc_num == CDC2) {
-        HAL_UART_Set_Baudrate(&huart3,line_coding->dwDTERate);
+        HAL_UART_Set_Baudrate(1,line_coding->dwDTERate);
       }
     }
 

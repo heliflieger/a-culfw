@@ -33,9 +33,14 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "board.h"
 #include "hal_usart.h"
 #include "hal_gpio.h"
 #include "usbd_cdc_if.h"
+#include "usb_device.h"
+#ifdef HAS_W5100
+#include "ethernet.h"
+#endif
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -299,19 +304,61 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 
   } else if(UartHandle->Instance==USART2) {
     CDC_Receive_next(CDC1);
+#ifdef HAS_W5100
+    NET_Receive_next(NET1);
+#endif
 
   } else if(UartHandle->Instance==USART3) {
     CDC_Receive_next(CDC2);
+#ifdef HAS_W5100
+    NET_Receive_next(NET2);
+#endif
 
   }
 
   return;
 }
 
-void HAL_UART_Set_Baudrate(UART_HandleTypeDef *UartHandle, uint32_t baudrate)
-{
+void HAL_UART_Set_Baudrate(uint8_t UART_num, uint32_t baudrate) {
+  UART_HandleTypeDef *UartHandle;
+
+
+  switch(UART_num) {
+  case 0:
+    UartHandle = &huart2;
+    break;
+  case 1:
+    UartHandle = &huart3;
+    break;
+  default:
+    return;
+  }
+
   UartHandle->Init.BaudRate = baudrate;
   UART_SetConfig(UartHandle);
+}
+
+uint32_t HAL_UART_Get_Baudrate(uint8_t UART_num) {
+
+  switch(UART_num) {
+  case 0:
+    return huart2.Init.BaudRate;
+  case 1:
+    return huart3.Init.BaudRate;
+  }
+  return 0;
+}
+
+void HAL_UART_Write(uint8_t UART_num, uint8_t* Buf, uint16_t Len) {
+  switch(UART_num) {
+  case 0:
+    HAL_UART_Transmit_IT(&huart2, Buf, Len);
+    break;
+  case 1:
+    HAL_UART_Transmit_IT(&huart3, Buf, Len);
+    break;
+  }
+  return;
 }
 
 /**

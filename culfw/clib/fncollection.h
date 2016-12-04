@@ -46,7 +46,14 @@ void do_wdt_enable(uint8_t t);
 # define EE_IP4_NTPSERVER    (EE_IP4_GATEWAY+4)                      
 # define EE_IP4_TCPLINK_PORT (EE_IP4_NTPSERVER+4)               // Offset x79
 # define EE_IP4_NTPOFFSET    (EE_IP4_TCPLINK_PORT+2)
+
+#if CDC_COUNT > 1
+# define EE_CDC1_BAUD        (EE_IP4_NTPOFFSET+1)
+# define EE_CDC2_BAUD        (EE_CDC1_BAUD+4)
+# define EE_ETH_LAST         (EE_CDC2_BAUD+4)
+#else
 # define EE_ETH_LAST         (EE_IP4_NTPOFFSET+1)       // 
+#endif
 #endif
 
 #ifdef HAS_LCD
@@ -66,6 +73,7 @@ void do_wdt_enable(uint8_t t);
 # define EE_LOGENABLED        (EE_LCD_LAST)
 # define EE_FS_LAST           (EE_LOGENABLED+1)
 #endif
+
 
 
 extern uint8_t led_mode;

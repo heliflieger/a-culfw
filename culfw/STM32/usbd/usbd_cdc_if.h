@@ -92,10 +92,6 @@
   * @{
   */ 
 /* USER CODE BEGIN EXPORTED_MACRO */
-#define CDC0  0
-#define CDC1  1
-#define CDC2  2
-
 /* USER CODE END EXPORTED_MACRO */
 
 /**

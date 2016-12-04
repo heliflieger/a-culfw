@@ -57,6 +57,9 @@ void MX_SPI1_Init(void);
 
 uint8_t spi2_send(uint8_t data);
 
+uint8_t spi2_transmit_burst(uint8_t *pData, uint16_t Size);
+uint8_t spi2_receive_burst(uint8_t *pData, uint16_t Size);
+
 /* USER CODE BEGIN Prototypes */
 /* USER CODE END Prototypes */
 

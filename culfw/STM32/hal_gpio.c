@@ -164,6 +164,7 @@ void hal_wiznet_Init(void) {
   HAL_GPIO_WritePin(WIZNET_RST_GPIO, _BV(WIZNET_RST_PIN), GPIO_PIN_RESET);
   my_delay_ms(10);
   HAL_GPIO_WritePin(WIZNET_RST_GPIO, _BV(WIZNET_RST_PIN), GPIO_PIN_SET);
+  my_delay_ms(10);
 
 }
 #endif
