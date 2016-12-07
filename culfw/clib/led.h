@@ -24,7 +24,7 @@ static const Pin pinsLeds[] = {PINS_LEDS};
 #define LED_OFF()     	PIO_Set(&pinsLeds[0])
 #define LED_TOGGLE()	{if (PIO_GetOutputDataStatus(&pinsLeds[0])) {PIO_Clear(&pinsLeds[0]);} else {PIO_Set(&pinsLeds[0]);}}
 
-#ifdef SAM7
+#ifdef CUBE
 #define led_init() 		PIO_Configure(&pinsLeds[0], 1);PIO_Configure(&pinsLeds[1], 1);PIO_Configure(&pinsLeds[2], 1)
 
 #define LED2_ON()    	PIO_Clear(&pinsLeds[1])

@@ -58,6 +58,7 @@
 #define HAS_INTERTECHNO
 #define HAS_UNIROLL
 #define HAS_HOERMANN
+#define HAS_HOERMANN_SEND
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
 #define HAS_RFNATIVE
