@@ -1,30 +1,49 @@
-# Firmware für den MapleCUL/MapleCUN
+# Firmware für den MAX! Cube
 
 
 ## benötigte Tools
 
-STM32 Flash loader demonstrator: http://www.st.com/en/development-tools/flasher-stm32.html
+SAM-BA 2.xx: http://www.atmel.com/tools/ATMELSAM-BAIN-SYSTEMPROGRAMMER.aspx
+ggf. USB CDC Treiber: http://www.atmel.com/tools/ATMELSAM-BAIN-SYSTEMPROGRAMMER.aspx
+Tera Term: http://ttssh2.osdn.jp/index.html.en
 a-culfw: https://www.mediafire.com/folder/tf16radvztfd9/a-culfw
-USB zu TTL Adapter. 
 
+## Bootloader flashen
+
+- Die Pins J1 auf dem Cube verbinden und die USB Verbindung kurz ein- und wieder ausstecken um die vorhandene Firmware zu löschen und den Flashspeicher zu entsperren.
+
+**Achtung:** Die original Firmware ist danach weg und kann auch nicht wiederhergestellt werden, da keine unverschlüsselte Version davon verfügbar ist!
+   
+- Verbindung  J1 lösen und USB Kabel wieder Verbinden.
+- Unter Windows erscheint im Gerätemanager ein neuer COM Port.
+- SAM-BA als Administrator ausführen.
+- Den neuen COM Port unter "Select the connection" auswählen.
+- Unter "Select your Board" at91sam7x256-ek bzw. at91sam7x512-ek auswählen (je nach verbauten µC).
+- Auf Connect Drücken.
+- Registerkarte Flash auswählen.
+- Unter "Send File Name" die Datei bootloader_CUBE.bin auswählen.
+- Auf Send File drücken. 
+- Die folgende Frage, ob das Flash gelockt werden soll, mit nein beantworten.
+- Im Feld Scripts „Boot from Flash (GPNVM2)“ auswählen.
+- Auf Execute drücken.
+- SAM-BA schließen und USB Kabel lösen. 
+
+Alternative für SAM-BA unter Linux: https://forum.fhem.de/index.php/topic,38404.msg378455.html#msg378455
 
 ## a-culfw flashen
 
-- RX1/TX1 am Maple Mini mit einem USB/TTL Adapter mit dem PC verbinden.
-- USB Kabel am Maple Mini anschließen.
-- Taste but=32 am Maple Mini drücken und gerdückt halten.
-- Taste reset am Maple Mini drücken.
-- Tasten loslassen.
-- Flash loader demonstrator starten.
-- Com Port des USB/TTL Wandler auswähle, Baud Rate 115200, Parity Even, Echo Disabled, Timeout 1.
-- Auf Next drücken.
-- Es sollte die Meldung erscheinen. Target is readable. Please click "Next" to proceed.
-- Auf Next drücken.
-- Auf Next drücken.
-- Download to device auswählen.
-- Datei MapleCUL.bin bzw. MapleCUN.bin öffnen.
-- Erase necessary pages auswählen.
-- Auf Next drücken.
-- Warten bis Flashvorgang abgeschlossen ist.
-- USB Kabel am Maple Mini entfernen. 
+- Zur aktivierung des Bootloaders den Knopfes an der Unterseite des Cubes drücken.
+- USB Kabel verbinden.
+- Knopf loslassen.
+- Falls bereits die a-culfw auf dem Cube installiert ist kann der Bootloader auch in einer Terminalverbindung mit dem Kommando „B01“ aktiviert werden.
+- Bei aktivierten Bootloader blink D1 vier mal pro Sekunde.
+- Unter Windows erscheint im Gerätemanager ein neuer COM Port "AT91 USB to Serial Converter".
+- Tera Term starten.
+- Datei --> Neue Verbindung --> Seriell auswählen.
+- Com Port auswählen.
+- Auf OK drücken.
+- Datei --> Transfer --> XMODEM --> Senden auswählen.
+- Die Datei CUBE_BL.bin öffnen.
+- Nach erfolgreicher Übetragung startet der Cube neu und D1 blinkt im Sekundentakt.
 
+Alternative für Tera Term unter Linux: https://forum.fhem.de/index.php/topic,38404.msg348429.html#msg348429

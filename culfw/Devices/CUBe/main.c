@@ -229,6 +229,9 @@ const t_fntab fntab[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
+#ifdef HAS_HOERMANN_SEND
+  { 'h', hm_send },
+#endif
 #ifdef HAS_MEMFN
   { 'm', getfreemem },
 #endif
