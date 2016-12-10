@@ -52,8 +52,7 @@
 #endif
 
 #ifdef SAM7
-#include <aic/aic.h>
-void ISR_Pio();
+#include <hal_gpio.h>
 #elif defined STM32
 #include <hal.h>
 #include "stm32f1xx_it.h"
@@ -100,27 +99,9 @@ void
 tx_init(void)
 {
 
-#ifdef SAM7
-
-  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
-#ifdef CUBE
-  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOB);
-#endif
-  //CC1100_OUT_PIN
-  CC1100_OUT_BASE->PIO_PPUER = _BV(CC1100_OUT_PIN); //Enable pullup
-  CC1100_OUT_BASE->PIO_OER = _BV(CC1100_OUT_PIN);   //Enable output
-  CC1100_OUT_BASE->PIO_CODR = _BV(CC1100_OUT_PIN);  //Clear_Bit
-  CC1100_OUT_BASE->PIO_PER = _BV(CC1100_OUT_PIN);   //Enable PIO control
-
-  //CC1100_IN_PIN
-  CC1100_IN_BASE->PIO_IER = _BV(CC1100_IN_PIN);     //Enable input change interrupt
-  CC1100_IN_BASE->PIO_ODR = _BV(CC1100_IN_PIN);     //Enable input
-  CC1100_IN_BASE->PIO_PER = _BV(CC1100_IN_PIN);     //Enable PIO control
-  AIC_ConfigureIT(CC1100_IN_PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
-
-#elif defined STM32
-  hal_CC_GDO_init(INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(TRUE);
+#ifdef ARM
+  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  //hal_enable_CC_GDOin_int(0,TRUE);
 #else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
   CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);
@@ -621,16 +602,16 @@ ISR(TIMER1_COMPA_vect)
 #ifdef SAM7
   AT91C_BASE_AIC->AIC_IDCR = 1<< AT91C_ID_TC1;	//Disable Interrupt
 
-#ifdef LONG_PULSE
+  #ifdef LONG_PULSE
   AT91C_BASE_TC1->TC_RC = TWRAP/8*3;    // Wrap Timer
   AT91C_BASE_TC1->TC_CMR |= AT91C_TC_CPCTRG;
-#endif
+  #endif
 
 #elif defined STM32
   hal_enable_CC_timer_int(FALSE);       //Disable Interrupt
-#ifdef LONG_PULSE
+  #ifdef LONG_PULSE
   TIM2->ARR = TWRAP;
-#endif
+  #endif
 
 #else
   TIMSK1 = 0;                           // Disable "us"
@@ -770,12 +751,7 @@ static void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool 
 
 //////////////////////////////////////////////////////////////////////
 // "Edge-Detected" Interrupt Handler
-#ifdef SAM7
-void ISR_Pio() {
-	// Read PIO controller status
-	CC1100_IN_BASE->PIO_ISR;
-
-#elif defined STM32
+#ifdef ARM
 	void CC1100_in_callback() {
 #else
 ISR(CC1100_INTVECT)
@@ -842,7 +818,11 @@ ISR(CC1100_INTVECT)
 
   //////////////////
   // Falling edge
+#ifdef ARM
+  if (!hal_CC_Pin_Get(0,CC_Pin_In)) {
+#else
   if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
+#endif
 
 #if defined (HAS_HMS) || defined (HAS_ESA)
     if( IS868MHZ &&  (

@@ -83,13 +83,14 @@
 #define CC1100_CS_BASE      AT91C_BASE_PIOA
 #define CC1100_OUT_PIN      20
 #define CC1100_OUT_BASE     AT91C_BASE_PIOA
-#define CC1100_OUT_PORT     AT91C_BASE_PIOA->PIO_PDSR
 #define CC1100_IN_PIN       19
 #define CC1100_IN_BASE      AT91C_BASE_PIOA
-#define CC1100_IN_PORT      AT91C_BASE_PIOA->PIO_PDSR
-#define CC1100_IN_PIO_ID    AT91C_ID_PIOA
-#define CC1100_OUT_IN       CC1100_OUT_PORT
-#define CC1100_IN_IN        CC1100_IN_PORT
+
+#define CCCOUNT       1
+#define CCTRANSCEIVERS    {\
+                          { {CC1100_OUT_BASE, CC1100_CS_BASE, CC1100_IN_BASE},\
+                            {CC1100_OUT_PIN,  CC1100_CS_PIN,  CC1100_IN_PIN}  },\
+                          }
 
 #define BOOTLOADER_PIN		(1<<9)
 

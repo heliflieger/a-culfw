@@ -220,6 +220,14 @@ void EXTI0_IRQHandler(void)
 }
 
 /**
+* @brief This function handles EXTI line0 interrupt.
+*/
+void EXTI4_IRQHandler(void)
+{
+  hal_GPIO_EXTI_IRQHandler();
+}
+
+/**
 * @brief This function handles USART1 global interrupt.
 */
 void USART1_IRQHandler(void)

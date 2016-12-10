@@ -115,19 +115,9 @@ static void rf_mbus_init(uint8_t mmode, uint8_t rmode) {
   mbus_mode  = WMBUS_NONE;
   radio_mode = RADIO_MODE_NONE;
 
-#ifdef SAM7
-  CC1100_IN_BASE->PIO_ODR = _BV(CC1100_IN_PIN);     //Enable input
-  CC1100_OUT_BASE->PIO_ODR = _BV(CC1100_OUT_PIN);   //Enable input
-
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID; // disable INT - we'll poll...
-
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN);   //Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
-
-#elif defined STM32
-  hal_CC_GDO_init(INIT_MODE_IN_CS_IN);
-  hal_enable_CC_GDOin_int(FALSE); // disable INT - we'll poll...
+#ifdef ARM
+  hal_CC_GDO_init(0,INIT_MODE_IN_CS_IN);
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 
 #else
   CLEAR_BIT( GDO0_DDR, GDO0_BIT );
@@ -229,14 +219,22 @@ void rf_mbus_task(void) {
 
      // RX active, awaiting SYNC
     case 1:
+#ifdef ARM
+      if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
+#else
       if (bit_is_set(GDO2_PIN,GDO2_BIT)) {
+#endif
         RXinfo.state = 2;
       }
       break;
 
     // awaiting pkt len to read
     case 2:
+#ifdef ARM
+      if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+#else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
+#endif
         // Read the 3 first bytes
         halRfReadFifo(RXinfo.pByteIndex, 3, NULL, NULL);
 
@@ -297,7 +295,11 @@ void rf_mbus_task(void) {
 
     // awaiting more data to be read
     case 3:
+#ifdef ARM
+      if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+#else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
+#endif
         // - Length mode -
         // Set fixed packet length mode is less than MAX_FIXED_LENGTH bytes
         if (((RXinfo.bytesLeft) < (MAX_FIXED_LENGTH )) && (RXinfo.format == INFINITE)) {
@@ -317,7 +319,11 @@ void rf_mbus_task(void) {
   }
 
   // END OF PAKET
+#ifdef ARM
+  if (!hal_CC_Pin_Get(0,CC_Pin_Out) && RXinfo.state>1) {
+#else
   if (!bit_is_set(GDO2_PIN,GDO2_BIT) && RXinfo.state>1) {
+#endif
     uint8_t rssi = 0;
     uint8_t lqi = 0;
     halRfReadFifo(RXinfo.pByteIndex, (uint8)RXinfo.bytesLeft, &rssi, &lqi);
@@ -441,7 +447,11 @@ uint16 txSendPacket(uint8* pPacket, uint8* pBytes, uint8 mode) {
   // Wait for available space in FIFO
   while (!TXinfo.complete) {
 
+#ifdef ARM
+    if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+#else
     if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
+#endif
       // Write data fragment to TX FIFO
       bytesToWrite = MIN(TX_AVAILABLE_FIFO, TXinfo.bytesLeft);
       halRfWriteFifo(TXinfo.pByteIndex, bytesToWrite);

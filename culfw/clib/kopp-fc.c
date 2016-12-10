@@ -164,17 +164,9 @@ const PROGMEM const uint8_t CC1100_Kopp_CFG[EE_CC1100_CFG_SIZE] = {
 void
 kopp_fc_init(void)
 {
-#ifdef SAM7
-
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID; // disable INT - we'll poll...
-
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN);     //Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
-
-#elif defined STM32
-  hal_CC_GDO_init(INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(FALSE); // disable INT - we'll poll...
+#ifdef ARM
+  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 	// disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   	// CS as output
@@ -670,9 +662,13 @@ uint8_t	recckserr= 0;					                    		// default: No checksum Error !
 
  // RX active, awaiting SYNC
 
-// if (bit_is_set(GDO2_PIN,GDO2_BIT)) 
+// if (bit_is_set(GDO2_PIN,GDO2_BIT))
+#ifdef ARM
+  if (hal_CC_Pin_Get(0,CC_Pin_In))
+#else
  if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))					// GDO2=CC100_IN_Port sind so konfirguriert, dass dieser aktiv=high wird
 																	// sobald ein kompletter Kopp Block (15 Bytes) oder mehr als 20Bytes im RX-Fifo sind
+#endif
  {
 
   wdt_reset();														// 2016-04-04: ####RaspII Watchdog reset for Feuerdrache to test reset issues

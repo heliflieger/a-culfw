@@ -14,64 +14,24 @@
 
 #include "board.h"
 
-#ifdef SAM7
-
-#include <pio/pio.h>
-
-static const Pin pinsLeds[] = {PINS_LEDS};
-
-#define LED_ON()    	PIO_Clear(&pinsLeds[0])
-#define LED_OFF()     	PIO_Set(&pinsLeds[0])
-#define LED_TOGGLE()	{if (PIO_GetOutputDataStatus(&pinsLeds[0])) {PIO_Clear(&pinsLeds[0]);} else {PIO_Set(&pinsLeds[0]);}}
-
-#ifdef CUBE
-#define led_init() 		PIO_Configure(&pinsLeds[0], 1);PIO_Configure(&pinsLeds[1], 1);PIO_Configure(&pinsLeds[2], 1)
-
-#define LED2_ON()    	PIO_Clear(&pinsLeds[1])
-#define LED2_OFF()     	PIO_Set(&pinsLeds[1])
-
-#define LED3_ON()    	PIO_Clear(&pinsLeds[2])
-#define LED3_OFF()     	PIO_Set(&pinsLeds[2])
-
-#define LED2_TOGGLE()	{if (PIO_GetOutputDataStatus(&pinsLeds[1])) {PIO_Clear(&pinsLeds[1]);} else {PIO_Set(&pinsLeds[1]);}}
-#define LED3_TOGGLE()	{if (PIO_GetOutputDataStatus(&pinsLeds[2])) {PIO_Clear(&pinsLeds[2]);} else {PIO_Set(&pinsLeds[2]);}}
-#else
-#define led_init() 		PIO_Configure(&pinsLeds[0], 1)
-
-#define LED2_ON()
-#define LED2_OFF()
-
-#define LED3_ON()
-#define LED3_OFF()
-
-#define LED2_TOGGLE()
-#define LED3_TOGGLE()
-#endif
-
-#elif defined STM32
+#ifdef ARM
 
 #include <hal_gpio.h>
 
-#define LED_ON()        HAL_GPIO_WritePin(LED_GPIO, _BV(LED_PIN), GPIO_PIN_SET)
-#define LED_OFF()       HAL_GPIO_WritePin(LED_GPIO, _BV(LED_PIN), GPIO_PIN_RESET)
-#define LED_TOGGLE()    HAL_GPIO_TogglePin(LED_GPIO, _BV(LED_PIN))
 #define led_init()      HAL_LED_Init()
 
-#ifdef LED2_GPIO
-#define LED2_ON()       HAL_GPIO_WritePin(LED2_GPIO, _BV(LED2_PIN), GPIO_PIN_SET)
-#define LED2_OFF()      HAL_GPIO_WritePin(LED2_GPIO, _BV(LED2_PIN), GPIO_PIN_RESET)
-#define LED2_TOGGLE()   HAL_GPIO_TogglePin(LED2_GPIO, _BV(LED2_PIN))
-#else
-#define LED2_ON()
-#define LED2_OFF()
-#define LED2_TOGGLE()
-#endif
+#define LED_ON()        HAL_LED_Set(0,LED_on)
+#define LED_OFF()       HAL_LED_Set(0,LED_off)
+#define LED_TOGGLE()    HAL_LED_Toggle(0)
 
-#define LED3_ON()
-#define LED3_OFF()
+#define LED2_ON()       HAL_LED_Set(1,LED_on)
+#define LED2_OFF()      HAL_LED_Set(1,LED_off)
+#define LED2_TOGGLE()   HAL_LED_Toggle(1)
 
+#define LED3_ON()       HAL_LED_Set(2,LED_on)
+#define LED3_OFF()      HAL_LED_Set(2,LED_off)
+#define LED3_TOGGLE()   HAL_LED_Toggle(2)
 
-#define LED3_TOGGLE()
 
 #else
 

@@ -24,28 +24,19 @@ void moritz_handleAutoAck(uint8_t* enc);
 #define CC_ID				CC1100_MORITZ
 
 #undef CC1100_ASSERT
-#define CC1100_ASSERT 		(CCtransceiver[CC_ID].CS_base->PIO_CODR = (1<<CCtransceiver[CC_ID].CS_pin))
 #undef CC1100_DEASSERT
-#define CC1100_DEASSERT 	(CCtransceiver[CC_ID].CS_base->PIO_SODR = (1<<CCtransceiver[CC_ID].CS_pin))
-#undef CC1100_IN_PORT
-#define CC1100_IN_PORT 		(CCtransceiver[CC_ID].CS_base->PIO_PDSR)
-#undef CC1100_IN_PIN
-#define CC1100_IN_PIN 		CCtransceiver[CC_ID].IN_pin
-#undef CC1100_CS_BASE
-#define CC1100_CS_BASE 		CCtransceiver[CC_ID].CS_base
-#undef CC1100_CS_PIN
-#define CC1100_CS_PIN 		CCtransceiver[CC_ID].CS_pin
-
-
-#define CC1100_READREG(x)				cc1100_readReg2(x,&CCtransceiver[CC_ID])
-#define CC1100_WRITEREG(x,y) 			cc1100_writeReg2(x,y,&CCtransceiver[CC_ID])
-#define CCSTROBE(x) 					ccStrobe2(x,&CCtransceiver[CC_ID])
+#define CC1100_DEASSERT                 hal_CC_Pin_Set(CC_ID,CC_Pin_CS,GPIO_PIN_SET)
+#define CC1100_ASSERT                   hal_CC_Pin_Set(CC_ID,CC_Pin_CS,GPIO_PIN_RESET)
+#define CC1100_READREG(x)               cc1100_readReg2(x,CC_ID)
+#define CC1100_WRITEREG(x,y)            cc1100_writeReg2(x,y,CC_ID)
+#define CCSTROBE(x)                     ccStrobe2(x,CC_ID)
+#define CC1101_RX_CHECK_PLL_WAIT_TASK() cc1101_RX_check_PLL_wait_task2(CC_ID)
 
 #else
-
-#define CC1100_READREG					cc1100_readReg
-#define CC1100_WRITEREG 				cc1100_writeReg
-#define CCSTROBE						ccStrobe
+#define CC_ID                           0
+#define CC1100_READREG                  cc1100_readReg
+#define CC1100_WRITEREG                 cc1100_writeReg
+#define CCSTROBE                        ccStrobe
 
 #endif
 
@@ -109,17 +100,9 @@ static uint32_t lastSendingTicks = 0;
 void
 rf_moritz_init(void)
 {
-#ifdef SAM7
-#ifndef CC_ID
-  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;	// disable INT - we'll poll...
-#endif
-
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);			//Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);			//Enable PIO control
-#elif defined STM32
-  hal_CC_GDO_init(INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(FALSE); // disable INT - we'll poll...
+#ifdef ARM
+  hal_CC_GDO_init(CC_ID,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -135,7 +118,7 @@ rf_moritz_init(void)
   CCSTROBE( CC1100_SRES );                   // Send SRES command
   my_delay_us(100);
 
-#ifdef CC_ID
+#if ((CC_ID != 0))
   CC1100_ASSERT;
   uint8_t *cfg = EE_CC1100_CFG;
   for(uint8_t i = 0; i < EE_CC1100_CFG_SIZE; i++) {
@@ -227,7 +210,11 @@ rf_moritz_task(void)
     return;
 
   // see if a CRC OK pkt has been arrived
+#ifdef ARM
+  if (hal_CC_Pin_Get(CC_ID,CC_Pin_In)) {
+#else
   if(bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
+#endif
     //errata #1 does not affect us, because we wait until packet is completely received
     enc[0] = CC1100_READREG( CC1100_RXFIFO ) & 0x7f; // read len
 
@@ -332,7 +319,7 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
    * start sending - CC1101 will send preamble continuously until TXFIFO is filled.
    * The preamble will wake up devices. See http://e2e.ti.com/support/low_power_rf/f/156/t/142864.aspx
    * It will not go into TX mode instantly if channel is not clear (see CCA_MODE), thus ccTX tries multiple times */
-#ifdef CC_ID
+#if ((CC_ID != 0))
   do {
     CCSTROBE(CC1100_STX);
   } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_TX);

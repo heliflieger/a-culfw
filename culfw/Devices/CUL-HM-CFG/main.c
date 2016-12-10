@@ -9,6 +9,7 @@
 
 #include "board.h"
 #include "pio/pio.h"
+#include "hal_gpio.h"
 
 #include <dbgu/dbgu.h>
 #include <stdio.h>
@@ -270,6 +271,8 @@ int main(void)
 
   //Configure Reset Controller
   AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
+
+  HAL_GPIO_Init();
 
   TRACE_INFO("init Flash\n\r");
   flash_init();

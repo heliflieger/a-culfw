@@ -111,14 +111,9 @@ it_tunein(void)
 {
 		  int8_t i;
 		  
-#ifdef SAM7
-  		AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;	// disable INT - we'll poll...
-  		AT91C_BASE_PIOA->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
-  		AT91C_BASE_PIOA->PIO_OER = _BV(CC1100_CS_PIN);			//Enable output
-  		AT91C_BASE_PIOA->PIO_PER = _BV(CC1100_CS_PIN);			//Enable PIO control
-#elif defined STM32
-  		hal_CC_GDO_init(INIT_MODE_OUT_CS_IN);
-  	  hal_enable_CC_GDOin_int(FALSE); // disable INT - we'll poll...
+#ifdef ARM
+  		hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  	  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 #else
 		  EIMSK &= ~_BV(CC1100_INT);
   		SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
