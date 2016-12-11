@@ -20,8 +20,9 @@
 
 #include "rf_receive_revolt.h"
 #include "display.h"
-#ifdef STM32
-#include <hal.h>
+#ifdef ARM
+#include <hal_timer.h>
+#include <hal_gpio.h>
 #endif
 #ifdef HAS_REVOLT
 /*
@@ -67,19 +68,13 @@ bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     b->bitidx  = 7;
     b->data[0] = 0;
     #ifdef SAM7
-        AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE/8*3);
     #elif defined STM32
-        TIM2->ARR = SILENCE;
+        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE);
     #else
         OCR1A = SILENCE;
     #endif
-    #ifdef SAM7
-        AT91C_BASE_TC1->TC_SR;
-        #ifdef LONG_PULSE
-            AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
-        #endif
-        AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
-    #elif defined STM32
+    #ifdef ARM
         hal_enable_CC_timer_int(TRUE);
     #else
         TIMSK1 = _BV(OCIE1A);

@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * File Name          : TIM.c
+  * File Name          : hal_timer.c
   * Description        : This file provides code for the configuration
   *                      of the TIM instances.
   ******************************************************************************
@@ -33,11 +33,8 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "tim.h"
+#include "hal_timer.h"
 
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
@@ -167,14 +164,14 @@ void hal_enable_CC_timer_int(uint8_t enable) {
 }
 /* USER CODE BEGIN 1 */
 
-__weak void TIM1_PeriodElapsedCallback(void)
+__weak void clock_TimerElapsedCallback(void)
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_TIMEx_CommutationCallback could be implemented in the user file
    */
 }
 
-__weak void TIM2_PeriodElapsedCallback(void)
+__weak void rf_receive_TimerElapsedCallback(void)
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_TIMEx_CommutationCallback could be implemented in the user file
@@ -183,20 +180,11 @@ __weak void TIM2_PeriodElapsedCallback(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if(htim->Instance==TIM1) {
-    TIM1_PeriodElapsedCallback();
+    clock_TimerElapsedCallback();
   } else if(htim->Instance==TIM2) {
-    TIM2_PeriodElapsedCallback();
+    rf_receive_TimerElapsedCallback();
   }
 }
 
-/* USER CODE END 1 */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

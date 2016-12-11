@@ -13,7 +13,7 @@
 #include <hal_usart.h>
 #include <usb_device.h>
 #include <hal_gpio.h>
-#include <tim.h>
+#include <hal_timer.h>
 #include <utility/trace.h>
 #include <avr/eeprom.h>
 #include <avr/wdt.h>

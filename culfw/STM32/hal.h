@@ -6,6 +6,6 @@
 #include "hal_gpio.h"
 #include "hal_spi.h"
 #include "hal_usart.h"
-#include "tim.h"
+#include "hal_timer.h"
 
 #endif /* __HAL_H_ */

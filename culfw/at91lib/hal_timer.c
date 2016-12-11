@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * File Name          : TIM.h
+  * File Name          : hal_timer.c
   * Description        : This file provides code for the configuration
   *                      of the TIM instances.
   ******************************************************************************
@@ -31,47 +31,53 @@
   *
   ******************************************************************************
   */
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __tim_H
-#define __tim_H
-#ifdef __cplusplus
- extern "C" {
-#endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f1xx_hal.h"
+#include "hal_timer.h"
+#include "board.h"
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-extern TIM_HandleTypeDef htim1;
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
-extern void Error_Handler(void);
-
-void MX_TIM1_Init(void);
-void MX_TIM2_Init(void);
-
-/* USER CODE BEGIN Prototypes */
-void hal_enable_CC_timer_int(uint8_t enable);
-
-/* USER CODE END Prototypes */
-
-#ifdef __cplusplus
+void hal_enable_CC_timer_int(uint8_t enable) {
+  if (enable) {
+    AT91C_BASE_TC1->TC_SR;
+    #ifdef LONG_PULSE
+        AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+    #endif
+    AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+  } else {
+    AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_TC1; //Disable Interrupt
+    #ifdef LONG_PULSE
+    AT91C_BASE_TC1->TC_CMR |= AT91C_TC_CPCTRG;
+    #endif
+  }
 }
-#endif
-#endif /*__ tim_H */
+/* USER CODE BEGIN 1 */
 
-/**
-  * @}
-  */
+__attribute__((weak)) void clock_TimerElapsedCallback(void)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the HAL_TIMEx_CommutationCallback could be implemented in the user file
+   */
+}
 
-/**
-  * @}
-  */
+__attribute__((weak)) void rf_receive_TimerElapsedCallback(void)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the HAL_TIMEx_CommutationCallback could be implemented in the user file
+   */
+}
+
+void ISR_Timer0() {
+  // Clear status bit to acknowledge interrupt
+  AT91C_BASE_TC0->TC_SR;
+  clock_TimerElapsedCallback();
+}
+
+void ISR_Timer1() {
+  // Clear status bit to acknowledge interrupt
+  AT91C_BASE_TC1->TC_SR;
+  rf_receive_TimerElapsedCallback();
+}
+
+
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -53,8 +53,10 @@
 
 #ifdef SAM7
 #include <hal_gpio.h>
+#include <hal_timer.h>
 #elif defined STM32
-#include <hal.h>
+#include <hal_timer.h>
+#include <hal_gpio.h>
 #include "stm32f1xx_it.h"
 #endif
 //////////////////////////
@@ -562,9 +564,7 @@ RfAnalyze_Task(void)
 void reset_input(void)
 {
   maxLevel=0;
-#ifdef SAM7
-  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_TC1;	//Disable Interrupt
-#elif defined STM32
+#ifdef ARM
   hal_enable_CC_timer_int(FALSE);
 #else
   TIMSK1 = 0;
@@ -574,9 +574,9 @@ void reset_input(void)
   packetCheckValues.isnotrep = 0;
 #endif
 #ifdef SAM7
-      	AT91C_BASE_TC1->TC_RC = 0;
+        HAL_TIMER_SET_RELOAD_REGISTER(0);
 #elif defined STM32
-      	TIM2->ARR = 0xffff;
+      	HAL_TIMER_SET_RELOAD_REGISTER(0xffff);
 #else
         OCR1A = 0;
 #endif
@@ -585,12 +585,8 @@ void reset_input(void)
 //////////////////////////////////////////////////////////////////////
 // Timer Compare Interrupt Handler. If we are called, then there was no
 // data for SILENCE time, and we can put the data to be analysed
-#ifdef SAM7
-void ISR_Timer1() {
-	// Clear status bit to acknowledge interrupt
-	AT91C_BASE_TC1->TC_SR;
-#elif defined STM32
-void TIM2_PeriodElapsedCallback() {
+#ifdef ARM
+void rf_receive_TimerElapsedCallback() {
 #else
 ISR(TIMER1_COMPA_vect)
 {
@@ -600,17 +596,16 @@ ISR(TIMER1_COMPA_vect)
 #endif
 
 #ifdef SAM7
-  AT91C_BASE_AIC->AIC_IDCR = 1<< AT91C_ID_TC1;	//Disable Interrupt
+  hal_enable_CC_timer_int(FALSE);       //Disable Interrupt
 
   #ifdef LONG_PULSE
-  AT91C_BASE_TC1->TC_RC = TWRAP/8*3;    // Wrap Timer
-  AT91C_BASE_TC1->TC_CMR |= AT91C_TC_CPCTRG;
+  HAL_TIMER_SET_RELOAD_REGISTER(TWRAP/8*3);    // Wrap Timer
   #endif
 
 #elif defined STM32
   hal_enable_CC_timer_int(FALSE);       //Disable Interrupt
   #ifdef LONG_PULSE
-  TIM2->ARR = TWRAP;
+  HAL_TIMER_SET_RELOAD_REGISTER(TWRAP);
   #endif
 
 #else
@@ -733,9 +728,9 @@ static void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool 
         }    
 #ifdef SAM7
         ocrVal = ((ocrVal * 100) / 266);
-        AT91C_BASE_TC1->TC_RC = ocrVal * 16;
+        HAL_TIMER_SET_RELOAD_REGISTER(ocrVal * 16);
 #elif defined STM32
-        TIM2->ARR = ocrVal * 16;
+        HAL_TIMER_SET_RELOAD_REGISTER(ocrVal * 16);
 #else
         OCR1A = ocrVal * 16;
 #endif
@@ -772,17 +767,17 @@ ISR(CC1100_INTVECT)
 #endif
 #ifdef LONG_PULSE
   #ifdef SAM7
-  uint16_t c = AT91C_BASE_TC1->TC_CV / 6;   // catch the time and make it smaller
+  uint16_t c = HAL_TIMER_GET_COUNTER_VALUE() / 6;   // catch the time and make it smaller
   #elif defined STM32
-  uint16_t c = (TIM2->CNT)>>4;;
+  uint16_t c = HAL_TIMER_GET_COUNTER_VALUE()>>4;;
   #else
   uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
   #endif
 #else
   #ifdef SAM7
-  uint8_t c = AT91C_BASE_TC1->TC_CV / 6;   // catch the time and make it smaller
+  uint8_t c = HAL_TIMER_GET_COUNTER_VALUE() / 6;   // catch the time and make it smaller
   #elif defined STM32
-  uint8_t c = (TIM2->CNT)>>4;
+  uint8_t c = HAL_TIMER_GET_COUNTER_VALUE()>>4;
   #else
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
   #endif
@@ -837,10 +832,8 @@ ISR(CC1100_INTVECT)
 #endif
     )) {
       addbit(b, 1);
-#ifdef SAM7
-      AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
-#elif defined STM32
-      TIM2->CNT = 0;
+#ifdef ARM
+      HAL_TIMER_RESET_COUNTER_VALUE();
 #else
       TCNT1 = 0;
 #endif
@@ -880,10 +873,8 @@ ISR(CC1100_INTVECT)
 
   lowtime = c-hightime;
 
-#ifdef SAM7
-  AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;		// restart timer
-#elif defined STM32
-  TIM2->CNT=0;
+#ifdef ARM
+  HAL_TIMER_RESET_COUNTER_VALUE();
 #else
   TCNT1 = 0;                          // restart timer
 #endif
@@ -988,21 +979,15 @@ retry_sync:
 	    #ifdef SAM7
           uint32_t ocrVal = 0;
           ocrVal = ((lowtime * 100) / 266);
-          AT91C_BASE_TC1->TC_RC = (ocrVal - 16) * 16;
+          HAL_TIMER_SET_RELOAD_REGISTER((ocrVal - 16) * 16);
       #elif defined STM32
-          TIM2->ARR = (lowtime - 16) * 16; //End of message
+          HAL_TIMER_SET_RELOAD_REGISTER((lowtime - 16) * 16); //End of message
       #else
           OCR1A = (lowtime - 16) * 16; //End of message
          	//OCR1A = 2200; // end of message
           //OCR1A = b->syncbit.lowtime*16 - 1000;
       #endif
-      #ifdef SAM7
-          AT91C_BASE_TC1->TC_SR;
-	      #ifdef LONG_PULSE
-          AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
-	      #endif
-          AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
-      #elif defined STM32
+      #ifdef ARM
           hal_enable_CC_timer_int(TRUE);
       #else
           TIMSK1 = _BV(OCIE1A);
@@ -1041,19 +1026,13 @@ retry_sync:
             //DC('s');
         }
         #ifdef SAM7
-            AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE/8*3);
         #elif defined STM32
-            TIM2->ARR = SILENCE;
+            HAL_TIMER_SET_RELOAD_REGISTER(SILENCE);
         #else
             OCR1A = SILENCE;
         #endif
-        #ifdef SAM7
-            AT91C_BASE_TC1->TC_SR;
-            #ifdef LONG_PULSE
-                AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
-            #endif
-            AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
-        #elif defined STM32
+        #ifdef ARM
             hal_enable_CC_timer_int(TRUE);
         #else
             TIMSK1 = _BV(OCIE1A);
@@ -1074,9 +1053,9 @@ retry_sync:
         b->sync++;
       } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
 #ifdef SAM7
-      	AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE/8*3);
 #elif defined STM32
-      	TIM2->ARR = SILENCE;
+      	HAL_TIMER_SET_RELOAD_REGISTER(SILENCE);
 #else
         OCR1A = SILENCE;
 #endif
@@ -1091,9 +1070,9 @@ retry_sync:
           b->state = STATE_ESA;
           //DU(b->sync,         3);
 #ifdef SAM7
-          AT91C_BASE_TC1->TC_RC = 375;
+          HAL_TIMER_SET_RELOAD_REGISTER(375);
 #elif defined STM32
-          TIM2->ARR = 1000;
+          HAL_TIMER_SET_RELOAD_REGISTER(1000);
 #else
           OCR1A = 1000;
 #endif
@@ -1123,13 +1102,7 @@ retry_sync:
         b->bitidx  = 7;
         b->data[0] = 0;
 
-#ifdef SAM7
-        AT91C_BASE_TC1->TC_SR;
-		#ifdef LONG_PULSE
-        AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
-		#endif
-        AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
-#elif defined STM32
+#ifdef ARM
         hal_enable_CC_timer_int(TRUE);
 #else
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data

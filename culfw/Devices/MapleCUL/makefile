@@ -77,7 +77,7 @@ SRCS += ../../clib/ethernet_wiznet.c
 SRCS += ../../STM32/hal_usart.c
 SRCS += ../../STM32/hal_spi.c
 SRCS += ../../STM32/hal_gpio.c
-SRCS += ../../STM32/tim.c
+SRCS += ../../STM32/hal_timer.c
 SRCS += ../../STM32/stdio.c
 
 SRCS += ../../STM32/usbd/usb_device.c
