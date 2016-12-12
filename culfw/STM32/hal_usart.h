@@ -63,6 +63,11 @@ void MX_USART3_UART_Init(void);
 void DBGU_init(void);
 unsigned int DBGU_IsRxReady(void);
 unsigned char DBGU_GetChar(void);
+
+void HAL_UART_Set_Baudrate(uint8_t UART_num, uint32_t baudrate);
+uint32_t HAL_UART_Get_Baudrate(uint8_t UART_num);
+void HAL_UART_Write(uint8_t UART_num, uint8_t* Buf, uint16_t Len);
+
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

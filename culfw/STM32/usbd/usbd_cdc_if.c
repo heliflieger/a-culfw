@@ -33,6 +33,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
 /* USER CODE BEGIN INCLUDE */
+#include "board.h"
+#include "usb_device.h"
+#include <utility/trace.h>
+#include "hal_usart.h"
+
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -59,8 +64,8 @@
 /* USER CODE BEGIN PRIVATE_DEFINES */
 /* Define size for the receive and transmit buffer over CDC */
 /* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE  128
-#define APP_TX_DATA_SIZE  128
+#define APP_RX_DATA_SIZE  64
+#define APP_TX_DATA_SIZE  8
 /* USER CODE END PRIVATE_DEFINES */
 /**
   * @}
@@ -85,9 +90,11 @@
 uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 
 /* Send Data over USB CDC are stored in this buffer       */
-uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
+//uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 
 /* USER CODE BEGIN PRIVATE_VARIABLES */
+
+uint8_t CDC_connected[CDC_COUNT];
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -110,8 +117,8 @@ uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
   */
 static int8_t CDC_Init_FS     (void);
 static int8_t CDC_DeInit_FS   (void);
-static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length);
-static int8_t CDC_Receive_FS  (uint8_t* pbuf, uint32_t *Len);
+static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length, uint8_t cdc_num);
+static int8_t CDC_Receive_FS  (uint8_t* pbuf, uint32_t *Len, uint8_t cdc_num);
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_DECLARATION */
 /* USER CODE END PRIVATE_FUNCTIONS_DECLARATION */
@@ -139,8 +146,10 @@ static int8_t CDC_Init_FS(void)
 { 
   /* USER CODE BEGIN 3 */ 
   /* Set Application Buffers */
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBufferFS, 0);
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+  for (unsigned x=0; x<CDC_COUNT; x++) {
+    USBD_CDC_SetTxBuffer(&hUsbDeviceFS, NULL, 0,x);
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS,x);
+  }
   return (USBD_OK);
   /* USER CODE END 3 */ 
 }
@@ -166,9 +175,13 @@ static int8_t CDC_DeInit_FS(void)
   * @param  length: Number of data to be sent (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
+static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length, uint8_t cdc_num)
 { 
   /* USER CODE BEGIN 5 */
+  CDCLineCoding_t *line_coding;
+
+  TRACE_DEBUG("CDC_Control: cmd:%x cdc:%x \n\r", cmd, cdc_num);
+
   switch (cmd)
   {
   case CDC_SEND_ENCAPSULATED_COMMAND:
@@ -209,7 +222,16 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
   case CDC_SET_LINE_CODING:   
-	
+    line_coding = (CDCLineCoding_t*)pbuf;
+    if((cdc_num < CDC_COUNT) && line_coding->dwDTERate) {
+      CDC_connected[cdc_num]=1;
+      if(cdc_num == CDC1) {
+        HAL_UART_Set_Baudrate(0,line_coding->dwDTERate);
+      } else if(cdc_num == CDC2) {
+        HAL_UART_Set_Baudrate(1,line_coding->dwDTERate);
+      }
+    }
+
     break;
 
   case CDC_GET_LINE_CODING:     
@@ -236,13 +258,37 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   * @brief  CDCDSerialDriver_Receive callback.
   * @retval None
   */
-__weak void CDCDSerialDriver_Receive_Callback(uint8_t* Buf, uint32_t *Len)
+__weak uint8_t CDCDSerialDriver_Receive_Callback0(uint8_t* Buf, uint32_t *Len)
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
             the CDCDSerialDriver_Receive_Callback could be implemented in the user file
    */
+  return 1;
 }
 
+/**
+  * @brief  CDCDSerialDriver_Receive callback.
+  * @retval None
+  */
+__weak uint8_t CDCDSerialDriver_Receive_Callback1(uint8_t* Buf, uint32_t *Len)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the CDCDSerialDriver_Receive_Callback could be implemented in the user file
+   */
+  return 1;
+}
+
+/**
+  * @brief  CDCDSerialDriver_Receive callback.
+  * @retval None
+  */
+__weak uint8_t CDCDSerialDriver_Receive_Callback2(uint8_t* Buf, uint32_t *Len)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the CDCDSerialDriver_Receive_Callback could be implemented in the user file
+   */
+  return 1;
+}
 /**
   * @brief  CDC_Receive_FS
   *         Data received over USB OUT endpoint are sent over CDC interface 
@@ -258,16 +304,28 @@ __weak void CDCDSerialDriver_Receive_Callback(uint8_t* Buf, uint32_t *Len)
   * @param  Len: Number of data received (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
   */
-static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
+static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len, uint8_t cdc_num)
 {
-  /* USER CODE BEGIN 6 */
-  CDCDSerialDriver_Receive_Callback(Buf, Len);
+  uint8_t restart = 1;
+  switch(cdc_num) {
+    case 0:
+      restart = CDCDSerialDriver_Receive_Callback0(Buf, Len);
+      break;
+    case 1:
+      restart = CDCDSerialDriver_Receive_Callback1(Buf, Len);
+      break;
+    case 2:
+      restart = CDCDSerialDriver_Receive_Callback2(Buf, Len);
+      break;
+  }
 
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  if(restart) {
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0], cdc_num);
+    USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num);
+  }
 
   return (USBD_OK);
-  /* USER CODE END 6 */ 
+
 }
 
 /**
@@ -281,16 +339,17 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
   * @param  Len: Number of data to be send (in bytes)
   * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
   */
-uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
+uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len, uint8_t cdc_num)
 {
   uint8_t result = USBD_OK;
+
   /* USER CODE BEGIN 7 */ 
-  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData;
+  USBD_CDC_HandleTypeDef *hcdc = &((USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData)[cdc_num];
   if (hcdc->TxState != 0){
     return USBD_BUSY;
   }
-  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len);
-  result = USBD_CDC_TransmitPacket(&hUsbDeviceFS);
+  USBD_CDC_SetTxBuffer(&hUsbDeviceFS, Buf, Len, cdc_num);
+  result = USBD_CDC_TransmitPacket(&hUsbDeviceFS, cdc_num);
   /* USER CODE END 7 */ 
   return result;
 }
@@ -307,15 +366,27 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 unsigned char CDCDSerialDriver_Write(void *data,
                                      unsigned int size,
                                      void* dummy1,
-                                     void* dummy2)
+                                     uint8_t CDC_num)
 {
-  uint8_t ret;
-  ret = CDC_Transmit_FS(data,size);
-  //TODO check for USB disconnect
-
-  return USBD_OK;
+  return CDC_Transmit_FS(data,size,CDC_num);
 }
 
+
+unsigned char CDC_isConnected(uint8_t cdc_num)
+{
+  if((USBD_GetState() == USBD_STATE_CONFIGURED) && CDC_connected[cdc_num]) {
+    return 1;
+  }
+  return 0;
+}
+
+void CDC_Receive_next (uint8_t cdc_num)
+{
+  if(cdc_num < CDC_COUNT) {
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS,cdc_num);
+    USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num);
+  }
+}
 
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 

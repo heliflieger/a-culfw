@@ -65,6 +65,23 @@
   * @{
   */  
 /* USER CODE BEGIN EXPORTED_TYPES */
+
+ typedef struct {
+
+     /// Data terminal rate in bits per second.
+     uint32_t dwDTERate;
+     /// Number of stop bits.
+     /// \sa "CDC LineCoding StopBits".
+     uint8_t bCharFormat;
+     /// Type of parity checking used.
+     /// \sa "CDC LineCoding ParityCheckings".
+     uint8_t bParityType;
+     /// Number of data bits (5, 6, 7, 8 or 16).
+     uint8_t bDataBits;
+
+ } __attribute__ ((packed)) CDCLineCoding_t; // GCC
+
+
 /* USER CODE END EXPORTED_TYPES */
 
 /**
@@ -96,10 +113,12 @@ extern USBD_CDC_ItfTypeDef  USBD_Interface_fops_FS;
 /** @defgroup USBD_CDC_IF_Exported_FunctionsPrototype
   * @{
   */ 
-uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
+uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len, uint8_t cdc_num);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-unsigned char CDCDSerialDriver_Write(void *data, unsigned int size, void* dummy1, void* dummy2);
+unsigned char CDCDSerialDriver_Write(void *data, unsigned int size, void* dummy1, uint8_t CDC_num);
+unsigned char CDC_isConnected(uint8_t cdc_num);
+void CDC_Receive_next (uint8_t cdc_num);
 /* USER CODE END EXPORTED_FUNCTIONS */
 /**
   * @}

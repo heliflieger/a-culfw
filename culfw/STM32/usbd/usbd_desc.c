@@ -36,7 +36,7 @@
 #include "usbd_core.h"
 #include "usbd_desc.h"
 #include "usbd_conf.h"
-
+#include "board.h"
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
   */
@@ -59,7 +59,10 @@
 #define USBD_VID                                1155
 #define USBD_LANGID_STRING                      1033
 #define USBD_MANUFACTURER_STRING      (uint8_t*)"STMicroelectronics"
-#define USBD_PID_FS                             22336
+#define USBD_PID_FS                             (22336 + CDC_COUNT)
+//#define USBD_PID_FS                             0x0001
+
+
 #define USBD_PRODUCT_STRING_FS        (uint8_t*)"MapleCUL"
 #define USBD_SERIALNUMBER_STRING_FS   (uint8_t*)"00000000001A"
 #define USBD_CONFIGURATION_STRING_FS  (uint8_t*)"CDC Config"
@@ -115,9 +118,9 @@ __ALIGN_BEGIN uint8_t USBD_FS_DeviceDesc[USB_LEN_DEV_DESC] __ALIGN_END =
     USB_DESC_TYPE_DEVICE,       /*bDescriptorType*/
     0x00,                       /* bcdUSB */  
     0x02,
-    0x02,                        /*bDeviceClass*/
+    0xEF,                        /*bDeviceClass*/
     0x02,                       /*bDeviceSubClass*/
-    0x00,                       /*bDeviceProtocol*/
+    0x01,                       /*bDeviceProtocol*/
     USB_MAX_EP0_SIZE,          /*bMaxPacketSize*/
     LOBYTE(USBD_VID),           /*idVendor*/
     HIBYTE(USBD_VID),           /*idVendor*/

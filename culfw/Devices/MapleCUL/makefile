@@ -34,6 +34,7 @@ SRCS += stm32f1xx_it.c
 SRCS += ../../clib/cc1100.c
 SRCS += ../../clib/cc1101_pllcheck.c  
 SRCS += ../../clib/cdc.c
+SRCS += ../../clib/cdc_uart.c
 SRCS += ../../clib/clock.c
 SRCS += ../../clib/delay.c
 SRCS += ../../clib/display.c
