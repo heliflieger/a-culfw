@@ -4,7 +4,6 @@
 #include "led.h"
 #include "delay.h"
 #include <pio/pio.h>
-#include "rf_receive.h"
 #include <aic/aic.h>
 
 static const Pin pinsLeds[] = {PINS_LEDS};
