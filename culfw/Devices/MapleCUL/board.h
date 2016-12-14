@@ -24,6 +24,7 @@
 #define ARM
 
 #define HAS_USB
+//#define USB_FIX_SERIAL          "012345"
 #define CDC_COUNT               3
 #define CDC_BAUD_RATE           115200
 #define USB_IsConnected		      (CDC_isConnected(0))

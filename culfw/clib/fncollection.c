@@ -33,7 +33,7 @@ uint8_t led_mode = 2;   // Start blinking
 #include "xled.h"
 #endif
 
-#if CDC_COUNT > 1
+#if defined(CDC_COUNT) && CDC_COUNT > 1
 #include "cdc_uart.h"
 #endif
 //////////////////////////////////////////////////

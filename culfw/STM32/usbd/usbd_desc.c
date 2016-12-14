@@ -37,6 +37,8 @@
 #include "usbd_desc.h"
 #include "usbd_conf.h"
 #include "board.h"
+#include <avr/eeprom.h>
+
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
   * @{
   */
@@ -58,13 +60,12 @@
   */ 
 #define USBD_VID                                1155
 #define USBD_LANGID_STRING                      1033
-#define USBD_MANUFACTURER_STRING      (uint8_t*)"STMicroelectronics"
+#define USBD_MANUFACTURER_STRING      (uint8_t*)"STM32"
 #define USBD_PID_FS                             (22336 + CDC_COUNT)
 //#define USBD_PID_FS                             0x0001
 
 
 #define USBD_PRODUCT_STRING_FS        (uint8_t*)"MapleCUL"
-#define USBD_SERIALNUMBER_STRING_FS   (uint8_t*)"00000000001A"
 #define USBD_CONFIGURATION_STRING_FS  (uint8_t*)"CDC Config"
 #define USBD_INTERFACE_STRING_FS      (uint8_t*)"CDC Interface"
 
@@ -235,14 +236,17 @@ uint8_t *  USBD_FS_ManufacturerStrDescriptor( USBD_SpeedTypeDef speed , uint16_t
 */
 uint8_t *  USBD_FS_SerialStrDescriptor( USBD_SpeedTypeDef speed , uint16_t *length)
 {
-  if(speed  == USBD_SPEED_HIGH)
-  {    
-    USBD_GetString (USBD_SERIALNUMBER_STRING_FS, USBD_StrDesc, length);
-  }
-  else
-  {
-    USBD_GetString (USBD_SERIALNUMBER_STRING_FS, USBD_StrDesc, length);    
-  }
+  char buf[16];
+
+#ifdef USB_FIX_SERIAL
+  sprintf(buf,USB_FIX_SERIAL);
+#else
+  uint32_t serial = flash_serial();
+  sprintf(buf,"%04x%04x", (uint16_t)(serial >> 16),(uint16_t)(serial & 0xffff));
+#endif
+
+  USBD_GetString ((uint8_t*)buf, USBD_StrDesc, length);
+
   return USBD_StrDesc;
 }
 

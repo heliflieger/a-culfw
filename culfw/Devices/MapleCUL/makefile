@@ -18,7 +18,7 @@ MPU_TYPE_LOWER_CASE := stm32f103xb
 CPU := cortex-m3
 
 # Debugger options, must be empty or GDB
-DEBUG ?= GDB
+DEBUG ?= 
 
 ###############################################################
 #####

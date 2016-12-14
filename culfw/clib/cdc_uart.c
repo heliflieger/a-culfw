@@ -82,8 +82,8 @@ void cdc_uart_init(void) {
   MX_USART3_UART_Init();
 
 #ifdef HAS_W5100
-  TRACE_INFO("UART Baud: %u@%u\n\r", 0,EE_read_baud(0));
-  TRACE_INFO("UART Baud: %u@%u\n\r", 1,EE_read_baud(1));
+  TRACE_DEBUG("UART Baud: %u@%u\n\r", 0,EE_read_baud(0));
+  TRACE_DEBUG("UART Baud: %u@%u\n\r", 1,EE_read_baud(1));
 
   HAL_UART_Set_Baudrate(0,EE_read_baud(0));
   HAL_UART_Set_Baudrate(1,EE_read_baud(1));
@@ -143,7 +143,7 @@ void cdc_uart_func(char *in) {
     in[3] = 0;
     fromdec(in+2,&num);
     fromdec32(in+4,&baud);
-    TRACE_INFO("UART set Baud: %u@%u\n\r", num,baud);
+    TRACE_DEBUG("UART set Baud: %u@%u\n\r", num,baud);
     HAL_UART_Set_Baudrate(num,baud);
 
 #ifdef HAS_W5100
