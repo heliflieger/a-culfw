@@ -9,6 +9,7 @@
 
 #include "board.h"
 #include "pio/pio.h"
+#include "hal_gpio.h"
 
 #include <dbgu/dbgu.h>
 #include <stdio.h>
@@ -292,6 +293,8 @@ int main(void)
 
   // Wait for end hardware reset
   while (!RSTC_GetNrstLevel());
+
+  HAL_GPIO_Init();
 
   TRACE_INFO("init Flash\n\r");
   flash_init();

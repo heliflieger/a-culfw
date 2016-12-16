@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : SPI.h
+  * File Name          : hal_timer.h
   * Description        : This file provides code for the configuration
-  *                      of the SPI instances.
+  *                      of the TIM instances.
   ******************************************************************************
   *
   * COPYRIGHT(c) 2016 STMicroelectronics
@@ -32,48 +32,26 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __hal_spi_H
-#define __hal_spi_H
-#ifdef __cplusplus
- extern "C" {
-#endif
+#ifndef __hal_timer_H
+#define __hal_timer_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 
-/* USER CODE BEGIN Includes */
+#define HAL_TIMER_SET_RELOAD_REGISTER(x)    ((TIM2->ARR) = (x))
+#define HAL_TIMER_GET_COUNTER_VALUE()       (TIM2->CNT)
+#define HAL_TIMER_RESET_COUNTER_VALUE()     (TIM2->CNT = 0)
 
-/* USER CODE END Includes */
-
-extern SPI_HandleTypeDef hspi1;
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
+extern TIM_HandleTypeDef htim1;
 extern void Error_Handler(void);
 
-void MX_SPI1_Init(void);
+void MX_TIM1_Init(void);
+void MX_TIM2_Init(void);
 
-uint8_t spi2_send(uint8_t data);
+void hal_enable_CC_timer_int(uint8_t enable);
 
-uint8_t spi2_transmit_burst(uint8_t *pData, uint16_t Size);
-uint8_t spi2_receive_burst(uint8_t *pData, uint16_t Size);
 
-/* USER CODE BEGIN Prototypes */
-/* USER CODE END Prototypes */
+#endif /*__ hal_timer_H */
 
-#ifdef __cplusplus
-}
-#endif
-#endif /*__ spi_H */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

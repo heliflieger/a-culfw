@@ -43,13 +43,8 @@ volatile uint8_t  clock_hsec;
 
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
-#ifdef SAM7
-void ISR_Timer0() 
-{
-	// Clear status bit to acknowledge interrupt
-	AT91C_BASE_TC0->TC_SR;
-#elif defined STM32
-void TIM1_PeriodElapsedCallback(void)
+#ifdef ARM
+void clock_TimerElapsedCallback(void)
 {
 #else
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)

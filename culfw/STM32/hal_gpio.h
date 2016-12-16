@@ -35,18 +35,12 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __gpio_H
 #define __gpio_H
-#ifdef __cplusplus
- extern "C" {
-#endif
+
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
+#include "board.h"
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* USER CODE BEGIN Private defines */
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -57,24 +51,53 @@
 
 #define INIT_MODE_OUT_CS_IN    0
 #define INIT_MODE_IN_CS_IN     1
-/* USER CODE END Private defines */
+
+typedef enum
+{
+  LED0 = 0,
+#ifdef LED2_GPIO
+  LED1,
+#endif
+#ifdef LED3_GPIO
+  LED2,
+#endif
+  LED_COUNT
+} LED_List;
+
+typedef enum
+{
+  LED_off = 0,
+  LED_on
+} LED_State;
+
+typedef struct {
+  GPIO_TypeDef*  base[3];
+  uint8_t       pin[3];
+} transceiver_t;
+
+typedef enum {
+  CC_Pin_Out = 0,
+  CC_Pin_CS,
+  CC_Pin_In
+} CC_PIN;
 
 void MX_GPIO_Init(void);
 
-/* USER CODE BEGIN Prototypes */
 void hal_UCBD_connect_init(void);
+
 void HAL_LED_Init(void);
+void HAL_LED_Set(LED_List led, LED_State state);
+void HAL_LED_Toggle(LED_List led);
+
+void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode);
+void hal_enable_CC_GDOin_int(uint8_t cc_num, uint8_t enable);
+void hal_CC_Pin_Set(uint8_t cc_num, CC_PIN pin, GPIO_PinState state);
+uint32_t hal_CC_Pin_Get(uint8_t cc_num, CC_PIN pin);
+
+void hal_GPIO_EXTI_IRQHandler(void);
 
 void hal_wiznet_Init(void);
 
-void hal_CC_GDO_init(uint8_t mode);
-void hal_enable_CC_GDOin_int(uint8_t enable);
-/* USER CODE END Prototypes */
-void hal_GPIO_EXTI_IRQHandler(void);
-
-#ifdef __cplusplus
-}
-#endif
 #endif /*__ pinoutConfig_H */
 
 /**

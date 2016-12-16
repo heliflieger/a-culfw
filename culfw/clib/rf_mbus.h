@@ -63,6 +63,7 @@ typedef struct TXinfoDescr {
     uint8  complete;            // Packet Sendt
 } TXinfoDescr;
 
+#ifndef ARM
 #define GDO0_DDR  CC1100_OUT_DDR
 #define GDO0_PORT CC1100_OUT_PORT
 #define GDO0_PIN  CC1100_OUT_IN
@@ -72,6 +73,7 @@ typedef struct TXinfoDescr {
 #define GDO2_PORT CC1100_IN_PORT
 #define GDO2_PIN  CC1100_IN_IN
 #define GDO2_BIT  CC1100_IN_PIN
+#endif
 
 #endif
 #endif

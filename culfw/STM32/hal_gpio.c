@@ -33,32 +33,22 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include <hal_gpio.h>
+#include "hal_gpio.h"
 #include <board.h>
-/* USER CODE BEGIN 0 */
 #include "stm32f103xb.h"
 #include "led.h"
 #include "delay.h"
-/* USER CODE END 0 */
+
+const transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
 
 /*----------------------------------------------------------------------------*/
 /* Configure GPIO                                                             */
 /*----------------------------------------------------------------------------*/
-/* USER CODE BEGIN 1 */
 
-/* USER CODE END 1 */
-
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
-*/
 void MX_GPIO_Init(void)
 {
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 }
@@ -79,7 +69,10 @@ void hal_UCBD_connect_init(void)
 #endif
 }
 
-/* USER CODE BEGIN 2 */
+/*----------------------------------------------------------------------------*/
+/* LED                                                                        */
+/*----------------------------------------------------------------------------*/
+
 void HAL_LED_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct;
 
@@ -105,7 +98,47 @@ void HAL_LED_Init(void) {
   #endif
 }
 
-void hal_CC_GDO_init(uint8_t mode) {
+void HAL_LED_Set(uint8_t led, uint8_t state) {
+  switch(led) {
+    case LED0:
+      HAL_GPIO_WritePin(LED_GPIO, _BV(LED_PIN), state);
+      break;
+  #ifdef LED2_GPIO
+    case LED1:
+      HAL_GPIO_WritePin(LED2_GPIO, _BV(LED2_PIN), state);
+        break;
+  #endif
+  #ifdef LED3_GPIO
+    case LED2:
+      HAL_GPIO_WritePin(LED3_GPIO, _BV(LED3_PIN), state);
+        break;
+  #endif
+  }
+}
+
+void HAL_LED_Toggle(uint8_t led) {
+  switch(led) {
+  case LED0:
+    HAL_GPIO_TogglePin(LED_GPIO, _BV(LED_PIN));
+    break;
+#ifdef LED2_GPIO
+  case LED1:
+      HAL_GPIO_TogglePin(LED2_GPIO, _BV(LED2_PIN));
+      break;
+#endif
+#ifdef LED3_GPIO
+  case LED2:
+      HAL_GPIO_TogglePin(LED3_GPIO, _BV(LED3_PIN));
+      break;
+#endif
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* CC1101                                                                     */
+/*----------------------------------------------------------------------------*/
+
+void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode) {
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /*Configure GDO0 (out) pin */
@@ -113,31 +146,84 @@ void hal_CC_GDO_init(uint8_t mode) {
       GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
       GPIO_InitStruct.Pull = GPIO_PULLUP;
     } else {
-      HAL_GPIO_WritePin(CC1100_OUT_GPIO, _BV(CC1100_OUT_PIN), GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(CCtransceiver[cc_num].base[CC_Pin_Out], _BV(CCtransceiver[cc_num].pin[CC_Pin_Out]), GPIO_PIN_RESET);
       GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
       GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     }
-    GPIO_InitStruct.Pin = _BV(CC1100_OUT_PIN);
-    HAL_GPIO_Init(CC1100_OUT_GPIO, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_Out]);
+    HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_Out], &GPIO_InitStruct);
 
   /*Configure GDO1 (CS) pin */
-  HAL_GPIO_WritePin(CC1100_CS_GPIO, _BV(CC1100_CS_PIN), GPIO_PIN_SET);
-  GPIO_InitStruct.Pin = _BV(CC1100_CS_PIN);
+  HAL_GPIO_WritePin(CCtransceiver[cc_num].base[CC_Pin_CS], _BV(CCtransceiver[cc_num].pin[CC_Pin_CS]), GPIO_PIN_SET);
+  GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_CS]);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(CC1100_CS_GPIO, &GPIO_InitStruct);
+  HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_CS], &GPIO_InitStruct);
 
   /*Configure GDO2 (in) pin */
-  GPIO_InitStruct.Pin = _BV(CC1100_IN_PIN);
+  GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(CC1100_IN_GPIO, &GPIO_InitStruct);
+  HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_In], &GPIO_InitStruct);
 
   HAL_NVIC_SetPriority(EXTI0_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 }
 
+
+void hal_enable_CC_GDOin_int(uint8_t cc_num, uint8_t enable) {
+  GPIO_InitTypeDef GPIO_InitStruct;
+
+  /*Configure in pin */
+  GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);
+  if (enable)
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  else
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_DeInit(CCtransceiver[cc_num].base[CC_Pin_In], _BV(CCtransceiver[cc_num].pin[CC_Pin_In]));
+  HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_In], &GPIO_InitStruct);
+}
+
+void hal_CC_Pin_Set(uint8_t cc_num, CC_PIN pin, GPIO_PinState state) {
+  if(cc_num < CCCOUNT) {
+    HAL_GPIO_WritePin(CCtransceiver[cc_num].base[pin], _BV(CCtransceiver[cc_num].pin[pin]), state);
+  }
+}
+
+uint32_t hal_CC_Pin_Get(uint8_t cc_num, CC_PIN pin) {
+  if(cc_num < CCCOUNT) {
+    return (CCtransceiver[cc_num].base[pin]->IDR) & _BV(CCtransceiver[cc_num].pin[pin]);
+  }
+  return 0;
+}
+
+
+__weak void CC1100_in_callback()
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the HAL_GPIO_EXTI_Callback could be implemented in the user file
+   */
+}
+
+/**
+  * @brief EXTI line detection callbacks
+  * @retval None
+  */
+void hal_GPIO_EXTI_IRQHandler(void)
+{
+  if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[0].pin[CC_Pin_In])) != RESET) {
+    __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[0].pin[CC_Pin_In]));
+    CC1100_in_callback();
+  }
+}
+
+/*----------------------------------------------------------------------------*/
+/* Wiznet                                                                     */
+/*----------------------------------------------------------------------------*/
 #ifdef HAS_W5100
 void hal_wiznet_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct;
@@ -164,42 +250,11 @@ void hal_wiznet_Init(void) {
   HAL_GPIO_WritePin(WIZNET_RST_GPIO, _BV(WIZNET_RST_PIN), GPIO_PIN_RESET);
   my_delay_ms(10);
   HAL_GPIO_WritePin(WIZNET_RST_GPIO, _BV(WIZNET_RST_PIN), GPIO_PIN_SET);
+  my_delay_ms(10);
 
 }
 #endif
 
-void hal_enable_CC_GDOin_int(uint8_t enable) {
-  GPIO_InitTypeDef GPIO_InitStruct;
-
-  /*Configure in pin */
-  GPIO_InitStruct.Pin = _BV(CC1100_IN_PIN);
-  if (enable)
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  else
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_DeInit(CC1100_IN_GPIO, _BV(CC1100_IN_PIN));
-  HAL_GPIO_Init(CC1100_IN_GPIO, &GPIO_InitStruct);
-}
-
-__weak void CC1100_in_callback()
-{
-  /* NOTE : This function Should not be modified, when the callback is needed,
-            the HAL_GPIO_EXTI_Callback could be implemented in the user file
-   */
-}
-
-/**
-  * @brief EXTI line detection callbacks
-  * @retval None
-  */
-void hal_GPIO_EXTI_IRQHandler(void)
-{
-  if(__HAL_GPIO_EXTI_GET_IT(_BV(CC1100_IN_PIN)) != RESET) {
-    __HAL_GPIO_EXTI_CLEAR_IT(_BV(CC1100_IN_PIN));
-    CC1100_in_callback();
-  }
-}
 /* USER CODE END 2 */
 
 /**

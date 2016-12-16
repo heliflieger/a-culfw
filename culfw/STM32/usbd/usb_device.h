@@ -51,6 +51,10 @@ void USBD_Disconnect(void);
 void USBD_Connect(void);
 unsigned char USBD_GetState(void);
 
+#define CDC0  0
+#define CDC1  1
+#define CDC2  2
+
 #ifdef __cplusplus
 }
 #endif

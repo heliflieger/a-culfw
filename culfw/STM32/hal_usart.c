@@ -33,19 +33,25 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "board.h"
 #include "hal_usart.h"
 #include "hal_gpio.h"
-#include "ringbuffer.h"
+#include "usbd_cdc_if.h"
+#include "usb_device.h"
+#ifdef HAS_W5100
+#include "ethernet.h"
+#endif
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
+static uint8_t inbyte1;
+static uint8_t inbyte2;
+static uint8_t inbyte3;
 
 static uint8_t DBGU_RxByte;
 static uint8_t DBGU_RxReady;
-
-static uint8_t inbyte;
 
 /* USART1 init function */
 
@@ -64,7 +70,7 @@ void MX_USART1_UART_Init(void)
   {
     Error_Handler();
   }
-
+  HAL_UART_Receive_IT(&huart1, &inbyte1, 1);
 }
 /* USART2 init function */
 
@@ -83,7 +89,7 @@ void MX_USART2_UART_Init(void)
   {
     Error_Handler();
   }
-
+  HAL_UART_Receive_IT(&huart2, &inbyte2, 1);
 }
 /* USART3 init function */
 
@@ -102,7 +108,7 @@ void MX_USART3_UART_Init(void)
   {
     Error_Handler();
   }
-
+  HAL_UART_Receive_IT(&huart3, &inbyte3, 1);
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
@@ -125,13 +131,12 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
     GPIO_InitStruct.Pin = GPIO_PIN_10;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
     HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
-
   /* USER CODE BEGIN USART1_MspInit 1 */
 
   }
@@ -151,8 +156,12 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
     GPIO_InitStruct.Pin = GPIO_PIN_3;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
   }
   else if(uartHandle->Instance==USART3)
   {
@@ -170,8 +179,12 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
 
     GPIO_InitStruct.Pin = GPIO_PIN_11;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USART3_IRQn);
   }
 }
 
@@ -234,36 +247,120 @@ signed int fputs(const char *pStr, FILE *pStream)
 }
 
 void DBGU_init(void) {
-  HAL_UART_Receive_IT(&huart1, &inbyte, 1);
+  MX_USART1_UART_Init();
 }
 
-unsigned int DBGU_IsRxReady()
-{
+unsigned int DBGU_IsRxReady() {
     return DBGU_RxReady;
 }
 
 
-unsigned char DBGU_GetChar(void)
-{
+unsigned char DBGU_GetChar(void) {
   DBGU_RxReady = 0;
   return DBGU_RxByte;
 }
 
-/**
-  * @brief  Rx Transfer completed callback
-  * @param  UartHandle: UART handle
-  * @note   This example shows a simple way to report end of DMA Rx transfer, and
-  *         you can add your own implementation.
-  * @retval None
-  */
+
+__weak void UART2_Rx_Callback(uint8_t data)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the CDCDSerialDriver_Receive_Callback could be implemented in the user file
+   */
+}
+
+__weak void UART3_Rx_Callback(uint8_t data)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the CDCDSerialDriver_Receive_Callback could be implemented in the user file
+   */
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
+
+  if(UartHandle->Instance==USART1) {
+    DBGU_RxByte = inbyte1;
+    DBGU_RxReady = 1;
+    HAL_UART_Receive_IT(&huart1, &inbyte1, 1);
+
+  } else if(UartHandle->Instance==USART2) {
+    UART2_Rx_Callback(inbyte2);
+    HAL_UART_Receive_IT(&huart2, &inbyte2, 1);
+
+  } else if(UartHandle->Instance==USART3) {
+    UART3_Rx_Callback(inbyte3);
+    HAL_UART_Receive_IT(&huart3, &inbyte3, 1);
+
+  }
+
   /* Set transmission flag: transfer complete */
-  DBGU_RxByte = inbyte;
-  DBGU_RxReady = 1;
-  HAL_UART_Receive_IT(&huart1, &inbyte, 1);
+
   return;
 }
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+  if(UartHandle->Instance==USART1) {
+
+  } else if(UartHandle->Instance==USART2) {
+    CDC_Receive_next(CDC1);
+#ifdef HAS_W5100
+    NET_Receive_next(NET1);
+#endif
+
+  } else if(UartHandle->Instance==USART3) {
+    CDC_Receive_next(CDC2);
+#ifdef HAS_W5100
+    NET_Receive_next(NET2);
+#endif
+
+  }
+
+  return;
+}
+
+void HAL_UART_Set_Baudrate(uint8_t UART_num, uint32_t baudrate) {
+  UART_HandleTypeDef *UartHandle;
+
+
+  switch(UART_num) {
+  case 0:
+    UartHandle = &huart2;
+    break;
+  case 1:
+    UartHandle = &huart3;
+    break;
+  default:
+    return;
+  }
+
+  UartHandle->Init.BaudRate = baudrate;
+  UART_SetConfig(UartHandle);
+}
+
+uint32_t HAL_UART_Get_Baudrate(uint8_t UART_num) {
+
+  switch(UART_num) {
+  case 0:
+    return huart2.Init.BaudRate;
+  case 1:
+    return huart3.Init.BaudRate;
+  }
+  return 0;
+}
+
+void HAL_UART_Write(uint8_t UART_num, uint8_t* Buf, uint16_t Len) {
+  switch(UART_num) {
+  case 0:
+    HAL_UART_Transmit_IT(&huart2, Buf, Len);
+    break;
+  case 1:
+    HAL_UART_Transmit_IT(&huart3, Buf, Len);
+    break;
+  }
+  return;
+}
+
 /**
   * @}
   */

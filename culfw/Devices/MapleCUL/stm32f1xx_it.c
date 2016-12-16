@@ -39,6 +39,7 @@
 #include "led.h"
 #include "hal_gpio.h"
 #include "stm32f103xb.h"
+#include "hal_usart.h"
 
 /* USER CODE END 0 */
 
@@ -46,7 +47,6 @@
 extern PCD_HandleTypeDef hpcd_USB_FS;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
-extern UART_HandleTypeDef huart1;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -220,6 +220,14 @@ void EXTI0_IRQHandler(void)
 }
 
 /**
+* @brief This function handles EXTI line0 interrupt.
+*/
+void EXTI4_IRQHandler(void)
+{
+  hal_GPIO_EXTI_IRQHandler();
+}
+
+/**
 * @brief This function handles USART1 global interrupt.
 */
 void USART1_IRQHandler(void)
@@ -227,4 +235,19 @@ void USART1_IRQHandler(void)
   HAL_UART_IRQHandler(&huart1);
 }
 
+/**
+* @brief This function handles USART2 global interrupt.
+*/
+void USART2_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart2);
+}
+
+/**
+* @brief This function handles USART3 global interrupt.
+*/
+void USART3_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart3);
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -175,7 +175,7 @@
 /** @addtogroup UART_Private_Functions   UART Private Functions
   * @{
   */
-static void UART_SetConfig (UART_HandleTypeDef *huart);
+void UART_SetConfig (UART_HandleTypeDef *huart);
 static HAL_StatusTypeDef UART_Transmit_IT(UART_HandleTypeDef *huart);
 static HAL_StatusTypeDef UART_EndTransmit_IT(UART_HandleTypeDef *huart);
 static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart);
@@ -1866,7 +1866,7 @@ static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
   *                the configuration information for the specified UART module.
   * @retval None
   */
-static void UART_SetConfig(UART_HandleTypeDef *huart)
+void UART_SetConfig(UART_HandleTypeDef *huart)
 {
   uint32_t tmpreg = 0x00;
   
