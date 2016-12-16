@@ -1,5 +1,12 @@
 ## Changelog:
 
+#### 1.23.04
+- MapleCUL/MapleCUN: 
+  - Access of UART2+3 via USB/network
+  - Add multi CC1101 support
+  - Activate Hoermann send
+- ARM Models: add HAL
+
 #### 1.23.03
 - Hoermann Send (activated for CUBe + CUL-HM-CFG)
 
