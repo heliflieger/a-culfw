@@ -218,13 +218,19 @@ void native_task(void) {
 
 
 void native_func(char *in) {
+#ifdef ARM
+  uint16_t mode = 0;
+#else
   uint8_t mode = 0;
+#endif
+
+
 
   if(in[1] == 'r') {                // Reception on
     
     // "Er<x>" - where <x> is mode
     if (in[2])
-      fromdec(in+2, &mode);
+      fromdec(in+2, ( uint8_t*)&mode);
 
     if (!mode || mode>MAX_MODES) {
       DS_P(PSTR("specify valid mode number\r\n"));
