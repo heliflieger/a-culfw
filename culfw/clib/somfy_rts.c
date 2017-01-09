@@ -27,32 +27,33 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <util/parity.h>
-#include <string.h>
-#include "fband.h"
-#include "board.h"
+#include <avr/interrupt.h>              // for cli, sei
+#include <avr/pgmspace.h>               // for PROGMEM, __LPM
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for int8_t
+#include <stdlib.h>                     // for free, malloc
+#include <string.h>                     // for memcpy
+
+#include "board.h"                      // for HAS_ASKSIN, HAS_MORITZ, etc
+#include "fband.h"                      // for checkFrequency
+#include "stringfunc.h"                 // for fromhex, fromdec
 
 #ifdef HAS_SOMFY_RTS
 
-#include "delay.h"
-#include "rf_send.h"
-#include "rf_receive.h"
-#include "led.h"
-#include "cc1100.h"
-#include "display.h"
-#include "fncollection.h"
+#include "cc1100.h"                     // for ccStrobe, cc1100_sendbyte, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DC, DNL, DU, display_hex2
+#include "fncollection.h"               // for EE_CC1100_CFG_SIZE, erb, etc
+#include "led.h"                        // for LED_OFF, LED_ON, SET_BIT
+#include "rf_receive.h"                 // for set_txrestore, tx_report
 #include "somfy_rts.h"
 
 #ifdef HAS_ASKSIN
-#include "rf_asksin.h"
+#include "rf_asksin.h"                  // for asksin_on, rf_asksin_init
 #endif
 
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for rf_moritz_init, moritz_on
 #endif
 
 static uint8_t somfy_rts_on = 0;

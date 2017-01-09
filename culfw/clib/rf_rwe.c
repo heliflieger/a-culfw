@@ -1,13 +1,17 @@
-#include "board.h"
-#ifdef HAS_RWE
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "fband.h"
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t
 
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromhex
+#ifdef HAS_RWE
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM
+
+#include "cc1100.h"                     // for ccStrobe, CC1100_DEASSERT, etc
+#include "delay.h"                      // for my_delay_ms, my_delay_us
+#include "display.h"                    // for DC, DH2, DNL
+#include "fband.h"                      // for checkFrequency
+#include "rf_receive.h"                 // for set_txrestore, REP_BINTIME, etc
 #include "rf_rwe.h"
 
 uint8_t rwe_on = 0;

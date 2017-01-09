@@ -4,7 +4,10 @@
  */
 
 #include "rf_receive_tx3.h"
-#include "display.h"
+
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for HAS_TX3
 
 /*
  * Description in header

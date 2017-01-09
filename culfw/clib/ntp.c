@@ -1,13 +1,14 @@
 #include <string.h>
+
 #include "board.h"
+#include "clock.h"
+#include "display.h"
+#include "drivers/interfaces/network.h"            // network_send
+#include "ethernet.h"           // eth_debug
+#include "fncollection.h"       // EE_IP4_GATEWAY
+#include "ntp.h"
 #include "uip.h"
 #include "uip_arp.h"            // uip_arp_out;
-#include "drivers/interfaces/network.h"            // network_send
-#include "display.h"
-#include "ntp.h"
-#include "clock.h"
-#include "fncollection.h"       // EE_IP4_GATEWAY
-#include "ethernet.h"           // eth_debug
 
 // Time of last sync.
 time_t        ntp_sec = 3461476149U; // 2009-09-09 09:09:09 (GMT)

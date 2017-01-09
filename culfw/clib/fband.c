@@ -1,10 +1,9 @@
-#include "board.h"
-#include "display.h"
-
-#include "fncollection.h"
-#include "cc1100.h"
-
 #include "fband.h"
+
+#include <stdint.h>                     // for uint8_t, uint16_t, uint32_t
+
+#include "fncollection.h"               // for erb
+#include "stringfunc.h"                 // for fromhex
 
 uint8_t frequencyMode = MODE_UNKNOWN;
 

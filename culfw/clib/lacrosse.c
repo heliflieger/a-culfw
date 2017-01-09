@@ -3,12 +3,14 @@
  * inspired by LaCrosseITPlusReader
  * License: GPL v2
  */
-#include "board.h"
+#include "board.h"  // IWYU pragma: keep
+
 #ifdef LACROSSE_HMS_EMU
-#include "lacrosse.h"
-#include <string.h>
-#include "display.h"
 #include <avr/pgmspace.h>
+#include <string.h>
+
+#include "display.h"
+#include "lacrosse.h"
 
 /*
 * Message Format:

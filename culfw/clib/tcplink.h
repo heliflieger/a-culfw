@@ -35,8 +35,10 @@
 #ifndef __TCPLINK_H__
 #define __TCPLINK_H__
 
-#include "uipopt.h"
+#include <uip/timer.h>
+
 #include "board.h"
+#include "uipopt.h"
 
 void tcplink_appcall(void);
 void tcp_putchar(char data);

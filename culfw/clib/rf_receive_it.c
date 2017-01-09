@@ -19,7 +19,11 @@
  */
 
 #include "rf_receive_it.h"
-#include "display.h"
+
+#include <stdbool.h>                    // for false, true
+#include <stdint.h>                     // for uint8_t
+
+#include "fband.h"                      // for IS433MHZ
 
 
 #ifdef HAS_IT

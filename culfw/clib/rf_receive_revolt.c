@@ -19,10 +19,14 @@
  */
 
 #include "rf_receive_revolt.h"
-#include "display.h"
+
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for uint8_t
+
+#include "fband.h"                      // for IS433MHZ
 #ifdef ARM
-#include <hal_timer.h>
 #include <hal_gpio.h>
+#include <hal_timer.h>
 #endif
 #ifdef HAS_REVOLT
 /*

@@ -22,11 +22,11 @@
  */
 
 #ifdef unix                                                                 // test/debug on linux/unix
+#include <inttypes.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
+#include <unistd.h>
 
 #define DEBUG
 #define F_CPU 8000000L
@@ -50,19 +50,19 @@ typedef unsigned short  uint16_t;
   #define WGM21  1
   #define CS20   0
 #else
-  #include <inttypes.h>
   #include <avr/io.h>
-  #include <util/delay.h>
   #include <avr/pgmspace.h>
+  #include <inttypes.h>
+  #include <util/delay.h>
 #endif // CODEVISION
 
 #endif // WIN32
 #endif // unix
 
-#include "irsndconfig.h"
-#include "irmpconfig.h"
 #include "irmp.h"
+#include "irmpconfig.h"
 #include "irsnd.h"
+#include "irsndconfig.h"
 
 /*---------------------------------------------------------------------------------------------------------------------------------------------------
  *  ATtiny pin definition of OC0A / OC0B

@@ -2,6 +2,8 @@
 #define _RF_SEND_H
 
 
+#include <stdint.h>                     // for uint8_t, uint16_t
+
 /* public prototypes */
 void fs20send(char *in);
 void rawsend(char *in);

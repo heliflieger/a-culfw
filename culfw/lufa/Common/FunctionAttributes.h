@@ -49,6 +49,7 @@
 #ifndef __FUNCATTR_H__
 #define __FUNCATTR_H__
 
+// IWYU pragma: private, include <Common/Common.h>
 	/* Preprocessor Checks: */
 		#if !defined(__COMMON_H__)
 			#error Do not include this file directly. Include LUFA/Common/Common.h instead to gain this functionality.

@@ -31,10 +31,12 @@
 #ifndef _DESCRIPTORS_H_
 #define _DESCRIPTORS_H_
 
-	/* Includes: */
-		#include <Drivers/USB/USB.h>
+#include <Common/Common.h>              // for ATTR_NON_NULL_PTR_ARG, etc
+#include <Drivers/USB/HighLevel/StdDescriptors.h>
+#include <stdbool.h>                    // for bool
+#include <stdint.h>                     // for uint8_t, uint16_t
 
-		#include <avr/pgmspace.h>
+#undef CDC_FUNCTIONAL_DESCRIPTOR
 
 	/* Macros: */
 		#define CDC_FUNCTIONAL_DESCRIPTOR(size)                      \

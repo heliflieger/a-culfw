@@ -1,24 +1,25 @@
-#include <avr/pgmspace.h>
 #include <avr/boot.h>
+#include <avr/pgmspace.h>
+
+#include "uip-conf.h"
+
+#include "apps/dhcpc/dhcpc.h"
 #include "board.h"
+#include "delay.h"
+#include "display.h"
+#include "drivers/interfaces/network.h"
 #include "ethernet.h"
 #include "fncollection.h"
+#include "led.h"
+#include "mdns_sd.h"
+#include "ntp.h"
 #include "stringfunc.h"
 #include "timer.h"
-#include "display.h"
-#include "delay.h"
-#include "ntp.h"
-#include "mdns_sd.h"
-#include "led.h"
-
 #include "uip_arp.h"
-#include "drivers/interfaces/network.h"
-#include "apps/dhcpc/dhcpc.h"
-#include "delay.h"
 
 #ifdef ARM
-#include <utility/trace.h>
 #include <avr/eeprom.h>
+#include <utility/trace.h>
 #endif
 
 struct timer periodic_timer, arp_timer;

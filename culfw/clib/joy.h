@@ -2,6 +2,7 @@
 #define __JOYSTICK
 
 #include <avr/io.h>
+
 #include "board.h"
 
 void joy_init(void);

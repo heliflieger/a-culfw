@@ -7,24 +7,23 @@
    --
 */
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <stdio.h>
-#include <util/parity.h>
-#include <string.h>
+#include <avr/interrupt.h>              // for cli, sei
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for uint8_t
+#include <string.h>                     // for strnlen
 
-#include "board.h"
+#include "board.h"                      // for CC1100_OUT_PIN, etc
 
 #ifdef HAS_BELFOX
 
-#include "delay.h"
 #include "belfox.h"
-#include "rf_receive.h"
-#include "led.h"
-#include "cc1100.h"
+#include "cc1100.h"                     // for ccRX, ccStrobe, ccTX, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "led.h"                        // for LED_OFF, LED_ON
+#include "rf_receive.h"                 // for set_txreport, tx_report
 
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
 #endif
 
 // define timings
