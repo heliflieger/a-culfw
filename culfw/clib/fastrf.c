@@ -1,14 +1,15 @@
-#include "board.h"
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for HAS_FASTRF, TTY_BUFSIZE
 #ifdef HAS_FASTRF
-#include <string.h>
-#include <avr/pgmspace.h>
+#include <string.h>                     // for strlen
+
+#include "cc1100.h"                     // for cc1100_sendbyte, etc
+#include "clock.h"                      // for ticks
+#include "delay.h"                      // for my_delay_ms
+#include "display.h"                    // for display_channel, DC, etc
 #include "fastrf.h"
-#include "cc1100.h"
-#include "delay.h"
-#include "display.h"
-#include "rf_receive.h"
-#include "fncollection.h"
-#include "clock.h"
+#include "fncollection.h"               // for EE_FASTRF_CFG
 
 uint8_t fastrf_on;
 

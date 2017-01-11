@@ -2,8 +2,11 @@
     File name: manchester.c
 ******************************************************************************/
 
-#include "mbus_defs.h"
 #include "manchester.h"
+
+#include <stdint.h>                     // for uint8_t
+
+#include "mbus_defs.h"                  // for uint8
 
 //----------------------------------------------------------------------------
 // Variables

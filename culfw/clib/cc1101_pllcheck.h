@@ -1,6 +1,9 @@
 #ifndef CC1101_PLLCHECK_H
 #define CC1101_PLLCHECK_H
 
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for HAS_CC1101_PLL_LOCK_CHECK, etc
 //
 // functions to use with TI cc1101 transceiver
 // 

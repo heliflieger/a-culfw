@@ -22,11 +22,11 @@
 #define _RF_RECEIVE_REVOLT_H
 
 
-#include <stdio.h>
-#include <stdbool.h>
-#include "board.h"
-#include "rf_receive_bucket.h"
-#include "fband.h"
+#include <stdbool.h>                    // for bool
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for HAS_REVOLT
+#include "rf_receive_bucket.h"          // for pulse_t, bucket_t
 
 #ifdef HAS_REVOLT
 

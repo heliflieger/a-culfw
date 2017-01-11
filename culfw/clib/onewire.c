@@ -1,17 +1,16 @@
 #include "board.h"
 #ifdef HAS_ONEWIRE
+#include <avr/boot.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
-#include <avr/boot.h>
 #include <math.h>
 
-#include "fncollection.h"
-#include "stringfunc.h"
-#include "display.h"
 #include "delay.h"
-
-#include "onewire.h"
+#include "display.h"
+#include "fncollection.h"
 #include "i2cmaster.h"
+#include "onewire.h"
+#include "stringfunc.h"
 
 static unsigned char dscrc_table[] = {
         0, 94,188,226, 97, 63,221,131,194,156,126, 32,163,253, 31, 65,

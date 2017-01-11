@@ -1,20 +1,23 @@
 #include "board.h"
 #ifdef HAS_W5100
 
+#include <DHCP/dhcp.h>
+#include <avr/eeprom.h>
+#include <avr/pgmspace.h>
+#include <hal.h>
+#include <socket.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <utility/trace.h>
+#include <wizchip_conf.h>
+
+#include "delay.h"
+#include "display.h"
 #include "ethernet.h"
 #include "fncollection.h"
-#include <wizchip_conf.h>
-#include <DHCP/dhcp.h>
-#include <socket.h>
-#include "display.h"
-#include "ttydata.h"
-#include <avr/pgmspace.h>
-#include <avr/eeprom.h>
-#include <stdio.h>
-#include <hal.h>
-#include <utility/trace.h>
 #include "spi.h"
-#include "delay.h"
+#include "stringfunc.h"
+#include "ttydata.h"
 
 //////////////////////////////////////////////////
 // Socket & Port number definition for Examples //

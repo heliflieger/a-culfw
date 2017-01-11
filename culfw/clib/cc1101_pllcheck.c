@@ -1,12 +1,10 @@
-#include "board.h"
- 
-#include <avr/io.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "display.h"
-#include "fncollection.h"
+#include <avr/pgmspace.h>               // for PSTR
+#include <stdint.h>                     // for uint8_t
 
+#include "cc1100.h"                     // for cc1100_readReg, ccStrobe, etc
 #include "cc1101_pllcheck.h"
+#include "delay.h"                      // for my_delay_us
+#include "display.h"                    // for DS_P
 
 
 #ifdef HAS_CC1101_PLL_LOCK_CHECK_MSG_SW

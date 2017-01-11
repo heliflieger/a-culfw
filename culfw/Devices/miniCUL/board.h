@@ -1,6 +1,8 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
+
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
 #define SPI_SS			2

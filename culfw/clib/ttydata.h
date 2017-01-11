@@ -1,7 +1,9 @@
 #ifndef _TTYDATA_H_
 #define _TTYDATA_H_
 
-#include "ringbuffer.h"
+#include <stdint.h>                     // for uint8_t
+
+#include "ringbuffer.h"                 // for rb_t
 
 typedef struct _fntab {
   unsigned char name;

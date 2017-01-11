@@ -1,14 +1,16 @@
-#include <string.h>
-#include <avr/eeprom.h>
-#include "board.h"
-#include "rf_send.h"
-#include "rf_receive.h"
-#include "fncollection.h"
-#include "display.h"
+#include <avr/pgmspace.h>               // for PSTR, __LPM, PROGMEM
+#include <stdint.h>                     // for uint8_t, int16_t, uint16_t
+#include <string.h>                     // for strlen
+
+#include "board.h"                      // for FHTBUF_SIZE, HAS_FHT_TF, etc
+#include "cc1100.h"                     // for ccRX, ccStrobe, etc
+#include "delay.h"                      // for my_delay_ms
+#include "display.h"                    // for DH2, DC, DS_P, DNL
 #include "fht.h"
-#include "delay.h"
-#include "clock.h"
-#include "cc1100.h"
+#include "fncollection.h"               // for EE_FHTID, erb, ewb
+#include "rf_receive.h"                 // for tx_report, REP_FHTPROTO, etc
+#include "rf_send.h"                    // for addParityAndSendData, etc
+#include "stringfunc.h"                 // for fromhex
 
 // We have three different work models:
 

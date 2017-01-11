@@ -1,5 +1,7 @@
 #ifndef _kopp_fc_H
 #define _kopp_fc_H
+#include <stdint.h>                     // for uint8_t
+
 #define MAX_kopp_fc_MSG 15				// (15) typical Kopp transmission block size incl. zeros at the end: 07 FA 5E 10 05 CC 0F 02 DD 00 00 00 00 00 00
 #define MAX_kopp_fc_NetMSG 9			// (09) typical Kopp transmission block size without zeros at the end: 07 FA 5E 10 05 CC 0F 02 DD 
 #define kopp_fc_Command_char 14			// amount of command line characters for kopp_fc (without "Kt", 2 for Kopp key code, 6 for Transmitter Code, 5 for timeout 1 for J/N)

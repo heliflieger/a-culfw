@@ -21,13 +21,14 @@
 #error "You can't have HAS_HM485 when HAS_HELIOS is enabled"
 #endif
        
+#include <avr/interrupt.h>   
+#include <avr/io.h>   
+#include <string.h>
+
+#include "clock.h"   
+#include "display.h"   
 #include "helios.h"   
 #include "stringfunc.h"   
-#include "display.h"   
-#include "clock.h"   
-#include <string.h>
-#include <avr/io.h>   
-#include <avr/interrupt.h>   
        
 // PD2 (RXD1) and PD3 (TXD1) are connected to the RS485 transceiver's 
 // RXD and TXD; PA3 is connected to REN/TXEN (high = transmit)   

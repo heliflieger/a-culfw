@@ -6,10 +6,9 @@
 #ifndef _RF_RECEIVE_TX3_H
 #define _RF_RECEIVE_TX3_H
 
-#include <stdio.h>
-#include "board.h"
-#include "rf_receive_bucket.h"
-#include "fband.h"
+#include <stdint.h>                     // for uint8_t
+
+#include "rf_receive_bucket.h"          // for bucket_t
 
 
 #define TYPE_TX3     't'

@@ -1,4 +1,7 @@
+#include "board.h"                      // IWYU pragma: keep (for ARM for MapleCUL)
 #include "stringfunc.h"
+
+#include <stdint.h>                     // for uint8_t, uint16_t
 
 /*
  * Converts a hex string to a buffer. Not hex characters will be skipped

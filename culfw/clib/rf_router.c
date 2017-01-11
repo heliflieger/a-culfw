@@ -1,17 +1,18 @@
-#include "board.h"
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for uint8_t, uint16_t
+
+#include "board.h"                      // for CC1100_OUT_PIN, etc
+#include "stringfunc.h"                 // for fromhex, tohex
 #ifdef HAS_RF_ROUTER
-#include <string.h>
-#include <avr/pgmspace.h>
+#include "cc1100.h"                     // for cc1100_sendbyte, etc
+#include "clock.h"                      // for ticks
+#include "delay.h"                      // for my_delay_ms, my_delay_us
+#include "display.h"                    // for DH2, DNL, DC, etc
+#include "fncollection.h"               // for erb, ewb, EE_FASTRF_CFG, etc
+#include "rf_receive.h"                 // for set_txrestore, etc
 #include "rf_router.h"
-#include "cc1100.h"
-#include "delay.h"
-#include "display.h"
-#include "rf_receive.h"
-#include "fncollection.h"
-#include "clock.h"
-#include "ringbuffer.h"
-#include "ttydata.h"
-#include "fht.h"
+#include "ringbuffer.h"                 // for rb_reset, rb_t, rb_put, etc
+#include "ttydata.h"                    // for TTY_Rx_Buffer, etc
 
 uint8_t rf_router_status;
 uint8_t rf_router_myid;

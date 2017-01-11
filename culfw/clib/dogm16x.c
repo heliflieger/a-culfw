@@ -1,12 +1,12 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 
+#include "../version.h"
+#include "board.h"
 #include "delay.h"
+#include "dogm16x.h"
 #include "spi.h"
 #include "stringfunc.h"
-#include "board.h"
-#include "dogm16x.h"
-#include "../version.h"
 
 static uint8_t cpos = 0;
 

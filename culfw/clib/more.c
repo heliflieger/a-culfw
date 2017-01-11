@@ -1,13 +1,13 @@
 #include "board.h"
-#include "pcf8833.h"            // lcd_putline
-#include "fswrapper.h"          // fs
-#include "log.h"                // LOG_TIMELEN
-#include "qfs.h"
-#include "more.h"
-#include "joy.h"                // joyfunc
-#include "string.h"             // strchr
-#include "menu.h"               // menu_redisplay
 #include "display.h"
+#include "fswrapper.h"          // fs
+#include "joy.h"                // joyfunc
+#include "log.h"                // LOG_TIMELEN
+#include "menu.h"               // menu_redisplay
+#include "more.h"
+#include "pcf8833.h"            // lcd_putline
+#include "qfs.h"
+#include "string.h"             // strchr
 
 #define MODE_INIT    0
 #define MODE_LOG     1

@@ -1,18 +1,20 @@
-#include "board.h"
-#ifdef HAS_MORITZ
-#include <string.h>
-#include <avr/pgmspace.h>
-#include <avr/interrupt.h>
-#include <avr/io.h>
-#include "fband.h"
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "clock.h"
-#include "rf_send.h" //credit_10ms
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t, uint32_t
 
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromhex
+#ifdef HAS_MORITZ
+#include <avr/pgmspace.h>               // for PSTR, pgm_read_byte, etc
+
+#include "cc1100.h"                     // for cc1100_readReg, ccStrobe, etc
+#include "clock.h"                      // for ticks
+#include "delay.h"                      // for my_delay_ms, my_delay_us
+#include "display.h"                    // for DC, DH2, DNL, DS_P
+#include "fband.h"                      // for checkFrequency
 #include "rf_moritz.h"
+#include "rf_receive.h"                 // for REP_RSSI, set_txrestore, etc
+#include "rf_send.h"                    // for credit_10ms
 
 void moritz_sendraw(uint8_t* buf, int longPreamble);
 void moritz_sendAck(uint8_t* enc);

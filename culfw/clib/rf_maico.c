@@ -1,19 +1,18 @@
 #include "board.h"
 #ifdef HAS_MAICO
-#include <string.h>
-#include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "clock.h"
-#include "rf_send.h" //credit_10ms
-
-#include "rf_maico.h"
-
+#include <avr/pgmspace.h>
+#include <string.h>
 #include <utility/trace.h>
+
+#include "cc1100.h"
+#include "clock.h"
+#include "delay.h"
+#include "display.h"
+#include "rf_maico.h"
+#include "rf_receive.h"
+#include "rf_send.h" //credit_10ms
 
 
 #ifdef CC1100_MAICO

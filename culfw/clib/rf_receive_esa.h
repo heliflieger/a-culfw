@@ -6,10 +6,10 @@
 #ifndef _RF_RECEIVE_ESA_H
 #define _RF_RECEIVE_ESA_H
 
-#include <stdio.h>
-#include "board.h"
-#include "rf_receive_bucket.h"
-#include "fband.h"
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for HAS_ESA
+#include "rf_receive_bucket.h"          // for bucket_t
 
 #ifdef HAS_ESA
 

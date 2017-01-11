@@ -5,18 +5,21 @@
  *      Author: Telekatz
  */
 
-#include "ringbuffer.h"
-#include "cdc.h"
-#include "usb_device.h"
-#include "hal_usart.h"
-#include "board.h"
 #include <utility/trace.h>
+
+#include "board.h"
+#include "cdc.h"
+#include "hal_usart.h"
+#include "ringbuffer.h"
+#include "usb_device.h"
 #ifdef HAS_W5100
 #include <socket.h>
+
 #include "ethernet.h"
 #endif
 #include "display.h"
 #include "fncollection.h"
+#include "stringfunc.h"
 
 #ifdef CDC_COUNT
 

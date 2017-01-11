@@ -3,20 +3,20 @@
  * Menu handling for the CUR
  *
  */
-#include "qfs.h"                // MENU file
-#include "menu.h"
-#include "fncollection.h"       // EEPROM offsets
-#include "fswrapper.h"          // global fs ponter
-#include "pcf8833.h"            // LCD
-#include "display.h"            // debugging
-#include "joy.h"                // input
-#include "ttydata.h"            // callfn
-#include "battery.h"            // bat_drawstate
-#include "mysleep.h"            // dosleep
-#include "fht.h"                // fht_hc
+#include <avr/eeprom.h>
 #include <string.h>
 
-#include <avr/eeprom.h>
+#include "battery.h"            // bat_drawstate
+#include "display.h"            // debugging
+#include "fht.h"                // fht_hc
+#include "fncollection.h"       // EEPROM offsets
+#include "fswrapper.h"          // global fs ponter
+#include "joy.h"                // input
+#include "menu.h"
+#include "mysleep.h"            // dosleep
+#include "pcf8833.h"            // LCD
+#include "qfs.h"                // MENU file
+#include "ttydata.h"            // callfn
 
 #define NMENUS     64   // Total number of menu's / macros
 #define NITEMS     32   // Maximum number of subitems in a single menu

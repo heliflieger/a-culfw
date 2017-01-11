@@ -7,28 +7,28 @@
  *
  * License: GPL v2
  */
+#include <avr/eeprom.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
-
-#include "pcf8833.h"
-#include "spi.h"
-#include "led.h"
-#include "delay.h"
-#include "display.h"
-#include "clock.h"
-#include "fncollection.h"          // EEPROM OFFSETS
-#include <avr/eeprom.h>
+#include <stdlib.h>
 
 #include "board.h"
-#include "fswrapper.h"             // Drawing picture from file
-
+#include "clock.h"
+#include "delay.h"
+#include "display.h"
+#include "fncollection.h"          // EEPROM OFFSETS
 #include "fonts/courier_10x17.inc" // Antialiased: big
+#include "fswrapper.h"             // Drawing picture from file
+#include "led.h"
+#include "pcf8833.h"
+#include "spi.h"
+
 #define TITLE_FONT                 courier_10x17
 
 #include "fonts/courier_8x14.inc"  // Antialiased: middle
+
 #define BODY_FONT                  courier_8x14
 
 static uint8_t lcd_scroll_y = 18;
@@ -521,6 +521,7 @@ lcd_resetscroll()
 
 #if 0
 #include "fonts/house2.inc"        // Logo
+
 void
 lcd_drawlogo()
 {
