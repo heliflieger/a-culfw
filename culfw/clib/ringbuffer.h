@@ -2,10 +2,10 @@
 #define __ringbuffer_H_
 
 #ifndef TESTING
-#include "board.h"
-#include <stdint.h>
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for TTY_BUFSIZE
 #endif
-#include <avr/interrupt.h>
 
 #if TTY_BUFSIZE < 256
 typedef struct

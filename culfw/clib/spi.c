@@ -1,6 +1,7 @@
-#include <avr/io.h>
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for SPI_DDR, SPI_SCLK, HAS_DOGM, etc
 #include "spi.h"
-#include "board.h"
 
 __attribute__((weak)) void spi_init(void)
 {

@@ -4,7 +4,10 @@
  */
 
 #include "rf_receive_esa.h"
-#include "display.h"
+
+#include <stdint.h>                     // for uint8_t, uint16_t
+
+#include "fband.h"                      // for IS868MHZ
 
 #ifdef HAS_ESA
 /*

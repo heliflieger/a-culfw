@@ -46,6 +46,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/mbus/3outof6.c                            \
 		../../clib/mbus/mbus_packet.c                        \
 		../../clib/mbus/crc.c                                \
+		../../clib/mbus/manchester.c                         \
 
 CFLAGS  = -D$(TARGET)
 CFLAGS += -D$(FREQUENCE)

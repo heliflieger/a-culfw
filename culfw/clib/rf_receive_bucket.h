@@ -23,10 +23,10 @@
 #ifndef _RF_RECEIVE_BUCKET_H
 #define _RF_RECEIVE_BUCKET_H
 
-#include <avr/io.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include "board.h"
+#include <stdbool.h>                    // for bool
+#include <stdint.h>                     // for uint8_t, uint16_t
+
+#include "board.h"                      // for HAS_IT, HAS_REVOLT, etc
 
 
 #define STATE_SYNC_PACKAGE      11

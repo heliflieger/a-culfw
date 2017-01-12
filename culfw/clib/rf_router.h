@@ -1,7 +1,9 @@
 #ifndef _RF_ROUTER_H
 #define _RF_ROUTER_H
 
-#include "ringbuffer.h"
+#include <stdint.h>                     // for uint8_t
+
+#include "ringbuffer.h"                 // for rb_t
 
 void rf_router_init(void);
 void rf_router_func(char *);

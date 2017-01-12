@@ -1,9 +1,10 @@
 #ifndef __ETHERNET_H_
 #define __ETHERNET_H_
 
+#include <stdint.h>
+
 #include "board.h"
 #include "ringbuffer.h"
-#include <stdint.h>
 
 void ethernet_reset(void);
 void ethernet_init(void);

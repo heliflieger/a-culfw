@@ -1,6 +1,8 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
+
 #define RPI_ADDON_BOARD
 
 #define SPI_PORT		PORTB

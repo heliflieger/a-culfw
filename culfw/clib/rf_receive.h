@@ -1,27 +1,8 @@
 #ifndef _RF_RECEIVE_H
 #define _RF_RECEIVE_H
 
-
-#include "board.h"
-
-#include "fband.h"
-#include "helper.h"
-
-#include "rf_receive_bucket.h"
-#ifdef HAS_TCM97001
-#include "rf_receive_tcm97001.h"
-#endif
-#ifdef HAS_IT
-#include "rf_receive_it.h"
-#endif
-#include "rf_receive_tx3.h"
-#include "rf_receive_revolt.h"
-#ifdef HAS_ESA
-#include "rf_receive_esa.h"
-#endif
-#ifdef HAS_HMS
-#include "rf_receive_hms.h"
-#endif
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for uint8_t
 
 #define TYPE_EM      'E'
 

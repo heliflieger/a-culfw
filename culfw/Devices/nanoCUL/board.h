@@ -1,6 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
 #include <stdint.h>
 
 /* if you have an Arduino with only 8MHz disable the next line */

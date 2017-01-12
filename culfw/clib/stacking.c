@@ -10,13 +10,14 @@
 
 #ifdef HAS_STACKING
 
+#include <avr/interrupt.h>
+#include <avr/io.h>
+#include <string.h>
+
+#include "clock.h"
+#include "display.h"
 #include "stacking.h"
 #include "stringfunc.h"
-#include "display.h"
-#include "clock.h"
-#include <string.h>
-#include <avr/io.h>
-#include <avr/interrupt.h>
 
 // Receive a CRLF terminated message from downlink UART1 
 // and forward to uplink UART0 by prefixing a '*'

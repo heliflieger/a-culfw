@@ -1,13 +1,14 @@
-#include "board.h"
 #include <avr/pgmspace.h>
-#include "log.h"
-#include "qfs.h"
-#include "fswrapper.h"
-#include "string.h"
-#include "display.h"
+
 #include "battery.h"            // do not log on battery low
+#include "board.h"
+#include "display.h"
 #include "ds1339.h"             // RTC
+#include "fswrapper.h"
+#include "log.h"
 #include "ntp.h" 
+#include "qfs.h"
+#include "string.h"
 
 static fs_inode_t logfd = 0xffff;
 static uint16_t logoffset;

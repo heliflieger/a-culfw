@@ -4,32 +4,31 @@
  * License: GPL v2
  */
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <stdio.h>
-#include <util/parity.h>
-#include <string.h>
+#include <avr/interrupt.h>              // for cli, sei
+#include <avr/pgmspace.h>               // for PSTR
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for int8_t
+#include <util/parity.h>                // for parity_even_bit
 
-#include "board.h"
-#include "delay.h"
+#include "board.h"                      // for HAS_MORITZ, HAS_RAWSEND, etc
+#include "cc1100.h"                     // for CC1100_CLEAR_OUT, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DS_P
+#include "led.h"                        // for LED_OFF, LED_ON
+#include "rf_receive.h"                 // for cksum1, cksum2, cksum3, etc
 #include "rf_send.h"
-#include "rf_receive.h"
-#include "led.h"
-#include "cc1100.h"
-#include "display.h"
-#include "fncollection.h"
-#include "fht.h"
+#include "stringfunc.h"                 // for fromhex
 
 #ifdef HAS_DMX
-#include "dmx.h"
+#include "dmx.h"                        // for dmx_fs20_emu
 #endif
 
 #ifdef HAS_HELIOS
-#include "helios.h"
+#include "helios.h"                     // for helios_fs20_emu
 #endif
 
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
 #endif
 
 // For FS20 we time the complete message, for KS300 the rise-fall distance

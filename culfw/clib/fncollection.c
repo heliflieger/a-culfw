@@ -1,14 +1,24 @@
-#include <avr/eeprom.h>
-#include <avr/wdt.h>
-#include <avr/interrupt.h>
+#include "board.h"                      // IWYU pragma: keep
 
-#include "fband.h"
-#include "board.h"
-#include "display.h"
-#include "delay.h"
+#include <avr/eeprom.h>                 // for __eerd_byte_UNKNOWN, etc
+#include <avr/interrupt.h>              // for cli
+#include <avr/io.h>                     // for bit_is_set
+#include <avr/pgmspace.h>               // for PSTR
+
+#ifndef bit_is_set
+#include <avr/sfr_defs.h>               // for bit_is_set
+#endif
+#include <stdint.h>                     // for uint8_t, uint16_t, int8_t
+
+#include "../version.h"                 // for VERSION_1, VERSION_2, etc
+#include "cc1100.h"                     // for cc_factory_reset
+#include "cdc_uart.h"                   // for EE_write_baud
+#include "display.h"                    // for DC, DS_P, DH2, DNL, DU, DH
+#include "fband.h"                      // for checkFrequency, IS433MHZ
 #include "fncollection.h"
-#include "cc1100.h"
-#include "../version.h"
+#include "led.h"                        // for LED_OFF, LED_ON
+#include "qfs.h"                        // for fs_sync
+#include "stringfunc.h"                 // for fromhex, fromip, fromdec
 #ifdef HAS_USB
 #ifdef SAM7
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
@@ -16,16 +26,14 @@
 #elif defined STM32
 #include "usb_device.h"
 #else
-#include <Drivers/USB/USB.h>
+#include <Drivers/USB/LowLevel/LowLevel.h>  // for USB_ShutDown
 #endif
 #endif
-#include "clock.h"
-#include "mysleep.h"
-#include "fswrapper.h"
-#include "fastrf.h"
-#include "rf_router.h"
-#include "ethernet.h"
-#include <avr/wdt.h>
+#include <avr/wdt.h>                    // for WDTO_15MS, wdt_enable
+
+#include "ethernet.h"                   // for ethernet_reset
+#include "fswrapper.h"                  // for fs
+#include "mysleep.h"                    // for sleep_time
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -34,7 +42,7 @@ uint8_t led_mode = 2;   // Start blinking
 #endif
 
 #if defined(CDC_COUNT) && CDC_COUNT > 1
-#include "cdc_uart.h"
+#include "cdc_uart.h"                   // for EE_write_baud
 #endif
 //////////////////////////////////////////////////
 // EEprom

@@ -4,8 +4,8 @@
     Copyright 2008 Texas Instruments, Inc.
 ***********************************************************************************/
 
-#include "mbus_defs.h"
 #include "crc.h"
+#include "mbus_defs.h"
 
 
 
