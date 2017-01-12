@@ -5,6 +5,10 @@ typedef unsigned char uint8_t;
 #include <stdio.h>
 #endif
 
+#include <avr/interrupt.h>              // for cli
+#include <avr/io.h>                     // for SREG
+#include <stdint.h>                     // for uint8_t
+
 #include "ringbuffer.h"
 
 #ifndef ARM

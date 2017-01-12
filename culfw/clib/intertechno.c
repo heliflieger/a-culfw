@@ -4,35 +4,35 @@
  * License: GPL v2
  */
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <stdio.h>
-#include <util/parity.h>
-#include <string.h>
+#include <avr/interrupt.h>              // for cli, sei
+#include <stdint.h>                     // for int8_t
+#include <string.h>                     // for strlen
 #ifdef ARM
 #include <hal.h>
 #endif
 
-#include "board.h"
+#include <avr/pgmspace.h>               // for __LPM, PROGMEM
+#include "board.h"                      // for HAS_ASKSIN, HAS_MORITZ, etc
+#include <avr/io.h>                     // for _BV
+
+#include "stringfunc.h"                 // for fromdec, fromhex
 
 #ifdef HAS_INTERTECHNO
 
-#include "delay.h"
-#include "rf_send.h"
-#include "rf_receive.h"
-#include "led.h"
-#include "cc1100.h"
-#include "display.h"
-#include "fncollection.h"
-#include "fht.h"
+#include "cc1100.h"                     // for CC1100_CLEAR_OUT, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DC, DNL, DH2, DU
+#include "fncollection.h"               // for EE_CC1100_CFG_SIZE, erb, etc
 #include "intertechno.h"
+#include "led.h"                        // for LED_OFF, LED_ON, SET_BIT
+#include "rf_receive.h"                 // for set_txrestore, tx_report
 
 #ifdef HAS_ASKSIN
-#include "rf_asksin.h"
+#include "rf_asksin.h"                  // for asksin_on, rf_asksin_init
 #endif
 
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
 #endif
 
 static uint8_t intertechno_on = 0;

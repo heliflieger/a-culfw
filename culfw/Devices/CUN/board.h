@@ -1,6 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
 
 #ifdef CUN_V10
 
@@ -121,6 +122,5 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
 #define BUSWARE_CUN
-
 
 #endif

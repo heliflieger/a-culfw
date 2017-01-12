@@ -1,6 +1,9 @@
-#include "display.h"
+#include <avr/pgmspace.h>               // for PSTR, PROGMEM, __LPM, etc
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for TTY_BUFSIZE
+#include "display.h"                    // for display_channel, DC, DS_P, etc
 #include "ttydata.h"
-#include <avr/pgmspace.h>
 
 void (*input_handle_func)(uint8_t channel);
 

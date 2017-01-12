@@ -1,5 +1,6 @@
-#include "board.h"
 #include <avr/io.h>
+
+#include "board.h"
 #include "delay.h"
 #include "display.h"
 

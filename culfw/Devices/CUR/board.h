@@ -1,6 +1,8 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
+
 #define BOARD_ID_STR            "CUR"
 #define BOARD_ID_USTR           L"CUR"
 #define BUSWARE_CUR

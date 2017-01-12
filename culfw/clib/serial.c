@@ -1,16 +1,18 @@
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
+
+#include "display.h"
 #include "ringbuffer.h"
 #include "ttydata.h"
-#include "display.h"
 #ifdef SAM7
-#include <usart/usart.h>
-#include "board.h"
-#include <pio/pio.h>
 #include <aic/aic.h>
+#include <pio/pio.h>
 #include <pmc/pmc.h>
+#include <usart/usart.h>
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
+
+#include "board.h"
 
 static const Pin pins[] = {
     PIN_USART0_RXD,

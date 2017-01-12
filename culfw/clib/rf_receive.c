@@ -21,42 +21,45 @@
  * 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
  *
  */
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <stdio.h>
-#include <util/parity.h>
-#include <string.h>
-#include <stdbool.h>
+#include <avr/interrupt.h>              // for ISR
+#include <avr/pgmspace.h>               // for PSTR
+#include <stdbool.h>                    // for bool, false
+#include <stdint.h>                     // for int8_t
+#include <util/parity.h>                // for parity_even_bit
 
-#include "board.h"
-#include "delay.h"
-#include "rf_send.h"
+#include "board.h"                      // for HAS_HMS, HAS_ESA, etc
+#include "cc1100.h"                     // for cc1100_readReg, CC1100_RSSI, etc
+#include "clock.h"                      // for ticks
+#include "display.h"                    // for DU, DC, DH2, DNL, DH, DS_P
+#include "fband.h"                      // for IS868MHZ, IS433MHZ
+#include "fht.h"                        // for fht_hook, FHT_ACK, FHT_ACK2, etc
+#include "led.h"                        // for CLEAR_BIT, SET_BIT, LED_OFF, etc
 #include "rf_receive.h"
-#include "led.h"
-#include "cc1100.h"
-#include "display.h"
-#include "clock.h"
-#include "fncollection.h"
-#include "fht.h"
+#include "rf_receive_bucket.h"          // for bucket_t, wave_t, TSCALE, etc
+#include "rf_receive_esa.h"             // for STATE_ESA, analyze_esa
+#include "rf_receive_hms.h"             // for STATE_HMS, analyze_hms
+#include "rf_receive_it.h"              // for analyze_intertechno, etc
+#include "rf_receive_revolt.h"          // for addbit_revolt, etc
+#include "rf_receive_tcm97001.h"        // for analyze_tcm97001, etc
+#include "rf_receive_tx3.h"             // for analyze_tx3
+#include "rf_send.h"                    // for credit_10ms, MAX_CREDIT
+#include "stringfunc.h"                 // for fromhex
 #ifdef HAS_LCD
-#include "pcf8833.h"
+#include "pcf8833.h"                    // for lcd_txmon
 #endif
-#include "fastrf.h"
-#include "rf_router.h"
-
-#ifdef HAS_ASKSIN
-#include "rf_asksin.h"
-#endif
+#include "fastrf.h"                     // for fastrf_on
+#include "rf_router.h"                  // for rf_router_status, etc
 #ifdef HAS_MBUS
-#include "rf_mbus.h"
+#include "rf_mbus.h"                    // for WMBUS_NONE, mbus_mode
 #endif
 
 #ifdef SAM7
 #include <hal_gpio.h>
 #include <hal_timer.h>
 #elif defined STM32
-#include <hal_timer.h>
 #include <hal_gpio.h>
+#include <hal_timer.h>
+
 #include "stm32f1xx_it.h"
 #endif
 //////////////////////////
@@ -839,7 +842,7 @@ ISR(CC1100_INTVECT)
 #endif
     }
 #endif
-
+    
     hightime = c;
 
 #ifdef HAS_MANCHESTER
@@ -918,8 +921,9 @@ ISR(CC1100_INTVECT)
 retry_mc:
         // Edge is not too long, nor too short?
 		if (lowtime < (b->clockTime >> 1) || lowtime > (b->clockTime << 1) + b->clockTime) { // read as: duration < 0.5 * clockTime || duration > 3 * clockTime
+        //if (lowtime < (b->clockTime >> 1) || lowtime > (b->clockTime << 2)) {
 			// Fail. Abort.
-		//	DC('F');
+			//DC('#');
 			b->state = STATE_SYNC;
 		} else {
 		    // Only process every second half bit, i.e. every whole bit.

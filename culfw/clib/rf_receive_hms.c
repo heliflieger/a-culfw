@@ -4,7 +4,11 @@
  */
 
 #include "rf_receive_hms.h"
-#include "display.h"
+
+#include <stdint.h>                     // for uint8_t
+
+#include "fband.h"                      // for IS868MHZ
+#include "util/parity.h"                // for parity_even_bit
 
 #ifdef HAS_HMS
 /*

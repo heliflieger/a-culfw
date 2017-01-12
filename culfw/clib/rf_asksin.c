@@ -1,15 +1,19 @@
-#include "board.h"
-#ifdef HAS_ASKSIN
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "cc1101_pllcheck.h"
-#include "clock.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t, uint32_t
 
+#include "board.h"                      // for HAS_ASKSIN_FUP, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromhex
+#ifdef HAS_ASKSIN
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM, etc
+
+#include "cc1100.h"                     // for ccStrobe, cc1100_readReg, etc
+#include "cc1101_pllcheck.h"
+#include "clock.h"                      // for get_timestamp
+#include "delay.h"                      // for my_delay_ms, my_delay_us
+#include "display.h"                    // for DC, DH2, DNL, DS_P
 #include "rf_asksin.h"
+#include "rf_receive.h"                 // for set_txrestore, REP_BINTIME, etc
 
 #ifdef CC1100_ASKSIN
 #include "fncollection.h"

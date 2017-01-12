@@ -5,6 +5,8 @@
 
 #include "helper.h"
 
+#include <stdint.h>                     // for uint8_t
+
 /**
  * Description in header
  */

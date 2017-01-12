@@ -1,6 +1,8 @@
 #ifndef __FREQUENCY_BAND_H_
 #define __FREQUENCY_BAND_H_
 
+#include <stdint.h>                     // for uint8_t
+
 #define MODE_UNKNOWN    0
 #define MODE_433_MHZ    1
 #define MODE_868_MHZ    2

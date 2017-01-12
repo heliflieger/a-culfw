@@ -1,9 +1,7 @@
 #ifndef __DISPLAY_H_
 #define __DISPLAY_H_
 
-#include <stdint.h>
-#include <avr/pgmspace.h>
-#include "stringfunc.h"
+#include <stdint.h>                     // for uint8_t, int8_t, uint16_t
 
 void display_char(char s);
 void display_string(char *s);

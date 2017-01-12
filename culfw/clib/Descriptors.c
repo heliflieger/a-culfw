@@ -28,7 +28,15 @@
   this software.
 */
 #include "Descriptors.h"
-#include "board.h"
+
+#include <Drivers/USB/HighLevel/StdDescriptors.h>
+#include <Drivers/USB/LowLevel/LowLevel.h>  // for EP_TYPE_BULK, etc
+#include <avr/io.h>                     // for bit_is_set
+#include <avr/pgmspace.h>               // for PROGMEM, pgm_read_byte
+#include <stddef.h>                     // for NULL
+#include <stdint.h>                     // for uint16_t, uint8_t
+
+#include "board.h"                      // for MULTI_FREQ_DEVICE, etc
 
 #ifdef LUFA
 #define NO_DESCRIPTOR_STRING NO_DESCRIPTOR
