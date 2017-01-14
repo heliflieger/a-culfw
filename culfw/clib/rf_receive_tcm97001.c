@@ -20,6 +20,11 @@
  */
 
 #include "rf_receive_tcm97001.h"
+
+#include <stdbool.h>                    // for false
+#include <stdint.h>                     // for uint8_t
+
+#include "fband.h"                      // for IS433MHZ
 //#include "display.h"
 
 

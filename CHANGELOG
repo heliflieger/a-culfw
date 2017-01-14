@@ -1,5 +1,49 @@
 ## Changelog:
 
+#### 1.23.06
+- Use include-what-you-use (and some manual fixes) to fix many header includes.
+
+#### 1.23.05
+- CUBe: fix rf_native 
+
+#### 1.23.04
+- MapleCUL/MapleCUN: 
+  - Access of UART2+3 via USB/network
+  - Add multi CC1101 support
+  - Activate Hoermann send
+- ARM Models: add HAL
+
+#### 1.23.03
+- Hoermann Send (activated for CUBe + CUL-HM-CFG)
+
+#### 1.23.02
+- Fix IT V3 Dimmer - send mode
+
+#### 1.23.01
+- Fix nanoCUL device
+- Fix miniCUL flash Skript
+- Change sending for IT V1 D bit (Unitec/Intertek)
+
+#### 1.23.00
+- Support for EIM-826 (Unitec/Intertek) (Forum #48515 and #45022)
+- Code upgrade from culfw Version 1.67 (2016-11-26)
+- Hoermann Send (activated for CUL + nanoCUL)
+- RFR filter: ufKERV forwards only messages starting with one of KERV
+- intertechno: modify interval
+- ZWave: no ack for routed packages (work in progress)
+- RFR: do not report FHT if T01 is zero and RFR target is on (Forum #50756)
+
+#### 1.22.00
+- Add STM32 support 
+- Add new device: MapleCUL/MapleCUN
+
+#### 1.21.02
+- miniCUL: added MULTI_FREQ_DEVICE in the board definition
+
+#### 1.21.01
+- Fix define dependencies 
+- Add CUL-ProMini with 8Mhz)
+
 #### 1.21.00
 - Fix receive of GT-WT-02
 

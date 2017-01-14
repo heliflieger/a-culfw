@@ -2,11 +2,13 @@
     Filename: mbus_packet.c
 ******************************************************************************/
 
-#include "mbus_defs.h"
+#include <stdint.h>                     // for uint8_t
+
+#include "3outof6.h"                    // for encode3outof6, etc
+#include "crc.h"                        // for crcCalc
+#include "manchester.h"                 // for manchDecode, manchEncode, etc
+#include "mbus_defs.h"                  // for uint8, uint16, HI_UINT16, etc
 #include "mbus_packet.h"
-#include "manchester.h"
-#include "3outof6.h"
-#include "crc.h"
 
 
 //----------------------------------------------------------------------------------

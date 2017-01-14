@@ -93,11 +93,11 @@ CFLAGS += -finline-limit=20
 CFLAGS += -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
-#CFLAGS += -Wunreachable-code
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 CFLAGS += -mcall-prologues
+#CFLAGS += -Wunreachable-code
 
 
 CPPFLAGS = -g$(DEBUG)
@@ -109,7 +109,7 @@ CPPFLAGS += -fpack-struct
 CPPFLAGS += -fshort-enums
 CPPFLAGS += -fno-exceptions
 CPPFLAGS += -Wall
-CFLAGS += -Wundef
+CPPFLAGS += -Wundef
 CPPFLAGS += -Wa,-adhlns=$(<:%.cpp=$(OBJDIR)/%.lst)
 CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 

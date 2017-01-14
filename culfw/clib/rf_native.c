@@ -8,18 +8,20 @@
  *
  * License: GPL v2
  */
-#include "board.h"
-#ifdef HAS_RFNATIVE
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "fband.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t
 
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromdec
+#ifdef HAS_RFNATIVE
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM, etc
+
+#include "cc1100.h"                     // for ccStrobe, CC1100_FIFOTHR, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DH2, DNL, DC, DS_P
+#include "fband.h"                      // for checkFrequency
 #include "rf_native.h"
-#include "cc1100.h"
 
 static uint8_t native_on = 0;
 
@@ -100,13 +102,8 @@ const uint8_t PROGMEM MODE_CFG[MAX_MODES][20] = {
 void native_init(uint8_t mode) {
 
 #ifdef ARM
-
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID; // disable INT - we'll poll...
-
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN);     //Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
-
+  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -162,7 +159,11 @@ void native_task(void) {
     return;
 
   // wait for CC1100_FIFOTHR given bytes to arrive in FIFO:
+#ifdef ARM
+  if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+#else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
+#endif
 
     // start over syncing
     ccStrobe( CC1100_SIDLE );
@@ -219,13 +220,19 @@ void native_task(void) {
 
 
 void native_func(char *in) {
+#ifdef ARM
+  uint16_t mode = 0;
+#else
   uint8_t mode = 0;
+#endif
+
+
 
   if(in[1] == 'r') {                // Reception on
     
     // "Er<x>" - where <x> is mode
     if (in[2])
-      fromdec(in+2, &mode);
+      fromdec(in+2, ( uint8_t*)&mode);
 
     if (!mode || mode>MAX_MODES) {
       DS_P(PSTR("specify valid mode number\r\n"));

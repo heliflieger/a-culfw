@@ -1,6 +1,8 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
+
 #define RPI_ADDON_BOARD
 
 #define SPI_PORT		PORTB
@@ -91,7 +93,7 @@
 #define HAS_ZWAVE
 
 /* a maximum of 8 onewire devices is supported */
-#define HAS_ONEWIRE            8      // OneWire Device Buffer, RAM: 10 * 8 Byte
+#define HAS_ONEWIRE         8         // OneWire Device Buffer, RAM: 10 * 8 Byte
 
 #define RPI_TTY_FIX
 

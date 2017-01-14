@@ -40,6 +40,8 @@
 #ifndef __STDREQTYPE_H__
 #define __STDREQTYPE_H__
 
+#include <stdint.h>
+
 	/* Public Interface - May be used in end-application: */
 		/* Macros: */
 			/** Mask for the request type parameter, to indicate the direction of the request data (Host to Device

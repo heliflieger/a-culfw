@@ -114,17 +114,17 @@ SRC += ../../clib/rf_mbus.c ../../clib/mbus/manchester.c ../../clib/mbus/3outof6
 endif
 
 all:
-	make TARGET=CUL_V2 FREQUENCE=_433MHZ MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2 FREQUENCE=_868MHZ MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2_HM FREQUENCE=_433MHZ MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2_HM FREQUENCE=_868MHZ MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2_MAX FREQUENCE=_433MHZ MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V2_MAX FREQUENCE=_868MHZ MCU=at90usb162 mostly_clean build size
-	make TARGET=CUL_V3 FREQUENCE=_433MHZ MCU=atmega32u4 mostly_clean build size
-	make TARGET=CUL_V3 FREQUENCE=_868MHZ MCU=atmega32u4 mostly_clean build size
-	make TARGET=CUL_V4 FREQUENCE=_433MHZ MCU=atmega32u2 mostly_clean build size
-	make TARGET=CUL_V4 FREQUENCE=_868MHZ MCU=atmega32u2 mostly_clean build size
-	make TARGET=CUL_V3_ZWAVE FREQUENCE=_868MHZ MCU=atmega32u4 mostly_clean build size
+	make TARGET=CUL_V2 FREQUENCE=_433MHZ MCU=at90usb162 FLASH_SIZE=16384 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V2 FREQUENCE=_868MHZ MCU=at90usb162 FLASH_SIZE=16384 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V2_HM FREQUENCE=_433MHZ MCU=at90usb162 FLASH_SIZE=16384 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V2_HM FREQUENCE=_868MHZ MCU=at90usb162 FLASH_SIZE=16384 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V2_MAX FREQUENCE=_433MHZ MCU=at90usb162 FLASH_SIZE=16384 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V2_MAX FREQUENCE=_868MHZ MCU=at90usb162 FLASH_SIZE=16384 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V3 FREQUENCE=_433MHZ MCU=atmega32u4 FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V3 FREQUENCE=_868MHZ MCU=atmega32u4 FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V4 FREQUENCE=_433MHZ MCU=atmega32u2 FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V4 FREQUENCE=_868MHZ MCU=atmega32u2 FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=CUL_V3_ZWAVE FREQUENCE=_868MHZ MCU=atmega32u4 FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
 
 build: elf hex eep lss sym
 
@@ -136,10 +136,16 @@ sym: $(TARGET)$(FREQUENCE).sym
 
 
 ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET)$(FREQUENCE).elf
+PROGRAM_SIZE = $(shell $(SIZE) --format=avr --mcu=$(MCU) $(TARGET)$(FREQUENCE).elf | grep Program | tr -s " " | cut -d " " -f 2 ; echo +$(BOOTLOADER_SIZE))
+PROGRAM_SIZE_PLUS_BL=$(shell echo $(PROGRAM_SIZE) | bc)
 
 size:
 	@if test -f $(TARGET)$(FREQUENCE).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
 	2>/dev/null; echo; fi
+	@echo "PROGRAM_SIZE_PLUS_BL: $(PROGRAM_SIZE_PLUS_BL), FLASH_SIZE: $(FLASH_SIZE) \n"
+	@if test $(PROGRAM_SIZE_PLUS_BL) -gt $(FLASH_SIZE); then echo "FLASH SIZE OVERFLOW ($(PROGRAM_SIZE_PLUS_BL)>$(FLASH_SIZE))"; exit 2; fi;
+	
+
 
 
 usbprogram:

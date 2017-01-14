@@ -164,8 +164,8 @@ main(void)
 
   clock_prescale_set(clock_div_1);
 
-  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
-  wdt_enable(WDTO_2S);
+//  MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
+//  wdt_enable(WDTO_2S);
 
   uart_init( UART_BAUD_SELECT_DOUBLE_SPEED(UART_BAUD_RATE,F_CPU) );
 

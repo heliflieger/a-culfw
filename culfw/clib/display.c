@@ -1,28 +1,32 @@
-#include "board.h"
+#include <avr/pgmspace.h>               // for __LPM
+#include <stdint.h>                     // for uint8_t, uint16_t
+
+#include "board.h"                      // for TTY_BUFSIZE
 #include "display.h"
-#include "ringbuffer.h"
+#include "ringbuffer.h"                 // for rb_t, rb_put
+#include "stringfunc.h"                 // for fromhex
 #ifdef HAS_USB
-#include "cdc.h"
+#include "cdc.h"                        // for CDC_Task, USB_IsConnected
 #else
 #include "serial.h"
 #endif
-#include "led.h"
-#include "delay.h"
-#include "pcf8833.h"
-#include "ttydata.h"            // callfn
-#include "fht.h"                // fht_hc
-#include "rf_router.h"
-#include "clock.h"
-#include "log.h"
+#include "fht.h"                        // for fht_hc0, fht_hc1
+#include "log.h"                        // for LOG_NETTOLINELEN, Log
+#include "pcf8833.h"                    // for TITLE_LINECHARS, etc
+#include "rf_router.h"                  // for RFR_Buffer, etc
+#include "ttydata.h"                    // for TTY_Tx_Buffer, callfn
 
 #ifdef HAS_PRIVATE_CHANNEL
-#include "private_channel.h"
+#include "private_channel.h"            // for private_putchar
 #endif
 #ifdef HAS_ETHERNET
-#include "tcplink.h"
+#include "tcplink.h"                    // for tcp_putchar
+#endif
+#ifdef HAS_W5100
+#include "ethernet.h"                   // for NET_Tx_Buffer
 #endif
 #ifdef HAS_DOGM
-#include "dogm16x.h"
+#include "dogm16x.h"                    // for dogm_putchar
 #endif
 uint8_t log_enabled = 0;
 
@@ -82,6 +86,11 @@ display_char(char data)
 #ifdef HAS_ETHERNET
   if(display_channel & DISPLAY_TCP)
     tcp_putchar( data );
+#endif
+
+#ifdef HAS_W5100
+  if(display_channel & DISPLAY_TCP)
+    rb_put(&NET_Tx_Buffer, data);
 #endif
 
 #ifdef HAS_PRIVATE_CHANNEL

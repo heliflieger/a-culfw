@@ -1,4 +1,6 @@
 MCU = atmega328p
+FLASH_SIZE = 32768
+BOOTLOADER_SIZE = 2048
 F_CPU = 8000000
 FORMAT = ihex
 OBJDIR = .
@@ -37,7 +39,8 @@ SRC = nanoCUL.c                                            \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
 		../../clib/somfy_rts.c                               \
-		../../clib/fastrf.c                                  \
+		../../clib/fastrf.c                               \
+		../../clib/rf_zwave.c                                \
 		../../clib/intertechno.c                             \
 		../../clib/kopp-fc.c                                 \
 		../../clib/memory.c                                  \
@@ -72,13 +75,13 @@ CFLAGS += -finline-limit=20
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
-CFLAGS  = -D$(TARGET)
-#CFLAGS += -Wunreachable-code
+CFLAGS += -D$(TARGET)
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 CFLAGS += -mcall-prologues
 CFLAGS += -DF_CPU=$(F_CPU)UL
+#CFLAGS += -Wunreachable-code
 
 
 CPPFLAGS = -g$(DEBUG)
@@ -90,7 +93,7 @@ CPPFLAGS += -fpack-struct
 CPPFLAGS += -fshort-enums
 CPPFLAGS += -fno-exceptions
 CPPFLAGS += -Wall
-CFLAGS += -Wundef
+CPPFLAGS += -Wundef
 CPPFLAGS += -Wa,-adhlns=$(<:%.cpp=$(OBJDIR)/%.lst)
 CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 
@@ -212,6 +215,8 @@ end:
 
 HEXSIZE = $(SIZE) $(TARGET).hex
 ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf
+PROGRAM_SIZE = $(shell $(SIZE) --format=avr --mcu=$(MCU) $(TARGET).elf | grep Program | tr -s " " | cut -d " " -f 2 ; echo +$(BOOTLOADER_SIZE))
+PROGRAM_SIZE_PLUS_BL=$(shell echo $(PROGRAM_SIZE) | bc)
 
 sizebefore:
 	@if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_BEFORE); $(ELFSIZE); \
@@ -220,6 +225,8 @@ sizebefore:
 sizeafter:
 	@if test -f $(TARGET).elf; then echo; echo $(MSG_SIZE_AFTER); $(ELFSIZE); \
 	2>/dev/null; echo; fi
+	@echo "PROGRAM_SIZE_PLUS_BL: $(PROGRAM_SIZE_PLUS_BL), FLASH_SIZE: $(FLASH_SIZE) \n"
+	@if test $(PROGRAM_SIZE_PLUS_BL) -gt $(FLASH_SIZE); then echo "FLASH SIZE OVERFLOW ($(PROGRAM_SIZE_PLUS_BL)>$(FLASH_SIZE))"; exit 2; fi; 
 
 gccversion : 
 	@$(CC) --version
@@ -342,6 +349,7 @@ extcoff: $(TARGET).elf
 
 $(OBJDIR)/%.o : %.c
 	@echo $(MSG_COMPILING) $<
+	@echo $(CC) -c $(ALL_CFLAGS) $< -o $@ 
 	@$(CC) -c $(ALL_CFLAGS) $< -o $@ 
 
 

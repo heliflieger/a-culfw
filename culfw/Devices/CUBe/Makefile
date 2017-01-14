@@ -43,7 +43,7 @@ OD = $(ARMPATH)$(TOOLPREFIX)objdump
 SIZE = $(ARMPATH)$(TOOLPREFIX)size
 
 CPUFLAGS = -mcpu=arm7tdmi-s
-OPTFLAGS = -Os
+OPTFLAGS = -Os -fno-isolate-erroneous-paths-dereference
 DEBUGFLAGS = -DTRACE_LEVEL=4 -DDBGU_UNIT_IN
 CFLAGS = -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable -mlong-calls -ffunction-sections -std=c99 -Dflash -D$(OUTPUT) $(DEBUGFLAGS) -g $(GENDEPFLAGS)
 INC = -I. -I../.. -I../../at91lib -I../../at91lib/usb -I../../clib -I../../at91lib/avr -I../../avr-uip/uip -I../../avr-uip -I$(INCLUDEPATH)
@@ -92,14 +92,14 @@ $(eval $(call expand_dir,))
 
 OBJS := $(patsubst %.S,%.o,$(ALLSRCS:%.c=%.o)) $(ALLTHUMBSRCS:.c=.thumb.o)
 
-target:	$(OUTPUT).bin
-	$(SIZE) $(OUTPUT).elf
-
-CUBE:
-	make OUTPUT=CUBE target
-
 CUBE_BL:
 	make OUTPUT=CUBE_BL target
+	
+CUBE:
+	make OUTPUT=CUBE target
+	
+target:	$(OUTPUT).bin
+	$(SIZE) $(OUTPUT).elf
 	
 all:
 	make clean2

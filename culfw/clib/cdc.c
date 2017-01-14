@@ -1,9 +1,11 @@
+#include "cdc.h"
+
 #include "led.h"
 #include "ringbuffer.h"
-#include "cdc.h"
 
 #ifdef ARM
 #include "display.h"
+
 static unsigned char usbBufferOut[DATABUFFERSIZEOUT];
 #else
 /* Globals: */

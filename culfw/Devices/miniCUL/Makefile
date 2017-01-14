@@ -46,6 +46,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/mbus/3outof6.c                            \
 		../../clib/mbus/mbus_packet.c                        \
 		../../clib/mbus/crc.c                                \
+		../../clib/mbus/manchester.c                         \
 
 CFLAGS  = -D$(TARGET)
 CFLAGS += -D$(FREQUENCE)
@@ -103,8 +104,8 @@ OBJ = $(SRC:%.c=$(OBJDIR)/%.o)
 
 
 all: 
-	make TARGET=miniCUL FREQUENCE=_433MHZ MCU=atmega328p mostly_clean build size
-	make TARGET=miniCUL FREQUENCE=_868MHZ MCU=atmega328p mostly_clean build size
+	make TARGET=miniCUL FREQUENCE=_433MHZ MCU=atmega328p FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
+	make TARGET=miniCUL FREQUENCE=_868MHZ MCU=atmega328p FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
 
 build: elf hex eep lss sym
 
@@ -116,10 +117,14 @@ sym: $(TARGET)$(FREQUENCE).sym
 
 
 ELFSIZE = $(SIZE) --format=avr --mcu=$(MCU) $(TARGET)$(FREQUENCE).elf
+PROGRAM_SIZE = $(shell $(SIZE) --format=avr --mcu=$(MCU) $(TARGET)$(FREQUENCE).elf | grep Program | tr -s " " | cut -d " " -f 2 ; echo +$(BOOTLOADER_SIZE))
+PROGRAM_SIZE_PLUS_BL=$(shell echo $(PROGRAM_SIZE) | bc)
 
 size:
 	@if test -f $(TARGET)$(FREQUENCE).elf; then echo $(MSG_SIZE); $(ELFSIZE); \
 	2>/dev/null; echo; fi
+	@echo "PROGRAM_SIZE_PLUS_BL: $(PROGRAM_SIZE_PLUS_BL), FLASH_SIZE: $(FLASH_SIZE) \n"
+	@if test $(PROGRAM_SIZE_PLUS_BL) -gt $(FLASH_SIZE); then echo "FLASH SIZE OVERFLOW ($(PROGRAM_SIZE_PLUS_BL)>$(FLASH_SIZE))"; exit 2; fi;
 
 
 program: $(TARGET).hex

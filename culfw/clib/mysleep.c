@@ -1,18 +1,19 @@
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <avr/wdt.h>
+#include <Drivers/USB/USB.h>     // USB Functionality
 #include <avr/eeprom.h>
+#include <avr/interrupt.h>
+#include <avr/io.h>
 #include <avr/sleep.h>
-#include "mysleep.h"
+#include <avr/wdt.h>
+
+#include "battery.h"
+#include "cc1100.h"
 #include "display.h"
-#include "pcf8833.h"
+#include "fncollection.h"
 #include "joy.h"
 #include "led.h"
-#include "battery.h"
+#include "mysleep.h"
+#include "pcf8833.h"
 #include "rf_receive.h"
-#include "cc1100.h"
-#include "fncollection.h"
-#include <Drivers/USB/USB.h>     // USB Functionality
 
 
 uint8_t sleep_time;

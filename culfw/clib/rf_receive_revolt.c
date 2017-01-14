@@ -19,8 +19,15 @@
  */
 
 #include "rf_receive_revolt.h"
-#include "display.h"
 
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for uint8_t
+
+#include "fband.h"                      // for IS433MHZ
+#ifdef ARM
+#include <hal_gpio.h>
+#include <hal_timer.h>
+#endif
 #ifdef HAS_REVOLT
 /*
  * Description in header
@@ -52,7 +59,7 @@ void analyze_revolt(bucket_t *b, uint8_t *datatype, uint8_t *obuf, uint8_t *oby)
  */
 bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime) 
 {
-  if (IS433MHZ && (*hightime > TSCALE(9000)) && (*hightime < TSCALE(12000)) &&
+  if (IS433MHZ && (*hightime > TSCALE(8900)) && (*hightime < TSCALE(12000)) &&
       (*lowtime  > TSCALE(150))   && (*lowtime  < TSCALE(540))) {
     // Revolt
     b->zero.hightime = 9; // = 144
@@ -64,17 +71,15 @@ bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     b->byteidx = 0;
     b->bitidx  = 7;
     b->data[0] = 0;
-    #ifdef ARM
-        AT91C_BASE_TC1->TC_RC = SILENCE/8*3;
+    #ifdef SAM7
+        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE/8*3);
+    #elif defined STM32
+        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE);
     #else
         OCR1A = SILENCE;
     #endif
     #ifdef ARM
-        AT91C_BASE_TC1->TC_SR;
-        #ifdef LONG_PULSE
-            AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
-        #endif
-        AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+        hal_enable_CC_timer_int(TRUE);
     #else
         TIMSK1 = _BV(OCIE1A);
     #endif

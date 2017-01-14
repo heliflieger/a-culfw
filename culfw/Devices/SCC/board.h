@@ -1,6 +1,8 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
+
 #define HAS_FHT_8v                      // PROGMEM:  434b, RAM: 19b
 #define HAS_FHT_80b                     // PROGMEM: 1158b, RAM:  5b
 #define HAS_FHT_TF
@@ -58,6 +60,7 @@
 #define HAS_TCM97001
 #define HAS_SOMFY_RTS
 #define HAS_MBUS
+#define HAS_ZWAVE
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW

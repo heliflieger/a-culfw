@@ -183,7 +183,6 @@ main(void)
   TCCR1A = 0;
   TCCR1B = _BV(CS11) | _BV(WGM12);         // Timer1: 1us = 8MHz/8
 
-
   MCUSR &= ~(1 << WDRF);                   // Enable the watchdog
   wdt_enable(WDTO_2S);
 

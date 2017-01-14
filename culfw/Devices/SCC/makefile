@@ -28,6 +28,7 @@ SRC = $(TARGET).c                                                    \
 		../../clib/rf_receive_hms.c                          \
 		../../clib/helper.c                                  \
 		../../clib/rf_router.c                               \
+		../../clib/rf_zwave.c                                \
 		../../clib/rf_mbus.c                                 \
 		../../clib/intertechno.c                             \
 		../../clib/somfy_rts.c	                             \

@@ -1,6 +1,8 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
+
 #define BUSWARE_COC
 
 #define SPI_PORT		PORTB

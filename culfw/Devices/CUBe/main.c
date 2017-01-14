@@ -9,6 +9,7 @@
 
 #include "board.h"
 #include "pio/pio.h"
+#include "hal_gpio.h"
 
 #include <dbgu/dbgu.h>
 #include <stdio.h>
@@ -229,6 +230,9 @@ const t_fntab fntab[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
+#ifdef HAS_HOERMANN_SEND
+  { 'h', hm_send },
+#endif
 #ifdef HAS_MEMFN
   { 'm', getfreemem },
 #endif
@@ -289,6 +293,8 @@ int main(void)
 
   // Wait for end hardware reset
   while (!RSTC_GetNrstLevel());
+
+  HAL_GPIO_Init();
 
   TRACE_INFO("init Flash\n\r");
   flash_init();

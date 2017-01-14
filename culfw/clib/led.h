@@ -4,50 +4,40 @@
 #define HI8(x)  ((uint8_t)((x) >> 8))
 #define LO8(x)  ((uint8_t)(x))
 
+#ifndef SET_BIT
 #define SET_BIT(PORT, BITNUM) ((PORT) |= (1<<(BITNUM)))
+#endif
+#ifndef CLEAR_BIT
 #define CLEAR_BIT(PORT, BITNUM) ((PORT) &= ~(1<<(BITNUM)))
+#endif
 #define TOGGLE_BIT(PORT, BITNUM) ((PORT) ^= (1<<(BITNUM)))
 
 #include "board.h"
 
 #ifdef ARM
 
-#include <pio/pio.h>
+#include <hal_gpio.h>
 
-static const Pin pinsLeds[] = {PINS_LEDS};
+#define led_init()      HAL_LED_Init()
 
-#define LED_ON()    	PIO_Clear(&pinsLeds[0])
-#define LED_OFF()     	PIO_Set(&pinsLeds[0])
-#define LED_TOGGLE()	{if (PIO_GetOutputDataStatus(&pinsLeds[0])) {PIO_Clear(&pinsLeds[0]);} else {PIO_Set(&pinsLeds[0]);}}
+#define LED_ON()        HAL_LED_Set(0,LED_on)
+#define LED_OFF()       HAL_LED_Set(0,LED_off)
+#define LED_TOGGLE()    HAL_LED_Toggle(0)
 
-#ifdef CUBE
-#define led_init() 		PIO_Configure(&pinsLeds[0], 1);PIO_Configure(&pinsLeds[1], 1);PIO_Configure(&pinsLeds[2], 1)
+#define LED2_ON()       HAL_LED_Set(1,LED_on)
+#define LED2_OFF()      HAL_LED_Set(1,LED_off)
+#define LED2_TOGGLE()   HAL_LED_Toggle(1)
 
-#define LED2_ON()    	PIO_Clear(&pinsLeds[1])
-#define LED2_OFF()     	PIO_Set(&pinsLeds[1])
+#define LED3_ON()       HAL_LED_Set(2,LED_on)
+#define LED3_OFF()      HAL_LED_Set(2,LED_off)
+#define LED3_TOGGLE()   HAL_LED_Toggle(2)
 
-#define LED3_ON()    	PIO_Clear(&pinsLeds[2])
-#define LED3_OFF()     	PIO_Set(&pinsLeds[2])
-
-#define LED2_TOGGLE()	{if (PIO_GetOutputDataStatus(&pinsLeds[1])) {PIO_Clear(&pinsLeds[1]);} else {PIO_Set(&pinsLeds[1]);}}
-#define LED3_TOGGLE()	{if (PIO_GetOutputDataStatus(&pinsLeds[2])) {PIO_Clear(&pinsLeds[2]);} else {PIO_Set(&pinsLeds[2]);}}
-#else
-#define led_init() 		PIO_Configure(&pinsLeds[0], 1)
-
-#define LED2_ON()
-#define LED2_OFF()
-
-#define LED3_ON()
-#define LED3_OFF()
-
-#define LED2_TOGGLE()
-#define LED3_TOGGLE()
-#endif
 
 #else
 
 #ifdef XLED
 #include "xled.h"
+
 #define led_init()   LED_DDR  |= _BV(LED_PIN); xled_pos=0; xled_pattern=0xff00
 #else
 #define led_init()   LED_DDR  |= _BV(LED_PIN)

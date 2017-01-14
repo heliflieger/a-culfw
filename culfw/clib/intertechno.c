@@ -4,32 +4,35 @@
  * License: GPL v2
  */
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <stdio.h>
-#include <util/parity.h>
-#include <string.h>
+#include <avr/interrupt.h>              // for cli, sei
+#include <stdint.h>                     // for int8_t
+#include <string.h>                     // for strlen
+#ifdef ARM
+#include <hal.h>
+#endif
 
-#include "board.h"
+#include <avr/pgmspace.h>               // for __LPM, PROGMEM
+#include "board.h"                      // for HAS_ASKSIN, HAS_MORITZ, etc
+#include <avr/io.h>                     // for _BV
+
+#include "stringfunc.h"                 // for fromdec, fromhex
 
 #ifdef HAS_INTERTECHNO
 
-#include "delay.h"
-#include "rf_send.h"
-#include "rf_receive.h"
-#include "led.h"
-#include "cc1100.h"
-#include "display.h"
-#include "fncollection.h"
-#include "fht.h"
+#include "cc1100.h"                     // for CC1100_CLEAR_OUT, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DC, DNL, DH2, DU
+#include "fncollection.h"               // for EE_CC1100_CFG_SIZE, erb, etc
 #include "intertechno.h"
+#include "led.h"                        // for LED_OFF, LED_ON, SET_BIT
+#include "rf_receive.h"                 // for set_txrestore, tx_report
 
 #ifdef HAS_ASKSIN
-#include "rf_asksin.h"
+#include "rf_asksin.h"                  // for asksin_on, rf_asksin_init
 #endif
 
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
 #endif
 
 static uint8_t intertechno_on = 0;
@@ -109,10 +112,8 @@ it_tunein(void)
 		  int8_t i;
 		  
 #ifdef ARM
-  		AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;	// disable INT - we'll poll...
-  		AT91C_BASE_PIOA->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
-  		AT91C_BASE_PIOA->PIO_OER = _BV(CC1100_CS_PIN);			//Enable output
-  		AT91C_BASE_PIOA->PIO_PER = _BV(CC1100_CS_PIN);			//Enable PIO control
+  		hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  	  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 #else
 		  EIMSK &= ~_BV(CC1100_INT);
   		SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
@@ -177,6 +178,18 @@ send_IT_bit(uint8_t bit)
   	my_delay_us(it_interval);
  	  CC1100_CLEAR_OUT;       // Low
 	  my_delay_us(it_interval * 3);
+// Quad-State
+  } else if (bit == 3) {
+      CC1100_SET_OUT;         // High
+      my_delay_us(it_interval * 3);
+      CC1100_CLEAR_OUT;       // Low
+      my_delay_us(it_interval);
+      
+      CC1100_SET_OUT;         // High
+      my_delay_us(it_interval);
+      CC1100_CLEAR_OUT;       // Low
+      my_delay_us(it_interval * 3);
+// Quad-State
   } else {
   	CC1100_SET_OUT;         // High
   	my_delay_us(it_interval);
@@ -329,7 +342,7 @@ it_send (char *in, uint8_t datatype) {
       mode = 1; // IT V3
       
     }
-		for(i = 0; i < it_repetition; i++)  {
+    for(i = 0; i < it_repetition; i++)  {
       if (datatype == DATATYPE_IT) {
         if (mode == 1) {    
           send_IT_sync_V3();  
@@ -357,8 +370,8 @@ it_send (char *in, uint8_t datatype) {
         startCount = 2;
       } 
 #endif
-		  for(j = startCount; j < sizeOfPackage; j++)  {
-			  if(in[j+1] == '0') {
+      for(j = startCount; j < sizeOfPackage; j++)  {
+	if(in[j+1] == '0') {
           if (datatype == DATATYPE_IT) {
             if (mode == 1) {
 					    send_IT_bit_V3(0);
@@ -370,7 +383,7 @@ it_send (char *in, uint8_t datatype) {
             send_IT_bit_HE(0, datatype);
 #endif
           }
-				} else if (in[j+1] == '1') {
+	} else if (in[j+1] == '1') {
           if (datatype == DATATYPE_IT) {
             if (mode == 1) {
 					    send_IT_bit_V3(1);
@@ -384,14 +397,22 @@ it_send (char *in, uint8_t datatype) {
           }
         } else if (in[j+1] == '2') {
           send_IT_bit_V3(2);
-				} else {
+// Quad
+        } else if (in[j+1] == 'D') {
           if (mode == 1) {
-					  send_IT_bit_V3(3);
-				  } else {
-					  send_IT_bit(2);
-				  }
-			  }
-			}
+	        send_IT_bit_V3(3);
+	  } else {
+	    send_IT_bit(3);
+	  }
+// Quad
+	} else {
+      if (mode == 1) {
+	    send_IT_bit_V3(3);
+	  } else {
+	    send_IT_bit(2);
+	  }
+	}
+      }
       //if (mode == 1) {  
       //  send_IT_sync_V3();
       //}
@@ -443,6 +464,12 @@ it_send (char *in, uint8_t datatype) {
 				DC('1');
 			} else if (in[j+1] == '2') {
 				DC('2');
+                        } else if (in[j+1] == 'D') {
+	  //if (mode == 1) {  
+     		// Not supported
+        //  } else {
+	     DC('D');
+          //}
 			} else {
         if (datatype == DATATYPE_IT) {
           if (mode == 1) {  

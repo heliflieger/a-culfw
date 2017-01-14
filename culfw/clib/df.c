@@ -23,11 +23,12 @@
  * http://www.gnu.org/copyleft/gpl.html
  }}} */
 
-#include <avr/io.h>
-#include "df.h"
-#include "spi.h"
-#include "led.h"
 #include <avr/interrupt.h>
+#include <avr/io.h>
+
+#include "df.h"
+#include "led.h"
+#include "spi.h"
 
 #ifdef DEBUG
 #include "uart.h"

@@ -25,8 +25,9 @@
  *				 
  *	 Pameter String definition (receive): 	krS krE 
  *   "k":		command will be routed to Kopp-fc
- *   "r" 		Command is "receive
- *   "S" or "E"	"S" will start Receive mode, "E" will end receive mode
+ *   "r": 		Command is "receive
+ *   "S" or "E" "S" will start Receive mode, "E" will end receive mode
+ *   "1" or "2": Optional Parameter for debugging only "1" will show each received block, "2" will show any received bytes, incl. zeros....
  *
  *	 some hints:
  *   =========== 
@@ -40,39 +41,43 @@
  *					
  * Date		   Who				Comment																												   
  * ----------  -------------   	-------------------------------------------------------------------------------------------------------------------------------
- * 2015-04-21  Claus M.			first version of Receive mode (used rf_mbus as example) implemented, usage only in terminal, yet
- * 2015-02-01  Claus M.			Changed Line-Endings to Unix style, changed comment above (this routine will be called from FHEM with "k" (little) and no more "K"
+ * 2016-04.04  RaspII			Added Debug Information and additional Watchdog handling (no more watchdog resets reported by Feuerdrache)
+ * 2016-03-29  RaspII           Generate no error messages anymore for Receive Checksum Errors
+ * 2016-02-22  RaspII			Received blocks (HF) are only accepted if blocklength = 7
+ * 2015-04-21  RaspII			first version of Receive mode (used rf_mbus as example) implemented, usage only in terminal, yet
+ * 2015-02-01  RaspII			Changed Line-Endings to Unix style, changed comment above (this routine will be called from FHEM with "k" (little) and no more "K"
  *                              removed useless lines
- * 2014-12-13  Claus M.			set Baudrate to 83 hex (previously 82)
- * 2014-12-13  Claus M.			Added Print Option because else FHEM will provide error messages to logfile
- * 2014-12-06  Claus M.			Added second command "s" for transmitt on data block only (no "Key off" code will be sent)
+ * 2014-12-13  RaspII			set Baudrate to 83 hex (previously 82)
+ * 2014-12-13  RaspII			Added Print Option because else FHEM will provide error messages to logfile
+ * 2014-12-06  RaspII			Added second command "s" for transmitt on data block only (no "Key off" code will be sent)
  *								Tansmitter Code was not sent, added Transmitter Code 2
- * 2014-08-29  Claus M.			Added "Long Key Preasure" (Remote control key pressed for x msec) 
- * 2014-08-08  Claus M.			Now transmitting one block is working with Kopp Free Control protocol, key Code from Input parameter (1 character)
- * 2014-08-01  Claus M.			first Version
+ * 2014-08-29  RaspII			Added "Long Key Preasure" (Remote control key pressed for x msec) 
+ * 2014-08-08  RaspII			Now transmitting one block is working with Kopp Free Control protocol, key Code from Input parameter (1 character)
+ * 2014-08-01  RaspII			first Version
  *
  * 
  * ------------------------------------------------------------------------------------------------------------------------------------------------------------
  */
 
-#include "board.h"
-#ifdef HAS_KOPP_FC
-#include <stdlib.h>				// for strtol
-#include <string.h>
-#include <avr/pgmspace.h>
-#include <avr/interrupt.h>
-#include <avr/io.h>
-#include "fband.h"
-#include <avr/wdt.h>			// for Watchdog Reset
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "clock.h"
-#include "rf_send.h" //credit_10ms
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t, uint16_t, uint32_t
 
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromhex
+#ifdef HAS_KOPP_FC
+#include <avr/pgmspace.h>               // for PSTR, PROGMEM, __LPM
+#include <avr/wdt.h>                    // for wdt_reset
+#include <stdlib.h>                     // for strtol, NULL
+#include <string.h>                     // for strlen, strcpy, strncpy
+
+#include "cc1100.h"                     // for cc1100_sendbyte, etc
+#include "clock.h"                      // for ticks
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DS_P, DH, DH2, DU, DNL, DS
+#include "fband.h"                      // for checkFrequency
+#include "fncollection.h"               // for EE_CC1100_CFG_SIZE, erb, etc
 #include "kopp-fc.h"
-#include "fncollection.h"
 
 void kopp_fc_sendraw(uint8_t* buf, int longPreamble);
 void kopp_fc_sendAck(uint8_t* enc);
@@ -91,6 +96,7 @@ void kopp_fc_handleAutoAck(uint8_t* enc);
 uint8_t kopp_fc_on = 0;
 uint8_t kopp_fc_rx_on = 0;
 uint8_t kopp_fc_tx_on = 0;
+uint8_t kopp_fc_debug_lvl = 0;					// Debug Level for Receive Mode
 
 
 uint8_t blkctr;
@@ -160,13 +166,8 @@ void
 kopp_fc_init(void)
 {
 #ifdef ARM
-
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID; // disable INT - we'll poll...
-
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN);     //Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
-
+  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 	// disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   	// CS as output
@@ -244,6 +245,8 @@ kopp_fc_init(void)
 
 // kopp_fc_init  E N D
 // ======================================================================================================
+
+
 
 
 
@@ -380,6 +383,8 @@ kopp_fc_tx_on = 1;												// Transmitt activated
 if (in[15]=='J') printon[0]='Y'; else printon[0]='N'; 		// Sollen wir Daten ausgeben (Zeitstempel etc)
 
 if(in[1] == 's') SingleBlkOnly=1;								// Command = "s", -> If KeyCode > 0x80 we will send no !! Key Off Code
+
+wdt_reset();													// 2016-04-04: ####RaspII Watchdog reset for Feuerdrache to test issues
 
 LastWatchdog=ticks;												// I guess, Watchdog reset was done shortly before 
 BlockStartTime=ticks;
@@ -575,7 +580,8 @@ if ((SingleBlkOnly==0) && (blkTXcode >= 0x80)) 								// Wenn Command = "t" und
 // ========================
     {
 	kopp_fc_rx_on = 0;
-	ccStrobe( CC1100_SIDLE);										// CC11xx goes idle again	
+	ccStrobe( CC1100_SIDLE);										// CC11xx goes idle again
+	kopp_fc_debug_lvl = 0;	
 //	kopp_fc_init();
 	DS_P(PSTR("krE-ReceiveEnd\r\n"));
     }
@@ -585,7 +591,14 @@ if ((SingleBlkOnly==0) && (blkTXcode >= 0x80)) 								// Wenn Command = "t" und
 
 // Receive Start command
 // ---------------------
+// ## RaspII Here I will add a debug level parameter later on to display all received blocks or even all received bytes
+
 	{
+
+     if(in[3] == '1') kopp_fc_debug_lvl = 1;							// define debuglevel
+	 else if (in[3] =='2') kopp_fc_debug_lvl = 2;
+	 else kopp_fc_debug_lvl = 0;	
+
 	kopp_fc_rx_on = 1;
 	kopp_fc_init();													// Init CC11xx for Kopp Free Control protocol (common init subroutine, later we will call this 
 																	// subroutine only if basic initialization was not done before)
@@ -650,16 +663,30 @@ uint8_t	recckserr= 0;					                    		// default: No checksum Error !
 
  // RX active, awaiting SYNC
 
-// if (bit_is_set(GDO2_PIN,GDO2_BIT)) 
- if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))
+// if (bit_is_set(GDO2_PIN,GDO2_BIT))
+#ifdef ARM
+  if (hal_CC_Pin_Get(0,CC_Pin_In))
+#else
+ if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))					// GDO2=CC100_IN_Port sind so konfirguriert, dass dieser aktiv=high wird
+																	// sobald ein kompletter Kopp Block (15 Bytes) oder mehr als 20Bytes im RX-Fifo sind
+#endif
  {
+
+  wdt_reset();														// 2016-04-04: ####RaspII Watchdog reset for Feuerdrache to test reset issues
+
 																	// errata #1 does not affect us, because we wait until packet is completely received
 //  recbuf[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; 			// read how much data if first byte in Fifo is blklen
   recbuf[0] = cc1100_readReg( CC1100_RXBYTES ) & 0x7f; 			// read how much data in fifo
+  
+  if(kopp_fc_debug_lvl == 2) 										// <Print Bytes received in Fifo Debuglevel = 2>
+  {
+   DS_P(PSTR("Bytes in Fifo: "));
+   DH2(recbuf[0]);
+   DS_P(PSTR("  Received Data: "));
+  }
+  
 
- if (recbuf[0]>=MAX_kopp_fc_MSG)
-     recbuf[0] = MAX_kopp_fc_MSG;
-
+  if (recbuf[0]>=MAX_kopp_fc_MSG) recbuf[0] = MAX_kopp_fc_MSG;		// If more bytes than overal block size (incl. Zeros) ignore remaining fifo content
 
 //  DS_P(PSTR("BlkStart  "));										// For test only
 //  DH2(recbuf[0]);
@@ -675,9 +702,6 @@ uint8_t	recckserr= 0;					                    		// default: No checksum Error !
   for (uint8_t i=0; i<recbuf[0]; i++) 								// Fifo lesen
   {
    recbuf[i+1] = cc1100_sendbyte( 0 );
-   
-   
-   
 
    if (i < 7+1)                                    					// calculate Checksum for  Receive Bytes 0...7 (=recbuf[1...8])
      {																// ------------------------------------------------------------
@@ -687,35 +711,45 @@ uint8_t	recckserr= 0;					                    		// default: No checksum Error !
    if ((i == 8) && (blkcks!=recbuf[i+1]))            				// Compare Checksum in Buffer to calculated Checksum 
      {																// ------------------------------------------------------------
       recckserr=1;					                    			// Checksum Error !
-	  DH2(recbuf[i+1]);
-	  DS_P(PSTR(" Checksum Error\r\n"));							// For test only
      }                                                    			//
    
-//   DH2(recbuf[i+1]);												// print all received bytes
+	 if(kopp_fc_debug_lvl == 2) DH2(recbuf[i+1]);					// <Print any received Bytes if Debuglevel = 2>
 
-  }
-  CC1100_DEASSERT;
-//  DS_P(PSTR("\r\n"));												// For test only
+   }
+   CC1100_DEASSERT;
+
+	if(kopp_fc_debug_lvl == 2) DS_P(PSTR("\r\n"));					// <Print Linefeed if Debuglevel = 2>
 
 
 
-  if ((memcmp(recbuf, lastrecblk, MAX_kopp_fc_NetMSG+1) != 0 ) && (recckserr!=1))			
-	{																// If new Block not equal old block (without zeros at the end) and Checksum is fine -> new command received
-																	// --------------------------------------------------------------------------------------------
+  if (((memcmp(recbuf, lastrecblk, MAX_kopp_fc_NetMSG+1) != 0 ) && (recbuf[1]==7) && (recbuf[0] >= MAX_kopp_fc_NetMSG) && (recckserr!=1) && (kopp_fc_debug_lvl != 2)) || (kopp_fc_debug_lvl == 1))			
+	{																// If (new Block not equal old block (without zeros at the end) and an Blocklength=7 
+																	// and minimum one whole kopp message received and debuglevel <> 2) or debuglevel = 1 
+																	// either Checksum is fine -> new command received; or print any block for debug purpose
+																	// ------------------------------------------------------------------------------------------------------------------------------
 	 DS_P(PSTR("kr"));												// Feed Back to FHEM: Was Kopp Receive + Received Data
      memcpy(lastrecblk, recbuf, MAX_kopp_fc_MSG+1);				// save new command (copy whole block incl. Fifo len information)
      for (uint8_t i=0; i<MAX_kopp_fc_NetMSG; i++)	 				// Read Receive String and ...
 	 {																//
       DH2(recbuf[i+1]);											// print all received bytes
      }
-      DS_P(PSTR("\r\n"));											// For test only
+	  if(kopp_fc_debug_lvl == 1) 									// 
+	  {
+       if (recckserr == 1)											// <Print Checksum Error information if Debuglevel = 1>
+	   {
+	   DS_P(PSTR(" Checksum Error, Calculated Cks: "));			// 
+	   DH2(blkcks);
+	   }
+	  }
+
+      DS_P(PSTR("\r\n"));											// 
 
     }
 
  } 
 }
 
-// ####Claus  Hier gehts weiter. Synthesizer Calibration sollte im Empfangs Mode ab und an gemacht werden 
+// ####RaspII  Hier gehts weiter. Synthesizer Calibration sollte im Empfangs Mode ab und an gemacht werden 
 // noch messen wie schnell die _task hintereinander aufgerufen wird !!!!
  
 

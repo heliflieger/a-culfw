@@ -3,132 +3,131 @@
    Inpired by the MyUSB USBtoSerial demo, Copyright (C) Dean Camera, 2008.
 */
 
-#include <avr/boot.h>
-#include <avr/power.h>
-#include <avr/eeprom.h>
-#include <avr/interrupt.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-#include <avr/wdt.h>
+#include <Drivers/USB/HighLevel/../LowLevel/LowLevel.h>  // for USB_Init
+#include <Drivers/USB/HighLevel/USBTask.h>  // for USB_USBTask
+#include <avr/interrupt.h>              // for cli
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <avr/pgmspace.h>               // for PROGMEM
+#include <avr/wdt.h>                    // for WDTO_2S, wdt_enable
 
-#include <string.h>
-
-#include <Drivers/USB/USB.h>     // USB Functionality
-
-#include "fband.h"
-#include "spi.h"
-#include "cc1100.h"
-#include "cdc.h"
-#include "clock.h"
-#include "delay.h"
-#include "display.h"
-#include "fncollection.h"
-#include "led.h"		// ledfunc
-#include "ringbuffer.h"
-#include "rf_receive.h"
-#include "rf_send.h"		// fs20send
-#include "ttydata.h"
-#include "fht.h"		// fhtsend
-#include "fastrf.h"		// fastrf_func
-#include "rf_router.h"		// rf_router_func
+#include "board.h"                      // for HAS_ASKSIN, HAS_KOPP_FC, etc
+#include "cc1100.h"                     // for ccreg, ccsetpa
+#include "cdc.h"                        // for CDC_Task
+#include "clock.h"                      // for Minute_Task, gettime
+#include "display.h"                    // for DISPLAY_RFROUTER, etc
+#include "fastrf.h"                     // for FastRF_Task, fastrf_func
+#include "fband.h"                      // for checkFrequency
+#include "fht.h"                        // for fht_init, fhtsend
+#include "fncollection.h"               // for EE_REQBL, etc
+#include "led.h"                        // for LED_OFF, led_init
+#include "rf_receive.h"                 // for RfAnalyze_Task, etc
+#include "rf_router.h"                  // for rf_router_func, etc
+#include "rf_send.h"                    // for em_send, fs20send, hm_send, etc
+#include "spi.h"                        // for spi_init
+#include "ttydata.h"                    // for analyze_ttydata, etc
 
 #ifdef HAS_MEMFN
-#include "memory.h"		// getfreemem
+#include "memory.h"                     // for getfreemem
 #endif
 #ifdef HAS_ASKSIN
-#include "rf_asksin.h"
+#include "rf_asksin.h"                  // for asksin_func, rf_asksin_task
 #endif
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for moritz_func, rf_moritz_task
 #endif
 #ifdef HAS_RWE
-#include "rf_rwe.h"
+#include "rf_rwe.h"                     // for rf_rwe_task, rwe_func
 #endif
 #ifdef HAS_RFNATIVE
-#include "rf_native.h"
+#include "rf_native.h"                  // for native_func, native_task
 #endif
 #ifdef HAS_INTERTECHNO
-#include "intertechno.h"
+#include "intertechno.h"                // for it_func
 #endif
 #ifdef HAS_SOMFY_RTS
-#include "somfy_rts.h"
+#include "somfy_rts.h"                  // for somfy_rts_func
 #endif
 #ifdef HAS_MBUS
-#include "rf_mbus.h"
+#include "rf_mbus.h"                    // for rf_mbus_func, rf_mbus_task
 #endif
 #ifdef HAS_KOPP_FC
-#include "kopp-fc.h"
+#include "kopp-fc.h"                    // for kopp_fc_func, kopp_fc_task
 #endif
 #ifdef HAS_BELFOX
-#include "belfox.h"
+#include "belfox.h"                     // for send_belfox
 #endif
 #ifdef HAS_ZWAVE
-#include "rf_zwave.h"
+#include "rf_zwave.h"                   // for rf_zwave_task, zwave_func
 #endif
 
 const PROGMEM t_fntab fntab[] = {
 
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
   { 'B', prepare_boot },
 #ifdef HAS_MBUS
   { 'b', rf_mbus_func },
 #endif
   { 'C', ccreg },
-  { 'F', fs20send },
-#ifdef HAS_INTERTECHNO
-  { 'i', it_func },
-#endif
-#ifdef HAS_ASKSIN
-  { 'A', asksin_func },
-#endif
-#ifdef HAS_MORITZ
-  { 'Z', moritz_func },
-#endif
-#ifdef HAS_RFNATIVE
-  { 'N', native_func },
-#endif
 #ifdef HAS_RWE
   { 'E', rwe_func },
 #endif
-#ifdef HAS_KOPP_FC
-  { 'k', kopp_fc_func },
-#endif
-#ifdef HAS_RAWSEND
-  { 'G', rawsend },
-  { 'M', em_send },
-  { 'K', ks_send },
-#endif
-#ifdef HAS_UNIROLL
-  { 'U', ur_send },
-#endif
-#ifdef HAS_SOMFY_RTS
-  { 'Y', somfy_rts_func },
-#endif
-  { 'R', read_eeprom },
-  { 'T', fhtsend },
-  { 'V', version },
-  { 'W', write_eeprom },
-  { 'X', set_txreport },
-
   { 'e', eeprom_factory_reset },
+  { 'F', fs20send },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
-#ifdef HAS_MEMFN
-  { 'm', getfreemem },
+#ifdef HAS_RAWSEND
+  { 'G', rawsend },
+#endif
+#ifdef HAS_HOERMANN_SEND
+  { 'h', hm_send },
+#endif
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
+#ifdef HAS_RAWSEND
+  { 'K', ks_send },
+#endif
+#ifdef HAS_KOPP_FC
+  { 'k', kopp_fc_func },
 #endif
 #ifdef HAS_BELFOX
   { 'L', send_belfox },
 #endif
   { 'l', ledfunc },
+#ifdef HAS_RAWSEND
+  { 'M', em_send },
+#endif
+#ifdef HAS_MEMFN
+  { 'm', getfreemem },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+  { 'R', read_eeprom },
+  { 'T', fhtsend },
   { 't', gettime },
+#ifdef HAS_UNIROLL
+  { 'U', ur_send },
+#endif
 #ifdef HAS_RF_ROUTER
   { 'u', rf_router_func },
 #endif
+  { 'V', version },
+  { 'W', write_eeprom },
+  { 'X', set_txreport },
   { 'x', ccsetpa },
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
-
   { 0, 0 },
 };
 

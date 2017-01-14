@@ -1,48 +1,42 @@
-#include "board.h"
-#ifdef HAS_ASKSIN
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "cc1101_pllcheck.h"
-#include "clock.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t, uint32_t
 
+#include "board.h"                      // for HAS_ASKSIN_FUP, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromhex
+#ifdef HAS_ASKSIN
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM, etc
+
+#include "cc1100.h"                     // for ccStrobe, cc1100_readReg, etc
+#include "cc1101_pllcheck.h"
+#include "clock.h"                      // for get_timestamp
+#include "delay.h"                      // for my_delay_ms, my_delay_us
+#include "display.h"                    // for DC, DH2, DNL, DS_P
 #include "rf_asksin.h"
+#include "rf_receive.h"                 // for set_txrestore, REP_BINTIME, etc
 
 #ifdef CC1100_ASKSIN
 #include "fncollection.h"
 
 #define CC_ID				CC1100_ASKSIN
 
-extern void cc1101_RX_check_PLL_wait_task2( transceiver_t* device);
+extern void cc1101_RX_check_PLL_wait_task2( uint8_t cc_num);
 
 #undef CC1100_ASSERT
-#define CC1100_ASSERT 		(CCtransceiver[CC_ID].CS_base->PIO_CODR = (1<<CCtransceiver[CC_ID].CS_pin))
 #undef CC1100_DEASSERT
-#define CC1100_DEASSERT 	(CCtransceiver[CC_ID].CS_base->PIO_SODR = (1<<CCtransceiver[CC_ID].CS_pin))
-#undef CC1100_IN_PORT
-#define CC1100_IN_PORT 		(CCtransceiver[CC_ID].CS_base->PIO_PDSR)
-#undef CC1100_IN_PIN
-#define CC1100_IN_PIN 		CCtransceiver[CC_ID].IN_pin
-#undef CC1100_CS_BASE
-#define CC1100_CS_BASE 		CCtransceiver[CC_ID].CS_base
-#undef CC1100_CS_PIN
-#define CC1100_CS_PIN 		CCtransceiver[CC_ID].CS_pin
-
-
-#define CC1100_READREG(x)				cc1100_readReg2(x,&CCtransceiver[CC_ID])
-#define CC1100_WRITEREG(x,y) 			cc1100_writeReg2(x,y,&CCtransceiver[CC_ID])
-#define CCSTROBE(x) 					ccStrobe2(x,&CCtransceiver[CC_ID])
-#define CC1101_RX_CHECK_PLL_WAIT_TASK()	cc1101_RX_check_PLL_wait_task2(&CCtransceiver[CC_ID])
+#define CC1100_DEASSERT                 hal_CC_Pin_Set(CC_ID,CC_Pin_CS,GPIO_PIN_SET)
+#define CC1100_ASSERT                   hal_CC_Pin_Set(CC_ID,CC_Pin_CS,GPIO_PIN_RESET)
+#define CC1100_READREG(x)               cc1100_readReg2(x,CC_ID)
+#define CC1100_WRITEREG(x,y)            cc1100_writeReg2(x,y,CC_ID)
+#define CCSTROBE(x)                     ccStrobe2(x,CC_ID)
+#define CC1101_RX_CHECK_PLL_WAIT_TASK() cc1101_RX_check_PLL_wait_task2(CC_ID)
 
 #else
-
-#define CC1100_READREG					cc1100_readReg
-#define CC1100_WRITEREG 				cc1100_writeReg
-#define CCSTROBE						ccStrobe
-#define CC1101_RX_CHECK_PLL_WAIT_TASK	cc1101_RX_check_PLL_wait_task
+#define CC_ID                           0
+#define CC1100_READREG                  cc1100_readReg
+#define CC1100_WRITEREG                 cc1100_writeReg
+#define CCSTROBE                        ccStrobe
+#define CC1101_RX_CHECK_PLL_WAIT_TASK   cc1101_RX_check_PLL_wait_task
 #endif
 
 uint8_t asksin_on = 0;
@@ -100,14 +94,8 @@ rf_asksin_init(void)
 {
 
 #ifdef ARM
-#ifndef CC_ID
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID;	// disable INT - we'll poll...
-#endif
-
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);			//Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);			//Enable PIO control
-
+  hal_CC_GDO_init(CC_ID,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(CC_ID,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -123,7 +111,7 @@ rf_asksin_init(void)
   CCSTROBE( CC1100_SRES );                   // Send SRES command
   my_delay_us(100);
 
-#ifdef CC_ID
+#if ((CC_ID != 0))
   CC1100_ASSERT;
   uint8_t *cfg = EE_CC1100_CFG;
   for(uint8_t i = 0; i < EE_CC1100_CFG_SIZE; i++) {
@@ -185,7 +173,11 @@ rf_asksin_task(void)
     return;
 
   // see if a CRC OK pkt has been arrived
+#ifdef ARM
+  if (hal_CC_Pin_Get(CC_ID,CC_Pin_In)) {
+#else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
+#endif
     msg[0] = CC1100_READREG( CC1100_RXFIFO ) & 0x7f; // read len
 
     if (msg[0] >= MAX_ASKSIN_MSG) {

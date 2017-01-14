@@ -4,22 +4,27 @@
  * License: GPL v2
  */
 
-#include "board.h"
-#ifdef HAS_MBUS
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
+#include <avr/io.h>                     // for bit_is_set, _BV
+#include <stdint.h>                     // for uint8_t
 
+#include "board.h"                      // for MBUS_NO_TX, CC1100_CS_DDR, etc
+#include "led.h"                        // for CLEAR_BIT, SET_BIT
+#ifdef HAS_MBUS
+#include <avr/pgmspace.h>               // for PSTR
+#include <string.h>                     // for NULL, memset
+
+#include "cc1100.h"                     // for ccStrobe, cc1100_sendbyte, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DS_P, DH2, DNL, DC
+#include "mbus/3outof6.h"               // for DECODING_3OUTOF6_OK
+#include "mbus/manchester.h"            // for MAN_DECODING_OK
+#include "mbus/mbus_defs.h"             // for uint8, FALSE, TRUE
+#include "mbus/mbus_packet.h"           // for WMBUS_SMODE, WMBUS_TMODE, etc
+#include "mbus/smode_rf_settings.h"     // for sCFG
+#include "mbus/tmode_rf_settings.h"     // for tCFG
 #include "rf_mbus.h"
-#include "mbus/mbus_defs.h"
-#include "mbus/smode_rf_settings.h"
-#include "mbus/tmode_rf_settings.h"
-#include "mbus/mbus_packet.h"
-#include "mbus/manchester.h"
-#include "mbus/3outof6.h"
+#include "rf_receive.h"                 // for REP_RSSI
+#include "stringfunc.h"                 // for fromhex
 
 // Buffers
 uint8 MBpacket[291];
@@ -116,16 +121,8 @@ static void rf_mbus_init(uint8_t mmode, uint8_t rmode) {
   radio_mode = RADIO_MODE_NONE;
 
 #ifdef ARM
-  CC1100_IN_BASE->PIO_ODR = _BV(CC1100_IN_PIN);     //Enable input
-  CC1100_OUT_BASE->PIO_ODR = _BV(CC1100_OUT_PIN);   //Enable input
-
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID; // disable INT - we'll poll...
-
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN);   //Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
-
-
+  hal_CC_GDO_init(0,INIT_MODE_IN_CS_IN);
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 
 #else
   CLEAR_BIT( GDO0_DDR, GDO0_BIT );
@@ -227,14 +224,22 @@ void rf_mbus_task(void) {
 
      // RX active, awaiting SYNC
     case 1:
+#ifdef ARM
+      if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
+#else
       if (bit_is_set(GDO2_PIN,GDO2_BIT)) {
+#endif
         RXinfo.state = 2;
       }
       break;
 
     // awaiting pkt len to read
     case 2:
+#ifdef ARM
+      if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+#else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
+#endif
         // Read the 3 first bytes
         halRfReadFifo(RXinfo.pByteIndex, 3, NULL, NULL);
 
@@ -295,7 +300,11 @@ void rf_mbus_task(void) {
 
     // awaiting more data to be read
     case 3:
+#ifdef ARM
+      if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+#else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
+#endif
         // - Length mode -
         // Set fixed packet length mode is less than MAX_FIXED_LENGTH bytes
         if (((RXinfo.bytesLeft) < (MAX_FIXED_LENGTH )) && (RXinfo.format == INFINITE)) {
@@ -315,7 +324,11 @@ void rf_mbus_task(void) {
   }
 
   // END OF PAKET
+#ifdef ARM
+  if (!hal_CC_Pin_Get(0,CC_Pin_Out) && RXinfo.state>1) {
+#else
   if (!bit_is_set(GDO2_PIN,GDO2_BIT) && RXinfo.state>1) {
+#endif
     uint8_t rssi = 0;
     uint8_t lqi = 0;
     halRfReadFifo(RXinfo.pByteIndex, (uint8)RXinfo.bytesLeft, &rssi, &lqi);
@@ -439,7 +452,11 @@ uint16 txSendPacket(uint8* pPacket, uint8* pBytes, uint8 mode) {
   // Wait for available space in FIFO
   while (!TXinfo.complete) {
 
+#ifdef ARM
+    if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+#else
     if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
+#endif
       // Write data fragment to TX FIFO
       bytesToWrite = MIN(TX_AVAILABLE_FIFO, TXinfo.bytesLeft);
       halRfWriteFifo(TXinfo.pByteIndex, bytesToWrite);

@@ -1,10 +1,11 @@
-#include "board.h"
-#include "joy.h"
-#include "delay.h"
-#include "clock.h"
-#include "display.h"
-#include "pcf8833.h"
 #include <avr/interrupt.h>
+
+#include "board.h"
+#include "clock.h"
+#include "delay.h"
+#include "display.h"
+#include "joy.h"
+#include "pcf8833.h"
 
 void (*joyfunc)(uint8_t) = 0;
 uint16_t joy_ltick, joy_last_key, joy_repeat;

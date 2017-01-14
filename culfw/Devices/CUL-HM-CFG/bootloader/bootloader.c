@@ -9,6 +9,7 @@
 
 #include "board.h"
 #include <pio/pio.h>
+#include "hal_gpio.h"
 
 #include <dbgu/dbgu.h>
 #include <stdio.h>
@@ -423,14 +424,16 @@ int main(void)
   puts("\n\rCUBELOADER gestartet\n\r");
   TRACE_INFO("-- Compiled: %s %s --\n\r", __DATE__, __TIME__);
 
-    //Configure Reset Controller
-    AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
+  //Configure Reset Controller
+  AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
 
-    ConfigurePit();
+  HAL_GPIO_Init();
 
-    FLASHD_Initialize(BOARD_MCK);
+  ConfigurePit();
 
-    rb_reset(&TTY_Rx_Buffer);
+  FLASHD_Initialize(BOARD_MCK);
+
+  rb_reset(&TTY_Rx_Buffer);
   rb_reset(&TTY_Tx_Buffer);
 
   TRACE_INFO("-- init USB\n\r");

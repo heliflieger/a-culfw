@@ -1,14 +1,23 @@
-#include "board.h"
-#ifdef HAS_ZWAVE
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "delay.h"
-#include "display.h"
-#include "clock.h"
-#include "rf_zwave.h"
-#include "cc1100.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t, uint16_t, uint32_t
 
-#define MAX_ZWAVE_MSG 64
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for LED_OFF, LED_ON, SET_BIT
+#include "stringfunc.h"                 // for fromhex
+#ifdef HAS_ZWAVE
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM
+
+#include "cc1100.h"                     // for cc1100_sendbyte, etc
+#include "clock.h"                      // for ticks
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DC, DH2, DNL
+#include "rf_zwave.h"
+
+#ifdef CUL_V4
+#define MAX_ZWAVE_MSG 64        // 1024k SRAM is not enough: no SEC for CUL_V4
+#else
+#define MAX_ZWAVE_MSG (8+158+2) // 158 == aMacMaxMSDUSizeR3 (G.9959)
+#endif
 
 void zwave_doSend(uint8_t *msg, uint8_t hblen);
 
@@ -148,7 +157,7 @@ zccRX(void)
 {
   ccRX();
 #ifdef ARM
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID; // disable INT - we'll poll...
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
 #endif
@@ -160,9 +169,7 @@ rf_zwave_init(void)
 {
 
 #ifdef ARM
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN);     //Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
+	hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
 #else
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );
 #endif
@@ -245,7 +252,11 @@ rf_zwave_task(void)
   if(zwave_ackState && ticks > zwave_sStamp)
     return zwave_doSend(zwave_sMsg, zwave_sLen);
 
+  #ifdef ARM
+  if (!hal_CC_Pin_Get(0,CC_Pin_In))
+#else
   if(!bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))
+#endif
     return;
 
   LED_ON();
@@ -316,8 +327,9 @@ rf_zwave_task(void)
   if(zwave_on=='r' && isOk && (msg[5]&3) == 3 && zwave_ackState) // got ACK
     zwave_ackState = 0;
 
-  if(zwave_on=='r' && isOk && (msg[5]&0x40)) { // need to ACK
-    my_delay_ms(10); // unsure
+  if(zwave_on=='r' && isOk && (msg[5]&0x40) &&  // ackReq
+     ((msg[5]&0x80) == 0)) {                    // not routed
+    my_delay_ms(10); // Tested with 1,5,10,15
 
     msg[8] = msg[4]; // src -> target
     msg[4] = zwave_hcid[4]; // src == ctrlId
