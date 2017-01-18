@@ -220,7 +220,7 @@ void rf_mbus_task(void) {
      // RX active, awaiting SYNC
     case 1:
 #ifdef ARM
-      if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
+      if (hal_CC_Pin_Get(0,CC_Pin_In)) {
 #else
       if (bit_is_set(GDO2_PIN,GDO2_BIT)) {
 #endif
@@ -231,7 +231,7 @@ void rf_mbus_task(void) {
     // awaiting pkt len to read
     case 2:
 #ifdef ARM
-      if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+      if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
 #else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
 #endif
@@ -296,7 +296,7 @@ void rf_mbus_task(void) {
     // awaiting more data to be read
     case 3:
 #ifdef ARM
-      if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+      if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
 #else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
 #endif
@@ -320,7 +320,7 @@ void rf_mbus_task(void) {
 
   // END OF PAKET
 #ifdef ARM
-  if (!hal_CC_Pin_Get(0,CC_Pin_Out) && RXinfo.state>1) {
+  if (!hal_CC_Pin_Get(0,CC_Pin_In) && RXinfo.state>1) {
 #else
   if (!bit_is_set(GDO2_PIN,GDO2_BIT) && RXinfo.state>1) {
 #endif
@@ -448,7 +448,7 @@ uint16 txSendPacket(uint8* pPacket, uint8* pBytes, uint8 mode) {
   while (!TXinfo.complete) {
 
 #ifdef ARM
-    if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+    if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
 #else
     if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
 #endif
