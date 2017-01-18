@@ -13,7 +13,7 @@
 #include "rf_maico.h"
 #include "rf_receive.h"
 #include "rf_send.h" //credit_10ms
-
+#include "stringfunc.h"                 // for fromhex
 
 #ifdef CC1100_MAICO
 #include "fncollection.h"

@@ -12,6 +12,10 @@
 #include "rf_moritz.h"                  // for moritz_on
 #endif
 
+#ifdef ARM
+#include "spi.h"
+#endif
+
 uint8_t cc_on;
 
 // NOTE: FS20 devices can receive/decode signals sent with PA ramping,
