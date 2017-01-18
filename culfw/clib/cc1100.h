@@ -7,8 +7,10 @@
 #ifndef CC1100_H
 #define CC1100_H
 
-#include <avr/io.h>
-#include "led.h"
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for uint8_t
+
+#include "led.h"                        // for SET_BIT, CLEAR_BIT
 
 #ifdef ARM
 
@@ -183,7 +185,7 @@ extern uint8_t cc_on;
 #define MARCSTATE_RXTX_SWITCH      0x15
 #define MARCSTATE_TXFIFO_UNDERFLOW 0x16
 
-#include "board.h"
+#include "board.h"                      // for CC1100_CS_PIN, etc
 
 #ifdef ARM
 #define CC1100_DEASSERT  	hal_CC_Pin_Set(0,CC_Pin_CS,GPIO_PIN_SET)

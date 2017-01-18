@@ -1,11 +1,13 @@
 #ifndef _RF_MBUS_H
 #define _RF_MBUS_H
 
-#include "board.h"
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for CC1100_IN_PIN, etc
 
 #ifdef HAS_MBUS
 
-#include "mbus/mbus_defs.h"
+#include "mbus/mbus_defs.h"             // for uint8, uint16
 
 void rf_mbus_task(void);
 void rf_mbus_func(char *in);

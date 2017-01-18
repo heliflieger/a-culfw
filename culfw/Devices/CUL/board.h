@@ -49,16 +49,20 @@
 #    define HAS_TCM97001                  // PROGMEM:  264
 #    define HAS_IT
 #    define HAS_HOMEEASY
-#    define HAS_MANCHESTER
+#    if defined(CUL_V3)
+#      define HAS_MANCHESTER
+#      define HAS_REVOLT
+#    endif
 #    define HAS_BELFOX                    // PROGMEM:  214
-#    define HAS_REVOLT
+
 #  endif
 
 #if defined(_868MHZ)
 #    define HAS_HMS
-#    define HAS_ESA                       // PROGMEM:  286
+#    if defined(CUL_V3)
+#      define HAS_ESA                     // PROGMEM:  286
+#  endif
 #    define HAS_MORITZ                    // PROGMEM: 1696
-//#    define HAS_HOERMANN
 #endif
 
 

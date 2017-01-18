@@ -4,22 +4,27 @@
  * License: GPL v2
  */
 
-#include "board.h"
-#ifdef HAS_MBUS
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
+#include <avr/io.h>                     // for bit_is_set, _BV
+#include <stdint.h>                     // for uint8_t
 
+#include "board.h"                      // for MBUS_NO_TX, CC1100_CS_DDR, etc
+#include "led.h"                        // for CLEAR_BIT, SET_BIT
+#ifdef HAS_MBUS
+#include <avr/pgmspace.h>               // for PSTR
+#include <string.h>                     // for NULL, memset
+
+#include "cc1100.h"                     // for ccStrobe, cc1100_sendbyte, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DS_P, DH2, DNL, DC
+#include "mbus/3outof6.h"               // for DECODING_3OUTOF6_OK
+#include "mbus/manchester.h"            // for MAN_DECODING_OK
+#include "mbus/mbus_defs.h"             // for uint8, FALSE, TRUE
+#include "mbus/mbus_packet.h"           // for WMBUS_SMODE, WMBUS_TMODE, etc
+#include "mbus/smode_rf_settings.h"     // for sCFG
+#include "mbus/tmode_rf_settings.h"     // for tCFG
 #include "rf_mbus.h"
-#include "mbus/mbus_defs.h"
-#include "mbus/smode_rf_settings.h"
-#include "mbus/tmode_rf_settings.h"
-#include "mbus/mbus_packet.h"
-#include "mbus/manchester.h"
-#include "mbus/3outof6.h"
+#include "rf_receive.h"                 // for REP_RSSI
+#include "stringfunc.h"                 // for fromhex
 
 // Buffers
 uint8 MBpacket[291];

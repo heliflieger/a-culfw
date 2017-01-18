@@ -1,6 +1,8 @@
-#include <avr/io.h>
-#include "util/delay_basic.h"
 #include "delay.h"
+
+#include <stdint.h>                     // for uint16_t, uint8_t
+
+#include "util/delay_basic.h"           // for _delay_loop_2
 
 
 

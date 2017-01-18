@@ -1,6 +1,8 @@
 #ifndef __FHT_H
 #define __FHT_H
 
+#include <stdint.h>                     // for uint8_t, int16_t, uint16_t
+
 void fhtsend(char *in);
 void fht_hook(uint8_t *in);
 void fht_tf_timer(uint8_t ind); // fht TF timer method

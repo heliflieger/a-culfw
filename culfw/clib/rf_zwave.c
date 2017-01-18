@@ -1,12 +1,17 @@
-#include "board.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t, uint16_t, uint32_t
+
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for LED_OFF, LED_ON, SET_BIT
+#include "stringfunc.h"                 // for fromhex
 #ifdef HAS_ZWAVE
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "delay.h"
-#include "display.h"
-#include "clock.h"
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM
+
+#include "cc1100.h"                     // for cc1100_sendbyte, etc
+#include "clock.h"                      // for ticks
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DC, DH2, DNL
 #include "rf_zwave.h"
-#include "cc1100.h"
 
 #ifdef CUL_V4
 #define MAX_ZWAVE_MSG 64        // 1024k SRAM is not enough: no SEC for CUL_V4

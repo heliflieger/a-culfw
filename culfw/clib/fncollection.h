@@ -1,6 +1,10 @@
 #ifndef __FNCOLLECTION_H_
 #define __FNCOLLECTION_H_
 
+#include <stdint.h>                     // for uint8_t, uint16_t
+
+#include "board.h"                      // for CDC_COUNT
+
 void read_eeprom(char *);
 void write_eeprom(char *);
 void eeprom_init(void);

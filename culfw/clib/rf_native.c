@@ -8,18 +8,20 @@
  *
  * License: GPL v2
  */
-#include "board.h"
-#ifdef HAS_RFNATIVE
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "fband.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t
 
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromdec
+#ifdef HAS_RFNATIVE
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM, etc
+
+#include "cc1100.h"                     // for ccStrobe, CC1100_FIFOTHR, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DH2, DNL, DC, DS_P
+#include "fband.h"                      // for checkFrequency
 #include "rf_native.h"
-#include "cc1100.h"
 
 static uint8_t native_on = 0;
 

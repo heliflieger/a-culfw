@@ -59,24 +59,25 @@
  * ------------------------------------------------------------------------------------------------------------------------------------------------------------
  */
 
-#include "board.h"
-#ifdef HAS_KOPP_FC
-#include <stdlib.h>				// for strtol
-#include <string.h>
-#include <avr/pgmspace.h>
-#include <avr/interrupt.h>
-#include <avr/io.h>
-#include "fband.h"
-#include <avr/wdt.h>			// for Watchdog Reset
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "clock.h"
-#include "rf_send.h" //credit_10ms
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t, uint16_t, uint32_t
 
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromhex
+#ifdef HAS_KOPP_FC
+#include <avr/pgmspace.h>               // for PSTR, PROGMEM, __LPM
+#include <avr/wdt.h>                    // for wdt_reset
+#include <stdlib.h>                     // for strtol, NULL
+#include <string.h>                     // for strlen, strcpy, strncpy
+
+#include "cc1100.h"                     // for cc1100_sendbyte, etc
+#include "clock.h"                      // for ticks
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DS_P, DH, DH2, DU, DNL, DS
+#include "fband.h"                      // for checkFrequency
+#include "fncollection.h"               // for EE_CC1100_CFG_SIZE, erb, etc
 #include "kopp-fc.h"
-#include "fncollection.h"
 
 void kopp_fc_sendraw(uint8_t* buf, int longPreamble);
 void kopp_fc_sendAck(uint8_t* enc);

@@ -45,6 +45,8 @@
 #ifndef _DHCP_H_
 #define _DHCP_H_
 
+#include <stdint.h>
+
 /*
  * @brief 
  * @details If you want to display debug & procssing message, Define _DHCP_DEBUG_ 

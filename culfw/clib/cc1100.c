@@ -1,20 +1,15 @@
-#include <stdio.h>
-#include <string.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-#include <avr/eeprom.h>
+#include <avr/pgmspace.h>               // for PROGMEM, __LPM, PSTR
+#include <stdint.h>                     // for uint8_t
 
-#include "delay.h"
-#include "display.h"
-#include "fncollection.h"
 #include "cc1100.h"
-#include "spi.h"
-
-#include "rf_asksin.h"  // asksin_on
-#include "rf_moritz.h"  // moritz_on
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DH2, DNL, DS_P, DC, DU
+#include "fncollection.h"               // for ewb, EE_CC1100_CFG, erb, etc
+#include "rf_asksin.h"                  // for asksin_on
+#include "stringfunc.h"                 // for fromhex
 
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for moritz_on
 #endif
 
 uint8_t cc_on;
