@@ -667,7 +667,7 @@ int16_t flash_init(void) {
 	AT45_Read(&at45, v,2,c);
 	TRACE_INFO("EE Magic: %u %u Start %u\n\r", v[0], v[1],(unsigned int)c);
 
-	TRACE_INFO("Flash Serial: %08x\n\r",flash_serial());
+	TRACE_INFO("Flash Serial: %04x%04x\n\r",(uint16_t)(flash_serial() >> 16),(uint16_t)(flash_serial() & 0xffff));
 
 	return 0;
 
