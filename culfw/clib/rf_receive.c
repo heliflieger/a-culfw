@@ -787,8 +787,8 @@ ISR(CC1100_INTVECT)
 #endif
 
 
-  if(c)
-    LED_TOGGLE();
+//  if(c)
+//    LED_TOGGLE();
 
   bucket_t *b = bucket_array+bucket_in; // where to fill in the bit
 
