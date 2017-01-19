@@ -5,6 +5,10 @@
 #include "display.h"                    // for display_channel, DC, DS_P, etc
 #include "ttydata.h"
 
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
+
 void (*input_handle_func)(uint8_t channel);
 
 
@@ -54,6 +58,10 @@ analyze_ttydata(uint8_t channel)
 
       if(!cmdlen)       // empty return
         continue;
+
+#ifdef HAS_MULTI_CC
+      multiCC.instance = 0;
+#endif
 
       cmdbuf[cmdlen] = 0;
       if(!callfn(cmdbuf)) {

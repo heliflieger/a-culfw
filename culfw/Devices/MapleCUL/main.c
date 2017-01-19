@@ -69,6 +69,9 @@
 #ifdef HAS_MAICO
 #include "rf_maico.h"
 #endif
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
 
 #include "cdc_uart.h"
 //------------------------------------------------------------------------------
@@ -241,10 +244,50 @@ const t_fntab fntab[] = {
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
-
+#ifdef HAS_MULTI_CC
+  { '*', multiCC_func },
+#endif
   { 0, 0 },
 };
 
+#if HAS_MULTI_CC > 1
+const t_fntab fntab1[] = {
+
+  { 'C', ccreg },
+  { 'V', version },
+  { 'X', set_txreport },
+#if HAS_MULTI_CC > 2
+  { '*', multiCC_func },
+#endif
+  { 0, 0 },
+};
+#endif
+
+#if HAS_MULTI_CC > 2
+const t_fntab fntab2[] = {
+
+  { 'C', ccreg },
+  { 'V', version },
+  { 'X', set_txreport },
+#if HAS_MULTI_CC > 3
+  { '*', multiCC_func },
+#endif
+  { 0, 0 },
+};
+#endif
+
+#if HAS_MULTI_CC > 3
+const t_fntab fntab3[] = {
+
+  { 'C', ccreg },
+  { 'V', version },
+  { 'X', set_txreport },
+#if HAS_MULTI_CC > 4
+  { '*', multiCC_func },
+#endif
+  { 0, 0 },
+};
+#endif
 
 //------------------------------------------------------------------------------
 //         Exported functions

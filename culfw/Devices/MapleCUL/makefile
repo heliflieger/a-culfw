@@ -18,7 +18,7 @@ MPU_TYPE_LOWER_CASE := stm32f103xb
 CPU := cortex-m3
 
 # Debugger options, must be empty or GDB
-DEBUG ?= 
+DEBUG ?= GDB
 
 ###############################################################
 #####
@@ -44,6 +44,7 @@ SRCS += ../../clib/fht.c
 SRCS += ../../clib/fncollection.c
 SRCS += ../../clib/intertechno.c 
 SRCS += ../../clib/kopp-fc.c 
+SRCS += ../../clib/multi_CC.c 
 SRCS += ../../clib/rf_asksin.c
 SRCS += ../../clib/rf_maico.c
 SRCS += ../../clib/rf_mbus.c
