@@ -6,12 +6,10 @@ FORMAT = ihex
 OBJDIR = .
 
 DATE=$(shell date +%Y-%m-%d)
-DESTDIR=culfw-nanoCUL
+DESTDIR=culfw-I2CCUL
 
-#		../../clib/adcw.c                                    \
-#		../../clib/cctemp.c                                  \
 
-SRC = nanoCUL.c                                            \
+SRC = I2CCUL.c                                            \
 		../../clib/cc1100.c                                  \
 		../../clib/cc1101_pllcheck.c                         \
 		../../clib/clock.c                                   \
@@ -44,7 +42,7 @@ SRC = nanoCUL.c                                            \
 		../../clib/intertechno.c                             \
 		../../clib/kopp-fc.c                                 \
 		../../clib/memory.c                                  \
-		../../clib/serial.c                                  \
+		../../clib/i2cslave.c                                  \
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
 		../../clib/rf_mbus.c                                 \
@@ -188,8 +186,8 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 all: 
-	make TARGET=nanoCUL868 mostly_clean sizebefore build sizeafter
-	make TARGET=nanoCUL433 mostly_clean sizebefore build sizeafter
+	make TARGET=I2CCUL868 mostly_clean build
+	make TARGET=I2CCUL433 mostly_clean build
 
 build: elf hex eep lss sym
 

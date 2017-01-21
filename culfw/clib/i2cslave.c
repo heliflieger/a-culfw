@@ -1,0 +1,76 @@
+/*
+	i2cslave.c - I2C Slave Communication instead of UART
+	
+	 19.01.2017	-	Diggen85 (Benny_Stark@live.de)
+							-	Add Communication as I2C Slave
+*/
+#include <util/twi.h>
+#include <avr/interrupt.h>
+
+#include "i2cslave.h"
+#include "display.h"
+#include "ringbuffer.h"
+#include "ttydata.h"
+
+#include "board.h"
+
+
+void I2CSlave_init(void)
+{
+	TWAR =  (I2CSLAVE_ADDR<<1);			//Set Slave Address / Shift left because BIT 1 = General CALL
+	TWCR = 	(1<<TWEN)|              //TWI enabled.
+					(1<<TWIE)|(0<<TWINT)|   //Enable TWI Interrupt and dont touch TWINT,else it wont work
+					(1<<TWEA)|							//Prepare to ACK next time the Slave is addressed.
+					(0<<TWSTA)|(0<<TWSTO)|  //No Start as Slave / Stop as Slave would release   
+					(0<<TWWC);      				//Write Collision
+	
+}
+
+void I2CSlave_task(void) 
+{
+     input_handle_func(DISPLAY_USB);
+}
+
+ISR(TWI_vect)
+{
+	//Simple State Maschine
+	switch (TW_STATUS)
+	{
+		//Send Data from tty_buffer
+		
+		//SLA+R - ACK has returned - send Data
+		case TW_ST_SLA_ACK: //A8
+		 //ACK Returned for Data - send Data
+		case TW_ST_DATA_ACK: //B8
+			if (TTY_Tx_Buffer.nbytes)
+				TWDR = rb_get(&TTY_Tx_Buffer);
+			else
+				TWDR = 0x04; //ASCII EOT
+			TWCR_ACK;
+			break;
+		
+	
+		//Receive Data and write to tty_buffer
+		
+		//SLA+W - Return ACK
+		case TW_SR_SLA_ACK: //60
+			TWCR_ACK;
+			break;
+		
+		//ACK Returned for Data - Get Data and write to tty_buffer
+		case TW_SR_DATA_ACK: //80
+			rb_put(&TTY_Rx_Buffer, TWDR);
+			TWCR_ACK;
+			break;
+		
+		//All Other States Release
+		case TW_SR_STOP: //A0	
+		case TW_ST_DATA_NACK: //C0 NACK Returned - no more Data
+		case TW_ST_LAST_DATA: //C8 Lasz Data Transmitted, ACK
+		case TW_SR_DATA_NACK: //88*/
+		default:
+			//Release
+			TWCR_RELEASE;
+			break;
+	}
+}

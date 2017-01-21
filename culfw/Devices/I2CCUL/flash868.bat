@@ -1,0 +1,1 @@
+D:\Atmel\avrdude-6.3-mingw32\avrdude.exe -v -patmega328p -c arduino -PCOM4 -D -Uflash:w:"I2CCUL868.hex":i -b115200

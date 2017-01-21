@@ -35,6 +35,10 @@
 #include "fswrapper.h"                  // for fs
 #include "mysleep.h"                    // for sleep_time
 
+#ifdef HAS_I2CSLAVE
+#include <stdlib.h>		//for itoa
+#endif
+
 uint8_t led_mode = 2;   // Start blinking
 
 #ifdef XLED
@@ -369,6 +373,13 @@ version(char *in)
   } else {
      DS_P( PSTR(" (F-Band: 868MHz)") );
   }
+#ifdef HAS_I2CSLAVE
+		DS_P( PSTR("(I2C: 0x") );
+		char temp[3];
+		itoa(I2CSLAVE_ADDR,temp,16);
+		DS(temp);
+		DS_P( PSTR(")") );
+#endif	
   DNL();
 }
 
