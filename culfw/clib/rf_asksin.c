@@ -15,31 +15,11 @@
 #include "rf_asksin.h"
 #include "rf_receive.h"                 // for set_txrestore, REP_BINTIME, etc
 
-#ifdef CC1100_ASKSIN
-#include "fncollection.h"
-
-#define CC_ID				CC1100_ASKSIN
-
-extern void cc1101_RX_check_PLL_wait_task2( uint8_t cc_num);
-
-#undef CC1100_ASSERT
-#undef CC1100_DEASSERT
-#define CC1100_DEASSERT                 hal_CC_Pin_Set(CC_ID,CC_Pin_CS,GPIO_PIN_SET)
-#define CC1100_ASSERT                   hal_CC_Pin_Set(CC_ID,CC_Pin_CS,GPIO_PIN_RESET)
-#define CC1100_READREG(x)               cc1100_readReg2(x,CC_ID)
-#define CC1100_WRITEREG(x,y)            cc1100_writeReg2(x,y,CC_ID)
-#define CCSTROBE(x)                     ccStrobe2(x,CC_ID)
-#define CC1101_RX_CHECK_PLL_WAIT_TASK() cc1101_RX_check_PLL_wait_task2(CC_ID)
-
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
 #else
-#define CC_ID                           0
-#define CC1100_READREG                  cc1100_readReg
-#define CC1100_WRITEREG                 cc1100_writeReg
-#define CCSTROBE                        ccStrobe
-#define CC1101_RX_CHECK_PLL_WAIT_TASK   cc1101_RX_check_PLL_wait_task
-#endif
-
 uint8_t asksin_on = 0;
+#endif
 
 const uint8_t PROGMEM ASKSIN_CFG[] = {
      0x00, 0x07,
@@ -94,8 +74,13 @@ rf_asksin_init(void)
 {
 
 #ifdef ARM
-  hal_CC_GDO_init(CC_ID,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(CC_ID,FALSE); // disable INT - we'll poll...
+#ifdef HAS_MULTI_CC
+  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
+#else
+  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
+#endif
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -108,28 +93,12 @@ rf_asksin_init(void)
   CC1100_DEASSERT;
   my_delay_us(45);
 
-  CCSTROBE( CC1100_SRES );                   // Send SRES command
+  ccStrobe( CC1100_SRES );                   // Send SRES command
   my_delay_us(100);
 
-#if ((CC_ID != 0))
-  CC1100_ASSERT;
-  uint8_t *cfg = EE_CC1100_CFG;
-  for(uint8_t i = 0; i < EE_CC1100_CFG_SIZE; i++) {
-      cc1100_sendbyte(erb(cfg++));
-  }
-  CC1100_DEASSERT;
-
-  uint8_t *pa = EE_CC1100_PA;
-    CC1100_ASSERT;                             // setup PA table
-    cc1100_sendbyte( CC1100_PATABLE | CC1100_WRITE_BURST );
-    for (uint8_t i = 0;i<8;i++) {
-      cc1100_sendbyte(erb(pa++));
-    }
-    CC1100_DEASSERT;
-#endif
   // load configuration
   for (uint8_t i = 0; i < sizeof(ASKSIN_CFG); i += 2) {
-    CC1100_WRITEREG( pgm_read_byte(&ASKSIN_CFG[i]),
+    cc1100_writeReg( pgm_read_byte(&ASKSIN_CFG[i]),
                      pgm_read_byte(&ASKSIN_CFG[i+1]) );
   }
 
@@ -142,23 +111,23 @@ rf_asksin_init(void)
   }
 #endif
   
-  CCSTROBE( CC1100_SCAL );
+  ccStrobe( CC1100_SCAL );
 
   my_delay_ms(4);
 
   // enable RX, but don't enable the interrupt
   do {
-    CCSTROBE(CC1100_SRX);
-  } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_RX);
+    ccStrobe(CC1100_SRX);
+  } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
 }
 
 static void
 rf_asksin_reset_rx(void)
 {
-  CCSTROBE( CC1100_SFRX  );
-  CCSTROBE( CC1100_SIDLE );
-  CCSTROBE( CC1100_SNOP  );
-  CCSTROBE( CC1100_SRX   );
+  ccStrobe( CC1100_SFRX  );
+  ccStrobe( CC1100_SIDLE );
+  ccStrobe( CC1100_SNOP  );
+  ccStrobe( CC1100_SRX   );
 }
 
 void
@@ -169,16 +138,23 @@ rf_asksin_task(void)
   uint8_t rssi;
   uint8_t l;
 
+
+#ifdef HAS_MULTI_CC
+for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
+  if (is_RF_mode(RF_mode_asksin) && (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In))) {
+
+#else
   if(!asksin_on)
     return;
 
   // see if a CRC OK pkt has been arrived
 #ifdef ARM
-  if (hal_CC_Pin_Get(CC_ID,CC_Pin_In)) {
+  if (hal_CC_Pin_Get(0,CC_Pin_In)) {
 #else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
 #endif
-    msg[0] = CC1100_READREG( CC1100_RXFIFO ) & 0x7f; // read len
+#endif
+    msg[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
 
     if (msg[0] >= MAX_ASKSIN_MSG) {
       // Something went horribly wrong, out of sync?
@@ -199,8 +175,8 @@ rf_asksin_task(void)
     CC1100_DEASSERT;
 
     do {
-      CCSTROBE(CC1100_SRX);
-    } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_RX);
+      ccStrobe(CC1100_SRX);
+    } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
 
     last_enc = msg[1];
     msg[1] = (~msg[1]) ^ 0x89;
@@ -212,9 +188,14 @@ rf_asksin_task(void)
     }
     
     msg[l] = msg[l] ^ msg[2];
-    
+
+#ifdef HAS_MULTI_CC
+    multiCC_prefix();
+
+    if (multiCC.tx_report[multiCC.instance] & REP_BINTIME) {
+#else
     if (tx_report & REP_BINTIME) {
-      
+#endif
       DC('a');
       for (uint8_t i=0; i<=msg[0]; i++)
       DC( msg[i] );
@@ -224,26 +205,33 @@ rf_asksin_task(void)
       
       for (uint8_t i=0; i<=msg[0]; i++)
         DH2( msg[i] );
-      
+#ifdef HAS_MULTI_CC
+      if (multiCC.tx_report[multiCC.instance] & REP_RSSI)
+#else
       if (tx_report & REP_RSSI)
+#endif
         DH2(rssi);
       
       DNL();
     }
   }
 
-  switch(CC1100_READREG( CC1100_MARCSTATE )) {
+  switch(cc1100_readReg( CC1100_MARCSTATE )) {
     case MARCSTATE_RXFIFO_OVERFLOW:
-      CCSTROBE( CC1100_SFRX  );
+      ccStrobe( CC1100_SFRX  );
     case MARCSTATE_IDLE:
-      CCSTROBE( CC1100_SIDLE );
-      CCSTROBE( CC1100_SNOP  );
-      CCSTROBE( CC1100_SRX   );
+      ccStrobe( CC1100_SIDLE );
+      ccStrobe( CC1100_SNOP  );
+      ccStrobe( CC1100_SRX   );
       break;
   }
 
 #ifdef HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
-  CC1101_RX_CHECK_PLL_WAIT_TASK();
+  cc1101_RX_check_PLL_wait_task();
+#endif
+#ifdef HAS_MULTI_CC
+}
+multiCC.instance = 0;
 #endif
 }
 
@@ -262,11 +250,15 @@ asksin_send(char *in)
     return;
   }
 
+#ifdef HAS_MULTI_CC
+  change_RF_mode(RF_mode_asksin);
+#else
   // in AskSin mode already?
   if(!asksin_on) {
     rf_asksin_init();
     my_delay_ms(3);             // 3ms: Found by trial and error
   }
+#endif
 
   ctl = msg[2];
 
@@ -281,16 +273,19 @@ asksin_send(char *in)
   // enable TX, wait for CCA
   get_timestamp(&ts1);
   do {
-    CCSTROBE(CC1100_STX);
-    if (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_TX) {
+    ccStrobe(CC1100_STX);
+    if (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_TX) {
       get_timestamp(&ts2);
       if (((ts2 > ts1) && (ts2 - ts1 > ASKSIN_WAIT_TICKS_CCA)) ||
           ((ts2 < ts1) && (ts1 + ASKSIN_WAIT_TICKS_CCA < ts2))) {
+#ifdef HAS_MULTI_CC
+        multiCC_prefix();
+#endif
         DS_P(PSTR("ERR:CCA\r\n"));
         goto out;
       }
     }
-  } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_TX);
+  } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_TX);
 
   if (ctl & (1 << 4)) { // BURST-bit set?
     // According to ELV, devices get activated every 300ms, so send burst for 360ms
@@ -311,23 +306,30 @@ asksin_send(char *in)
   CC1100_DEASSERT;
 
   // wait for TX to finish
-  while(CC1100_READREG( CC1100_MARCSTATE ) == MARCSTATE_TX)
+  while(cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_TX)
     ;
 
 out:
-  if (CC1100_READREG( CC1100_MARCSTATE ) == MARCSTATE_TXFIFO_UNDERFLOW) {
-      CCSTROBE( CC1100_SFTX  );
-      CCSTROBE( CC1100_SIDLE );
-      CCSTROBE( CC1100_SNOP  );
+  if (cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_TXFIFO_UNDERFLOW) {
+      ccStrobe( CC1100_SFTX  );
+      ccStrobe( CC1100_SIDLE );
+      ccStrobe( CC1100_SNOP  );
   }
-  
+#ifdef HAS_MULTI_CC
+  if(!restore_RF_mode()) {
+    do {
+      ccStrobe(CC1100_SRX);
+    } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
+  }
+#else
   if(asksin_on) {
     do {
-      CCSTROBE(CC1100_SRX);
-    } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_RX);
+      ccStrobe(CC1100_SRX);
+    } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_RX);
   } else {
     set_txrestore();
   }
+#endif
 }
 
 void
@@ -343,14 +345,22 @@ asksin_func(char *in)
       asksin_update_mode = 0;
     }
 #endif
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_asksin);
+#else
     rf_asksin_init();
     asksin_on = 1;
+#endif
 
   } else if(in[1] == 's') {         // Send
     asksin_send(in+1);
 
   } else {                          // Off
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_off);
+#else
     asksin_on = 0;
+#endif
 
   }
 }

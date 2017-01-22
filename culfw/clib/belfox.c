@@ -26,6 +26,10 @@
 #include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
 #endif
 
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
+
 // define timings
 #define BELFOX_ZERO_HIGH               1000  // 1000uS
 #define BELFOX_ZERO_LOW  2*BELFOX_ZERO_HIGH  
@@ -78,8 +82,11 @@ send_belfox(char *msg)
     set_txreport("21");
   }
 #endif
-
+#ifdef HAS_MULTI_CC
+  if(!multiCC.RF_mode[multiCC.instance])
+#else
   if(!cc_on)
+#endif
     set_ccon();
   ccTX();                                       // Enable TX 
   do {

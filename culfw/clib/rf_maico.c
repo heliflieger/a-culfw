@@ -15,30 +15,11 @@
 #include "rf_send.h" //credit_10ms
 #include "stringfunc.h"                 // for fromhex
 
-#ifdef CC1100_MAICO
-#include "fncollection.h"
-
-#define CC_ID				CC1100_MAICO
-
-#undef CC1100_ASSERT
-#undef CC1100_DEASSERT
-#define CC1100_DEASSERT                 hal_CC_Pin_Set(CC_ID,CC_Pin_CS,GPIO_PIN_SET)
-#define CC1100_ASSERT                   hal_CC_Pin_Set(CC_ID,CC_Pin_CS,GPIO_PIN_RESET)
-#define CC1100_READREG(x)               cc1100_readReg2(x,CC_ID)
-#define CC1100_WRITEREG(x,y)            cc1100_writeReg2(x,y,CC_ID)
-#define CCSTROBE(x)                     ccStrobe2(x,CC_ID)
-#define CC1101_RX_CHECK_PLL_WAIT_TASK() cc1101_RX_check_PLL_wait_task2(CC_ID)
-
-#else
-#define CC_ID                           0
-#define CC1100_READREG                  cc1100_readReg
-#define CC1100_WRITEREG                 cc1100_writeReg
-#define CCSTROBE                        ccStrobe
-
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
 #endif
 
 uint8_t maico_on = 0;
-
 
 //07 0e
 const uint8_t PROGMEM MAICO_CFG[] = {
@@ -85,8 +66,13 @@ void
 rf_maico_init(void)
 {
 #ifdef ARM
-  hal_CC_GDO_init(CC_ID,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(CC_ID,FALSE); // disable INT - we'll poll...
+#ifdef HAS_MULTI_CC
+  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
+#else
+  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
+#endif
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -99,38 +85,32 @@ rf_maico_init(void)
   CC1100_DEASSERT;
   my_delay_us(45);
 
-  CCSTROBE( CC1100_SRES );                   // Send SRES command
+  ccStrobe( CC1100_SRES );                   // Send SRES command
   my_delay_us(100);
 
-#if (CC_ID != 0)
-  CC1100_ASSERT;
-  uint8_t *cfg = EE_CC1100_CFG;
-  for(uint8_t i = 0; i < EE_CC1100_CFG_SIZE; i++) {
-      cc1100_sendbyte(erb(cfg++));
-  }
-  CC1100_DEASSERT;
-#endif
 
   // load configuration
   for (uint8_t i = 0; i<60; i += 2) {
     if (pgm_read_byte( &MAICO_CFG[i] )>0x40)
       break;
 
-    CC1100_WRITEREG( pgm_read_byte(&MAICO_CFG[i]),
+    cc1100_writeReg( pgm_read_byte(&MAICO_CFG[i]),
                      pgm_read_byte(&MAICO_CFG[i+1]) );
   }
 
-  CCSTROBE( CC1100_SCAL );
+  ccStrobe( CC1100_SCAL );
 
   my_delay_ms(4); // 4ms: Found by trial and error
   //This is ccRx() but without enabling the interrupt
   uint8_t cnt = 0xff;
   //Enable RX. Perform calibration first if coming from IDLE and MCSM0.FS_AUTOCAL=1.
   //Why do it multiple times?
-  while(cnt-- && (CCSTROBE( CC1100_SRX ) & 0x70) != 1)
+  while(cnt-- && (ccStrobe( CC1100_SRX ) & 0x70) != 1)
     my_delay_us(10);
 
+#ifndef HAS_MULTI_CC
   maico_on = 1;
+#endif
 }
 
 
@@ -139,18 +119,22 @@ rf_maico_task(void)
 {
   uint8_t msg[MAX_MAICO_MSG];
   uint8_t rssi;
-
+#ifdef HAS_MULTI_CC
+for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
+  if (is_RF_mode(RF_mode_maico) && (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In))) {
+#else
   if(!maico_on)
     return;
 
   // see if a CRC OK pkt has been arrived
 #ifdef ARM
-  if (hal_CC_Pin_Get(CC_ID,CC_Pin_In)) {
+  if (hal_CC_Pin_Get(0,CC_Pin_In)) {
 #else
   if(bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
 #endif
+#endif
     //errata #1 does not affect us, because we wait until packet is completely received
-    msg[0] = CC1100_READREG( CC1100_READ_BURST | CC1100_RXBYTES ) -2; // len
+    msg[0] = cc1100_readReg( CC1100_READ_BURST | CC1100_RXBYTES ) -2; // len
 
     CC1100_ASSERT;
     cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
@@ -166,8 +150,13 @@ rf_maico_task(void)
 
     CC1100_DEASSERT;
 
-    if (tx_report & REP_BINTIME) {
+#ifdef HAS_MULTI_CC
+    multiCC_prefix();
 
+    if (multiCC.tx_report[multiCC.instance] & REP_BINTIME) {
+#else
+    if (tx_report & REP_BINTIME) {
+#endif
       DC('l');
       for (uint8_t i=0; i<=msg[0]; i++)
       DC( msg[i] );
@@ -175,7 +164,11 @@ rf_maico_task(void)
       DC('L');
       for (uint8_t i=0; i<=msg[0]; i++)
         DH2( msg[i] );
+#ifdef HAS_MULTI_CC
+      if (multiCC.tx_report[multiCC.instance] & REP_RSSI)
+#else
       if (tx_report & REP_RSSI)
+#endif
         DH2(rssi);
       DNL();
     }
@@ -183,16 +176,20 @@ rf_maico_task(void)
     return;
   }
 
-  switch(CC1100_READREG( CC1100_MARCSTATE )) {
+  switch(cc1100_readReg( CC1100_MARCSTATE )) {
     case MARCSTATE_RXFIFO_OVERFLOW:
-      CCSTROBE( CC1100_SFRX  );
+      ccStrobe( CC1100_SFRX  );
     case MARCSTATE_IDLE:
-      CCSTROBE( CC1100_SIDLE );
-      CCSTROBE( CC1100_SNOP  );
-      CCSTROBE( CC1100_SRX   );
+      ccStrobe( CC1100_SIDLE );
+      ccStrobe( CC1100_SNOP  );
+      ccStrobe( CC1100_SRX   );
       //TRACE_INFO("Maico CC restart");
       break;
   }
+#ifdef HAS_MULTI_CC
+}
+multiCC.instance = 0;
+#endif
 }
 
 
@@ -203,23 +200,34 @@ maico_sendraw(uint8_t *dec)
   //1kb/s = 1 bit/ms. we send 1 sec preamble + hblen*8 bits
   uint32_t sum = (hblen*8)/10;
   if (credit_10ms < sum) {
+#ifdef HAS_MULTI_CC
+    multiCC_prefix();
+#endif
     DS_P(PSTR("LOVF\n\r"));
     return;
   }
   credit_10ms -= sum;
 
+
+#ifdef HAS_MULTI_CC
+  change_RF_mode(RF_mode_maico);
+#else
   // in Maico mode already?
   if(!maico_on) {
     rf_maico_init();
   }
+#endif
 
-  if(CC1100_READREG( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
-    DC('Z');
+  if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
+#ifdef HAS_MULTI_CC
+    multiCC_prefix();
+#endif
+    DC('L');
     DC('E');
     DC('R');
     DC('R');
     DC('1');
-    DH2(CC1100_READREG( CC1100_MARCSTATE ));
+    DH2(cc1100_readReg( CC1100_MARCSTATE ));
     DNL();
     rf_maico_init();
     return;
@@ -238,47 +246,60 @@ maico_sendraw(uint8_t *dec)
 
   // enable TX, wait for CCA
     do {
-      CCSTROBE(CC1100_STX);
-    } while (CC1100_READREG(CC1100_MARCSTATE) != MARCSTATE_TX);
+      ccStrobe(CC1100_STX);
+    } while (cc1100_readReg(CC1100_MARCSTATE) != MARCSTATE_TX);
 
 
   //Wait for sending to finish (CC1101 will go to RX state automatically
   //after sending
   uint8_t i;
   for(i=0; i< 200;++i) {
-    if( CC1100_READREG( CC1100_MARCSTATE ) == MARCSTATE_RX)
+    if( cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_RX)
       break; //now in RX, good
-    if( CC1100_READREG( CC1100_MARCSTATE ) != MARCSTATE_TX)
+    if( cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_TX)
       break; //neither in RX nor TX, probably some error
     my_delay_ms(1);
   }
 
-  if(CC1100_READREG( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
-    DC('Z');
+  if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
+#ifdef HAS_MULTI_CC
+    multiCC_prefix();
+#endif
+    DC('L');
     DC('E');
     DC('R');
     DC('R');
     DC('3');
-    DH2(CC1100_READREG( CC1100_MARCSTATE ));
+    DH2(cc1100_readReg( CC1100_MARCSTATE ));
     DNL();
     rf_maico_init();
   }
-
+#ifdef HAS_MULTI_CC
+  restore_RF_mode();
+#else
   if(!maico_on) {
     set_txrestore();
   }
+#endif
 }
 
 void
 maico_func(char *in)
 {
   if(in[1] == 'r') {                // Reception on
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_maico);
+#else
     rf_maico_init();
+#endif
 
   } else if(in[1] == 's' ) {         // Send/Send fast
     uint8_t dec[0x0b];
     uint8_t hblen = fromhex(in+2, dec, 0x0b);
     if ((hblen) != 0x0b) {
+#ifdef HAS_MULTI_CC
+      multiCC_prefix();
+#endif
       DS_P(PSTR("LENERR\n\r"));
       TRACE_INFO("LENERR %02X\n\r", hblen);
       return;
@@ -286,7 +307,11 @@ maico_func(char *in)
     maico_sendraw(dec);
 
   } else {                          // Off
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_off);
+#else
     maico_on = 0;
+#endif
 
   }
 }

@@ -62,6 +62,11 @@
 
 #include "stm32f1xx_it.h"
 #endif
+
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
+
 //////////////////////////
 // With a CUL measured RF timings, in us, high/low sum
 //           Bit zero        Bit one
@@ -105,8 +110,11 @@ tx_init(void)
 {
 
 #ifdef ARM
+#ifdef HAS_MULTI_CC
+  init_RF_mode();
+#else
   hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
-  //hal_enable_CC_GDOin_int(0,TRUE);
+#endif
 #else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
   CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);
@@ -119,7 +127,9 @@ tx_init(void)
 
   for(int i = 1; i < RCV_BUCKETS; i ++)
     bucket_array[i].state = STATE_RESET;
+#ifndef HAS_MULTI_CC
   cc_on = 0;
+#endif
 }
 
 void
@@ -133,6 +143,15 @@ set_txrestore()
     return;
   }
 #endif
+#ifdef HAS_MULTI_CC
+  if(multiCC.tx_report[multiCC.instance]) {
+    set_ccon();
+    if(!multiCC.instance)
+      ccRX();
+  } else {
+    set_ccoff();
+  }
+#else
   if(tx_report) {
     set_ccon();
     ccRX();
@@ -141,20 +160,33 @@ set_txrestore()
     set_ccoff();
 
   }
+#endif
 }
 
 void
 set_txreport(char *in)
 {
   if(in[1] == 0) {              // Report Value
+#ifdef HAS_MULTI_CC
+    multiCC_prefix();
+    DH2(multiCC.tx_report[multiCC.instance]);
+#else
     DH2(tx_report);
+#endif
     DU(credit_10ms, 5);
     DNL();
     return;
   }
 
+#ifdef HAS_MULTI_CC
+  fromhex(in+1, &multiCC.tx_report[multiCC.instance], 1);
+  fromhex(in+1, &tx_report, 1);
+  set_RF_mode(RF_mode_slow);
+#else
   fromhex(in+1, &tx_report, 1);
   set_txrestore();
+#endif
+
 }
 
 ////////////////////////////////////////////////////

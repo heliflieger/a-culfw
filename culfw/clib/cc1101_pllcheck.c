@@ -134,21 +134,6 @@ cc1101_toTX_PLLcheck(void)
 
 #ifdef HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 // check if stuck in RX state without PLL Lock and try to recover
-#ifdef ARM
-void
-cc1101_RX_check_PLL_wait_task2( uint8_t cc_num)
-{
-  if (cc1100_readReg2( CC1100_MARCSTATE, cc_num ) == MARCSTATE_RX)
-  {
-	// try init or recalibration, if stuck in RX State with no PLL Lock as seen in extended read timeout logging
-	if (cc1100_readReg2( CC1100_FSCAL1, cc_num ) == 0x3f)							// no PLL Lock?  as described in CC1101 errata
-	{
-		cc1101_checkPLL();													// try calibration to recover, takes about 735us
-		while ((ccStrobe2( CC1100_SRX, cc_num ) & CC1100_STATUS_STATE_BM) != 0x10);	// Set RX again until Status Byte indicates RX, this will take up to 799us depending on AUTOCAL setting! see cc1101 doc
-	}
-  }
-}
-#endif
 void
 cc1101_RX_check_PLL_wait_task(void)
 {

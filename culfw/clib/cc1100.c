@@ -14,9 +14,17 @@
 
 #ifdef ARM
 #include "spi.h"
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#define CC_INSTANCE     multiCC.instance
+#else
+#define CC_INSTANCE     0
+#endif
 #endif
 
+#ifndef HAS_MULTI_CC
 uint8_t cc_on;
+#endif
 
 // NOTE: FS20 devices can receive/decode signals sent with PA ramping,
 // but the CC1101 cannot
@@ -166,12 +174,14 @@ cc1100_sendbyte(uint8_t data)
 void
 ccInitChip(uint8_t *cfg)
 {
+#ifndef HAS_MULTI_CC
 #ifdef HAS_MORITZ
   moritz_on = 0; //loading this configuration overwrites moritz cfg
 #endif
+#endif
 
 #ifdef ARM
-  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
 #else
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
@@ -282,7 +292,7 @@ ccTX(void)
 {
   uint8_t cnt = 0xff;
 #ifdef ARM
-  hal_enable_CC_GDOin_int(0,FALSE);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE);
 #else
   EIMSK  &= ~_BV(CC1100_INT);
 #endif
@@ -304,7 +314,7 @@ ccRX(void)
         (ccStrobe(CC1100_SRX) & CC1100_STATUS_STATE_BM) != CC1100_STATE_RX)
     my_delay_us(10);
 #ifdef ARM
-    hal_enable_CC_GDOin_int(0,TRUE);
+    hal_enable_CC_GDOin_int(CC_INSTANCE,TRUE);
 #else
   EIMSK |= _BV(CC1100_INT);
 #endif
@@ -327,12 +337,19 @@ ccreg(char *in)
 
     if(hb == 0x99) {
       for(uint8_t i = 0; i < 0x30; i++) {
+#ifdef HAS_MULTI_CC
+        if((i&7) == 0)
+          multiCC_prefix();
+#endif
         DH2(cc1100_readReg(i));
         if((i&7) == 7)
           DNL();
       }
     } else {
       out = cc1100_readReg(hb);
+#ifdef HAS_MULTI_CC
+      multiCC_prefix();
+#endif
       DC('C');                    // prefix
       DH2(hb);                    // register number
       DS_P( PSTR(" = ") );
@@ -378,38 +395,6 @@ ccStrobe(uint8_t strobe)
 
 //--------------------------------------------------------------------
 
-#ifdef ARM
-
-uint8_t
-cc1100_readReg2(uint8_t addr, uint8_t cc_num)
-{
-  hal_CC_Pin_Set(cc_num,CC_Pin_CS,GPIO_PIN_RESET);	//assert CS
-  cc1100_sendbyte( addr|CC1100_READ_BURST );
-  uint8_t ret = cc1100_sendbyte( 0 );
-  hal_CC_Pin_Set(cc_num,CC_Pin_CS,GPIO_PIN_SET);	//deassert CS
-  return ret;
-}
-
-void
-cc1100_writeReg2(uint8_t addr, uint8_t data, uint8_t cc_num)
-{
-  hal_CC_Pin_Set(cc_num,CC_Pin_CS,GPIO_PIN_RESET);	//assert CS
-  cc1100_sendbyte( addr|CC1100_WRITE_BURST );
-  cc1100_sendbyte( data );
-  hal_CC_Pin_Set(cc_num,CC_Pin_CS,GPIO_PIN_SET);	//deassert CS
-}
-
-uint8_t
-ccStrobe2(uint8_t strobe, uint8_t cc_num)
-{
-  hal_CC_Pin_Set(cc_num,CC_Pin_CS,GPIO_PIN_RESET);	//assert CS
-  uint8_t ret = cc1100_sendbyte( strobe );
-  hal_CC_Pin_Set(cc_num,CC_Pin_CS,GPIO_PIN_SET);	//deassert CS
-
-  return ret;
-}
-#endif
-
 void
 set_ccoff(void)
 {
@@ -421,7 +406,7 @@ set_ccoff(void)
 #else
   ccStrobe(CC1100_SIDLE);
 #endif
-
+#ifndef HAS_MULTI_CC
   cc_on = 0;
 
 #ifdef HAS_ASKSIN
@@ -431,12 +416,14 @@ set_ccoff(void)
 #ifdef HAS_MORITZ
   moritz_on = 0;
 #endif
+#endif
 }
 
 void
 set_ccon(void)
 {
   ccInitChip(EE_CC1100_CFG);
+#ifndef HAS_MULTI_CC
   cc_on = 1;
 
 #ifdef HAS_ASKSIN
@@ -448,6 +435,7 @@ set_ccon(void)
 #ifdef HAS_MORITZ
 #ifndef CC1100_MORITZ
   moritz_on = 0;
+#endif
 #endif
 #endif
 }

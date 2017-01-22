@@ -79,6 +79,10 @@
 #include "fncollection.h"               // for EE_CC1100_CFG_SIZE, erb, etc
 #include "kopp-fc.h"
 
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
+
 void kopp_fc_sendraw(uint8_t* buf, int longPreamble);
 void kopp_fc_sendAck(uint8_t* enc);
 void kopp_fc_handleAutoAck(uint8_t* enc);
@@ -235,7 +239,9 @@ kopp_fc_init(void)
 // Set CC_ON
 	ccStrobe( CC1100_SCAL);						// Calibrate Synthesizer and turn it of. ##Claus brauchen wir das
 	my_delay_ms(1);
+#ifndef HAS_MULTI_CC
 	cc_on = 1;
+#endif
 
   
 

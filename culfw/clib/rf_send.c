@@ -31,6 +31,10 @@
 #include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
 #endif
 
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
+
 // For FS20 we time the complete message, for KS300 the rise-fall distance
 // FS20  NULL: 400us high, 400us low
 // FS20  ONE:  600us high, 600us low
@@ -112,6 +116,11 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   cli();
 #endif
 
+#ifdef HAS_MULTI_CC
+  save_RF_mode();
+  if(!is_RF_mode(RF_mode_slow))
+    set_txreport("21");
+#else
 #ifdef HAS_MORITZ
   uint8_t restore_moritz = 0;
 #ifndef CC1100_MORITZ
@@ -122,9 +131,9 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   }
 #endif
 #endif
-
   if(!cc_on)
     set_ccon();
+#endif
   ccTX();                                       // Enable TX 
   do {
 
@@ -162,9 +171,13 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   sei(); 
 #endif
 
+#ifdef HAS_MULTI_CC
+  restore_RF_mode();
+#else
 #ifdef HAS_MORITZ
   if(restore_moritz)
     rf_moritz_init();
+#endif
 #endif
 
   LED_OFF();

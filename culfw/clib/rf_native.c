@@ -23,7 +23,11 @@
 #include "fband.h"                      // for checkFrequency
 #include "rf_native.h"
 
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#else
 static uint8_t native_on = 0;
+#endif
 
 #ifdef LACROSSE_HMS_EMU
 uint8_t payload[5];
@@ -102,14 +106,21 @@ const uint8_t PROGMEM MODE_CFG[MAX_MODES][20] = {
 void native_init(uint8_t mode) {
 
 #ifdef ARM
+#ifdef HAS_MULTI_CC
+  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
+#else
   hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
   hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
+#endif
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
 #endif
 
+#ifndef HAS_MULTI_CC
   native_on = 0;
+#endif
 
   CC1100_DEASSERT;                           // Toggle chip select signal
   my_delay_us(30);
@@ -147,7 +158,9 @@ void native_init(uint8_t mode) {
   
   ccStrobe( CC1100_SCAL );
 
+#ifndef HAS_MULTI_CC
   native_on = mode;
+#endif
   checkFrequency(); 
   my_delay_ms(1);
 }
@@ -155,6 +168,12 @@ void native_init(uint8_t mode) {
 void native_task(void) {
   uint8_t len, byte, i;
 
+#ifdef HAS_MULTI_CC
+for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
+  if ((is_RF_mode(RF_mode_native1) || is_RF_mode(RF_mode_native2) || is_RF_mode(RF_mode_native3))
+       && (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In))) {
+
+#else
   if(!native_on)
     return;
 
@@ -163,6 +182,7 @@ void native_task(void) {
   if (hal_CC_Pin_Get(0,CC_Pin_In)) {
 #else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
+#endif
 #endif
 
     // start over syncing
@@ -175,17 +195,25 @@ void native_task(void) {
       CC1100_ASSERT;
       cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
 
+#ifdef HAS_MULTI_CC
+      multiCC_prefix();
+      DC( 'N' );
+      DH2(get_RF_mode() - RF_mode_native1 + 1);
+#else
       DC( 'N' );
       DH2(native_on);
+#endif
+
+
 
       for (i=0; i<len; i++) {
-	byte = cc1100_sendbyte( 0 );
+         byte = cc1100_sendbyte( 0 );
 
 #if defined(LACROSSE_HMS_EMU)
-	if (i<sizeof(payload))
-	  payload[i] = byte;
+        if (i<sizeof(payload))
+          payload[i] = byte;
 #endif
-	DH2( byte );
+        DH2( byte );
       }
       
       CC1100_DEASSERT;
@@ -215,7 +243,10 @@ void native_task(void) {
     break;
        
   }
-
+#ifdef HAS_MULTI_CC
+}
+multiCC.instance = 0;
+#endif
 }
 
 
@@ -235,24 +266,38 @@ void native_func(char *in) {
       fromdec(in+2, ( uint8_t*)&mode);
 
     if (!mode || mode>MAX_MODES) {
+#ifdef HAS_MULTI_CC
+      multiCC_prefix();
+#endif
       DS_P(PSTR("specify valid mode number\r\n"));
       return;
     }
     
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_native1 + mode - 1);
+#else
     native_init(mode);
+#endif
 
   } else if(in[1] == 'x') {        // Reception off
 
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_off);
+#else
     if (native_on)
       ccStrobe( CC1100_SIDLE );
     
     native_on = 0;
+#endif
 
   }
-
+#ifdef HAS_MULTI_CC
+  multiCC_prefix();
+  DH2(get_RF_mode() - RF_mode_native1 + 1);
+#else
   DH2(native_on);
+#endif
   DNL();
-  
 }
 
 #endif

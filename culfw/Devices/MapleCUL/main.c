@@ -244,7 +244,7 @@ const t_fntab fntab[] = {
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
-#ifdef HAS_MULTI_CC
+#if HAS_MULTI_CC > 1
   { '*', multiCC_func },
 #endif
   { 0, 0 },
@@ -256,6 +256,24 @@ const t_fntab fntab1[] = {
   { 'C', ccreg },
   { 'V', version },
   { 'X', set_txreport },
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
 #if HAS_MULTI_CC > 2
   { '*', multiCC_func },
 #endif
@@ -269,6 +287,21 @@ const t_fntab fntab2[] = {
   { 'C', ccreg },
   { 'V', version },
   { 'X', set_txreport },
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
 #if HAS_MULTI_CC > 3
   { '*', multiCC_func },
 #endif
@@ -282,8 +315,20 @@ const t_fntab fntab3[] = {
   { 'C', ccreg },
   { 'V', version },
   { 'X', set_txreport },
-#if HAS_MULTI_CC > 4
-  { '*', multiCC_func },
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
 #endif
   { 0, 0 },
 };

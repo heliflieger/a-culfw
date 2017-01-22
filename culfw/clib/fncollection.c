@@ -351,6 +351,9 @@ prepare_boot(char *in)
 void
 version(char *in)
 {
+#ifdef HAS_MULTI_CC
+  multiCC_prefix();
+#endif
 #if defined(CUL_HW_REVISION)
   if (in[1] == 'H') {
     DS_P( PSTR(CUL_HW_REVISION) );

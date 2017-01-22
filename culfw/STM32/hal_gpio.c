@@ -142,6 +142,7 @@ void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode) {
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /*Configure GDO0 (out) pin */
+  if(CCtransceiver[cc_num].base[CC_Pin_Out]) {
     if(mode == INIT_MODE_IN_CS_IN) {
       GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
       GPIO_InitStruct.Pull = GPIO_PULLUP;
@@ -152,19 +153,24 @@ void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode) {
     }
     GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_Out]);
     HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_Out], &GPIO_InitStruct);
+  }
 
   /*Configure GDO1 (CS) pin */
-  HAL_GPIO_WritePin(CCtransceiver[cc_num].base[CC_Pin_CS], _BV(CCtransceiver[cc_num].pin[CC_Pin_CS]), GPIO_PIN_SET);
-  GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_CS]);
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_CS], &GPIO_InitStruct);
+  if(CCtransceiver[cc_num].base[CC_Pin_CS]) {
+    HAL_GPIO_WritePin(CCtransceiver[cc_num].base[CC_Pin_CS], _BV(CCtransceiver[cc_num].pin[CC_Pin_CS]), GPIO_PIN_SET);
+    GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_CS]);
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_CS], &GPIO_InitStruct);
+  }
 
   /*Configure GDO2 (in) pin */
-  GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_In], &GPIO_InitStruct);
+  if(CCtransceiver[cc_num].base[CC_Pin_In]) {
+    GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(CCtransceiver[cc_num].base[CC_Pin_In], &GPIO_InitStruct);
+  }
 
   HAL_NVIC_SetPriority(EXTI0_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI0_IRQn);
@@ -189,13 +195,13 @@ void hal_enable_CC_GDOin_int(uint8_t cc_num, uint8_t enable) {
 }
 
 void hal_CC_Pin_Set(uint8_t cc_num, CC_PIN pin, GPIO_PinState state) {
-  if(cc_num < CCCOUNT) {
+  if((cc_num < CCCOUNT) && CCtransceiver[cc_num].base[pin]){
     HAL_GPIO_WritePin(CCtransceiver[cc_num].base[pin], _BV(CCtransceiver[cc_num].pin[pin]), state);
   }
 }
 
 uint32_t hal_CC_Pin_Get(uint8_t cc_num, CC_PIN pin) {
-  if(cc_num < CCCOUNT) {
+  if((cc_num < CCCOUNT) && CCtransceiver[cc_num].base[pin]) {
     return (CCtransceiver[cc_num].base[pin]->IDR) & _BV(CCtransceiver[cc_num].pin[pin]);
   }
   return 0;

@@ -72,13 +72,6 @@
 #    define HAS_REVOLT
 #  endif
 
-
-
-//additional CC1101 Transceiver
-//#define CC1100_ASKSIN		1
-//#define CC1100_MORITZ		2
-//#define CC1100_MAICO		3
-
 //PORT 0
 #define CC1100_0_CS_PIN		  4
 #define CC1100_0_CS_BASE	  GPIOA
@@ -103,14 +96,24 @@
 #define CC1100_2_IN_PIN     6
 #define CC1100_2_IN_BASE    GPIOB
 
-#define HAS_MULTI_CC        2
+//PORT 3
+#define CC1100_3_CS_PIN     0
+#define CC1100_3_CS_BASE    GPIOB
+#define CC1100_3_OUT_PIN    NULL
+#define CC1100_3_OUT_BASE   NULL
+#define CC1100_3_IN_PIN     13
+#define CC1100_3_IN_BASE    GPIOC
 
-#define CCCOUNT             2
+#define HAS_MULTI_CC        3
+
+#define CCCOUNT             3
 #define CCTRANSCEIVERS    {\
                           { {CC1100_0_OUT_BASE, CC1100_0_CS_BASE, CC1100_0_IN_BASE},\
                             {CC1100_0_OUT_PIN,  CC1100_0_CS_PIN,  CC1100_0_IN_PIN}  },\
                           { {CC1100_2_OUT_BASE, CC1100_2_CS_BASE, CC1100_2_IN_BASE},\
                             {CC1100_2_OUT_PIN,  CC1100_2_CS_PIN,  CC1100_2_IN_PIN}  },\
+                          { {CC1100_3_OUT_BASE, CC1100_3_CS_BASE, CC1100_3_IN_BASE},\
+                            {CC1100_3_OUT_PIN,  CC1100_3_CS_PIN,  CC1100_3_IN_PIN}  },\
                           }
 
 #ifdef MapleCUN
@@ -130,8 +133,8 @@
 #define LED_GPIO              GPIOB
 #define LED_PIN               1
 
-#define LED2_GPIO             GPIOB
-#define LED2_PIN              0
+//#define LED2_GPIO             GPIOB
+//#define LED2_PIN              0
 
 #define USBD_CONNECT_PORT     GPIOB
 #define USBD_CONNECT_PIN      9
