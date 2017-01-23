@@ -53,14 +53,9 @@
 #include "rf_mbus.h"                    // for WMBUS_NONE, mbus_mode
 #endif
 
-#ifdef SAM7
+#ifdef ARM
 #include <hal_gpio.h>
 #include <hal_timer.h>
-#elif defined STM32
-#include <hal_gpio.h>
-#include <hal_timer.h>
-
-#include "stm32f1xx_it.h"
 #endif
 
 #ifdef HAS_MULTI_CC
@@ -180,7 +175,8 @@ set_txreport(char *in)
 
 #ifdef HAS_MULTI_CC
   fromhex(in+1, &multiCC.tx_report[multiCC.instance], 1);
-  fromhex(in+1, &tx_report, 1);
+  if(!multiCC.instance)
+    fromhex(in+1, &tx_report, 1);
   set_RF_mode(RF_mode_slow);
 #else
   fromhex(in+1, &tx_report, 1);

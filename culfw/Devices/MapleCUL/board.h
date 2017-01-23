@@ -104,12 +104,14 @@
 #define CC1100_3_IN_PIN     13
 #define CC1100_3_IN_BASE    GPIOC
 
-#define HAS_MULTI_CC        3
+#define HAS_MULTI_CC        4
 
-#define CCCOUNT             3
+#define CCCOUNT             4
 #define CCTRANSCEIVERS    {\
                           { {CC1100_0_OUT_BASE, CC1100_0_CS_BASE, CC1100_0_IN_BASE},\
                             {CC1100_0_OUT_PIN,  CC1100_0_CS_PIN,  CC1100_0_IN_PIN}  },\
+                          { {CC1100_1_OUT_BASE, CC1100_1_CS_BASE, CC1100_1_IN_BASE},\
+                            {CC1100_1_OUT_PIN,  CC1100_1_CS_PIN,  CC1100_1_IN_PIN}  },\
                           { {CC1100_2_OUT_BASE, CC1100_2_CS_BASE, CC1100_2_IN_BASE},\
                             {CC1100_2_OUT_PIN,  CC1100_2_CS_PIN,  CC1100_2_IN_PIN}  },\
                           { {CC1100_3_OUT_BASE, CC1100_3_CS_BASE, CC1100_3_IN_BASE},\

@@ -22,9 +22,10 @@ void moritz_handleAutoAck(uint8_t* enc);
 
 #ifdef HAS_MULTI_CC
 #include "multi_CC.h"
-#endif
+#else
 
 uint8_t moritz_on = 0;
+#endif
 
 /*
  * CC1100_PKTCTRL0.LENGTH_CONFIG = 1 //Variable packet length mode. Packet length configured by the first byte after sync word

@@ -9,12 +9,14 @@
 #include "board.h"
 
 #include <stm32f1xx_hal.h>
+#include <stm32f103xb.h>
 #include <hal_spi.h>
 #include <hal_usart.h>
 #include <usb_device.h>
 #include <hal_gpio.h>
 #include <hal_timer.h>
 #include <utility/trace.h>
+#include <utility/dbgu.h>
 #include <avr/eeprom.h>
 #include <avr/wdt.h>
 
@@ -468,6 +470,7 @@ int main(void)
       unsigned char x;
 
       x=DBGU_GetChar();
+      SWO_PrintChar(x,0);
       switch(x) {
 
       case 'd':

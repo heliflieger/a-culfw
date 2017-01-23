@@ -92,6 +92,8 @@ SRCS += ../../STM32/avr/eeprom.c
 SRCS += ../../STM32/avr/wdt.c
 SRCS += ../../STM32/util/parity.c
 
+SRCS += ../../STM32/utility/dbgu.c
+
 SRCS += ../../STM32/Drivers/$(MCU_FAMILY)xx_HAL_Driver/Src/stm32f1xx_hal.c
 SRCS += ../../STM32/Drivers/$(MCU_FAMILY)xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c
 SRCS += ../../STM32/Drivers/$(MCU_FAMILY)xx_HAL_Driver/Src/stm32f1xx_hal_dma.c
