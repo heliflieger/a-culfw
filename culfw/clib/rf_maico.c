@@ -121,7 +121,9 @@ rf_maico_task(void)
   uint8_t rssi;
 #ifdef HAS_MULTI_CC
 for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
-  if (is_RF_mode(RF_mode_maico) && (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In))) {
+ if (is_RF_mode(RF_mode_maico)) {
+  if (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In)) {
+
 #else
   if(!maico_on)
     return;
@@ -187,6 +189,7 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
       break;
   }
 #ifdef HAS_MULTI_CC
+ }
 }
 multiCC.instance = 0;
 #endif

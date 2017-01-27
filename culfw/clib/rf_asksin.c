@@ -141,7 +141,8 @@ rf_asksin_task(void)
 
 #ifdef HAS_MULTI_CC
 for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
-  if (is_RF_mode(RF_mode_asksin) && (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In))) {
+ if (is_RF_mode(RF_mode_asksin)) {
+  if (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In)) {
 
 #else
   if(!asksin_on)
@@ -230,6 +231,7 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
   cc1101_RX_check_PLL_wait_task();
 #endif
 #ifdef HAS_MULTI_CC
+ }
 }
 multiCC.instance = 0;
 #endif

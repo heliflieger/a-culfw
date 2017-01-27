@@ -170,8 +170,8 @@ void native_task(void) {
 
 #ifdef HAS_MULTI_CC
 for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
-  if ((is_RF_mode(RF_mode_native1) || is_RF_mode(RF_mode_native2) || is_RF_mode(RF_mode_native3))
-       && (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In))) {
+ if (is_RF_mode(RF_mode_native1) || is_RF_mode(RF_mode_native2) || is_RF_mode(RF_mode_native3)) {
+  if (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In)) {
 
 #else
   if(!native_on)
@@ -244,6 +244,7 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
        
   }
 #ifdef HAS_MULTI_CC
+ }
 }
 multiCC.instance = 0;
 #endif
