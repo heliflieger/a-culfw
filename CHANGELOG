@@ -1,5 +1,10 @@
 ## Changelog:
 
+#### 1.23.08
+- miniCUL: added Hoermann send + RFR Filter
+- miniCUL: Code cleanup
+- rpiaddon: added Hoermann send + RFR Filter
+
 #### 1.23.07
 - ARM Models: fix MBus
 
