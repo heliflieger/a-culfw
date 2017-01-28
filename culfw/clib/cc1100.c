@@ -110,6 +110,60 @@ const PROGMEM const uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
  */
 };
 
+const PROGMEM const uint8_t CC1100_CFG1[EE_CC1100_CFG_SIZE] = {
+// CULFW   IDX NAME     RESET STUDIO COMMENT
+   0x0D, // 00 IOCFG2   *29   *0B    GDO2 as serial output
+   0x2E, // 01 IOCFG1    2E    2E    Tri-State
+   0x2D, // 02 IOCFG0   *3F   *0C    GDO0 for input
+   0x07, // 03 FIFOTHR   07   *47
+   0xD3, // 04 SYNC1     D3    D3
+   0x91, // 05 SYNC0     91    91
+   0x3D, // 06 PKTLEN   *FF    3D
+   0x04, // 07 PKTCTRL1  04    04
+   0x32, // 08 PKTCTRL0 *45    32
+   0x00, // 09 ADDR      00    00
+   0x00, // 0A CHANNR    00    00
+   0x06, // 0B FSCTRL1  *0F    06    152kHz IF Frquency
+   0x00, // 0C FSCTRL0   00    00
+   0x10, // 0D FREQ2    *1E    21    868.3 (def:800MHz)
+   0xb0, // 0E FREQ1    *C4    65
+   0x71, // 0F FREQ0    *EC    e8
+   //0x55, // 10 MDMCFG4  *8C    55    bWidth 325kHz
+   0x57, // 10 MDMCFG4  *8C    55    bWidth 325kHz
+   //0xe4, // 11 MDMCFG3  *22   *43    Drate:1500 ((256+228)*2^5)*26000000/2^28
+   0xC4, // 11 MDMCFG3 (x)   DataRate: 5603,79 Baud ((256+196)*2^7)*26000000/(2^28)
+   0x30, // 12 MDMCFG2  *02   *B0    Modulation: ASK
+   0x23, // 13 MDMCFG1  *22    23
+   0xb9, // 14 MDMCFG0  *F8    b9    ChannelSpace: 350kHz
+   0x00, // 15 DEVIATN  *47    00
+   0x07, // 16 MCSM2     07    07
+   0x00, // 17 MCSM1     30    30
+   0x18, // 18 MCSM0    *04    18    Calibration: RX/TX->IDLE
+   0x14, // 19 FOCCFG   *36    14
+   0x6C, // 1A BSCFG     6C    6C
+   0x07, // 1B AGCCTRL2 *03   *03    42 dB instead of 33dB
+   0x00, // 1C AGCCTRL1 *40   *40
+   0x90, // 1D AGCCTRL0 *91   *92    4dB decision boundery
+   0x87, // 1E WOREVT1   87    87
+   0x6B, // 1F WOREVT0   6B    6B
+   0xF8, // 20 WORCTRL   F8    F8
+   0x56, // 21 FREND1    56    56
+   0x11, // 22 FREND0   *16    17    0x11 for no PA ramping
+   0xE9, // 23 FSCAL3   *A9    E9
+   0x2A, // 24 FSCAL2   *0A    2A
+   0x00, // 25 FSCAL1    20    00
+   0x1F, // 26 FSCAL0    0D    1F
+   0x41, // 27 RCCTRL1   41    41
+   0x00, // 28 RCCTRL0   00    00
+
+ /*
+ Conf1: SmartRF Studio:
+   Xtal: 26Mhz, RF out: 0dB, PA ramping, Dev:5kHz, Data:1kHz, Modul: ASK/OOK,
+   RF: 868.30MHz, Chan:350kHz, RX Filter: 325kHz
+   SimpleRX: Async, SimpleTX: Async+Unmodulated
+ */
+};
+
 #if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
 const PROGMEM const uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
 // CULFW   IDX NAME     
@@ -256,6 +310,11 @@ cc_factory_reset(void)
   t = EE_FASTRF_CFG;
   for(uint8_t i = 0; i < sizeof(FASTRF_CFG); i++)
     ewb(t++, __LPM(FASTRF_CFG+i));
+#endif
+#if defined(HAS_MULTI_CC) && HAS_MULTI_CC > 1
+  t = EE_CC1100_CFG1;
+  for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++)
+    ewb(t++, __LPM(CC1100_CFG1+i));
 #endif
 
 #ifdef MULTI_FREQ_DEVICE
@@ -422,8 +481,14 @@ set_ccoff(void)
 void
 set_ccon(void)
 {
+#ifdef HAS_MULTI_CC
+  if(multiCC.instance == 1)
+    ccInitChip(EE_CC1100_CFG1);
+  else
+    ccInitChip(EE_CC1100_CFG);
+
+#else
   ccInitChip(EE_CC1100_CFG);
-#ifndef HAS_MULTI_CC
   cc_on = 1;
 
 #ifdef HAS_ASKSIN

@@ -72,14 +72,14 @@ bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     b->bitidx  = 7;
     b->data[0] = 0;
     #ifdef SAM7
-        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE/8*3);
+    HAL_timer_set_reload_register(1,SILENCE/8*3);
     #elif defined STM32
-        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE);
+    HAL_timer_set_reload_register(1,SILENCE);
     #else
         OCR1A = SILENCE;
     #endif
     #ifdef ARM
-        hal_enable_CC_timer_int(TRUE);
+        hal_enable_CC_timer_int(0,TRUE);
     #else
         TIMSK1 = _BV(OCIE1A);
     #endif

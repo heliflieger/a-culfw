@@ -58,6 +58,8 @@ void do_wdt_enable(uint8_t t);
 #else
 # define EE_ETH_LAST         (EE_IP4_NTPOFFSET+1)       // 
 #endif
+#else
+# define EE_ETH_LAST         (EE_RF_ROUTER_ROUTER+1)
 #endif
 
 #ifdef HAS_LCD
@@ -71,6 +73,10 @@ void do_wdt_enable(uint8_t t);
 # define EE_LCD_LAST          (EE_SLEEPTIME+1)
 #else
 # define EE_LCD_LAST          EE_ETH_LAST
+#endif
+
+#if defined(HAS_MULTI_CC) && HAS_MULTI_CC > 1
+# define EE_CC1100_CFG1       EE_ETH_LAST
 #endif
 
 #ifdef HAS_FS

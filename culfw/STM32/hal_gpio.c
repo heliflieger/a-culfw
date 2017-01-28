@@ -215,6 +215,13 @@ __weak void CC1100_in_callback()
    */
 }
 
+__weak void CC1100_in_callback1()
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the HAL_GPIO_EXTI_Callback could be implemented in the user file
+   */
+}
+
 /**
   * @brief EXTI line detection callbacks
   * @retval None
@@ -225,6 +232,12 @@ void hal_GPIO_EXTI_IRQHandler(void)
     __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[0].pin[CC_Pin_In]));
     CC1100_in_callback();
   }
+
+  if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[1].pin[CC_Pin_In])) != RESET) {
+    __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[1].pin[CC_Pin_In]));
+    CC1100_in_callback1();
+  }
+
 }
 
 /*----------------------------------------------------------------------------*/

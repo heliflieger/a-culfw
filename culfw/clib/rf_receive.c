@@ -141,7 +141,7 @@ set_txrestore()
 #ifdef HAS_MULTI_CC
   if(multiCC.tx_report[multiCC.instance]) {
     set_ccon();
-    if(!multiCC.instance)
+    if(multiCC.instance < 2)
       ccRX();
   } else {
     set_ccoff();
@@ -596,7 +596,7 @@ void reset_input(void)
 {
   maxLevel=0;
 #ifdef ARM
-  hal_enable_CC_timer_int(FALSE);
+  hal_enable_CC_timer_int(0,FALSE);
 #else
   TIMSK1 = 0;
 #endif
@@ -605,9 +605,9 @@ void reset_input(void)
   packetCheckValues.isnotrep = 0;
 #endif
 #ifdef SAM7
-        HAL_TIMER_SET_RELOAD_REGISTER(0);
+        HAL_timer_set_reload_register(0,0);
 #elif defined STM32
-      	HAL_TIMER_SET_RELOAD_REGISTER(0xffff);
+      	HAL_timer_set_reload_register(0,0xffff);
 #else
         OCR1A = 0;
 #endif
@@ -630,13 +630,13 @@ ISR(TIMER1_COMPA_vect)
   hal_enable_CC_timer_int(FALSE);       //Disable Interrupt
 
   #ifdef LONG_PULSE
-  HAL_TIMER_SET_RELOAD_REGISTER(TWRAP/8*3);    // Wrap Timer
+  HAL_timer_set_reload_register(0,TWRAP/8*3);    // Wrap Timer
   #endif
 
 #elif defined STM32
-  hal_enable_CC_timer_int(FALSE);       //Disable Interrupt
+  hal_enable_CC_timer_int(0,FALSE);       //Disable Interrupt
   #ifdef LONG_PULSE
-  HAL_TIMER_SET_RELOAD_REGISTER(TWRAP);
+  HAL_timer_set_reload_register(0,TWRAP);
   #endif
 
 #else
@@ -759,9 +759,9 @@ static void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool 
         }    
 #ifdef SAM7
         ocrVal = ((ocrVal * 100) / 266);
-        HAL_TIMER_SET_RELOAD_REGISTER(ocrVal * 16);
+        HAL_timer_set_reload_register(0,ocrVal * 16);
 #elif defined STM32
-        HAL_TIMER_SET_RELOAD_REGISTER(ocrVal * 16);
+        HAL_timer_set_reload_register(0,ocrVal * 16);
 #else
         OCR1A = ocrVal * 16;
 #endif
@@ -798,17 +798,17 @@ ISR(CC1100_INTVECT)
 #endif
 #ifdef LONG_PULSE
   #ifdef SAM7
-  uint16_t c = HAL_TIMER_GET_COUNTER_VALUE() / 6;   // catch the time and make it smaller
+  uint16_t c = HAL_timer_get_counter_value(0) / 6;   // catch the time and make it smaller
   #elif defined STM32
-  uint16_t c = HAL_TIMER_GET_COUNTER_VALUE()>>4;;
+  uint16_t c = HAL_timer_get_counter_value(0)>>4;;
   #else
   uint16_t c = (TCNT1>>4);               // catch the time and make it smaller
   #endif
 #else
   #ifdef SAM7
-  uint8_t c = HAL_TIMER_GET_COUNTER_VALUE() / 6;   // catch the time and make it smaller
+  uint8_t c = HAL_timer_get_counter_value(0) / 6;   // catch the time and make it smaller
   #elif defined STM32
-  uint8_t c = HAL_TIMER_GET_COUNTER_VALUE()>>4;
+  uint8_t c = HAL_timer_get_counter_value(0)>>4;
   #else
   uint8_t c = (TCNT1>>4);               // catch the time and make it smaller
   #endif
@@ -864,7 +864,7 @@ ISR(CC1100_INTVECT)
     )) {
       addbit(b, 1);
 #ifdef ARM
-      HAL_TIMER_RESET_COUNTER_VALUE();
+      HAL_timer_reset_counter_value(0);
 #else
       TCNT1 = 0;
 #endif
@@ -905,7 +905,7 @@ ISR(CC1100_INTVECT)
   lowtime = c-hightime;
 
 #ifdef ARM
-  HAL_TIMER_RESET_COUNTER_VALUE();
+  HAL_timer_reset_counter_value(0);
 #else
   TCNT1 = 0;                          // restart timer
 #endif
@@ -1011,16 +1011,16 @@ retry_sync:
 	    #ifdef SAM7
           uint32_t ocrVal = 0;
           ocrVal = ((lowtime * 100) / 266);
-          HAL_TIMER_SET_RELOAD_REGISTER((ocrVal - 16) * 16);
+          HAL_timer_set_reload_register(0,(ocrVal - 16) * 16);
       #elif defined STM32
-          HAL_TIMER_SET_RELOAD_REGISTER((lowtime - 16) * 16); //End of message
+          HAL_timer_set_reload_register(0,(lowtime - 16) * 16); //End of message
       #else
           OCR1A = (lowtime - 16) * 16; //End of message
          	//OCR1A = 2200; // end of message
           //OCR1A = b->syncbit.lowtime*16 - 1000;
       #endif
       #ifdef ARM
-          hal_enable_CC_timer_int(TRUE);
+          hal_enable_CC_timer_int(0,TRUE);
       #else
           TIMSK1 = _BV(OCIE1A);
       #endif
@@ -1058,14 +1058,14 @@ retry_sync:
             //DC('s');
         }
         #ifdef SAM7
-        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE/8*3);
+        HAL_timer_set_reload_register(0,SILENCE/8*3);
         #elif defined STM32
-            HAL_TIMER_SET_RELOAD_REGISTER(SILENCE);
+            HAL_timer_set_reload_register(0,SILENCE);
         #else
             OCR1A = SILENCE;
         #endif
         #ifdef ARM
-            hal_enable_CC_timer_int(TRUE);
+            hal_enable_CC_timer_int(0,TRUE);
         #else
             TIMSK1 = _BV(OCIE1A);
         #endif
@@ -1085,9 +1085,9 @@ retry_sync:
         b->sync++;
       } else if(b->sync >= 4 ) {          // the one bit at the end of the 0-sync
 #ifdef SAM7
-        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE/8*3);
+        HAL_timer_set_reload_register(0,SILENCE/8*3);
 #elif defined STM32
-      	HAL_TIMER_SET_RELOAD_REGISTER(SILENCE);
+      	HAL_timer_set_reload_register(0,SILENCE);
 #else
         OCR1A = SILENCE;
 #endif
@@ -1102,9 +1102,9 @@ retry_sync:
           b->state = STATE_ESA;
           //DU(b->sync,         3);
 #ifdef SAM7
-          HAL_TIMER_SET_RELOAD_REGISTER(375);
+          HAL_timer_set_reload_register(0,375);
 #elif defined STM32
-          HAL_TIMER_SET_RELOAD_REGISTER(1000);
+          HAL_timer_set_reload_register(0,1000);
 #else
           OCR1A = 1000;
 #endif
@@ -1135,7 +1135,7 @@ retry_sync:
         b->data[0] = 0;
 
 #ifdef ARM
-        hal_enable_CC_timer_int(TRUE);
+        hal_enable_CC_timer_int(0,TRUE);
 #else
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data
 #endif

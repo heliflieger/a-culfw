@@ -34,10 +34,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hal_timer.h"
-
+#include <stm32f1xx_hal.h>
+#include <stm32f103xb.h>
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 
 /* TIM1 init function */
 void MX_TIM1_Init(void)
@@ -108,6 +110,39 @@ void MX_TIM2_Init(void)
 
 }
 
+/* TIM2 init function */
+void MX_TIM3_Init(void)
+{
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 71;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 4000;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  __HAL_TIM_ENABLE(&htim3);
+
+}
+
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
 {
 
@@ -149,17 +184,33 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
     /* Peripheral interrupt Deinit*/
     HAL_NVIC_DisableIRQ(TIM2_IRQn);
   }
+  else if(tim_baseHandle->Instance==TIM3)
+  {
+    /* Peripheral clock disable */
+    __HAL_RCC_TIM3_CLK_DISABLE();
 
+    /* Peripheral interrupt Deinit*/
+    HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  }
 } 
 
-void hal_enable_CC_timer_int(uint8_t enable) {
+void hal_enable_CC_timer_int(uint8_t instance, uint8_t enable) {
+  TIM_HandleTypeDef* htim;
+
+  if(instance == 0)
+    htim=&htim2;
+  else if(instance == 1)
+    htim=&htim3;
+  else
+    return;
+
   if (enable) {
-    __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_UPDATE);
-    if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK) {
+    __HAL_TIM_CLEAR_IT(htim, TIM_IT_UPDATE);
+    if (HAL_TIM_Base_Start_IT(htim) != HAL_OK) {
       Error_Handler();
     }
   } else {
-    __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_UPDATE);
+    __HAL_TIM_DISABLE_IT(htim, TIM_IT_UPDATE);
   }
 }
 /* USER CODE BEGIN 1 */
@@ -178,13 +229,49 @@ __weak void rf_receive_TimerElapsedCallback(void)
    */
 }
 
+__weak void rf_receive1_TimerElapsedCallback(void)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the HAL_TIMEx_CommutationCallback could be implemented in the user file
+   */
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if(htim->Instance==TIM1) {
     clock_TimerElapsedCallback();
   } else if(htim->Instance==TIM2) {
     rf_receive_TimerElapsedCallback();
+  } else if(htim->Instance==TIM3) {
+    rf_receive1_TimerElapsedCallback();
   }
 }
+
+void HAL_timer_set_reload_register(uint8_t instance, uint32_t value) {
+  if(instance == 0)
+    TIM2->ARR = value;
+  else if(instance == 1)
+    TIM3->ARR = value;
+  else
+    return;
+}
+uint32_t HAL_timer_get_counter_value(uint8_t instance) {
+  if(instance == 0)
+    return TIM2->CNT;
+  else if(instance == 1)
+    return TIM3->CNT;
+  else
+    return 0;
+
+}
+void HAL_timer_reset_counter_value(uint8_t instance) {
+  if(instance == 0)
+    TIM2->CNT = 0;
+  else if(instance == 1)
+    TIM3->CNT = 0;
+  else
+    return;
+}
+
 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
