@@ -34,12 +34,17 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "hal_timer.h"
+#include "board.h"
 #include <stm32f1xx_hal.h>
 #include <stm32f103xb.h>
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
 
 /* TIM1 init function */
 void MX_TIM1_Init(void)
@@ -121,7 +126,7 @@ void MX_TIM3_Init(void)
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 4000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -163,6 +168,15 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     /* Peripheral interrupt init */
     HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM2_IRQn);
+  }
+  else if(tim_baseHandle->Instance==TIM3)
+  {
+    /* Peripheral clock enable */
+    __HAL_RCC_TIM3_CLK_ENABLE();
+
+    /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM3_IRQn);
   }
 }
 
@@ -229,21 +243,29 @@ __weak void rf_receive_TimerElapsedCallback(void)
    */
 }
 
-__weak void rf_receive1_TimerElapsedCallback(void)
-{
-  /* NOTE : This function Should not be modified, when the callback is needed,
-            the HAL_TIMEx_CommutationCallback could be implemented in the user file
-   */
-}
-
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+#ifdef HAS_MULTI_CC
+  uint8_t old_instance = multiCC.instance;
+
+  if(htim->Instance==TIM1) {
+      clock_TimerElapsedCallback();
+    } else if(htim->Instance==TIM2) {
+      multiCC.instance = 0;
+      rf_receive_TimerElapsedCallback();
+      multiCC.instance = old_instance;
+    } else if(htim->Instance==TIM3) {
+      multiCC.instance = 1;
+      rf_receive_TimerElapsedCallback();
+      multiCC.instance = old_instance;
+    }
+#else
   if(htim->Instance==TIM1) {
     clock_TimerElapsedCallback();
   } else if(htim->Instance==TIM2) {
     rf_receive_TimerElapsedCallback();
-  } else if(htim->Instance==TIM3) {
-    rf_receive1_TimerElapsedCallback();
   }
+#endif
+
 }
 
 void HAL_timer_set_reload_register(uint8_t instance, uint32_t value) {

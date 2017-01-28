@@ -109,7 +109,7 @@ const PROGMEM const uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    SimpleRX: Async, SimpleTX: Async+Unmodulated
  */
 };
-
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
 const PROGMEM const uint8_t CC1100_CFG1[EE_CC1100_CFG_SIZE] = {
 // CULFW   IDX NAME     RESET STUDIO COMMENT
    0x0D, // 00 IOCFG2   *29   *0B    GDO2 as serial output
@@ -163,6 +163,7 @@ const PROGMEM const uint8_t CC1100_CFG1[EE_CC1100_CFG_SIZE] = {
    SimpleRX: Async, SimpleTX: Async+Unmodulated
  */
 };
+#endif
 
 #if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
 const PROGMEM const uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
@@ -311,7 +312,7 @@ cc_factory_reset(void)
   for(uint8_t i = 0; i < sizeof(FASTRF_CFG); i++)
     ewb(t++, __LPM(FASTRF_CFG+i));
 #endif
-#if defined(HAS_MULTI_CC) && HAS_MULTI_CC > 1
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
   t = EE_CC1100_CFG1;
   for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++)
     ewb(t++, __LPM(CC1100_CFG1+i));

@@ -256,7 +256,9 @@ const t_fntab fntab[] = {
 const t_fntab fntab1[] = {
 
   { 'C', ccreg },
+  { 'R', read_eeprom },
   { 'V', version },
+  { 'W', write_eeprom },
   { 'X', set_txreport },
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
@@ -419,15 +421,26 @@ int main(void)
 
   TRACE_INFO("init Complete\n\r");
 
-  checkFrequency();
+#if defined(HAS_MULTI_CC)
+    for (multiCC.instance = 0; multiCC.instance < HAS_MULTI_CC; multiCC.instance++)
+      checkFrequency();
+    multiCC.instance = 0;
+#else
+    checkFrequency();
+#endif
 
   // Main loop
   while (1) {
 
     CDC_Task();
     Minute_Task();
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+    for (multiCC.instance = 0; multiCC.instance < 2; multiCC.instance++)
+      RfAnalyze_Task();
+    multiCC.instance = 0;
+#else
     RfAnalyze_Task();
-
+#endif
     #if CDC_COUNT > 1
       cdc_uart_task();
     #endif

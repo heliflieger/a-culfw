@@ -126,6 +126,14 @@ read_eeprom(char *in)
     else
       addr = hb[0];
 
+#ifdef HAS_MULTI_CC
+    if(multiCC.instance == 1) {
+      if((addr >= (uint32_t)EE_CC1100_CFG) && (addr < (uint32_t)EE_CC1100_CFG + EE_CC1100_CFG_SIZE)) {
+        addr = addr - (uint32_t)EE_CC1100_CFG + (uint32_t)EE_CC1100_CFG1;
+      }
+    }
+#endif
+
     d = erb((uint8_t *)addr);
     DC('R');                    // prefix
     DH(addr,4);                 // register number
@@ -172,7 +180,15 @@ write_eeprom(char *in)
       addr = hb[0];
     else
       addr = (hb[0] << 8) | hb[1];
-      
+
+#ifdef HAS_MULTI_CC
+    if(multiCC.instance == 1) {
+      if((addr >= (uint32_t)EE_CC1100_CFG) && (addr < (uint32_t)EE_CC1100_CFG + EE_CC1100_CFG_SIZE)) {
+        addr = addr - (uint32_t)EE_CC1100_CFG + (uint32_t)EE_CC1100_CFG1;
+      }
+    }
+#endif
+
     ewb((uint8_t*)addr, hb[d-1]);
 
     if (addr == 15 || addr == 16 || addr == 17)

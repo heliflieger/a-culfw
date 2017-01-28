@@ -75,7 +75,7 @@ void do_wdt_enable(uint8_t t);
 # define EE_LCD_LAST          EE_ETH_LAST
 #endif
 
-#if defined(HAS_MULTI_CC) && HAS_MULTI_CC > 1
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
 # define EE_CC1100_CFG1       EE_ETH_LAST
 #endif
 

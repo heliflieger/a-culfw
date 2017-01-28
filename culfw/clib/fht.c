@@ -103,14 +103,22 @@ fht_display_buf(uint8_t ptr[])
   DH2(fht80b_state);
   DC(' ');
 #else
+#ifdef HAS_MULTI_CC
+  if(!(multiCC.tx_report[multiCC.instance] & REP_FHTPROTO))
+#else
   if(!(tx_report & REP_FHTPROTO))
+#endif
     return;
 #endif
 
   DC('T');
   for(uint8_t i = 0; i < 5; i++)
     DH2(ptr[i]);
+#ifdef HAS_MULTI_CC
+  if((multiCC.tx_report[multiCC.instance] & REP_RSSI))
+#else
   if(tx_report & REP_RSSI)
+#endif
     DH2(250);
   DNL();
 #ifdef FHTDEBUG

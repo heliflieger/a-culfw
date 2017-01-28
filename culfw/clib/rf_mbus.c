@@ -351,7 +351,11 @@ void rf_mbus_task(void) {
 //	DC( ' ' );
       }
 
+#ifdef HAS_MULTI_CC
+      if (multiCC.tx_report[multiCC.instance] & REP_RSSI) {
+#else
       if (tx_report & REP_RSSI) {
+#endif
         DH2(lqi);	
         DH2(rssi);
       }

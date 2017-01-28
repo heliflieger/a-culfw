@@ -161,7 +161,11 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
 
   } while(--repeat > 0);
 
+#ifdef HAS_MULTI_CC
+  if(multiCC.tx_report[multiCC.instance]) {     // Enable RX
+#else
   if(tx_report) {                               // Enable RX
+#endif
     ccRX();
   } else {
     ccStrobe(CC1100_SIDLE);

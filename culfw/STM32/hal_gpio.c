@@ -39,6 +39,10 @@
 #include "led.h"
 #include "delay.h"
 
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
+
 const transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
 
 /*----------------------------------------------------------------------------*/
@@ -226,18 +230,29 @@ __weak void CC1100_in_callback1()
   * @brief EXTI line detection callbacks
   * @retval None
   */
-void hal_GPIO_EXTI_IRQHandler(void)
-{
+void hal_GPIO_EXTI_IRQHandler(void) {
+#ifdef HAS_MULTI_CC
+  uint8_t old_instance = multiCC.instance;
+
   if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[0].pin[CC_Pin_In])) != RESET) {
     __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[0].pin[CC_Pin_In]));
+    multiCC.instance = 0;
     CC1100_in_callback();
+    multiCC.instance = old_instance;
   }
 
   if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[1].pin[CC_Pin_In])) != RESET) {
     __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[1].pin[CC_Pin_In]));
-    CC1100_in_callback1();
+    multiCC.instance = 1;
+    CC1100_in_callback();
+    multiCC.instance = old_instance;
   }
-
+#else
+  if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[0].pin[CC_Pin_In])) != RESET) {
+    __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[0].pin[CC_Pin_In]));
+    CC1100_in_callback();
+  }
+#endif
 }
 
 /*----------------------------------------------------------------------------*/

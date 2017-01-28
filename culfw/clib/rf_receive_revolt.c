@@ -28,6 +28,13 @@
 #include <hal_gpio.h>
 #include <hal_timer.h>
 #endif
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#define CC_INSTANCE   multiCC.instance
+#else
+#define CC_INSTANCE   0
+#endif
+
 #ifdef HAS_REVOLT
 /*
  * Description in header
@@ -72,14 +79,14 @@ bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     b->bitidx  = 7;
     b->data[0] = 0;
     #ifdef SAM7
-    HAL_timer_set_reload_register(1,SILENCE/8*3);
+    HAL_timer_set_reload_register(CC_INSTANCE,SILENCE/8*3);
     #elif defined STM32
-    HAL_timer_set_reload_register(1,SILENCE);
+    HAL_timer_set_reload_register(CC_INSTANCE,SILENCE);
     #else
         OCR1A = SILENCE;
     #endif
     #ifdef ARM
-        hal_enable_CC_timer_int(0,TRUE);
+        hal_enable_CC_timer_int(CC_INSTANCE,TRUE);
     #else
         TIMSK1 = _BV(OCIE1A);
     #endif

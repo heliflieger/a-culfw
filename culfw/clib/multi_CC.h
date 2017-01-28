@@ -21,6 +21,7 @@ typedef struct {
   RF_mode_t   RF_mode[HAS_MULTI_CC];
   RF_mode_t   RF_mode_save[HAS_MULTI_CC];
   uint8_t     tx_report[HAS_MULTI_CC];
+  uint8_t     frequencyMode[HAS_MULTI_CC];
 } multiCC_t;
 
 extern multiCC_t multiCC;

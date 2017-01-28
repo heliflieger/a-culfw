@@ -120,7 +120,11 @@ rf_rwe_task(void)
     ccStrobe( CC1100_SNOP  );
     ccStrobe( CC1100_SRX   );
 
+#ifdef HAS_MULTI_CC
+    if(multiCC.tx_report[multiCC.instance] & REP_BINTIME) {
+#else
     if (tx_report & REP_BINTIME) {
+#endif
       
       DC('w');
       for (uint8_t i=0; i<=enc[0]; i++)
@@ -131,8 +135,12 @@ rf_rwe_task(void)
       
       for (uint8_t i=0; i<=enc[0]; i++)
         DH2( enc[i] );
-      
+
+#ifdef HAS_MULTI_CC
+      if(!(multiCC.tx_report[multiCC.instance] & REP_RSSI))
+#else
       if (tx_report & REP_RSSI)
+#endif
         DH2(rssi);
       
       DNL();

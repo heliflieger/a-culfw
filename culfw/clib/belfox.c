@@ -74,6 +74,10 @@ send_belfox(char *msg)
   cli();
 #endif
 
+#ifdef HAS_MULTI_CC
+  change_RF_mode(RF_mode_slow);
+#else
+
 #ifdef HAS_MORITZ
   uint8_t restore_moritz = 0;
   if(moritz_on) {
@@ -82,12 +86,10 @@ send_belfox(char *msg)
     set_txreport("21");
   }
 #endif
-#ifdef HAS_MULTI_CC
-  if(!multiCC.RF_mode[multiCC.instance])
-#else
+
   if(!cc_on)
-#endif
     set_ccon();
+#endif
   ccTX();                                       // Enable TX 
   do {
     send_sync();                                // sync
@@ -101,7 +103,11 @@ send_belfox(char *msg)
 
   } while(--repeat > 0);
 
+#ifdef HAS_MULTI_CC
+  if(multiCC.tx_report[multiCC.instance]) {                               // Enable RX
+#else
   if(tx_report) {                               // Enable RX
+#endif
     ccRX();
   } else {
     ccStrobe(CC1100_SIDLE);
@@ -111,11 +117,14 @@ send_belfox(char *msg)
   sei(); 
 #endif
 
+#ifdef HAS_MULTI_CC
+  restore_RF_mode();
+#else
 #ifdef HAS_MORITZ
   if(restore_moritz)
     rf_moritz_init();
 #endif
-
+#endif
   LED_OFF();
 }
 
