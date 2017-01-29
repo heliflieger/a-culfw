@@ -77,6 +77,7 @@ CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
 CFLAGS += -D$(TARGET)
+CFLAGS += -DI2CSLAVE_ADDR=$(I2CSLAVE_ADDR)
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
@@ -189,18 +190,19 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
 all: 
-	make TARGET=I2CCUL868 mostly_clean build
-	make TARGET=I2CCUL433 mostly_clean build
-
+	make TARGET=I2CCUL868 I2CSLAVE_ADDR=0x7E mostly_clean build
+	make TARGET=I2CCUL433 I2CSLAVE_ADDR=0x7D mostly_clean build
+	make TARGET=I2CCUL868 I2CSLAVE_ADDR=0x7C mostly_clean build
+	
 build: elf hex eep lss sym
 
 
-elf: $(TARGET).elf
-hex: $(TARGET).hex
-eep: $(TARGET).eep
-lss: $(TARGET).lss
-sym: $(TARGET).sym
-LIBNAME=lib$(TARGET).a
+elf: $(TARGET)-$(I2CSLAVE_ADDR).elf
+hex: $(TARGET)-$(I2CSLAVE_ADDR).hex
+eep: $(TARGET)-$(I2CSLAVE_ADDR).eep
+lss: $(TARGET)-$(I2CSLAVE_ADDR).lss
+sym: $(TARGET)-$(I2CSLAVE_ADDR).sym
+LIBNAME=lib$(TARGET)-$(I2CSLAVE_ADDR).a
 lib: $(LIBNAME)
 
 

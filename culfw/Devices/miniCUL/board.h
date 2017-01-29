@@ -65,6 +65,14 @@
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 
+#define HAS_IRTX                                //IR-Transmission
+#define IRSND_OCx               IRSND_OC2A          // use OC2A
+#ifndef F_INTERRUPTS            
+#define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
+#endif
+#undef  HAS_IRTX
+
+
 #if defined(_433MHZ)
 #define HAS_TCM97001
 #define HAS_REVOLT
