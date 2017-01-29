@@ -37,14 +37,11 @@
 #include "board.h"
 #include <stm32f1xx_hal.h>
 #include <stm32f103xb.h>
+#include "rf_mode.h"
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
-
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
-#endif
 
 /* TIM1 init function */
 void MX_TIM1_Init(void)
@@ -245,18 +242,18 @@ __weak void rf_receive_TimerElapsedCallback(void)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 #ifdef HAS_MULTI_CC
-  uint8_t old_instance = multiCC.instance;
+  uint8_t old_instance = CC1101.instance;
 
   if(htim->Instance==TIM1) {
       clock_TimerElapsedCallback();
     } else if(htim->Instance==TIM2) {
-      multiCC.instance = 0;
+      CC1101.instance = 0;
       rf_receive_TimerElapsedCallback();
-      multiCC.instance = old_instance;
+      CC1101.instance = old_instance;
     } else if(htim->Instance==TIM3) {
-      multiCC.instance = 1;
+      CC1101.instance = 1;
       rf_receive_TimerElapsedCallback();
-      multiCC.instance = old_instance;
+      CC1101.instance = old_instance;
     }
 #else
   if(htim->Instance==TIM1) {

@@ -12,6 +12,7 @@
 #include "delay.h"                      // for my_delay_us, my_delay_ms
 #include "display.h"                    // for DC, DH2, DNL
 #include "rf_zwave.h"
+#include "rf_mode.h"
 
 #ifdef CUL_V4
 #define MAX_ZWAVE_MSG 64        // 1024k SRAM is not enough: no SEC for CUL_V4
@@ -157,7 +158,7 @@ zccRX(void)
 {
   ccRX();
 #ifdef ARM
-  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
 #endif
@@ -169,7 +170,7 @@ rf_zwave_init(void)
 {
 
 #ifdef ARM
-	hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+	hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
 #else
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );
 #endif
@@ -253,7 +254,7 @@ rf_zwave_task(void)
     return zwave_doSend(zwave_sMsg, zwave_sLen);
 
   #ifdef ARM
-  if (!hal_CC_Pin_Get(0,CC_Pin_In))
+  if (!hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In))
 #else
   if(!bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))
 #endif
@@ -433,7 +434,7 @@ zwave_func(char *in)
   if(in[1] == 'r' || in[1] == 'm') {// Reception on: receive or monitor
     zwave_drate = (in[2] ? in[2] : DRATE_40k); // Valid: '1', '4', '9'
     zwave_on = in[1];
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_zwave);
 #else
     rf_zwave_init();
@@ -462,7 +463,7 @@ zwave_func(char *in)
 
   } else {                          // Off
     zwave_on = 0;
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_off);
 #endif
   }

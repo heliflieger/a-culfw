@@ -15,15 +15,14 @@
 #include "rf_moritz.h"
 #include "rf_receive.h"                 // for REP_RSSI, set_txrestore, etc
 #include "rf_send.h"                    // for credit_10ms
+#include "multi_CC.h"
+#include "rf_mode.h"
 
 void moritz_sendraw(uint8_t* buf, int longPreamble);
 void moritz_sendAck(uint8_t* enc);
 void moritz_handleAutoAck(uint8_t* enc);
 
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
-#else
-
+#ifndef USE_RF_MODE
 uint8_t moritz_on = 0;
 #endif
 
@@ -86,13 +85,8 @@ void
 rf_moritz_init(void)
 {
 #ifdef ARM
-#ifdef HAS_MULTI_CC
-  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
-#else
-  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
-#endif
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -127,7 +121,7 @@ rf_moritz_init(void)
   while(cnt-- && (ccStrobe( CC1100_SRX ) & 0x70) != 1)
     my_delay_us(10);
 
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
   moritz_on = 1;
 #endif
   checkFrequency(); 
@@ -180,21 +174,16 @@ rf_moritz_task(void)
   uint8_t enc[MAX_MORITZ_MSG];
   uint8_t rssi;
 
-#ifdef HAS_MULTI_CC
-for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
- if (is_RF_mode(RF_mode_moritz)) {
-  if (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In)) {
-
-#else
+#ifndef USE_RF_MODE
   if(!moritz_on)
     return;
+#endif
 
   // see if a CRC OK pkt has been arrived
 #ifdef ARM
-  if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+  if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
 #else
   if(bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
-#endif
 #endif
     //errata #1 does not affect us, because we wait until packet is completely received
     enc[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
@@ -218,13 +207,9 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
 
     moritz_handleAutoAck(enc);
 
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
+    MULTICC_PREFIX();
 
-    if (multiCC.tx_report[multiCC.instance] & REP_BINTIME) {
-#else
-    if (tx_report & REP_BINTIME) {
-#endif
+    if (TX_REPORT & REP_BINTIME) {
       DC('z');
       for (uint8_t i=0; i<=enc[0]; i++)
       DC( enc[i] );
@@ -232,11 +217,7 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
       DC('Z');
       for (uint8_t i=0; i<=enc[0]; i++)
         DH2( enc[i] );
-#ifdef HAS_MULTI_CC
-      if (multiCC.tx_report[multiCC.instance] & REP_RSSI)
-#else
-      if (tx_report & REP_RSSI)
-#endif
+      if (TX_REPORT & REP_RSSI)
         DH2(rssi);
       DNL();
     }
@@ -249,11 +230,6 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
     ccStrobe( CC1100_SIDLE );
     ccStrobe( CC1100_SRX   );
   }
-#ifdef HAS_MULTI_CC
- }
-}
-multiCC.instance = 0;
-#endif
 }
 
 void
@@ -265,9 +241,7 @@ moritz_send(char *in)
   uint8_t hblen = fromhex(in+1, dec, MAX_MORITZ_MSG-1);
 
   if ((hblen-1) != dec[0]) {
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DS_P(PSTR("LENERR\r\n"));
     return;
   }
@@ -282,15 +256,13 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
   //1kb/s = 1 bit/ms. we send 1 sec preamble + hblen*8 bits
   uint32_t sum = (longPreamble ? 100 : 0) + (hblen*8)/10;
   if (credit_10ms < sum) {
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DS_P(PSTR("LOVF\r\n"));
     return;
   }
   credit_10ms -= sum;
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   change_RF_mode(RF_mode_moritz);
 #else
   // in Moritz mode already?
@@ -300,9 +272,7 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
 #endif
 
   if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DC('Z');
     DC('E');
     DC('R');
@@ -330,9 +300,7 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
   ccTX();
 
   if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_TX) { //error
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DC('Z');
     DC('E');
     DC('R');
@@ -376,9 +344,7 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
   }
 
   if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DC('Z');
     DC('E');
     DC('R');
@@ -390,7 +356,7 @@ moritz_sendraw(uint8_t *dec, int longPreamble)
     DNL();
     rf_moritz_init();
   }
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   restore_RF_mode();
 #else
   if(!moritz_on) {
@@ -420,17 +386,11 @@ moritz_sendAck(uint8_t* enc)
   moritz_sendraw(ackPacket, 0);
 
   //Inform FHEM that we send an autoack
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+  MULTICC_PREFIX();
   DC('Z');
   for (uint8_t i=0; i < ackPacket[0]+1; i++)
     DH2( ackPacket[i] );
-#ifdef HAS_MULTI_CC
-      if (multiCC.tx_report[multiCC.instance] & REP_RSSI)
-#else
-  if (tx_report & REP_RSSI)
-#endif
+  if (TX_REPORT & REP_RSSI)
     DH2( 0 ); //fake some rssi
   DNL();
 }
@@ -439,7 +399,7 @@ void
 moritz_func(char *in)
 {
   if(in[1] == 'r') {                // Reception on
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_moritz);
 #else
     rf_moritz_init();
@@ -449,9 +409,7 @@ moritz_func(char *in)
     uint8_t dec[MAX_MORITZ_MSG];
     uint8_t hblen = fromhex(in+2, dec, MAX_MORITZ_MSG-1);
     if ((hblen-1) != dec[0]) {
-#ifdef HAS_MULTI_CC
-      multiCC_prefix();
-#endif
+      MULTICC_PREFIX();
       DS_P(PSTR("LENERR\r\n"));
       return;
     }
@@ -464,7 +422,7 @@ moritz_func(char *in)
     fromhex(in+2, fakeWallThermostatAddr, 3);
 
   } else {                          // Off
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_off);
 #else
     moritz_on = 0;

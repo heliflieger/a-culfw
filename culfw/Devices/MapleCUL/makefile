@@ -52,6 +52,7 @@ SRCS += ../../clib/mbus/mbus_packet.c
 SRCS += ../../clib/mbus/manchester.c
 SRCS += ../../clib/mbus/3outof6.c
 SRCS += ../../clib/mbus/crc.c
+SRCS += ../../clib/rf_mode.c
 SRCS += ../../clib/rf_moritz.c
 SRCS += ../../clib/rf_native.c
 SRCS += ../../clib/rf_router.c

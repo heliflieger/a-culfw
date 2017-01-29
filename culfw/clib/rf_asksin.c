@@ -14,10 +14,10 @@
 #include "display.h"                    // for DC, DH2, DNL, DS_P
 #include "rf_asksin.h"
 #include "rf_receive.h"                 // for set_txrestore, REP_BINTIME, etc
-
-#ifdef HAS_MULTI_CC
+#include "rf_mode.h"
 #include "multi_CC.h"
-#else
+
+#ifndef USE_RF_MODE
 uint8_t asksin_on = 0;
 #endif
 
@@ -74,13 +74,8 @@ rf_asksin_init(void)
 {
 
 #ifdef ARM
-#ifdef HAS_MULTI_CC
-  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
-#else
-  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
-#endif
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -138,22 +133,16 @@ rf_asksin_task(void)
   uint8_t rssi;
   uint8_t l;
 
-
-#ifdef HAS_MULTI_CC
-for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
- if (is_RF_mode(RF_mode_asksin)) {
-  if (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In)) {
-
-#else
+#ifndef USE_RF_MODE
   if(!asksin_on)
     return;
+#endif
 
   // see if a CRC OK pkt has been arrived
 #ifdef ARM
-  if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+  if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
 #else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
-#endif
 #endif
     msg[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
 
@@ -190,13 +179,10 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
     
     msg[l] = msg[l] ^ msg[2];
 
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
+    MULTICC_PREFIX();
 
-    if (multiCC.tx_report[multiCC.instance] & REP_BINTIME) {
-#else
-    if (tx_report & REP_BINTIME) {
-#endif
+    if (TX_REPORT & REP_BINTIME) {
+
       DC('a');
       for (uint8_t i=0; i<=msg[0]; i++)
       DC( msg[i] );
@@ -206,11 +192,7 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
       
       for (uint8_t i=0; i<=msg[0]; i++)
         DH2( msg[i] );
-#ifdef HAS_MULTI_CC
-      if (multiCC.tx_report[multiCC.instance] & REP_RSSI)
-#else
-      if (tx_report & REP_RSSI)
-#endif
+      if (TX_REPORT & REP_RSSI)
         DH2(rssi);
       
       DNL();
@@ -230,11 +212,6 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
 #ifdef HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
   cc1101_RX_check_PLL_wait_task();
 #endif
-#ifdef HAS_MULTI_CC
- }
-}
-multiCC.instance = 0;
-#endif
 }
 
 void
@@ -252,7 +229,7 @@ asksin_send(char *in)
     return;
   }
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   change_RF_mode(RF_mode_asksin);
 #else
   // in AskSin mode already?
@@ -280,9 +257,7 @@ asksin_send(char *in)
       get_timestamp(&ts2);
       if (((ts2 > ts1) && (ts2 - ts1 > ASKSIN_WAIT_TICKS_CCA)) ||
           ((ts2 < ts1) && (ts1 + ASKSIN_WAIT_TICKS_CCA < ts2))) {
-#ifdef HAS_MULTI_CC
-        multiCC_prefix();
-#endif
+        MULTICC_PREFIX();
         DS_P(PSTR("ERR:CCA\r\n"));
         goto out;
       }
@@ -317,7 +292,7 @@ out:
       ccStrobe( CC1100_SIDLE );
       ccStrobe( CC1100_SNOP  );
   }
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   if(!restore_RF_mode()) {
     do {
       ccStrobe(CC1100_SRX);
@@ -347,7 +322,7 @@ asksin_func(char *in)
       asksin_update_mode = 0;
     }
 #endif
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_asksin);
 #else
     rf_asksin_init();
@@ -358,7 +333,7 @@ asksin_func(char *in)
     asksin_send(in+1);
 
   } else {                          // Off
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_off);
 #else
     asksin_on = 0;

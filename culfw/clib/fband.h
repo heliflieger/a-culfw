@@ -8,10 +8,10 @@
 #define MODE_433_MHZ    1
 #define MODE_868_MHZ    2
 
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
-#define IS433MHZ (multiCC.frequencyMode[multiCC.instance] == MODE_433_MHZ)
-#define IS868MHZ (multiCC.frequencyMode[multiCC.instance] == MODE_868_MHZ)
+#ifdef USE_RF_MODE
+#include "rf_mode.h"
+#define IS433MHZ (CC1101.frequencyMode[CC1101.instance] == MODE_433_MHZ)
+#define IS868MHZ (CC1101.frequencyMode[CC1101.instance] == MODE_868_MHZ)
 #else
 #define IS433MHZ (frequencyMode == MODE_433_MHZ)
 #define IS868MHZ (frequencyMode == MODE_868_MHZ)

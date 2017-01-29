@@ -29,6 +29,7 @@
 #define CDC_BAUD_RATE           115200
 #define USB_IsConnected		      (CDC_isConnected(0))
 #define HAS_XRAM
+#define USE_RF_MODE
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -105,6 +106,8 @@
 #define CC1100_3_IN_BASE    GPIOC
 
 #define HAS_MULTI_CC        4
+
+#define NUM_SLOWRF          2
 
 #define CCCOUNT             4
 #define CCTRANSCEIVERS    {\

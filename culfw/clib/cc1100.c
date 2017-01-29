@@ -7,6 +7,8 @@
 #include "fncollection.h"               // for ewb, EE_CC1100_CFG, erb, etc
 #include "rf_asksin.h"                  // for asksin_on
 #include "stringfunc.h"                 // for fromhex
+#include "rf_mode.h"
+#include "multi_CC.h"
 
 #ifdef HAS_MORITZ
 #include "rf_moritz.h"                  // for moritz_on
@@ -14,15 +16,9 @@
 
 #ifdef ARM
 #include "spi.h"
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
-#define CC_INSTANCE     multiCC.instance
-#else
-#define CC_INSTANCE     0
-#endif
 #endif
 
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
 uint8_t cc_on;
 #endif
 
@@ -125,7 +121,7 @@ const PROGMEM const uint8_t CC1100_CFG1[EE_CC1100_CFG_SIZE] = {
    0x00, // 0A CHANNR    00    00
    0x06, // 0B FSCTRL1  *0F    06    152kHz IF Frquency
    0x00, // 0C FSCTRL0   00    00
-   0x10, // 0D FREQ2    *1E    21    868.3 (def:800MHz)
+   0x10, // 0D FREQ2    *1E    21    433.92 (def:800MHz)
    0xb0, // 0E FREQ1    *C4    65
    0x71, // 0F FREQ0    *EC    e8
    //0x55, // 10 MDMCFG4  *8C    55    bWidth 325kHz
@@ -229,7 +225,7 @@ cc1100_sendbyte(uint8_t data)
 void
 ccInitChip(uint8_t *cfg)
 {
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
 #ifdef HAS_MORITZ
   moritz_on = 0; //loading this configuration overwrites moritz cfg
 #endif
@@ -407,9 +403,7 @@ ccreg(char *in)
       }
     } else {
       out = cc1100_readReg(hb);
-#ifdef HAS_MULTI_CC
-      multiCC_prefix();
-#endif
+      MULTICC_PREFIX();
       DC('C');                    // prefix
       DH2(hb);                    // register number
       DS_P( PSTR(" = ") );
@@ -466,7 +460,7 @@ set_ccoff(void)
 #else
   ccStrobe(CC1100_SIDLE);
 #endif
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
   cc_on = 0;
 
 #ifdef HAS_ASKSIN
@@ -483,13 +477,15 @@ void
 set_ccon(void)
 {
 #ifdef HAS_MULTI_CC
-  if(multiCC.instance == 1)
+  if(CC1101.instance == 1)
     ccInitChip(EE_CC1100_CFG1);
   else
     ccInitChip(EE_CC1100_CFG);
-
 #else
   ccInitChip(EE_CC1100_CFG);
+#endif
+
+#ifndef USE_RF_MODE
   cc_on = 1;
 
 #ifdef HAS_ASKSIN

@@ -47,11 +47,10 @@
 #include "led.h"                        // for LED_OFF, LED_ON, SET_BIT
 #include "rf_receive.h"                 // for set_txrestore, tx_report
 #include "somfy_rts.h"
-
-#ifdef HAS_MULTI_CC
+#include "rf_mode.h"
 #include "multi_CC.h"
 
-#else
+#ifndef USE_RF_MODE
 
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"                  // for asksin_on, rf_asksin_init
@@ -110,7 +109,7 @@ const PROGMEM const uint8_t CC1100_SOMFY_RTS_CFG[EE_CC1100_CFG_SIZE] = {
 	0x00,// 28 RCCTRL0   00    00
 };
 
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
 uint8_t somfy_restore_asksin = 0;
 uint8_t somfy_restore_moritz = 0;
 #endif
@@ -121,13 +120,8 @@ uint16_t somfy_rts_interval_half = 620;
 
 void somfy_rts_tunein(void) {
 #ifdef ARM
-#ifdef HAS_MULTI_CC
-  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
-#else
-	hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
-#endif
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
 	EIMSK &= ~_BV(CC1100_INT);
 	SET_BIT(CC1100_CS_DDR, CC1100_CS_PIN); // CS as output
@@ -165,7 +159,7 @@ void somfy_rts_tunein(void) {
 	// Set CC_ON
 	ccStrobe( CC1100_SCAL);
 	my_delay_ms(1);
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
 	cc_on = 1;
 #endif
     checkFrequency(); 
@@ -291,7 +285,7 @@ static void somfy_rts_send(char *in) {
 	cli();
 #endif
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
 	change_RF_mode(RF_mode_somfy);
 #else
 	// If NOT in Somfy mode
@@ -331,10 +325,10 @@ static void somfy_rts_send(char *in) {
 		send_somfy_rts_frame(airdata, (i == 0) ? 2 : 7); // send 2 hw Sync pulses at first, and 7 for repeated frames
 	}
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
 	if(!restore_RF_mode()) {
 	  // enable RX again
-    if (multiCC.tx_report[multiCC.instance]) {
+    if (TX_REPORT) {
       ccRX();
     } else {
       ccStrobe(CC1100_SIDLE);
@@ -373,9 +367,7 @@ static void somfy_rts_send(char *in) {
 #endif
 
 	LED_OFF();
-#ifdef HAS_MULTI_CC
-  multiCC_prefix();
-#endif
+	MULTICC_PREFIX();
 	DC('Y');
 	DC('s');
 	for(j = 0; j < SOMFY_RTS_FRAME_SIZE; j++) {
@@ -395,9 +387,7 @@ void somfy_rts_func(char *in) {
 
 	} else if (in[1] == 'r') { // Set repetition
 		fromdec (in+2, (uint8_t *)&somfy_rts_repetition);
-#ifdef HAS_MULTI_CC
-		multiCC_prefix();
-#endif
+		MULTICC_PREFIX();
 		DC('Y');DC('r');DC(':');
 		DU(somfy_rts_repetition, 0);
 		DNL();
@@ -410,14 +400,12 @@ void somfy_rts_func(char *in) {
 		}
 		somfy_rts_interval_half = somfy_rts_interval / 2;
 
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+		MULTICC_PREFIX();
 		DC('Y');DC('t');DC(':');
 		DU(somfy_rts_interval, 6);
 		DNL();
 	} else if (in[1] == 'x') { 	// Reset Frequency back to Eeprom value
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
 	  set_RF_mode(RF_mode_off);
 #else
 	  if(0) { ;

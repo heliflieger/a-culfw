@@ -18,6 +18,7 @@
 #include "rf_receive.h"                 // for cksum1, cksum2, cksum3, etc
 #include "rf_send.h"
 #include "stringfunc.h"                 // for fromhex
+#include "rf_mode.h"
 
 #ifdef HAS_DMX
 #include "dmx.h"                        // for dmx_fs20_emu
@@ -29,10 +30,6 @@
 
 #ifdef HAS_MORITZ
 #include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
-#endif
-
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
 #endif
 
 // For FS20 we time the complete message, for KS300 the rise-fall distance
@@ -116,20 +113,16 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   cli();
 #endif
 
-#ifdef HAS_MULTI_CC
-  save_RF_mode();
-  if(!is_RF_mode(RF_mode_slow))
-    set_txreport("21");
+#ifdef USE_RF_MODE
+  change_RF_mode(RF_mode_slow);
 #else
 #ifdef HAS_MORITZ
   uint8_t restore_moritz = 0;
-#ifndef CC1100_MORITZ
   if(moritz_on) {
     restore_moritz = 1;
     moritz_on = 0;
     set_txreport("21");
   }
-#endif
 #endif
   if(!cc_on)
     set_ccon();
@@ -161,11 +154,7 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
 
   } while(--repeat > 0);
 
-#ifdef HAS_MULTI_CC
-  if(multiCC.tx_report[multiCC.instance]) {     // Enable RX
-#else
-  if(tx_report) {                               // Enable RX
-#endif
+  if(TX_REPORT) {                               // Enable RX
     ccRX();
   } else {
     ccStrobe(CC1100_SIDLE);
@@ -175,7 +164,7 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
   sei(); 
 #endif
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   restore_RF_mode();
 #else
 #ifdef HAS_MORITZ

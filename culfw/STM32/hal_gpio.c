@@ -38,10 +38,7 @@
 #include "stm32f103xb.h"
 #include "led.h"
 #include "delay.h"
-
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
-#endif
+#include "rf_mode.h"
 
 const transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
 
@@ -145,6 +142,9 @@ void HAL_LED_Toggle(uint8_t led) {
 void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode) {
   GPIO_InitTypeDef GPIO_InitStruct;
 
+  if(!(cc_num < CCCOUNT ))
+    return;
+
   /*Configure GDO0 (out) pin */
   if(CCtransceiver[cc_num].base[CC_Pin_Out]) {
     if(mode == INIT_MODE_IN_CS_IN) {
@@ -186,6 +186,9 @@ void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode) {
 
 void hal_enable_CC_GDOin_int(uint8_t cc_num, uint8_t enable) {
   GPIO_InitTypeDef GPIO_InitStruct;
+
+  if(!(cc_num < CCCOUNT ))
+    return;
 
   /*Configure in pin */
   GPIO_InitStruct.Pin = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);
@@ -232,20 +235,20 @@ __weak void CC1100_in_callback1()
   */
 void hal_GPIO_EXTI_IRQHandler(void) {
 #ifdef HAS_MULTI_CC
-  uint8_t old_instance = multiCC.instance;
+  uint8_t old_instance = CC1101.instance;
 
   if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[0].pin[CC_Pin_In])) != RESET) {
     __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[0].pin[CC_Pin_In]));
-    multiCC.instance = 0;
+    CC1101.instance = 0;
     CC1100_in_callback();
-    multiCC.instance = old_instance;
+    CC1101.instance = old_instance;
   }
 
   if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[1].pin[CC_Pin_In])) != RESET) {
     __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[1].pin[CC_Pin_In]));
-    multiCC.instance = 1;
+    CC1101.instance = 1;
     CC1100_in_callback();
-    multiCC.instance = old_instance;
+    CC1101.instance = old_instance;
   }
 #else
   if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[0].pin[CC_Pin_In])) != RESET) {

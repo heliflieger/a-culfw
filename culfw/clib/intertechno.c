@@ -26,12 +26,10 @@
 #include "intertechno.h"
 #include "led.h"                        // for LED_OFF, LED_ON, SET_BIT
 #include "rf_receive.h"                 // for set_txrestore, tx_report
-
-#ifdef HAS_MULTI_CC
+#include "rf_mode.h"
 #include "multi_CC.h"
 
-#else
-
+#ifndef USE_RF_MODE
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"                  // for asksin_on, rf_asksin_init
 #endif
@@ -118,13 +116,8 @@ it_tunein(void)
 		  int8_t i;
 		  
 #ifdef ARM
-#ifdef HAS_MULTI_CC
-		  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
-		  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
-#else
-  		hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
-  	  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
-#endif
+		  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+		  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
 		  EIMSK &= ~_BV(CC1100_INT);
   		SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
@@ -163,7 +156,7 @@ it_tunein(void)
 
   		ccStrobe( CC1100_SCAL );
   		my_delay_ms(1);
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
   		cc_on = 1;																	// Set CC_ON
 #endif
 }
@@ -325,7 +318,7 @@ it_send (char *in, uint8_t datatype) {
       cli(); 
     #endif
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   change_RF_mode(RF_mode_intertechno);
 #else
 	// If NOT InterTechno mode
@@ -434,10 +427,10 @@ it_send (char *in, uint8_t datatype) {
       //  send_IT_sync_V3();
       //}
 		} //Do it n Times
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     if(!restore_RF_mode()) {
       // enable RX again
-      if (multiCC.tx_report[multiCC.instance]) {
+      if (TX_REPORT) {
         ccRX();
       } else {
         ccStrobe(CC1100_SIDLE);
@@ -475,9 +468,7 @@ it_send (char *in, uint8_t datatype) {
     #endif		  
 
 		LED_OFF();
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+		MULTICC_PREFIX();
 		DC('i');DC('s');
 #ifdef HAS_HOMEEASY
     if (datatype == DATATYPE_HE) {
@@ -522,9 +513,7 @@ it_func(char *in)
 	} else if (in[1] == 's') {
         if (in[2] == 'r') {		// Modify Repetition-counter
             fromdec (in+3, (uint8_t *)&it_repetition);
-#ifdef HAS_MULTI_CC
-            multiCC_prefix();
-#endif
+            MULTICC_PREFIX();
             DU(it_repetition,0); DNL();
 #ifdef HAS_HOMEEASY
             } else if (in[2] == 'h') {		// HomeEasy
@@ -536,7 +525,7 @@ it_func(char *in)
             it_send (in, DATATYPE_IT);				// Sending real data
         } //sending real data
 	} else if (in[1] == 'r') { // Start of "Set Frequency" (f)
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
 	  set_RF_mode(RF_mode_intertechno);
 #else
 		#ifdef HAS_ASKSIN
@@ -562,16 +551,14 @@ it_func(char *in)
 		  } else {
 				fromhex (in+2, it_frequency, 3);
 			}
-#ifdef HAS_MULTI_CC
-      multiCC_prefix();
-#endif
+		  MULTICC_PREFIX();
 			DC('i');DC('f');DC(':');
 		  DH2(it_frequency[0]);
 		  DH2(it_frequency[1]);
 		  DH2(it_frequency[2]);
 		  DNL();
 	} else if (in[1] == 'x') { 		                    // Reset Frequency back to Eeprom value
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
 	  set_RF_mode(RF_mode_off);
 #else
 	  if(0) { ;

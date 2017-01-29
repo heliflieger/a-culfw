@@ -28,12 +28,7 @@
 #include <hal_gpio.h>
 #include <hal_timer.h>
 #endif
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
-#define CC_INSTANCE   multiCC.instance
-#else
-#define CC_INSTANCE   0
-#endif
+#include "rf_mode.h"
 
 #ifdef HAS_REVOLT
 /*

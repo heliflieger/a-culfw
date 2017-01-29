@@ -25,6 +25,7 @@
 #include "rf_mbus.h"
 #include "rf_receive.h"                 // for REP_RSSI
 #include "stringfunc.h"                 // for fromhex
+#include "rf_mode.h"
 
 // Buffers
 uint8 MBpacket[291];
@@ -351,11 +352,7 @@ void rf_mbus_task(void) {
 //	DC( ' ' );
       }
 
-#ifdef HAS_MULTI_CC
-      if (multiCC.tx_report[multiCC.instance] & REP_RSSI) {
-#else
-      if (tx_report & REP_RSSI) {
-#endif
+      if (TX_REPORT & REP_RSSI) {
         DH2(lqi);	
         DH2(rssi);
       }

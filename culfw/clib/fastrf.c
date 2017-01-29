@@ -10,10 +10,9 @@
 #include "display.h"                    // for display_channel, DC, etc
 #include "fastrf.h"
 #include "fncollection.h"               // for EE_FASTRF_CFG
-
-#ifdef HAS_MULTI_CC
+#include "rf_mode.h"
 #include "multi_CC.h"
-#endif
+
 uint8_t fastrf_on;
 
 void
@@ -22,7 +21,7 @@ fastrf_func(char *in)
   uint8_t len = strlen(in);
 
   if(in[1] == 'r') {                // Init
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_fast);
 #else
     ccInitChip(EE_FASTRF_CFG);
@@ -44,30 +43,20 @@ fastrf_func(char *in)
     ccRX();                         // set reception again. MCSM1 does not work.
 
   } else {
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_off);
-    fastrf_on = 0;
 #else
     fastrf_on = 0;
 #endif
-
   }
 }
 
 void
 FastRF_Task(void)
 {
-#ifdef HAS_MULTI_CC
-for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
- if (is_RF_mode(RF_mode_fast)) {
-#endif
 
   if(!fastrf_on)
-#ifdef HAS_MULTI_CC
-    break;
-#else
     return;
-#endif
 
   if(fastrf_on == 1) {
 
@@ -79,11 +68,7 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
       }
       lasttick = (uint8_t)ticks;
     }
-#ifdef HAS_MULTI_CC
-    break;
-#else
     return;
-#endif
   }
 
   uint8_t len = cc1100_readReg(CC1100_RXFIFO);
@@ -98,20 +83,13 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
 
     display_channel=DISPLAY_USB;
     uint8_t i;
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     for(i=0; i<len; i++)
       DC(buf[i]);
     DNL();
     display_channel=0xff;
   }
   fastrf_on = 1;
-#ifdef HAS_MULTI_CC
- }
-}
-multiCC.instance = 0;
-#endif
 }
 
 #endif

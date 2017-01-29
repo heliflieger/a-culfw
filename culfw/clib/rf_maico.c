@@ -14,12 +14,13 @@
 #include "rf_receive.h"
 #include "rf_send.h" //credit_10ms
 #include "stringfunc.h"                 // for fromhex
-
-#ifdef HAS_MULTI_CC
+#include "rf_mode.h"
 #include "multi_CC.h"
+
+#ifndef USE_RF_MODE
+uint8_t maico_on = 0;
 #endif
 
-uint8_t maico_on = 0;
 
 //07 0e
 const uint8_t PROGMEM MAICO_CFG[] = {
@@ -66,13 +67,8 @@ void
 rf_maico_init(void)
 {
 #ifdef ARM
-#ifdef HAS_MULTI_CC
-  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
-#else
-  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
-#endif
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -108,7 +104,7 @@ rf_maico_init(void)
   while(cnt-- && (ccStrobe( CC1100_SRX ) & 0x70) != 1)
     my_delay_us(10);
 
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
   maico_on = 1;
 #endif
 }
@@ -119,22 +115,19 @@ rf_maico_task(void)
 {
   uint8_t msg[MAX_MAICO_MSG];
   uint8_t rssi;
-#ifdef HAS_MULTI_CC
-for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
- if (is_RF_mode(RF_mode_maico)) {
-  if (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In)) {
 
-#else
+#ifndef USE_RF_MODE
   if(!maico_on)
     return;
+#endif
 
   // see if a CRC OK pkt has been arrived
 #ifdef ARM
-  if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+  if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
 #else
   if(bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
 #endif
-#endif
+
     //errata #1 does not affect us, because we wait until packet is completely received
     msg[0] = cc1100_readReg( CC1100_READ_BURST | CC1100_RXBYTES ) -2; // len
 
@@ -152,13 +145,10 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
 
     CC1100_DEASSERT;
 
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
+    MULTICC_PREFIX();
 
-    if (multiCC.tx_report[multiCC.instance] & REP_BINTIME) {
-#else
-    if (tx_report & REP_BINTIME) {
-#endif
+    if (TX_REPORT & REP_BINTIME) {
+
       DC('l');
       for (uint8_t i=0; i<=msg[0]; i++)
       DC( msg[i] );
@@ -166,11 +156,7 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
       DC('L');
       for (uint8_t i=0; i<=msg[0]; i++)
         DH2( msg[i] );
-#ifdef HAS_MULTI_CC
-      if (multiCC.tx_report[multiCC.instance] & REP_RSSI)
-#else
-      if (tx_report & REP_RSSI)
-#endif
+      if (TX_REPORT & REP_RSSI)
         DH2(rssi);
       DNL();
     }
@@ -188,11 +174,6 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
       //TRACE_INFO("Maico CC restart");
       break;
   }
-#ifdef HAS_MULTI_CC
- }
-}
-multiCC.instance = 0;
-#endif
 }
 
 
@@ -203,16 +184,14 @@ maico_sendraw(uint8_t *dec)
   //1kb/s = 1 bit/ms. we send 1 sec preamble + hblen*8 bits
   uint32_t sum = (hblen*8)/10;
   if (credit_10ms < sum) {
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DS_P(PSTR("LOVF\n\r"));
     return;
   }
   credit_10ms -= sum;
 
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   change_RF_mode(RF_mode_maico);
 #else
   // in Maico mode already?
@@ -222,9 +201,7 @@ maico_sendraw(uint8_t *dec)
 #endif
 
   if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DC('L');
     DC('E');
     DC('R');
@@ -265,9 +242,7 @@ maico_sendraw(uint8_t *dec)
   }
 
   if(cc1100_readReg( CC1100_MARCSTATE ) != MARCSTATE_RX) { //error
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DC('L');
     DC('E');
     DC('R');
@@ -277,7 +252,7 @@ maico_sendraw(uint8_t *dec)
     DNL();
     rf_maico_init();
   }
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   restore_RF_mode();
 #else
   if(!maico_on) {
@@ -290,7 +265,7 @@ void
 maico_func(char *in)
 {
   if(in[1] == 'r') {                // Reception on
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_maico);
 #else
     rf_maico_init();
@@ -300,9 +275,7 @@ maico_func(char *in)
     uint8_t dec[0x0b];
     uint8_t hblen = fromhex(in+2, dec, 0x0b);
     if ((hblen) != 0x0b) {
-#ifdef HAS_MULTI_CC
-      multiCC_prefix();
-#endif
+      MULTICC_PREFIX();
       DS_P(PSTR("LENERR\n\r"));
       TRACE_INFO("LENERR %02X\n\r", hblen);
       return;
@@ -310,7 +283,7 @@ maico_func(char *in)
     maico_sendraw(dec);
 
   } else {                          // Off
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_off);
 #else
     maico_on = 0;

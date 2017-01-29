@@ -33,7 +33,7 @@ void checkFrequency(void) {
   uint16_t value_0E;
   uint8_t  value_0F;
 #ifdef HAS_MULTI_CC
-  if (multiCC.instance == 1) {
+  if (CC1101.instance == 1) {
     value_0D = erb((uint8_t *)EE_CC1100_CFG1 + 0x0D);
     value_0E = erb((uint8_t *)EE_CC1100_CFG1 + 0x0E);
     value_0F = erb((uint8_t *)EE_CC1100_CFG1 + 0x0F);
@@ -49,9 +49,9 @@ void checkFrequency(void) {
 
 #ifdef HAS_MULTI_CC
   if (frequency > 500) {
-    multiCC.frequencyMode[multiCC.instance] = MODE_868_MHZ;
+    CC1101.frequencyMode[CC1101.instance] = MODE_868_MHZ;
   } else {
-    multiCC.frequencyMode[multiCC.instance] = MODE_433_MHZ;
+    CC1101.frequencyMode[CC1101.instance] = MODE_433_MHZ;
   }
 #else
   if (frequency > 500) {

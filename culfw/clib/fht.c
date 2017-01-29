@@ -11,10 +11,9 @@
 #include "rf_receive.h"                 // for tx_report, REP_FHTPROTO, etc
 #include "rf_send.h"                    // for addParityAndSendData, etc
 #include "stringfunc.h"                 // for fromhex
-
-#ifdef HAS_MULTI_CC
+#include "rf_mode.h"
 #include "multi_CC.h"
-#endif
+#include "fband.h"
 
 // We have three different work models:
 
@@ -107,22 +106,14 @@ fht_display_buf(uint8_t ptr[])
   DH2(fht80b_state);
   DC(' ');
 #else
-#ifdef HAS_MULTI_CC
-  if(!(multiCC.tx_report[multiCC.instance] & REP_FHTPROTO))
-#else
-  if(!(tx_report & REP_FHTPROTO))
-#endif
+  if(!(TX_REPORT & REP_FHTPROTO))
     return;
 #endif
 
   DC('T');
   for(uint8_t i = 0; i < 5; i++)
     DH2(ptr[i]);
-#ifdef HAS_MULTI_CC
-  if((multiCC.tx_report[multiCC.instance] & REP_RSSI))
-#else
-  if(tx_report & REP_RSSI)
-#endif
+  if(TX_REPORT & REP_RSSI)
     DH2(250);
   DNL();
 #ifdef FHTDEBUG
@@ -344,9 +335,7 @@ fhtsend(char *in)
 
 #ifdef HAS_FHT_80b
   if(!fht_addbuf(in)) {               // FHT80b mode: Queue everything
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DS_P( PSTR("EOB\r\n") );
   }
 #endif
@@ -503,6 +492,14 @@ void
 fht80b_timer(void)
 {
   if(fht80b_repeatcnt) {
+#ifdef HAS_MULTI_CC
+    for(CC1101.instance=0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++) {
+      if((CC1101.RF_mode[CC1101.instance] == RF_mode_slow) && IS868MHZ )
+        break;
+    }
+    if(!(CC1101.instance < HAS_MULTI_CC))
+        CC1101.instance=0;
+#endif
     fht80b_sendpacket();
     fht80b_timeout = 41;               // repeat if there is no msg for 0.3sec
     fht80b_repeatcnt--;

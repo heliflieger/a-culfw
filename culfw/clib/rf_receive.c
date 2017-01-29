@@ -52,22 +52,16 @@
 #ifdef HAS_MBUS
 #include "rf_mbus.h"                    // for WMBUS_NONE, mbus_mode
 #endif
+#include "rf_mode.h"
+#include "multi_CC.h"
 
 #ifdef ARM
 #include <hal_gpio.h>
 #include <hal_timer.h>
 #endif
 
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
-#define NUM_SLOWRF    2
-#define CC_INSTANCE   multiCC.instance
-#define TX_REPORT     multiCC.tx_report[multiCC.instance]
-#else
-#define NUM_SLOWRF    1
-#define CC_INSTANCE   0
+#ifndef USE_RF_MODE
 uint8_t tx_report;              // global verbose / output-filter
-#define TX_REPORT     tx_report
 #endif
 
 //////////////////////////
@@ -110,7 +104,7 @@ tx_init(void)
 {
 
 #ifdef ARM
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   init_RF_mode();
 #else
   hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
@@ -127,7 +121,7 @@ tx_init(void)
 
   for(int i = 1; i < RCV_BUCKETS; i ++)
     bucket_array[CC_INSTANCE][i].state = STATE_RESET;
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
   cc_on = 0;
 #endif
 }
@@ -143,49 +137,38 @@ set_txrestore()
     return;
   }
 #endif
-#ifdef HAS_MULTI_CC
-  if(multiCC.tx_report[multiCC.instance]) {
-    set_ccon();
-    if(multiCC.instance < 2)
-      ccRX();
-  } else {
-    set_ccoff();
-  }
-#else
+
   if(TX_REPORT) {
     set_ccon();
-    ccRX();
+#ifdef HAS_MULTI_CC
+    if(CC1101.instance < NUM_SLOWRF)
+#endif
+      ccRX();
 
   } else {
     set_ccoff();
 
   }
-#endif
 }
 
 void
 set_txreport(char *in)
 {
   if(in[1] == 0) {              // Report Value
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-    DH2(multiCC.tx_report[multiCC.instance]);
-#else
+    MULTICC_PREFIX();
     DH2(TX_REPORT);
-#endif
     DU(credit_10ms, 5);
     DNL();
     return;
   }
 
-#ifdef HAS_MULTI_CC
-  fromhex(in+1, &multiCC.tx_report[multiCC.instance], 1);
+  fromhex(in+1, &TX_REPORT, 1);
+
+#ifdef USE_RF_MODE
   set_RF_mode(RF_mode_slow);
 #else
-  fromhex(in+1, &TX_REPORT, 1);
   set_txrestore();
 #endif
-
 }
 
 ////////////////////////////////////////////////////
@@ -363,9 +346,7 @@ RfAnalyze_Task(void)
         rssi = 15;
       else 
         rssi = (rssi-80)>>3;
-#ifdef HAS_MULTI_CC
-      multiCC_prefix();
-#endif
+      MULTICC_PREFIX();
       DC('a'+rssi);
 #endif
     }
@@ -509,9 +490,7 @@ RfAnalyze_Task(void)
 #endif
 
     if(packetCheckValues.packageOK) {
-#ifdef HAS_MULTI_CC
-      multiCC_prefix();
-#endif
+      MULTICC_PREFIX();
       DC(datatype);
 #ifdef HAS_HOMEEASY
       if (b->state == STATE_HE) {
@@ -547,9 +526,7 @@ RfAnalyze_Task(void)
 
 #ifndef NO_RF_DEBUG
   if(TX_REPORT & REP_BITS) {
-#ifdef HAS_MULTI_CC
-    multiCC_prefix();
-#endif
+    MULTICC_PREFIX();
     DC('p');
     DU(b->state,        2);
     DU(b->zero.hightime*16, 5);
@@ -796,7 +773,7 @@ ISR(CC1100_INTVECT)
 #endif
 
 #ifdef HAS_FASTRF
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   if(is_RF_mode(RF_mode_fast)) {
     fastrf_on = 2;
     return;

@@ -35,6 +35,8 @@
 #include "display.h"
 #include "fastrf.h"
 #include "fband.h"
+#include "multi_CC.h"
+#include "rf_mode.h"
 #ifdef HAS_UART
 #include "serial.h"
 #endif
@@ -70,9 +72,6 @@
 #endif
 #ifdef HAS_MAICO
 #include "rf_maico.h"
-#endif
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
 #endif
 
 #include "cdc_uart.h"
@@ -448,9 +447,9 @@ int main(void)
   TRACE_INFO("init Complete\n\r");
 
 #if defined(HAS_MULTI_CC)
-    for (multiCC.instance = 0; multiCC.instance < HAS_MULTI_CC; multiCC.instance++)
+    for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
       checkFrequency();
-    multiCC.instance = 0;
+    CC1101.instance = 0;
 #else
     checkFrequency();
 #endif
@@ -460,16 +459,58 @@ int main(void)
 
     CDC_Task();
     Minute_Task();
+
+#ifdef USE_RF_MODE
+
+
 #if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
-    for (multiCC.instance = 0; multiCC.instance < 2; multiCC.instance++)
-      RfAnalyze_Task();
-    multiCC.instance = 0;
+    for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
+#endif
+    {
+      switch(get_RF_mode()) {
+        case RF_mode_slow:
+          RfAnalyze_Task();
+          break;
+        case RF_mode_asksin:
+          rf_asksin_task();
+          break;
+        case RF_mode_moritz:
+          rf_moritz_task();
+          break;
+        case RF_mode_maico:
+          rf_maico_task();
+          break;
+        case RF_mode_native1:
+        case RF_mode_native2:
+        case RF_mode_native3:
+          native_task();
+          break;
+        case RF_mode_rwe:
+          rf_rwe_task();
+          break;
+        case RF_mode_fast:
+          FastRF_Task();
+          break;
+        case RF_mode_zwave:
+          rf_zwave_task();
+          break;
+        case RF_mode_off:
+        case RF_mode_somfy:
+        case RF_mode_intertechno:
+          break;
+      }
+    }
+
+    #ifdef HAS_MBUS
+      rf_mbus_task();
+    #endif
+    #ifdef HAS_KOPP_FC
+      kopp_fc_task();
+    #endif
+
+
 #else
     RfAnalyze_Task();
-#endif
-    #if CDC_COUNT > 1
-      cdc_uart_task();
-    #endif
     #ifdef HAS_FASTRF
       FastRF_Task();
     #endif
@@ -500,7 +541,11 @@ int main(void)
     #ifdef HAS_MAICO
       rf_maico_task();
     #endif
+#endif
 
+    #if CDC_COUNT > 1
+      cdc_uart_task();
+    #endif
     #ifdef HAS_W5100
       Ethernet_Task();
     #endif

@@ -22,10 +22,10 @@
 #include "display.h"                    // for DH2, DNL, DC, DS_P
 #include "fband.h"                      // for checkFrequency
 #include "rf_native.h"
-
-#ifdef HAS_MULTI_CC
+#include "rf_mode.h"
 #include "multi_CC.h"
-#else
+
+#ifndef USE_RF_MODE
 static uint8_t native_on = 0;
 #endif
 
@@ -106,19 +106,14 @@ const uint8_t PROGMEM MODE_CFG[MAX_MODES][20] = {
 void native_init(uint8_t mode) {
 
 #ifdef ARM
-#ifdef HAS_MULTI_CC
-  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
-#else
-  hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
-  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
-#endif
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
 #endif
 
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
   native_on = 0;
 #endif
 
@@ -158,7 +153,7 @@ void native_init(uint8_t mode) {
   
   ccStrobe( CC1100_SCAL );
 
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
   native_on = mode;
 #endif
   checkFrequency(); 
@@ -168,21 +163,16 @@ void native_init(uint8_t mode) {
 void native_task(void) {
   uint8_t len, byte, i;
 
-#ifdef HAS_MULTI_CC
-for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
- if (is_RF_mode(RF_mode_native1) || is_RF_mode(RF_mode_native2) || is_RF_mode(RF_mode_native3)) {
-  if (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In)) {
-
-#else
+#ifndef USE_RF_MODE
   if(!native_on)
     return;
+#endif
 
   // wait for CC1100_FIFOTHR given bytes to arrive in FIFO:
 #ifdef ARM
-  if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+  if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
 #else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
-#endif
 #endif
 
     // start over syncing
@@ -195,12 +185,11 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
       CC1100_ASSERT;
       cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
 
-#ifdef HAS_MULTI_CC
-      multiCC_prefix();
+      MULTICC_PREFIX();
       DC( 'N' );
+#ifdef USE_RF_MODE
       DH2(get_RF_mode() - RF_mode_native1 + 1);
 #else
-      DC( 'N' );
       DH2(native_on);
 #endif
 
@@ -243,11 +232,6 @@ for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
     break;
        
   }
-#ifdef HAS_MULTI_CC
- }
-}
-multiCC.instance = 0;
-#endif
 }
 
 
@@ -267,14 +251,12 @@ void native_func(char *in) {
       fromdec(in+2, ( uint8_t*)&mode);
 
     if (!mode || mode>MAX_MODES) {
-#ifdef HAS_MULTI_CC
-      multiCC_prefix();
-#endif
+      MULTICC_PREFIX();
       DS_P(PSTR("specify valid mode number\r\n"));
       return;
     }
     
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_native1 + mode - 1);
 #else
     native_init(mode);
@@ -282,7 +264,7 @@ void native_func(char *in) {
 
   } else if(in[1] == 'x') {        // Reception off
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
     set_RF_mode(RF_mode_off);
 #else
     if (native_on)
@@ -292,8 +274,8 @@ void native_func(char *in) {
 #endif
 
   }
-#ifdef HAS_MULTI_CC
-  multiCC_prefix();
+  MULTICC_PREFIX();
+#ifdef USE_RF_MODE
   DH2(get_RF_mode() - RF_mode_native1 + 1);
 #else
   DH2(native_on);

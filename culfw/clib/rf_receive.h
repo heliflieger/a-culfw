@@ -37,7 +37,11 @@ uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
 uint8_t cksum2(uint8_t *buf, uint8_t len);
 uint8_t cksum3(uint8_t *buf, uint8_t len);
 
-#ifndef HAS_MULTI_CC
+#ifndef NUM_SLOWRF
+#define NUM_SLOWRF    1
+#endif
+
+#ifndef USE_RF_MODE
 extern uint8_t tx_report;
 #endif
 

@@ -34,7 +34,7 @@ uint8_t cc1100_readReg(uint8_t addr);
 void set_ccoff(void);
 void set_ccon(void);
 
-#ifndef HAS_MULTI_CC
+#ifndef USE_RF_MODE
 extern uint8_t cc_on;
 #endif
 
@@ -189,18 +189,11 @@ extern uint8_t cc_on;
 #include "board.h"                      // for CC1100_CS_PIN, etc
 
 #ifdef ARM
-#ifdef HAS_MULTI_CC
-#include "multi_CC.h"
-#define CC1100_DEASSERT   hal_CC_Pin_Set(multiCC.instance,CC_Pin_CS,GPIO_PIN_SET)
-#define CC1100_ASSERT     hal_CC_Pin_Set(multiCC.instance,CC_Pin_CS,GPIO_PIN_RESET)
-#define CC1100_SET_OUT    hal_CC_Pin_Set(multiCC.instance,CC_Pin_Out,GPIO_PIN_SET)
-#define CC1100_CLEAR_OUT  hal_CC_Pin_Set(multiCC.instance,CC_Pin_Out,GPIO_PIN_RESET)
-#else
-#define CC1100_DEASSERT  	hal_CC_Pin_Set(0,CC_Pin_CS,GPIO_PIN_SET)
-#define CC1100_ASSERT    	hal_CC_Pin_Set(0,CC_Pin_CS,GPIO_PIN_RESET)
-#define CC1100_SET_OUT		hal_CC_Pin_Set(0,CC_Pin_Out,GPIO_PIN_SET)
-#define CC1100_CLEAR_OUT	hal_CC_Pin_Set(0,CC_Pin_Out,GPIO_PIN_RESET)
-#endif
+#include "rf_mode.h"
+#define CC1100_DEASSERT   hal_CC_Pin_Set(CC_INSTANCE,CC_Pin_CS,GPIO_PIN_SET)
+#define CC1100_ASSERT     hal_CC_Pin_Set(CC_INSTANCE,CC_Pin_CS,GPIO_PIN_RESET)
+#define CC1100_SET_OUT    hal_CC_Pin_Set(CC_INSTANCE,CC_Pin_Out,GPIO_PIN_SET)
+#define CC1100_CLEAR_OUT  hal_CC_Pin_Set(CC_INSTANCE,CC_Pin_Out,GPIO_PIN_RESET)
 
 #else
 #define CC1100_DEASSERT  	SET_BIT( CC1100_CS_PORT, CC1100_CS_PIN )
