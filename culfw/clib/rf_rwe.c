@@ -14,7 +14,11 @@
 #include "rf_receive.h"                 // for set_txrestore, REP_BINTIME, etc
 #include "rf_rwe.h"
 
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#else
 uint8_t rwe_on = 0;
+#endif
 
 const uint8_t PROGMEM RWE_CFG[60] = {
 //     0x00, 0x0E,
@@ -50,8 +54,13 @@ rf_rwe_init(void)
 {
 
 #ifdef ARM
+#ifdef HAS_MULTI_CC
+  hal_CC_GDO_init(multiCC.instance,INIT_MODE_OUT_CS_IN);
+  hal_enable_CC_GDOin_int(multiCC.instance,FALSE); // disable INT - we'll poll...
+#else
   hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
   hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
+#endif
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -89,6 +98,12 @@ rf_rwe_task(void)
   uint8_t enc[MAX_RWE_MSG];
   uint8_t rssi;
 
+#ifdef HAS_MULTI_CC
+for(multiCC.instance = 0; multiCC.instance<HAS_MULTI_CC; multiCC.instance++) {
+ if (is_RF_mode(RF_mode_maico)) {
+  if (hal_CC_Pin_Get(multiCC.instance,CC_Pin_In)) {
+
+#else
   if(!rwe_on)
     return;
 
@@ -97,6 +112,7 @@ rf_rwe_task(void)
   if (hal_CC_Pin_Get(0,CC_Pin_In)) {
 #else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
+#endif
 #endif
 
     enc[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
@@ -121,6 +137,8 @@ rf_rwe_task(void)
     ccStrobe( CC1100_SRX   );
 
 #ifdef HAS_MULTI_CC
+    multiCC_prefix();
+
     if(multiCC.tx_report[multiCC.instance] & REP_BINTIME) {
 #else
     if (tx_report & REP_BINTIME) {
@@ -164,7 +182,11 @@ rf_rwe_task(void)
     break;
        
   }
-
+#ifdef HAS_MULTI_CC
+ }
+}
+multiCC.instance = 0;
+#endif
 }
 
 void
@@ -179,11 +201,15 @@ rwe_send(char *in)
     return;
   }
 
+#ifdef HAS_MULTI_CC
+  change_RF_mode(RF_mode_rwe);
+#else
   // in Moritz mode already?
   if(!rwe_on) {
     rf_rwe_init();
     my_delay_ms(3);             // 3ms: Found by trial and error
   }
+#endif
 
   ccStrobe(CC1100_SIDLE);
 
@@ -226,26 +252,39 @@ rwe_send(char *in)
     my_delay_ms(5);
   
   ccStrobe(CC1100_SIDLE);
-
+#ifdef HAS_MULTI_CC
+  if(!restore_RF_mode()) {
+    ccRX();
+  }
+#else
   if(rwe_on) {
     ccRX();
   } else {
     set_txrestore();
   }
+#endif
 }
 
 void
 rwe_func(char *in)
 {
   if(in[1] == 'r') {                // Reception on
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_rwe);
+#else
     rf_rwe_init();
     rwe_on = 1;
+#endif
 
   } else if(in[1] == 's') {         // Send
 //    rwe_send(in+1);
 
   } else {                          // Off
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_off);
+#else
     rwe_on = 0;
+#endif
 
   }
 }

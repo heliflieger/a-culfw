@@ -11,6 +11,8 @@
 #include "delay.h"
 #include "cc1100.h"
 #include "hal_gpio.h"
+#include "fastrf.h"
+#include "fncollection.h"
 
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
@@ -41,6 +43,12 @@
 #endif
 #ifdef HAS_MAICO
 #include "rf_maico.h"
+#endif
+#ifdef HAS_RWE
+#include "rf_rwe.h"
+#endif
+#ifdef HAS_ZWAVE
+#include "rf_zwave.h"
 #endif
 
 extern const t_fntab fntab[];
@@ -180,6 +188,22 @@ void set_RF_mode(RF_mode_t mode) {
     case RF_mode_intertechno:
       it_tunein();
       my_delay_ms(3);
+      break;
+#endif
+#ifdef HAS_RWE
+    case RF_mode_rwe:
+      rf_rwe_init();
+      my_delay_ms(3);
+      break;
+#endif
+    case RF_mode_fast:
+      ccInitChip(EE_FASTRF_CFG);
+      ccRX();
+      fastrf_on = 1;
+      break;
+#ifdef HAS_ZWAVE
+    case RF_mode_zwave:
+      rf_zwave_init();
       break;
 #endif
     default:

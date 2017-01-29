@@ -14,6 +14,9 @@ typedef enum {
   RF_mode_native3,
   RF_mode_somfy,
   RF_mode_intertechno,
+  RF_mode_rwe,
+  RF_mode_fast,
+  RF_mode_zwave,
 } RF_mode_t;
 
 typedef struct {

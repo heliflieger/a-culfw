@@ -12,6 +12,10 @@
 #include "rf_send.h"                    // for addParityAndSendData, etc
 #include "stringfunc.h"                 // for fromhex
 
+#ifdef HAS_MULTI_CC
+#include "multi_CC.h"
+#endif
+
 // We have three different work models:
 
 // 1. Control the FHT80b. In this mode we have to wait for a message from the
@@ -163,6 +167,10 @@ fhtsend(char *in)
   l = fromhex(in+1, hb, 5);
 
   if(l < 4) {
+#ifdef HAS_MULTI_CC
+    if((hb[0] != 1) || (l != 3))
+      multiCC_prefix();
+#endif
     if(hb[0] == 1) {                   // Set housecode, clear buffers
       if(l == 3) {
         ewb(EE_FHTID  , hb[1]);        // 1.st byte: 80b relevant
@@ -335,8 +343,12 @@ fhtsend(char *in)
 #endif
 
 #ifdef HAS_FHT_80b
-  if(!fht_addbuf(in))                  // FHT80b mode: Queue everything
+  if(!fht_addbuf(in)) {               // FHT80b mode: Queue everything
+#ifdef HAS_MULTI_CC
+    multiCC_prefix();
+#endif
     DS_P( PSTR("EOB\r\n") );
+  }
 #endif
 
 }

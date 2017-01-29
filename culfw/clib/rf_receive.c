@@ -794,13 +794,20 @@ static void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool 
 ISR(CC1100_INTVECT)
 {
 #endif
+
 #ifdef HAS_FASTRF
+#ifdef HAS_MULTI_CC
+  if(is_RF_mode(RF_mode_fast)) {
+    fastrf_on = 2;
+    return;
+  }
+#else
   if(fastrf_on) {
     fastrf_on = 2;
     return;
   }
 #endif
-
+#endif
 #ifdef HAS_RF_ROUTER
   if(rf_router_status == RF_ROUTER_DATA_WAIT) {
     rf_router_status = RF_ROUTER_GOT_DATA;

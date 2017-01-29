@@ -256,27 +256,41 @@ const t_fntab fntab[] = {
 const t_fntab fntab1[] = {
 
   { 'C', ccreg },
-  { 'R', read_eeprom },
-  { 'V', version },
-  { 'W', write_eeprom },
-  { 'X', set_txreport },
+  { 'F', fs20send },
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
 #endif
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
 #endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
+  { 'G', rawsend },
+  { 'M', em_send },
+  { 'K', ks_send },
 #ifdef HAS_MAICO
   { 'L', maico_func },
 #endif
-#ifdef HAS_RFNATIVE
-  { 'N', native_func },
+#ifdef HAS_UNIROLL
+  { 'U', ur_send },
 #endif
 #ifdef HAS_SOMFY_RTS
   { 'Y', somfy_rts_func },
 #endif
-#ifdef HAS_INTERTECHNO
-  { 'i', it_func },
+  { 'R', read_eeprom },
+  { 'T', fhtsend },
+  { 'V', version },
+  { 'W', write_eeprom },
+  { 'X', set_txreport },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
 #endif
 #if HAS_MULTI_CC > 2
   { '*', multiCC_func },
@@ -289,22 +303,28 @@ const t_fntab fntab1[] = {
 const t_fntab fntab2[] = {
 
   { 'C', ccreg },
-  { 'V', version },
-  { 'X', set_txreport },
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
 #endif
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
 #endif
-#ifdef HAS_MAICO
-  { 'L', maico_func },
-#endif
 #ifdef HAS_RFNATIVE
   { 'N', native_func },
 #endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
 #ifdef HAS_SOMFY_RTS
   { 'Y', somfy_rts_func },
+#endif
+  { 'V', version },
+  { 'X', set_txreport },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
 #endif
 #if HAS_MULTI_CC > 3
   { '*', multiCC_func },
@@ -316,25 +336,31 @@ const t_fntab fntab2[] = {
 #if HAS_MULTI_CC > 3
 const t_fntab fntab3[] = {
 
-  { 'C', ccreg },
-  { 'V', version },
-  { 'X', set_txreport },
-#ifdef HAS_ASKSIN
-  { 'A', asksin_func },
-#endif
-#ifdef HAS_MORITZ
-  { 'Z', moritz_func },
-#endif
-#ifdef HAS_MAICO
-  { 'L', maico_func },
-#endif
-#ifdef HAS_RFNATIVE
-  { 'N', native_func },
-#endif
-#ifdef HAS_SOMFY_RTS
-  { 'Y', somfy_rts_func },
-#endif
-  { 0, 0 },
+    { 'C', ccreg },
+  #ifdef HAS_ASKSIN
+    { 'A', asksin_func },
+  #endif
+  #ifdef HAS_MORITZ
+    { 'Z', moritz_func },
+  #endif
+  #ifdef HAS_RFNATIVE
+    { 'N', native_func },
+  #endif
+  #ifdef HAS_RWE
+    { 'E', rwe_func },
+  #endif
+  #ifdef HAS_MAICO
+    { 'L', maico_func },
+  #endif
+  #ifdef HAS_SOMFY_RTS
+    { 'Y', somfy_rts_func },
+  #endif
+    { 'V', version },
+    { 'X', set_txreport },
+  #ifdef HAS_FASTRF
+    { 'f', fastrf_func },
+  #endif
+    { 0, 0 },
 };
 #endif
 

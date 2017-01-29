@@ -433,7 +433,11 @@ zwave_func(char *in)
   if(in[1] == 'r' || in[1] == 'm') {// Reception on: receive or monitor
     zwave_drate = (in[2] ? in[2] : DRATE_40k); // Valid: '1', '4', '9'
     zwave_on = in[1];
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_zwave);
+#else
     rf_zwave_init();
+#endif
 
   } else if(in[1] == 's') {         // Send
     zwave_ackState = 0;
@@ -458,7 +462,9 @@ zwave_func(char *in)
 
   } else {                          // Off
     zwave_on = 0;
-
+#ifdef HAS_MULTI_CC
+    set_RF_mode(RF_mode_off);
+#endif
   }
 }
 
