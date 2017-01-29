@@ -2,8 +2,13 @@
    Released under the GPL Licence, Version 2
    Inpired by the MyUSB USBtoSerial demo, Copyright (C) Dean Camera, 2008.
 	 
-	 19.01.2017	-	Diggen85 (Benny_Stark@live.de)
-							-	Add Communication as I2C Slave
+	 I2CCUL - ProMini(ATmega328) as I2CSlave
+	 
+	 Diggen85 (Benny_Stark@live.de)
+	 19.01.2017	-	Add Communication as I2C Slave
+	 29.01.2017 - Cleanup, remove unneeded defines, added Makefile defines
+							- Added IR
+							- Changed CC1100OUT to ProMini A0 - PC0
 */
 
 #include <avr/boot.h>
@@ -23,7 +28,6 @@
 #include "delay.h"
 #include "display.h"
 
-//#include "serial.h"
 #include "i2cslave.h"
 
 #include "fncollection.h"
@@ -35,10 +39,7 @@
 #include "ttydata.h"
 #include "fastrf.h"
 #include "rf_router.h"
-//#include "i2cmaster.h"
 #include "intertechno.h"
-//#include "adcw.h"
-//#include "cctemp.h"
 #include "fht.h"
 #include "memory.h"
 
@@ -73,12 +74,14 @@
 #include "rf_zwave.h"
 #endif
 
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
+#include "ir.h"
+#endif
 
-
-#ifdef HAS_CC1100_433
+#if defined (I2CCUL433)
 const uint8_t mark433_pin = 0x00;
 #else
-const uint8_t mark433_pin = 0xff;
+const uint8_t mark433_pin = 0xFF;
 #endif
 
 const PROGMEM t_fntab fntab[] = {
@@ -162,25 +165,27 @@ int
 main(void)
 {
   wdt_disable();
-#ifdef HAS_16MHZ_CLOCK
+#if F_CPU == 16000000UL 
   /* set clock to 16MHz/2 = 8Mhz */
   clock_prescale_set(clock_div_2);
 #endif
-
-//  LED_ON_DDR  |= _BV( LED_ON_PIN );
-//  LED_ON_PORT |= _BV( LED_ON_PIN );
 
   led_init();
   LED_ON();
 
   spi_init();
-  //init_adcw();
 
   //eeprom_factory_reset("xx");
   eeprom_init();
 
-  // Setup the timers. Are needed for watchdog-reset
+    // Setup the timers. Are needed for watchdog-reset
+#if defined (HAS_IRRX) || defined (HAS_IRTX)
+  ir_init();
+  // IR uses highspeed TIMER0 for sampling 
+  OCR0A  = 1;                              // Timer0: 0.008s = 8MHz/256/2   == 15625Hz
+#else
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz
+#endif
   TCCR0B = _BV(CS02);
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);
@@ -213,7 +218,6 @@ main(void)
   sei();
 
   for(;;) {
-    //uart_task();
 		I2CSlave_task();
 		
     RfAnalyze_Task();
@@ -238,6 +242,9 @@ main(void)
 #endif
 #ifdef HAS_KOPP_FC
     kopp_fc_task();
+#endif
+#if defined(HAS_IRRX) || defined(HAS_IRTX)
+    ir_task();
 #endif
 #ifdef HAS_MBUS
     rf_mbus_task();

@@ -50,6 +50,9 @@ SRC = I2CCUL.c                                            \
 		../../clib/mbus/3outof6.c                            \
 		../../clib/mbus/mbus_packet.c                        \
 		../../clib/mbus/crc.c                                \
+		../../clib/ir.c                                \
+		../../clib/irmp.c                                \
+		../../clib/irsnd.c                                
 
 
 OPT = s
