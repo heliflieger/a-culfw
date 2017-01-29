@@ -1,13 +1,14 @@
-### Fork of a-culfw
-from heliflieger/a-culfw
+##### Fork of a-culfw from heliflieger/a-culfw
 
-SSCUL 	- Goal is to implement Software Serial Stacking for the nanoCUL
-		- Works but has receive Problems because of SoftwareSerial Interrupts
+#I2CCUL 	
+- Allow communication over I2C as Slave instead UART
+- based on nanoCUL board
+- Pro Mini with 3,3V / 16MHz, 3,3V/8MHz or a Nano should also work
 
-a644p	- Works on an Atmel AVR 644p - with SCC support
-
-I2CCUL 	- Allow communication over I2C as Slave instead UART
-		- WIP
+##ToDo:
+- Addressing per Pin Assignment, not Software defined
+- Code cleanups
+- cleanup Protocol to MHz assignments
 
 
 # Alternative culfw for cul devices
