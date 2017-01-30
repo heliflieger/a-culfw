@@ -494,6 +494,10 @@ int main(void)
         case RF_mode_zwave:
           rf_zwave_task();
           break;
+        case RF_mode_WMBUS_S:
+        case RF_mode_WMBUS_T:
+          rf_mbus_task();
+          break;
         case RF_mode_off:
         case RF_mode_somfy:
         case RF_mode_intertechno:
@@ -501,9 +505,6 @@ int main(void)
       }
     }
 
-    #ifdef HAS_MBUS
-      rf_mbus_task();
-    #endif
     #ifdef HAS_KOPP_FC
       kopp_fc_task();
     #endif

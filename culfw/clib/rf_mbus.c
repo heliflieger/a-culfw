@@ -116,7 +116,7 @@ static uint8_t rf_mbus_on(uint8_t force) {
   return 1; // this will indicate we just have re-started RX
 }
 
-static void rf_mbus_init(uint8_t mmode, uint8_t rmode) {
+void rf_mbus_init(uint8_t mmode, uint8_t rmode) {
 
   mbus_mode  = WMBUS_NONE;
   radio_mode = RADIO_MODE_NONE;
@@ -518,6 +518,15 @@ static void mbus_status(void) {
 
 void rf_mbus_func(char *in) {
   if((in[1] == 'r') && in[2]) {     // Reception on
+#ifdef USE_RF_MODE
+    if(in[2] == 's') {
+      set_RF_mode(RF_mode_WMBUS_S);
+    } else if(in[2] == 't') {
+      set_RF_mode(RF_mode_WMBUS_T);
+    } else {                        // Off
+      set_RF_mode(RF_mode_off);
+    }
+#else
     if(in[2] == 's') {
       rf_mbus_init(WMBUS_SMODE,RADIO_MODE_RX);
     } else if(in[2] == 't') {
@@ -525,6 +534,7 @@ void rf_mbus_func(char *in) {
     } else {                        // Off
       rf_mbus_init(WMBUS_NONE,RADIO_MODE_NONE);
     }	
+#endif
     
   } else if(in[1] == 's') {         // Send
 

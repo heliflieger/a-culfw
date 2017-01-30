@@ -9,6 +9,7 @@
 
 #include "mbus/mbus_defs.h"             // for uint8, uint16
 
+void rf_mbus_init(uint8_t mmode, uint8_t rmode);
 void rf_mbus_task(void);
 void rf_mbus_func(char *in);
 

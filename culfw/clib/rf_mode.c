@@ -53,6 +53,13 @@
 #ifdef HAS_ZWAVE
 #include "rf_zwave.h"
 #endif
+#ifdef HAS_MBUS
+#include "rf_mbus.h"
+#include "mbus/mbus_packet.h"
+#define RADIO_MODE_NONE  0
+#define RADIO_MODE_TX    1
+#define RADIO_MODE_RX    2
+#endif
 
 CC1101_t CC1101;
 
@@ -154,6 +161,14 @@ void set_RF_mode(RF_mode_t mode) {
       rf_zwave_init();
       break;
 #endif
+#ifdef HAS_MBUS
+    case   RF_mode_WMBUS_S:
+      rf_mbus_init(WMBUS_SMODE,RADIO_MODE_RX);
+    break;
+    case RF_mode_WMBUS_T:
+      rf_mbus_init(WMBUS_TMODE,RADIO_MODE_RX);
+      break;
+#endif
     default:
       set_ccoff();
 #ifdef HAS_FASTRF
@@ -161,6 +176,9 @@ void set_RF_mode(RF_mode_t mode) {
 #endif
 #ifdef HAS_ZWAVE
       zwave_on = 0;
+#endif
+#ifdef HAS_MBUS
+      mbus_mode = WMBUS_NONE;
 #endif
       CC1101.RF_mode[CC1101.instance] = RF_mode_off;
   }
