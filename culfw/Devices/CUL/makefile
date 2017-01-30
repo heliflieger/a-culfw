@@ -126,10 +126,6 @@ all:
 	make TARGET=CUL_V4 FREQUENCE=_868MHZ MCU=atmega32u2 FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
 	make TARGET=CUL_V3_ZWAVE FREQUENCE=_868MHZ MCU=atmega32u4 FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
 
-cul:
-	make TARGET=CUL_V3 FREQUENCE=_868MHZ MCU=atmega32u4 FLASH_SIZE=32768 BOOTLOADER_SIZE=2048 mostly_clean build size
-	
-	
 build: elf hex eep lss sym
 
 elf: $(TARGET)$(FREQUENCE).elf
