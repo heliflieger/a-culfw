@@ -1,5 +1,5 @@
 #include "board.h"
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 
 #include <DHCP/dhcp.h>
 #include <avr/eeprom.h>

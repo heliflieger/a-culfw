@@ -12,7 +12,7 @@
 #include "hal_usart.h"
 #include "ringbuffer.h"
 #include "usb_device.h"
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 #include <socket.h>
 
 #include "ethernet.h"
@@ -49,7 +49,7 @@ void UART3_Rx_Callback(uint8_t data) {
 }
 #endif
 
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 void EE_write_baud(uint8_t num, uint32_t baud) {
   uint8_t b[4];
   uint32_t* p_baud = (uint32_t*)b;
@@ -84,7 +84,7 @@ void cdc_uart_init(void) {
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
 
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
   TRACE_DEBUG("UART Baud: %u@%u\n\r", 0,EE_read_baud(0));
   TRACE_DEBUG("UART Baud: %u@%u\n\r", 1,EE_read_baud(1));
 
@@ -109,14 +109,14 @@ void cdc_uart_task(void) {
       if(CDC_isConnected(CDC1+x)) {
         ret = CDCDSerialDriver_Write(CDC_Tx_buffer[x],CDC_Tx_len[x], 0, CDC1+x);
         if( ret == USBD_STATUS_SUCCESS) {
-          #ifdef HAS_W5100
+          #ifdef HAS_WIZNET
           Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
 
           #endif
           CDC_Tx_len[x]=0;
         }
       } else {
-        #ifdef HAS_W5100
+        #ifdef HAS_WIZNET
         Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
         #endif
         CDC_Tx_len[x]=0;
@@ -149,7 +149,7 @@ void cdc_uart_func(char *in) {
     TRACE_DEBUG("UART set Baud: %u@%u\n\r", num,baud);
     HAL_UART_Set_Baudrate(num,baud);
 
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
   } else if (in[1] == 's') {  // store baudrate
     EE_write_baud(0,HAL_UART_Get_Baudrate(0));
     EE_write_baud(1,HAL_UART_Get_Baudrate(1));

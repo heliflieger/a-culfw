@@ -18,7 +18,7 @@ MPU_TYPE_LOWER_CASE := stm32f103xb
 CPU := cortex-m3
 
 # Debugger options, must be empty or GDB
-DEBUG ?= GDB
+DEBUG ?= 
 
 ###############################################################
 #####
@@ -125,6 +125,7 @@ SRCS += ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq
 SRCS += ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c
 
 SRCS += ../../Wiznet/Ethernet/W5100/w5100.c
+SRCS += ../../Wiznet/Ethernet/W5500/w5500.c
 SRCS += ../../Wiznet/Ethernet/socket.c
 SRCS += ../../Wiznet/Ethernet/wizchip_conf.c
 SRCS += ../../Wiznet/Internet/DHCP/dhcp.c
@@ -192,7 +193,9 @@ COMPILE = $(CC) $(CFLAGS) $(GENDEPFLAGS)
 
 all:
 	make TARGET=MapleCUL build clean2
+	make TARGET=MapleCULx4 build clean2
 	make TARGET=MapleCUN build clean2
+	make TARGET=MapleCUNx4 build clean2
 
 MapleCUL: 
 	make TARGET=MapleCUL build 
@@ -200,6 +203,12 @@ MapleCUL:
 MapleCUN: 
 	make TARGET=MapleCUN build 
 		
+MapleCULx4: 
+	make TARGET=MapleCULx4 build 
+
+MapleCUNx4: 
+	make TARGET=MapleCUNx4 build
+			
 build: $(TARGET).elf
 
 %.o: %.c

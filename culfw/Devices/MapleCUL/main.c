@@ -40,7 +40,7 @@
 #ifdef HAS_UART
 #include "serial.h"
 #endif
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 #include "ethernet.h"
 #endif
 #ifdef HAS_ASKSIN
@@ -417,7 +417,7 @@ int main(void)
   fht_init();
   tx_init();
 
-  #ifdef HAS_W5100
+  #ifdef HAS_WIZNET
   TRACE_INFO("init Ethernet\n\r");
   ethernet_init();
   #endif
@@ -440,7 +440,7 @@ int main(void)
 
   display_channel = DISPLAY_USB;
 
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
   display_channel |= DISPLAY_TCP;
 #endif
 
@@ -547,7 +547,7 @@ int main(void)
     #if CDC_COUNT > 1
       cdc_uart_task();
     #endif
-    #ifdef HAS_W5100
+    #ifdef HAS_WIZNET
       Ethernet_Task();
     #endif
 

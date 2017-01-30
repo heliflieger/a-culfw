@@ -41,7 +41,7 @@ void do_wdt_enable(uint8_t t);
 #define EE_DUDETTE_PRIV      (EE_DUDETTE_MAC-16)		// 128bit RSA private key 
 #define EE_DUDETTE_PUBL      (EE_DUDETTE_PRIV-16)		// 128bit RSA public key
 
-#if defined(HAS_ETHERNET) | defined(HAS_W5100)
+#if defined(HAS_ETHERNET) | defined(HAS_WIZNET)
 # define EE_MAC_ADDR         (EE_RF_ROUTER_ROUTER+1)
 # define EE_USE_DHCP         (EE_MAC_ADDR+6)                    // Offset x62
 # define EE_IP4_ADDR         (EE_USE_DHCP+1)
@@ -63,7 +63,7 @@ void do_wdt_enable(uint8_t t);
 #endif
 
 #ifdef HAS_LCD
-#if defined(HAS_ETHERNET) | defined(HAS_W5100)
+#if defined(HAS_ETHERNET) | defined(HAS_WIZNET)
 # define EE_CONTRAST          EE_ETH_LAST
 #else
 # define EE_CONTRAST          (EE_FASTRF_CFG+EE_CC1100_CFG_SIZE)

@@ -21,7 +21,7 @@
 #ifdef HAS_VZ
 #include "vz.h"                         // for vz_sectask
 #endif
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 #include <DHCP/dhcp.h>                  // for DHCP_time_handler
 #endif
 #ifdef JOY_PIN1
@@ -187,7 +187,7 @@ Minute_Task(void)
     return;
   clock_hsec = 0;       // once per second from here on.
 
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
   DHCP_time_handler();
 #endif
 

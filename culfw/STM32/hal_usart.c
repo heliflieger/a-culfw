@@ -39,7 +39,7 @@
 #include "usbd_cdc_if.h"
 #include "usb_device.h"
 #include "utility/dbgu.h"
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 #include "ethernet.h"
 #endif
 
@@ -264,13 +264,13 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 
   } else if(UartHandle->Instance==USART2) {
     CDC_Receive_next(CDC1);
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
     NET_Receive_next(NET1);
 #endif
 
   } else if(UartHandle->Instance==USART3) {
     CDC_Receive_next(CDC2);
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
     NET_Receive_next(NET2);
 #endif
 

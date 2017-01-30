@@ -261,7 +261,7 @@ void hal_GPIO_EXTI_IRQHandler(void) {
 /*----------------------------------------------------------------------------*/
 /* Wiznet                                                                     */
 /*----------------------------------------------------------------------------*/
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 void hal_wiznet_Init(void) {
   GPIO_InitTypeDef GPIO_InitStruct;
 
