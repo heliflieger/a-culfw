@@ -4,26 +4,29 @@
 #define _BV(a) (1<<(a))
 #define bit_is_set(sfr, bit) ((sfr) & _BV(bit))
 
+#define LONG_PULSE
 
-//#define LONG_PULSE
+#define TTY_BUFSIZE          512      // RAM: TTY_BUFSIZE*4
 
-#define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
+#if defined(CUBE) || defined(CUBE_BL)
+#define BOARD_NAME          "CUBe"
+#define BOARD_ID_STR        "CUBe"
+#define NUM_SLOWRF          1
 
-#if defined(CUBE)
+#elif defined(CUBEx4) || defined(CUBEx4_BL)
+#define BOARD_NAME          "CUBEx4"
+#define BOARD_ID_STR        "CUBEx4"
+#define HAS_MULTI_CC        4
+#define NUM_SLOWRF          2
 
-#elif defined(CUBE_BL)
-#define CUBE
-#elif defined(bootloader_CUBE)
-#define CUBE
-#undef  TTY_BUFSIZE
-#define TTY_BUFSIZE          512
 #else
 #define CUBE
+#define BOARD_NAME          "CUBe"
+#define BOARD_ID_STR        "CUBe"
+#define NUM_SLOWRF          1
 #endif
 
 #define USE_DATAFLASH
-#define BOARD_NAME 			"CUBe"
-#define BOARD_ID_STR        "CUBe"
 
 #define ARM
 #define SAM7
@@ -33,6 +36,7 @@
 #define HAS_XRAM
 #define UART_BAUD_RATE          115200
 //#define HAS_UART                1
+#define USE_RF_MODE
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -43,7 +47,7 @@
 
 #define FHTBUF_SIZE          174
 #define RCV_BUCKETS            4      //                 RAM: 25b * bucket
-#define RFR_DEBUG
+//#define RFR_DEBUG
 #define FULL_CC1100_PA
 #define HAS_RAWSEND
 #define HAS_FASTRF
@@ -63,6 +67,7 @@
 #define HAS_MAICO
 #define HAS_RFNATIVE
 #define HAS_ZWAVE
+#define HAS_MBUS
 
 #define _433MHZ
 
@@ -75,17 +80,9 @@
 #    define HAS_REVOLT
 #  endif
 
-#define HAS_MBUS
-//#define HAS_MEMFN
-
 #define SPI_MISO			(1<<16)
 #define SPI_MOSI			(1<<17)
 #define SPI_SCLK			(1<<18)
-
-//additional CC1101 Transceiver
-//#define CC1100_ASKSIN		1
-//#define CC1100_MORITZ		2
-//#define CC1100_MAICO		3
 
 //Internal Transceiver
 #define CC1100_0_CS_PIN		  12

@@ -10,11 +10,12 @@
 #include "board.h"
 #include "pio/pio.h"
 #include "hal_gpio.h"
+#include "hal_timer.h"
 
 #include <dbgu/dbgu.h>
 #include <stdio.h>
 #include <pio/pio_it.h>
-#include <aic/aic.h>
+
 #include <utility/trace.h>
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
 #include <usb/device/cdc-serial/CDCDSerialDriverDescriptors.h>
@@ -39,6 +40,9 @@
 #include "fastrf.h"
 #include "rf_router.h"		// rf_router_func
 #include "fband.h"
+#include "multi_CC.h"
+#include "rf_mode.h"
+
 #ifdef HAS_UART
 #include "serial.h"
 #endif
@@ -245,10 +249,123 @@ const t_fntab fntab[] = {
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
-
+#if HAS_MULTI_CC > 1
+  { '*', multiCC_func },
+#endif
   { 0, 0 },
 };
 
+#if HAS_MULTI_CC > 1
+const t_fntab fntab1[] = {
+
+  { 'C', ccreg },
+  { 'F', fs20send },
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
+  { 'G', rawsend },
+  { 'M', em_send },
+  { 'K', ks_send },
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
+#ifdef HAS_UNIROLL
+  { 'U', ur_send },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+  { 'R', read_eeprom },
+  { 'T', fhtsend },
+  { 'V', version },
+  { 'W', write_eeprom },
+  { 'X', set_txreport },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
+#endif
+#if HAS_MULTI_CC > 2
+  { '*', multiCC_func },
+#endif
+  { 0, 0 },
+};
+#endif
+
+#if HAS_MULTI_CC > 2
+const t_fntab fntab2[] = {
+
+  { 'C', ccreg },
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+  { 'V', version },
+  { 'X', set_txreport },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
+#endif
+#if HAS_MULTI_CC > 3
+  { '*', multiCC_func },
+#endif
+  { 0, 0 },
+};
+#endif
+
+#if HAS_MULTI_CC > 3
+const t_fntab fntab3[] = {
+
+    { 'C', ccreg },
+  #ifdef HAS_ASKSIN
+    { 'A', asksin_func },
+  #endif
+  #ifdef HAS_MORITZ
+    { 'Z', moritz_func },
+  #endif
+  #ifdef HAS_RFNATIVE
+    { 'N', native_func },
+  #endif
+  #ifdef HAS_RWE
+    { 'E', rwe_func },
+  #endif
+  #ifdef HAS_MAICO
+    { 'L', maico_func },
+  #endif
+  #ifdef HAS_SOMFY_RTS
+    { 'Y', somfy_rts_func },
+  #endif
+    { 'V', version },
+    { 'X', set_txreport },
+  #ifdef HAS_FASTRF
+    { 'f', fastrf_func },
+  #endif
+    { 0, 0 },
+};
+#endif
 
 //------------------------------------------------------------------------------
 //         Exported functions
@@ -302,29 +419,8 @@ int main(void)
   TRACE_INFO("init Timer\n\r");
   // Configure timer 0
   ticks=0;
-  extern void ISR_Timer0();
-  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC0);
-  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
-  AT91C_BASE_TC0->TC_IDR = 0xFFFFFFFF;
-  AT91C_BASE_TC0->TC_SR;
-  AT91C_BASE_TC0->TC_CMR = AT91C_TC_CLKS_TIMER_DIV5_CLOCK | AT91C_TC_CPCTRG;
-  AT91C_BASE_TC0->TC_RC = 375;
-  AT91C_BASE_TC0->TC_IER = AT91C_TC_CPCS;
-  AIC_ConfigureIT(AT91C_ID_TC0, AT91C_AIC_PRIOR_LOWEST, ISR_Timer0);
-  AIC_EnableIT(AT91C_ID_TC0);
-  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
 
-  // Configure timer 1
-  extern void ISR_Timer1();
-  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC1);
-  AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKDIS;	//Stop clock
-  AT91C_BASE_TC1->TC_IDR = 0xFFFFFFFF;		//Disable Interrupts
-  AT91C_BASE_TC1->TC_SR;						//Read Status register
-  AT91C_BASE_TC1->TC_CMR = AT91C_TC_CLKS_TIMER_DIV4_CLOCK | AT91C_TC_CPCTRG;  // Timer1: 2,666us = 48MHz/128
-  AT91C_BASE_TC1->TC_RC = 0xffff;
-  AT91C_BASE_TC1->TC_IER = AT91C_TC_CPCS;
-  AIC_ConfigureIT(AT91C_ID_TC1, 1, ISR_Timer1);
-  AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+  HAL_timer_init();
 
   led_init();
 
@@ -364,7 +460,13 @@ int main(void)
 
   TRACE_INFO("init Complete\n\r");
 
+#if defined(HAS_MULTI_CC)
+  for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
+    checkFrequency();
+  CC1101.instance = 0;
+#else
   checkFrequency();
+#endif
 
   // Main loop
   while (1) {
@@ -375,8 +477,58 @@ int main(void)
       uart_task();
     #endif
     Minute_Task();
-    RfAnalyze_Task();
+#ifdef USE_RF_MODE
 
+
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+    for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
+#endif
+    {
+      switch(get_RF_mode()) {
+        case RF_mode_slow:
+          RfAnalyze_Task();
+          break;
+        case RF_mode_asksin:
+          rf_asksin_task();
+          break;
+        case RF_mode_moritz:
+          rf_moritz_task();
+          break;
+        case RF_mode_maico:
+          rf_maico_task();
+          break;
+        case RF_mode_native1:
+        case RF_mode_native2:
+        case RF_mode_native3:
+          native_task();
+          break;
+        case RF_mode_rwe:
+          rf_rwe_task();
+          break;
+        case RF_mode_fast:
+          FastRF_Task();
+          break;
+        case RF_mode_zwave:
+          rf_zwave_task();
+          break;
+        case RF_mode_WMBUS_S:
+        case RF_mode_WMBUS_T:
+          rf_mbus_task();
+          break;
+        case RF_mode_off:
+        case RF_mode_somfy:
+        case RF_mode_intertechno:
+          break;
+      }
+    }
+
+    #ifdef HAS_KOPP_FC
+      kopp_fc_task();
+    #endif
+
+
+#else
+    RfAnalyze_Task();
     #ifdef HAS_FASTRF
       FastRF_Task();
     #endif
@@ -407,6 +559,7 @@ int main(void)
     #ifdef HAS_MAICO
       rf_maico_task();
     #endif
+#endif
 
     #ifdef HAS_ETHERNET
       Ethernet_Task();

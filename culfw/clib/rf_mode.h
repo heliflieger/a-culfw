@@ -2,11 +2,9 @@
 #define _RF_MODE_H
 
 #include <stdint.h>
+#include "board.h"
 
 #ifdef USE_RF_MODE
-
-#define CC_INSTANCE       CC1101.instance
-#define TX_REPORT         (CC1101.tx_report[CC1101.instance])
 
 typedef enum {
   RF_mode_off = 0,
@@ -28,6 +26,9 @@ typedef enum {
 
 #ifdef HAS_MULTI_CC
 
+#define CC_INSTANCE       CC1101.instance
+#define TX_REPORT         (CC1101.tx_report[CC1101.instance])
+
 typedef struct {
   uint8_t     instance;
   RF_mode_t   RF_mode[HAS_MULTI_CC];
@@ -37,6 +38,9 @@ typedef struct {
 } CC1101_t;
 
 #else
+
+#define CC_INSTANCE       0
+#define TX_REPORT         (CC1101.tx_report[0])
 
 typedef struct {
   uint8_t     instance;

@@ -3,6 +3,7 @@
 
 #include <avr/io.h>                     // for _BV
 #include <stdint.h>                     // for uint8_t
+#include "board.h"
 
 #define TYPE_EM      'E'
 
