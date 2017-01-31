@@ -57,6 +57,7 @@
 #define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
 #define HAS_FHT_TF
 #define HAS_RF_ROUTER                 // PROGMEM: 1248b  RAM: 44b
+#define RFR_FILTER                    // PROGMEM:   90b  RAM:  4b
 
 #define FHTBUF_SIZE          174      //                 RAM: 174b
 #define RCV_BUCKETS            4      //                 RAM: 25b * bucket
@@ -77,6 +78,7 @@
 #define HAS_UNIROLL
 #define HAS_REVOLT
 #define HAS_HOERMANN
+#define HAS_HOERMANN_SEND               // PROGMEM:  220
 #define HAS_MEMFN
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG

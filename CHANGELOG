@@ -1,5 +1,13 @@
 ## Changelog:
 
+#### 1.23.08
+- miniCUL: added Hoermann send + RFR Filter
+- miniCUL: Code cleanup
+- rpiaddon: added Hoermann send + RFR Filter
+
+#### 1.23.07
+- ARM Models: fix MBus
+
 #### 1.23.06
 - FIX: Remove LED flicker
 - Use include-what-you-use (and some manual fixes) to fix many header includes.

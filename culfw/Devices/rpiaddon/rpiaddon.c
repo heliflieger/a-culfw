@@ -80,6 +80,9 @@ const PROGMEM t_fntab fntab[] = {
 #endif
   { 'C', ccreg },
   { 'F', fs20send },
+#ifdef HAS_HOERMANN_SEND
+  { 'h', hm_send },
+#endif
 #ifdef HAS_INTERTECHNO
   { 'i', it_func },
 #endif

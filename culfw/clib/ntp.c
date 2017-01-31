@@ -9,6 +9,7 @@
 #include "ntp.h"
 #include "uip.h"
 #include "uip_arp.h"            // uip_arp_out;
+#include "stringfunc.h"                 // for fromhex
 
 // Time of last sync.
 time_t        ntp_sec = 3461476149U; // 2009-09-09 09:09:09 (GMT)

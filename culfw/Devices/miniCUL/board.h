@@ -42,13 +42,14 @@
 
 #define TTY_BUFSIZE		128
 
-#define HAS_FHT_80b 		// PROGMEM: 1374b, RAM: 90b
+#define HAS_FHT_80b 	// PROGMEM: 1374b, RAM: 90b
 #define HAS_FHT_8v 		// PROGMEM:  586b  RAM: 23b
 #define HAS_FHT_TF
-#define FHTBUF_SIZE 		174 //             RAM: 174b
-#define RCV_BUCKETS		4     //                 RAM: 25b * bucket
+#define FHTBUF_SIZE 	174 //             RAM: 174b
+#define RCV_BUCKETS		4   //             RAM: 25b * bucket
 #define RFR_DEBUG 		// PROGMEM:  354b  RAM: 14b
 #define HAS_RF_ROUTER
+#define RFR_FILTER      // PROGMEM:   90b  RAM:  4b
 #define FULL_CC1100_PA
 #define HAS_RAWSEND
 #define HAS_FASTRF 		// PROGMEM:  468b  RAM:  1b
@@ -60,7 +61,6 @@
 #define HAS_UNIROLL
 #define HAS_MEMFN
 #define HAS_SOMFY_RTS
-#define LACROSSE_HMS_EMU
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
@@ -87,6 +87,7 @@
 #define HAS_ESA
 #define HAS_MORITZ
 #define HAS_HOERMANN
+#define HAS_HOERMANN_SEND               // PROGMEM:  220
 //#define HAS_MBUS                      // PROGMEM: 2536
 #define MBUS_NO_TX                       // PROGMEM:  962
 #define HAS_RFNATIVE                  // PROGMEM:  580
