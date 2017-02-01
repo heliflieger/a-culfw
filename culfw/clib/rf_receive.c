@@ -102,13 +102,19 @@ static pulse_t hightime[NUM_SLOWRF], lowtime[NUM_SLOWRF];
 void
 tx_init(void)
 {
-
-#ifdef ARM
 #ifdef USE_RF_MODE
   init_RF_mode();
+#endif
+
+#ifdef ARM
+#ifdef HAS_MULTI_CC
+  for(uint8_t x=0; x < HAS_MULTI_CC; x++) {
+    hal_CC_GDO_init(x,INIT_MODE_OUT_CS_IN);
+  }
 #else
   hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
 #endif
+
 #else
   SET_BIT  ( CC1100_OUT_DDR,  CC1100_OUT_PIN);
   CLEAR_BIT( CC1100_OUT_PORT, CC1100_OUT_PIN);

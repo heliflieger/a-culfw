@@ -62,6 +62,7 @@ void save_RF_mode(void);
 void set_RF_mode(RF_mode_t mode);
 RF_mode_t get_RF_mode(void);
 uint8_t restore_RF_mode(void);
+void rf_mode_task(void);
 
 #else //USE_RF_MODE
 

@@ -461,62 +461,11 @@ int main(void)
     Minute_Task();
 
 #ifdef USE_RF_MODE
-
-
-#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
-    for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
-#endif
-    {
-      switch(get_RF_mode()) {
-        case RF_mode_slow:
-          RfAnalyze_Task();
-          break;
-        case RF_mode_asksin:
-          rf_asksin_task();
-          break;
-        case RF_mode_moritz:
-          rf_moritz_task();
-          break;
-        case RF_mode_maico:
-          rf_maico_task();
-          break;
-        case RF_mode_native1:
-        case RF_mode_native2:
-        case RF_mode_native3:
-          native_task();
-          break;
-        case RF_mode_rwe:
-          rf_rwe_task();
-          break;
-        case RF_mode_fast:
-          FastRF_Task();
-          break;
-        case RF_mode_zwave:
-          rf_zwave_task();
-          break;
-        case RF_mode_WMBUS_S:
-        case RF_mode_WMBUS_T:
-          rf_mbus_task();
-          break;
-        case RF_mode_off:
-        case RF_mode_somfy:
-        case RF_mode_intertechno:
-          break;
-      }
-    }
-
-    #ifdef HAS_KOPP_FC
-      kopp_fc_task();
-    #endif
-
-
+    rf_mode_task();
 #else
     RfAnalyze_Task();
     #ifdef HAS_FASTRF
       FastRF_Task();
-    #endif
-    #ifdef HAS_RF_ROUTER
-      rf_router_task();
     #endif
     #ifdef HAS_ASKSIN
       rf_asksin_task();
@@ -533,9 +482,6 @@ int main(void)
     #ifdef HAS_RFNATIVE
       native_task();
     #endif
-    #ifdef HAS_KOPP_FC
-      kopp_fc_task();
-    #endif
     #ifdef HAS_ZWAVE
       rf_zwave_task();
     #endif
@@ -544,6 +490,12 @@ int main(void)
     #endif
 #endif
 
+    #ifdef HAS_RF_ROUTER
+      rf_router_task();
+    #endif
+    #ifdef HAS_KOPP_FC
+      kopp_fc_task();
+    #endif
     #if CDC_COUNT > 1
       cdc_uart_task();
     #endif

@@ -72,7 +72,6 @@ void init_RF_mode(void) {
     CC1101.RF_mode[x] = RF_mode_off;
     CC1101.RF_mode_save[x] = RF_mode_off;
     CC1101.tx_report[x] = 0;
-    hal_CC_GDO_init(x,INIT_MODE_OUT_CS_IN);
   }
   CC1101.instance = 0;
 }
@@ -182,7 +181,9 @@ void set_RF_mode(RF_mode_t mode) {
 #endif
       CC1101.RF_mode[CC1101.instance] = RF_mode_off;
   }
+#ifdef ARM
   TRACE_INFO_WP("%d:Set RF mode to %d\r\n",CC1101.instance,CC1101.RF_mode[CC1101.instance]);
+#endif
   my_delay_ms(3);
 }
 
@@ -198,4 +199,67 @@ uint8_t restore_RF_mode(void) {
   return 0;
 }
 
+void rf_mode_task(void) {
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+    for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
+#endif
+    {
+      switch(get_RF_mode()) {
+        case RF_mode_slow:
+          RfAnalyze_Task();
+          break;
+        #ifdef HAS_ASKSIN
+        case RF_mode_asksin:
+          rf_asksin_task();
+          break;
+        #endif
+        #ifdef HAS_MORITZ
+        case RF_mode_moritz:
+          rf_moritz_task();
+          break;
+        #endif
+        #ifdef HAS_MAICO
+        case RF_mode_maico:
+          rf_maico_task();
+          break;
+        #endif
+        #ifdef HAS_RFNATIVE
+        case RF_mode_native1:
+        case RF_mode_native2:
+        case RF_mode_native3:
+          native_task();
+          break;
+        #endif
+        #ifdef HAS_RWE
+        case RF_mode_rwe:
+          rf_rwe_task();
+          break;
+        #endif
+        #ifdef HAS_FASTRF
+        case RF_mode_fast:
+          FastRF_Task();
+          break;
+        #endif
+        #ifdef HAS_ZWAVE
+        case RF_mode_zwave:
+          rf_zwave_task();
+          break;
+        #endif
+        #ifdef HAS_MBUS
+        case RF_mode_WMBUS_S:
+        case RF_mode_WMBUS_T:
+          rf_mbus_task();
+          break;
+        #endif
+        #ifdef HAS_SOMFY_RTS
+        case RF_mode_somfy:
+        #endif
+        #ifdef HAS_INTERTECHNO
+        case RF_mode_intertechno:
+        #endif
+        case RF_mode_off:
+          break;
+      }
+    }
+}
 #endif
