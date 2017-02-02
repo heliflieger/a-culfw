@@ -629,8 +629,11 @@ ISR(TIMER1_COMPA_vect)
 
 #elif defined STM32
   hal_enable_CC_timer_int(CC_INSTANCE,FALSE);       //Disable Interrupt
+
   #ifdef LONG_PULSE
+  uint32_t tmp = HAL_timer_get_reload_register(CC_INSTANCE);
   HAL_timer_set_reload_register(CC_INSTANCE,TWRAP);
+  HAL_timer_set_counter_value(CC_INSTANCE,tmp);
   #endif
 
 #else

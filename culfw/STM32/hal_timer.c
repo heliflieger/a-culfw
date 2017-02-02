@@ -265,6 +265,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 }
 
+uint32_t HAL_timer_get_reload_register(uint8_t instance) {
+  if(instance == 0)
+    return TIM2->ARR;
+  else if(instance == 1)
+    return TIM3->ARR;
+  else
+    return 0;
+}
+
 void HAL_timer_set_reload_register(uint8_t instance, uint32_t value) {
   if(instance == 0)
     TIM2->ARR = value;
@@ -273,6 +282,7 @@ void HAL_timer_set_reload_register(uint8_t instance, uint32_t value) {
   else
     return;
 }
+
 uint32_t HAL_timer_get_counter_value(uint8_t instance) {
   if(instance == 0)
     return TIM2->CNT;
@@ -280,8 +290,17 @@ uint32_t HAL_timer_get_counter_value(uint8_t instance) {
     return TIM3->CNT;
   else
     return 0;
-
 }
+
+void HAL_timer_set_counter_value(uint8_t instance, uint32_t value) {
+  if(instance == 0)
+    TIM2->CNT = value;
+  else if(instance == 1)
+    TIM3->CNT = value;
+  else
+    return;
+}
+
 void HAL_timer_reset_counter_value(uint8_t instance) {
   if(instance == 0)
     TIM2->CNT = 0;

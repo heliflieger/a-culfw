@@ -47,8 +47,10 @@ void MX_TIM3_Init(void);
 
 void hal_enable_CC_timer_int(uint8_t instance, uint8_t enable);
 
+uint32_t HAL_timer_get_reload_register(uint8_t instance);
 void HAL_timer_set_reload_register(uint8_t instance, uint32_t value);
 uint32_t HAL_timer_get_counter_value(uint8_t instance);
+void HAL_timer_set_counter_value(uint8_t instance, uint32_t value);
 void HAL_timer_reset_counter_value(uint8_t instance);
 
 #endif /*__ hal_timer_H */
