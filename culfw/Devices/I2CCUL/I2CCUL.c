@@ -84,6 +84,13 @@ const uint8_t mark433_pin = 0x00;
 const uint8_t mark433_pin = 0xFF;
 #endif
 
+#if defined(I2CSLAVE_ADDR)
+	const uint8_t i2cSlaveAddr = I2CSLAVE_ADDR;
+#else
+	uint8_t i2cSlaveAddr = I2CSLAVE_ADDR_BASE;
+#endif
+
+
 const PROGMEM t_fntab fntab[] = {
 
 #ifdef HAS_ASKSIN
@@ -178,7 +185,7 @@ main(void)
   //eeprom_factory_reset("xx");
   eeprom_init();
 
-    // Setup the timers. Are needed for watchdog-reset
+	// Setup the timers. Are needed for watchdog-reset
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
   ir_init();
   // IR uses highspeed TIMER0 for sampling 
@@ -186,6 +193,7 @@ main(void)
 #else
   OCR0A  = 249;                            // Timer0: 0.008s = 8MHz/256/250 == 125Hz
 #endif
+
   TCCR0B = _BV(CS02);
   TCCR0A = _BV(WGM01);
   TIMSK0 = _BV(OCIE0A);

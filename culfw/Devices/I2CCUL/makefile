@@ -77,13 +77,14 @@ CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 CFLAGS += -Wundef
 CFLAGS += -D$(TARGET)
-CFLAGS += -DI2CSLAVE_ADDR=$(I2CSLAVE_ADDR)
 CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 CFLAGS += -mcall-prologues
 CFLAGS += -DF_CPU=$(F_CPU)UL
 #CFLAGS += -Wunreachable-code
+
+
 
 
 CPPFLAGS = -g$(DEBUG)
@@ -188,13 +189,24 @@ ALL_CPPFLAGS = -mmcu=$(MCU) -I. -x c++ $(CPPFLAGS) $(GENDEPFLAGS)
 ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 
 
+all:
+	make TARGET=I2CCUL868 mostly_clean buildhw
+	make TARGET=I2CCUL433 mostly_clean buildhw
 
-all: 
-	make TARGET=I2CCUL868 I2CSLAVE_ADDR=0x7E mostly_clean build
-	make TARGET=I2CCUL433 I2CSLAVE_ADDR=0x7D mostly_clean build
-	make TARGET=I2CCUL868 I2CSLAVE_ADDR=0x7C mostly_clean build
+
+all-sw: 
+	make TARGET=I2CCUL868 I2CSLAVE_ADDR=0x7E mostly_clean buildsw
+	make TARGET=I2CCUL433 I2CSLAVE_ADDR=0x7D mostly_clean buildsw
+	make TARGET=I2CCUL868 I2CSLAVE_ADDR=0x7C mostly_clean buildsw
+
+buildhw: CFLAGS += -DI2CSLAVE_HWADDR
+buildhw: elf hex eep lss sym
 	
-build: elf hex eep lss sym
+buildsw: CFLAGS += -DI2CSLAVE_ADDR=$(I2CSLAVE_ADDR)
+buildsw: elf hex eep lss sym
+
+
+
 
 
 elf: $(TARGET)-$(I2CSLAVE_ADDR).elf
@@ -234,11 +246,11 @@ sizeafter:
 gccversion : 
 	@$(CC) --version
 
-program-433: 
-	make TARGET=nanoCUL433 program
+#program-433: 
+#	make TARGET=nanoCUL433 program
 
-program-868:
-	make TARGET=nanoCUL868 program
+#program-868:
+#	make TARGET=nanoCUL868 program
 
 program: $(TARGET).hex
 	#@if test ! -d /sys/class/gpio/gpio17; then echo 17 > /sys/class/gpio/export; fi
@@ -304,61 +316,61 @@ COFFCONVERT += --change-section-address .eeprom-0x810000
 
 
 coff: $(TARGET).elf
-	@echo
-	@echo $(MSG_COFF) $(TARGET).cof
+	echo
+	echo $(MSG_COFF) $(TARGET).cof
 	$(COFFCONVERT) -O coff-avr $< $(TARGET).cof
 
 
 extcoff: $(TARGET).elf
-	@echo
-	@echo $(MSG_EXTENDED_COFF) $(TARGET).cof
+	echo
+	echo $(MSG_EXTENDED_COFF) $(TARGET).cof
 	$(COFFCONVERT) -O coff-ext-avr $< $(TARGET).cof
 
 
 
 %.hex: %.elf
-	@echo $(MSG_FLASH) $@
-	@$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@
+	echo $(MSG_FLASH) $@
+	$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@
 
 %.eep: %.elf
-	@echo $(MSG_EEPROM) $@
-	@-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
+	echo $(MSG_EEPROM) $@
+	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
 	--change-section-lma .eeprom=0 --no-change-warnings -O $(FORMAT) $< $@ || exit 0
 
 %.lss: %.elf
-	@echo $(MSG_EXTENDED_LISTING) $@
-	@$(OBJDUMP) -h -z -S $< > $@
+	echo $(MSG_EXTENDED_LISTING) $@
+	$(OBJDUMP) -h -z -S $< > $@
 
 %.sym: %.elf
-	@echo $(MSG_SYMBOL_TABLE) $@
-	@$(NM) -n $< > $@
+	echo $(MSG_SYMBOL_TABLE) $@
+	$(NM) -n $< > $@
 
 
 
 .SECONDARY : $(TARGET).a
 .PRECIOUS : $(OBJ)
 %.a: $(OBJ)
-	@echo
-	@echo $(MSG_CREATING_LIBRARY) $@
+	echo
+	echo $(MSG_CREATING_LIBRARY) $@
 	$(AR) $@ $(OBJ)
 
 
 .SECONDARY : $(TARGET).elf
 .PRECIOUS : $(OBJ)
 %.elf: $(OBJ)
-	@echo $(MSG_LINKING) $@
-	@$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
+	echo $(MSG_LINKING) $@
+	$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
 
 
 $(OBJDIR)/%.o : %.c
-	@echo $(MSG_COMPILING) $<
-	@echo $(CC) -c $(ALL_CFLAGS) $< -o $@ 
-	@$(CC) -c $(ALL_CFLAGS) $< -o $@ 
+	echo $(MSG_COMPILING) $<
+	echo $(CC) -c $(ALL_CFLAGS) $< -o $@ 
+	$(CC) -c $(ALL_CFLAGS) $< -o $@ 
 
 
 $(OBJDIR)/%.o : %.cpp
-	@echo
-	@echo $(MSG_COMPILING_CPP) $<
+	echo
+	echo $(MSG_COMPILING_CPP) $<
 	$(CC) -c $(ALL_CPPFLAGS) $< -o $@ 
 
 
@@ -371,8 +383,8 @@ $(OBJDIR)/%.o : %.cpp
 
 
 $(OBJDIR)/%.o : %.S
-	@echo
-	@echo $(MSG_ASSEMBLING) $<
+	echo
+	echo $(MSG_ASSEMBLING) $<
 	$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 
@@ -382,38 +394,38 @@ $(OBJDIR)/%.o : %.S
 clean: clean_list clean_binary
 
 clean_binary:
-	@$(REMOVE) $(TARGET).hex
+	$(REMOVE) $(TARGET).hex
 
 mostly_clean:
-	@echo $(MSG_CLEANING)
-	@$(REMOVE) $(TARGET).hex
-	@$(REMOVE) $(TARGET).eep
-	@$(REMOVE) $(TARGET).cof
-	@$(REMOVE) $(TARGET).elf
-	@$(REMOVE) $(TARGET).map
-	@$(REMOVE) $(TARGET).sym
-	@$(REMOVE) $(TARGET).lss
-	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
-	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
-	@$(REMOVE) $(SRC:.c=.s)
-	@$(REMOVE) $(SRC:.c=.d)
-	@$(REMOVE) $(SRC:.c=.i)
+	echo $(MSG_CLEANING)
+	$(REMOVE) $(TARGET).hex
+	$(REMOVE) $(TARGET).eep
+	$(REMOVE) $(TARGET).cof
+	$(REMOVE) $(TARGET).elf
+	$(REMOVE) $(TARGET).map
+	$(REMOVE) $(TARGET).sym
+	$(REMOVE) $(TARGET).lss
+	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
+	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
+	$(REMOVE) $(SRC:.c=.s)
+	$(REMOVE) $(SRC:.c=.d)
+	$(REMOVE) $(SRC:.c=.i)
 
 clean_list:
-	@echo $(MSG_CLEANING)
-	@$(REMOVE) *.eep
-	@$(REMOVE) *.cof
-	@$(REMOVE) *.elf
-	@$(REMOVE) *.map
-	@$(REMOVE) *.sym
-	@$(REMOVE) *.lss
-	@$(REMOVE) *.hex
-	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
-	@$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
-	@$(REMOVE) $(SRC:.c=.s)
-	@$(REMOVE) $(SRC:.c=.d)
-	@$(REMOVE) $(SRC:.c=.i)
-	@$(REMOVEDIR) .dep
+	echo $(MSG_CLEANING)
+	$(REMOVE) *.eep
+	$(REMOVE) *.cof
+	$(REMOVE) *.elf
+	$(REMOVE) *.map
+	$(REMOVE) *.sym
+	$(REMOVE) *.lss
+	$(REMOVE) *.hex
+	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
+	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
+	$(REMOVE) $(SRC:.c=.s)
+	$(REMOVE) $(SRC:.c=.d)
+	$(REMOVE) $(SRC:.c=.i)
+	$(REMOVEDIR) .dep
 
 
 $(shell mkdir $(OBJDIR) 2>/dev/null)

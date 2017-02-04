@@ -17,7 +17,26 @@
 
 void I2CSlave_init(void)
 {
-	TWAR =  (I2CSLAVE_ADDR<<1);			//Set Slave Address / Shift left because BIT 1 = General CALL
+#if defined(I2CSLAVE_HWADDR)
+	//Set Address Pins as Input and Pullups on
+	I2CSLAVE_ADDR_DDR 	&= ~((1<<I2CSLAVE_ADDR_A1)|(1<<I2CSLAVE_ADDR_A0));
+	I2CSLAVE_ADDR_PORT	|= 	((1<<I2CSLAVE_ADDR_A1)|(1<<I2CSLAVE_ADDR_A0));
+	
+	//Reading Address Bits and add them to i2cSlaveAddr ( I2CSLAVE_ADDR_BASE )
+	if (I2CSLAVE_ADDR_PIN & (1<<I2CSLAVE_ADDR_A0)) 
+		i2cSlaveAddr |= (1<<0);
+	else 
+		i2cSlaveAddr &= ~(1<<0);
+	if (I2CSLAVE_ADDR_PIN & (1<<I2CSLAVE_ADDR_A1)) 
+		i2cSlaveAddr |= (1<<1);
+	else 
+		i2cSlaveAddr &= ~(1<<1);
+	
+	// Disable Pullups after getting Address - less stress to Pullups
+	I2CSLAVE_ADDR_PORT	&= 	~((1<<I2CSLAVE_ADDR_A1)|(1<<I2CSLAVE_ADDR_A0));
+#endif
+
+	TWAR =  (i2cSlaveAddr<<1);			//Set Slave Address / Shift left because BIT 1 = General CALL
 	TWCR = 	(1<<TWEN)|              //TWI enabled.
 					(1<<TWIE)|(0<<TWINT)|   //Enable TWI Interrupt and dont touch TWINT,else it wont work
 					(1<<TWEA)|							//Prepare to ACK next time the Slave is addressed.

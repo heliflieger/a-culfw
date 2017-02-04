@@ -372,7 +372,7 @@ version(char *in)
   }
 #ifdef HAS_I2CSLAVE
 		DS_P( PSTR(" (I2C: 0x") );
-		display_hex2(I2CSLAVE_ADDR);
+		display_hex2(i2cSlaveAddr);
 		DS_P( PSTR(")") );
 #endif	
   DNL();
