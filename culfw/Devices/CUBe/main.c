@@ -295,6 +295,9 @@ const t_fntab fntab1[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
+#ifdef HAS_ZWAVE
+  { 'z', zwave_func },
+#endif
 #if HAS_MULTI_CC > 2
   { '*', multiCC_func },
 #endif
@@ -328,6 +331,9 @@ const t_fntab fntab2[] = {
   { 'X', set_txreport },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
+#endif
+#ifdef HAS_ZWAVE
+  { 'z', zwave_func },
 #endif
 #if HAS_MULTI_CC > 3
   { '*', multiCC_func },
@@ -363,6 +369,9 @@ const t_fntab fntab3[] = {
   #ifdef HAS_FASTRF
     { 'f', fastrf_func },
   #endif
+#ifdef HAS_ZWAVE
+  { 'z', zwave_func },
+#endif
     { 0, 0 },
 };
 #endif

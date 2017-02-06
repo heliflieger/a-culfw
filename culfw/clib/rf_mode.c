@@ -174,7 +174,7 @@ void set_RF_mode(RF_mode_t mode) {
       fastrf_on = 0;
 #endif
 #ifdef HAS_ZWAVE
-      zwave_on = 0;
+      zwave_on[CC_INSTANCE] = 0;
 #endif
 #ifdef HAS_MBUS
       mbus_mode = WMBUS_NONE;
