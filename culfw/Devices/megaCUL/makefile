@@ -235,7 +235,7 @@ deb: $(TARGET).hex
 	mkdir -p .f/tmp
 	cp -r DEBIAN .f/
 	rm -fr .f/DEBIAN/CVS
-	cp $(TARGET).hex .f/tmp/CSM-rpiaddon.hex	
+	cp $(TARGET).hex .f/tmp/megaCUL.hex	
 	find .f -type f -print |\
 		xargs perl -pi -e 's/=VERS=/$(VERS)/g;s/=DATE=/$(DATE)/g'
 	chown -R root:root .f
