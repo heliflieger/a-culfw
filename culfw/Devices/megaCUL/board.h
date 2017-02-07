@@ -29,9 +29,9 @@
 #define CC1100_ISC		ISC00
 #define CC1100_EICR             EICRA
 
-#define LED_DDR                 DDRA
-#define LED_PORT                PORTA
-#define LED_PIN                 1
+#define LED_DDR                 DDRD
+#define LED_PORT                PORTD
+#define LED_PIN                 7
 
 #define LED_ON_DDR              DDRA
 #define LED_ON_PORT             PORTA
