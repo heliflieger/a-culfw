@@ -1,4 +1,4 @@
-Firmware for megaCUL (ATMEGA1284P) device
+Firmware for megaCUL (ATMEGA1284P) device.
 
 See
 http://forum.fhem.de/index.php
@@ -6,7 +6,7 @@ for details.
 
 FLASHING FIRMWARE
 
-For programming the device simple execute:
+For programming the device with a-culfw execute:
 
 	make program
 
