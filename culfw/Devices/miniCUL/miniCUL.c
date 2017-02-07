@@ -82,7 +82,7 @@ const PROGMEM t_fntab fntab[] = {
   { 'e', eeprom_factory_reset },
   { 'F', fs20send },
 #ifdef HAS_FASTRF
- { 'f', fastrf_func },
+  { 'f', fastrf_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
