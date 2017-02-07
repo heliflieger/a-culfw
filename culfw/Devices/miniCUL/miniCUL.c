@@ -66,6 +66,9 @@
 #ifdef HAS_ZWAVE
 #include "rf_zwave.h"
 #endif
+#ifdef HAS_EVOHOME
+#include "rf_evohome.h"
+#endif
 
 const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_ASKSIN
@@ -122,6 +125,9 @@ const PROGMEM t_fntab fntab[] = {
   { 'u', rf_router_func },
 #endif
   { 'V', version },
+#ifdef HAS_EVOHOME
+  { 'v', rf_evohome_func },
+#endif
   { 'W', write_eeprom },
   { 'X', set_txreport },
   { 'x', ccsetpa },
@@ -214,6 +220,8 @@ main(void)
 #ifdef HAS_ZWAVE
     rf_zwave_task();
 #endif
+#ifdef HAS_EVOHOME
+    rf_evohome_task();
+#endif
   }
-
 }
