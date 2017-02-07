@@ -67,6 +67,9 @@
 #ifdef HAS_ZWAVE
 #include "rf_zwave.h"
 #endif
+#ifdef HAS_EVOHOME
+#include "rf_evohome.h"
+#endif
 
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
 #include "ir.h"
@@ -74,72 +77,75 @@
 
 const PROGMEM t_fntab fntab[] = {
 
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
   { 'B', prepare_boot },
 #ifdef HAS_MBUS
   { 'b', rf_mbus_func },
 #endif
   { 'C', ccreg },
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
+  { 'e', eeprom_factory_reset },
   { 'F', fs20send },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
+#endif
+#ifdef HAS_RAWSEND
+  { 'G', rawsend },
+#endif
 #ifdef HAS_HOERMANN_SEND
   { 'h', hm_send },
-#endif
-#ifdef HAS_INTERTECHNO
-  { 'i', it_func },
-#endif
-#ifdef HAS_ASKSIN
-  { 'A', asksin_func },
 #endif
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
   { 'I', ir_func },
 #endif
-#ifdef HAS_MORITZ
-  { 'Z', moritz_func },
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
 #endif
-#ifdef HAS_RFNATIVE
-  { 'N', native_func },
-#endif
-#ifdef HAS_RWE
-  { 'E', rwe_func },
+#ifdef HAS_RAWSEND
+  { 'K', ks_send },
 #endif
 #ifdef HAS_KOPP_FC
   { 'k', kopp_fc_func },
-#endif
-#ifdef HAS_RAWSEND
-  { 'G', rawsend },
-  { 'M', em_send },
-  { 'K', ks_send },
-#endif
-#ifdef HAS_UNIROLL
-  { 'U', ur_send },
-#endif
-#ifdef HAS_SOMFY_RTS
-  { 'Y', somfy_rts_func },
-#endif
-#ifdef HAS_ONEWIRE
-  { 'O', onewire_func },
-#endif
-  { 'R', read_eeprom },
-  { 'T', fhtsend },
-  { 'V', version },
-  { 'W', write_eeprom },
-  { 'X', set_txreport },
-
-  { 'e', eeprom_factory_reset },
-#ifdef HAS_FASTRF
-  { 'f', fastrf_func },
-#endif
-#ifdef HAS_MEMFN
-  { 'm', getfreemem },
 #endif
 #ifdef HAS_BELFOX
   { 'L', send_belfox },
 #endif
   { 'l', ledfunc },
+#ifdef HAS_RAWSEND
+  { 'M', em_send },
+#endif
+#ifdef HAS_MEMFN
+  { 'm', getfreemem },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+  { 'R', read_eeprom },
+  { 'T', fhtsend },
   { 't', gettime },
+#ifdef HAS_UNIROLL
+  { 'U', ur_send },
+#endif
 #ifdef HAS_RF_ROUTER
   { 'u', rf_router_func },
 #endif
+  { 'V', version },
+#ifdef HAS_EVOHOME
+  { 'v', rf_evohome_func },
+#endif
+  { 'W', write_eeprom },
+  { 'X', set_txreport },
   { 'x', ccsetpa },
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
@@ -241,6 +247,8 @@ main(void)
 #ifdef HAS_ZWAVE
     rf_zwave_task();
 #endif
+#ifdef HAS_EVOHOME
+    rf_evohome_task();
+#endif
   }
-
 }
