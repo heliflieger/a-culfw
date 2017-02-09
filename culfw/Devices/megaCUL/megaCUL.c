@@ -31,8 +31,6 @@
 #include "fht.h"
 #include "fastrf.h"
 #include "rf_router.h"
-#include "onewire.h"
-#include "i2cmaster.h"
 
 #ifdef HAS_MEMFN
 #include "memory.h"
@@ -167,15 +165,8 @@ main(void)
 
   spi_init();
 
-//  eeprom_factory_reset("xx");
+  // eeprom_factory_reset("xx");
   eeprom_init();
-
-// Setup OneWire and make a full search at the beginning (takes some time)
-#ifdef HAS_ONEWIRE
-  i2c_init();
-	onewire_Init();
-	onewire_FullSearch();
-#endif
 
   // Setup the timers. Are needed for watchdog-reset
 #if defined (HAS_IRRX) || defined (HAS_IRTX)

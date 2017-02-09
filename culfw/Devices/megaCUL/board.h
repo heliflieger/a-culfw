@@ -1,9 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
-#include <avr/io.h>
-
-#define RPI_ADDON_BOARD
+#include <stdint.h>
 
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
@@ -31,20 +29,25 @@
 #define CC1100_ISC		ISC00
 #define CC1100_EICR             EICRA
 
-#define LED_DDR                 DDRA
-#define LED_PORT                PORTA
-#define LED_PIN                 1
+#define LED_DDR                 DDRD
+#define LED_PORT                PORTD
+#define LED_PIN                 7
 
 #define LED_ON_DDR              DDRA
 #define LED_ON_PORT             PORTA
 #define LED_ON_PIN              0
 
-#define HAS_IRRX
-#define HAS_IRTX
-#define F_INTERRUPTS            15625   // interrupts per second, min: 10000, max: 20000
-#define IRSND_OCx               IRSND_OC2B          // use OC2B/PIN 15
+#define HAS_IRRX			//IR Receiption
+#define F_INTERRUPTS            15625	// interrupts per second, min: 10000, max: 20000
+#define IRMP_PORT               PORTB
+#define IRMP_DDR                DDRB
+#define IRMP_PIN                PINB
+#define IRMP_BIT                0       // use PB0 as IR input on AVR
 
-#define BOARD_ID_STR            "RPIAddOn_CSM" // must contain CSM or OWX.pm won't detect it
+#define HAS_IRTX			//IR Transmission
+#define IRSND_OCx               IRSND_OC2B	// use OC2B/PIN 15
+
+#define BOARD_ID_STR            "megaCUL"
 
 #define HAS_UART
 #define UART_BAUD_RATE          38400
@@ -92,9 +95,6 @@
 #define MBUS_NO_TX                  // PROGMEM:  962
 #define HAS_ZWAVE                   // PROGMEM:  882
 //#define HAS_EVOHOME
-
-/* a maximum of 8 onewire devices is supported */
-#define HAS_ONEWIRE               8 // OneWire Device Buffer, RAM: 10 * 8 Byte
 
 #define RPI_TTY_FIX
 
