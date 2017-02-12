@@ -42,7 +42,7 @@ volatile uint8_t  clock_hsec;
 
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
-#ifdef ARM
+#ifdef USE_HAL
 void clock_TimerElapsedCallback(void)
 {
 #else

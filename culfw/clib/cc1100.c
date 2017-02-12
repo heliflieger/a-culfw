@@ -14,8 +14,8 @@
 #include "rf_moritz.h"                  // for moritz_on
 #endif
 
-#ifdef ARM
-#include "spi.h"
+#ifdef USE_HAL
+#include "hal.h"
 #endif
 
 #ifndef USE_RF_MODE
@@ -212,7 +212,7 @@ const PROGMEM const uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
 uint8_t
 cc1100_sendbyte(uint8_t data)
 {
-#ifdef ARM
+#ifdef USE_HAL
   return spi_send(data);
 #else
   SPDR = data;		        // send byte
@@ -231,7 +231,7 @@ ccInitChip(uint8_t *cfg)
 #endif
 #endif
 
-#ifdef ARM
+#ifdef USE_HAL
   hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
 #else
   EIMSK &= ~_BV(CC1100_INT);                 
@@ -347,7 +347,7 @@ void
 ccTX(void)
 {
   uint8_t cnt = 0xff;
-#ifdef ARM
+#ifdef USE_HAL
   hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE);
 #else
   EIMSK  &= ~_BV(CC1100_INT);
@@ -369,7 +369,7 @@ ccRX(void)
   while(cnt-- &&
         (ccStrobe(CC1100_SRX) & CC1100_STATUS_STATE_BM) != CC1100_STATE_RX)
     my_delay_us(10);
-#ifdef ARM
+#ifdef USE_HAL
     hal_enable_CC_GDOin_int(CC_INSTANCE,TRUE);
 #else
   EIMSK |= _BV(CC1100_INT);

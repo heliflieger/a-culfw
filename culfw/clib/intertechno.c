@@ -7,8 +7,8 @@
 #include <avr/interrupt.h>              // for cli, sei
 #include <stdint.h>                     // for int8_t
 #include <string.h>                     // for strlen
-#ifdef ARM
-#include <hal.h>
+#ifdef USE_HAL
+#include "hal.h"
 #endif
 
 #include <avr/pgmspace.h>               // for __LPM, PROGMEM
@@ -115,7 +115,7 @@ it_tunein(void)
 {
 		  int8_t i;
 		  
-#ifdef ARM
+#ifdef USE_HAL
 		  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
 		  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else

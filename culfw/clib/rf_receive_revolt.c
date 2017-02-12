@@ -24,9 +24,8 @@
 #include <stdint.h>                     // for uint8_t
 
 #include "fband.h"                      // for IS433MHZ
-#ifdef ARM
-#include <hal_gpio.h>
-#include <hal_timer.h>
+#ifdef USE_HAL
+#include "hal.h"
 #endif
 #include "rf_mode.h"
 
@@ -80,7 +79,7 @@ bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     #else
         OCR1A = SILENCE;
     #endif
-    #ifdef ARM
+    #ifdef USE_HAL
         hal_enable_CC_timer_int(CC_INSTANCE,TRUE);
     #else
         TIMSK1 = _BV(OCIE1A);

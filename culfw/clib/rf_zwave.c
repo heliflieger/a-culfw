@@ -15,6 +15,10 @@
 #include "rf_mode.h"
 #include "multi_CC.h"
 
+#ifdef USE_HAL
+#include "hal.h"
+#endif
+
 #ifdef CUL_V4
 #define MAX_ZWAVE_MSG 64        // 1024k SRAM is not enough: no SEC for CUL_V4
 #else
@@ -158,7 +162,7 @@ void
 zccRX(void)
 {
   ccRX();
-#ifdef ARM
+#ifdef USE_HAL
   hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
@@ -170,7 +174,7 @@ void
 rf_zwave_init(void)
 {
 
-#ifdef ARM
+#ifdef USE_HAL
 	hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
 #else
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );
@@ -254,7 +258,7 @@ rf_zwave_task(void)
   if(zwave_ackState[CC_INSTANCE] && ticks > zwave_sStamp[CC_INSTANCE])
     return zwave_doSend(zwave_sMsg[CC_INSTANCE], zwave_sLen[CC_INSTANCE]);
 
-  #ifdef ARM
+  #ifdef USE_HAL
   if (!hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In))
 #else
   if(!bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))

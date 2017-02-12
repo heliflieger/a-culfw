@@ -27,6 +27,10 @@
 #include "stringfunc.h"                 // for fromhex
 #include "rf_mode.h"
 
+#ifdef USE_HAL
+#include "hal.h"
+#endif
+
 // Buffers
 uint8 MBpacket[291];
 uint8 MBbytes[584];
@@ -121,7 +125,7 @@ void rf_mbus_init(uint8_t mmode, uint8_t rmode) {
   mbus_mode  = WMBUS_NONE;
   radio_mode = RADIO_MODE_NONE;
 
-#ifdef ARM
+#ifdef USE_HAL
   hal_CC_GDO_init(0,INIT_MODE_IN_CS_IN);
   hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 
@@ -225,7 +229,7 @@ void rf_mbus_task(void) {
 
      // RX active, awaiting SYNC
     case 1:
-#ifdef ARM
+#ifdef USE_HAL
       if (hal_CC_Pin_Get(0,CC_Pin_In)) {
 #else
       if (bit_is_set(GDO2_PIN,GDO2_BIT)) {
@@ -236,7 +240,7 @@ void rf_mbus_task(void) {
 
     // awaiting pkt len to read
     case 2:
-#ifdef ARM
+#ifdef USE_HAL
       if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
 #else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
@@ -301,7 +305,7 @@ void rf_mbus_task(void) {
 
     // awaiting more data to be read
     case 3:
-#ifdef ARM
+#ifdef USE_HAL
       if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
 #else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
@@ -325,7 +329,7 @@ void rf_mbus_task(void) {
   }
 
   // END OF PAKET
-#ifdef ARM
+#ifdef USE_HAL
   if (!hal_CC_Pin_Get(0,CC_Pin_In) && RXinfo.state>1) {
 #else
   if (!bit_is_set(GDO2_PIN,GDO2_BIT) && RXinfo.state>1) {
@@ -453,7 +457,7 @@ uint16 txSendPacket(uint8* pPacket, uint8* pBytes, uint8 mode) {
   // Wait for available space in FIFO
   while (!TXinfo.complete) {
 
-#ifdef ARM
+#ifdef USE_HAL
     if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
 #else
     if (bit_is_set(GDO0_PIN,GDO0_BIT)) {

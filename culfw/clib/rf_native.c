@@ -25,6 +25,10 @@
 #include "rf_mode.h"
 #include "multi_CC.h"
 
+#ifdef USE_HAL
+#include "hal.h"
+#endif
+
 #ifndef USE_RF_MODE
 static uint8_t native_on = 0;
 #endif
@@ -105,7 +109,7 @@ const uint8_t PROGMEM MODE_CFG[MAX_MODES][20] = {
 
 void native_init(uint8_t mode) {
 
-#ifdef ARM
+#ifdef USE_HAL
   hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
   hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
@@ -169,7 +173,7 @@ void native_task(void) {
 #endif
 
   // wait for CC1100_FIFOTHR given bytes to arrive in FIFO:
-#ifdef ARM
+#ifdef USE_HAL
   if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
 #else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {

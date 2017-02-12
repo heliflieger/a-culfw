@@ -18,6 +18,10 @@
 #include "multi_CC.h"
 #include "rf_mode.h"
 
+#ifdef USE_HAL
+#include "hal.h"
+#endif
+
 void moritz_sendraw(uint8_t* buf, int longPreamble);
 void moritz_sendAck(uint8_t* enc);
 void moritz_handleAutoAck(uint8_t* enc);
@@ -84,7 +88,7 @@ static uint32_t lastSendingTicks = 0;
 void
 rf_moritz_init(void)
 {
-#ifdef ARM
+#ifdef USE_HAL
   hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
   hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
@@ -180,7 +184,7 @@ rf_moritz_task(void)
 #endif
 
   // see if a CRC OK pkt has been arrived
-#ifdef ARM
+#ifdef USE_HAL
   if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
 #else
   if(bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {

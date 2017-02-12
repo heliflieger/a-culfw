@@ -14,9 +14,9 @@
 
 #include "board.h"
 
-#ifdef ARM
+#ifdef USE_HAL
 
-#include <hal_gpio.h>
+#include "hal.h"
 
 #define led_init()      HAL_LED_Init()
 

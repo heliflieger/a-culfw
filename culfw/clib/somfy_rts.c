@@ -119,7 +119,7 @@ uint16_t somfy_rts_interval = 1240; // symbol width in us -> ca. 828 Hz data rat
 uint16_t somfy_rts_interval_half = 620;
 
 void somfy_rts_tunein(void) {
-#ifdef ARM
+#ifdef USE_HAL
   hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
   hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else

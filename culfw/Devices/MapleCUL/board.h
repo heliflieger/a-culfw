@@ -45,6 +45,7 @@
 #define USB_IsConnected		      (CDC_isConnected(0))
 #define HAS_XRAM
 #define USE_RF_MODE
+#define USE_HAL
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v

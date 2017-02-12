@@ -55,9 +55,8 @@
 #include "rf_mode.h"
 #include "multi_CC.h"
 
-#ifdef ARM
-#include <hal_gpio.h>
-#include <hal_timer.h>
+#ifdef USE_HAL
+#include "hal.h"
 #endif
 
 #ifndef USE_RF_MODE
@@ -106,7 +105,7 @@ tx_init(void)
   init_RF_mode();
 #endif
 
-#ifdef ARM
+#ifdef USE_HAL
 #ifdef HAS_MULTI_CC
   for(uint8_t x=0; x < HAS_MULTI_CC; x++) {
     hal_CC_GDO_init(x,INIT_MODE_OUT_CS_IN);
@@ -589,7 +588,7 @@ RfAnalyze_Task(void)
 void reset_input(void)
 {
   maxLevel[CC_INSTANCE]=0;
-#ifdef ARM
+#ifdef USE_HAL
   hal_enable_CC_timer_int(CC_INSTANCE,FALSE);
 #else
   TIMSK1 = 0;
@@ -610,7 +609,7 @@ void reset_input(void)
 //////////////////////////////////////////////////////////////////////
 // Timer Compare Interrupt Handler. If we are called, then there was no
 // data for SILENCE time, and we can put the data to be analysed
-#ifdef ARM
+#ifdef USE_HAL
 void rf_receive_TimerElapsedCallback() {
 #else
 ISR(TIMER1_COMPA_vect)
@@ -774,7 +773,7 @@ static void calcOcrValue(bucket_t *b, pulse_t *hightime, pulse_t *lowtime, bool 
 
 //////////////////////////////////////////////////////////////////////
 // "Edge-Detected" Interrupt Handler
-#ifdef ARM
+#ifdef USE_HAL
 	void CC1100_in_callback() {
 #else
 ISR(CC1100_INTVECT)
@@ -848,7 +847,7 @@ ISR(CC1100_INTVECT)
 
   //////////////////
   // Falling edge
-#ifdef ARM
+#ifdef USE_HAL
   if (!hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
 #else
   if(!bit_is_set(CC1100_IN_PORT,CC1100_IN_PIN)) {
@@ -867,7 +866,7 @@ ISR(CC1100_INTVECT)
 #endif
     )) {
       addbit(b, 1);
-#ifdef ARM
+#ifdef USE_HAL
       HAL_timer_reset_counter_value(CC_INSTANCE);
 #else
       TCNT1 = 0;
@@ -908,7 +907,7 @@ ISR(CC1100_INTVECT)
 
   lowtime[CC_INSTANCE] = c-hightime[CC_INSTANCE];
 
-#ifdef ARM
+#ifdef USE_HAL
   HAL_timer_reset_counter_value(CC_INSTANCE);
 #else
   TCNT1 = 0;                          // restart timer
@@ -944,7 +943,7 @@ ISR(CC1100_INTVECT)
 
   ///////////////////////
   // http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_intbits
-#ifndef ARM
+#ifndef USE_HAL
   TIFR1 = _BV(OCF1A);                 // clear Timers flags (?, important!)
 #endif
 
@@ -1023,7 +1022,7 @@ retry_sync:
          	//OCR1A = 2200; // end of message
           //OCR1A = b->syncbit.lowtime*16 - 1000;
       #endif
-      #ifdef ARM
+      #ifdef USE_HAL
           hal_enable_CC_timer_int(CC_INSTANCE,TRUE);
       #else
           TIMSK1 = _BV(OCIE1A);
@@ -1068,7 +1067,7 @@ retry_sync:
         #else
             OCR1A = SILENCE;
         #endif
-        #ifdef ARM
+        #ifdef USE_HAL
             hal_enable_CC_timer_int(CC_INSTANCE,TRUE);
         #else
             TIMSK1 = _BV(OCIE1A);
@@ -1138,7 +1137,7 @@ retry_sync:
         b->bitidx  = 7;
         b->data[0] = 0;
 
-#ifdef ARM
+#ifdef USE_HAL
         hal_enable_CC_timer_int(CC_INSTANCE,TRUE);
 #else
         TIMSK1 = _BV(OCIE1A);             // On timeout analyze the data

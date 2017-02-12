@@ -37,6 +37,7 @@
 #define UART_BAUD_RATE          115200
 //#define HAS_UART                1
 #define USE_RF_MODE
+#define USE_HAL
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v

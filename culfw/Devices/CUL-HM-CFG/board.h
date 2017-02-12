@@ -26,6 +26,7 @@
 #define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
 #define USB_DESCRIPTOR_SN	'1'
 #define USE_RF_MODE
+#define USE_HAL
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v

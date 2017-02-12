@@ -12,14 +12,6 @@
 
 #include "led.h"                        // for SET_BIT, CLEAR_BIT
 
-#ifdef ARM
-
-uint8_t ccStrobe2(uint8_t, uint8_t cc_num);
-void cc1100_writeReg2(uint8_t addr, uint8_t data, uint8_t cc_num);
-uint8_t cc1100_readReg2(uint8_t addr, uint8_t cc_num);
-
-#endif
-
 void ccInitChip(uint8_t *cfg);
 void cc_factory_reset(void);
 void ccDump(void);
@@ -188,7 +180,7 @@ extern uint8_t cc_on;
 
 #include "board.h"                      // for CC1100_CS_PIN, etc
 
-#ifdef ARM
+#ifdef USE_HAL
 #include "rf_mode.h"
 #define CC1100_DEASSERT   hal_CC_Pin_Set(CC_INSTANCE,CC_Pin_CS,GPIO_PIN_SET)
 #define CC1100_ASSERT     hal_CC_Pin_Set(CC_INSTANCE,CC_Pin_CS,GPIO_PIN_RESET)

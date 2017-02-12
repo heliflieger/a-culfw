@@ -80,6 +80,9 @@
 #include "kopp-fc.h"
 #include "rf_mode.h"
 
+#ifdef USE_HAL
+#include "hal.h"
+#endif
 
 void kopp_fc_sendraw(uint8_t* buf, int longPreamble);
 void kopp_fc_sendAck(uint8_t* enc);
@@ -167,7 +170,7 @@ const PROGMEM const uint8_t CC1100_Kopp_CFG[EE_CC1100_CFG_SIZE] = {
 void
 kopp_fc_init(void)
 {
-#ifdef ARM
+#ifdef USE_HAL
   hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
   hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
 #else
@@ -668,7 +671,7 @@ uint8_t	recckserr= 0;					                    		// default: No checksum Error !
  // RX active, awaiting SYNC
 
 // if (bit_is_set(GDO2_PIN,GDO2_BIT))
-#ifdef ARM
+#ifdef USE_HAL
   if (hal_CC_Pin_Get(0,CC_Pin_In))
 #else
  if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))					// GDO2=CC100_IN_Port sind so konfirguriert, dass dieser aktiv=high wird
