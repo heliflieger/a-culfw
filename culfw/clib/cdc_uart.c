@@ -110,6 +110,7 @@ void cdc_uart_task(void) {
         ret = CDCDSerialDriver_Write(CDC_Tx_buffer[x],CDC_Tx_len[x], 0, CDC1+x);
         if( ret == USBD_STATUS_SUCCESS) {
           #ifdef HAS_WIZNET
+          TRACE_DEBUG_WP("%d:NET_UART_RECEIVE1: %d\r\n",x+1, CDC_Tx_len[x]);
           Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
 
           #endif
@@ -117,6 +118,7 @@ void cdc_uart_task(void) {
         }
       } else {
         #ifdef HAS_WIZNET
+        TRACE_DEBUG_WP("%d:NET_UART_RECEIVE2: %d\r\n",x+1, CDC_Tx_len[x]);
         Net_Write(CDC_Tx_buffer[x], CDC_Tx_len[x], 1+x);
         #endif
         CDC_Tx_len[x]=0;

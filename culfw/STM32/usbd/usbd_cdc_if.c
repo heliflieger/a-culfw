@@ -382,7 +382,7 @@ unsigned char CDC_isConnected(uint8_t cdc_num)
 
 void CDC_Receive_next (uint8_t cdc_num)
 {
-  if(cdc_num < CDC_COUNT) {
+  if((cdc_num < CDC_COUNT) && (CDC_isConnected(cdc_num))) {
     USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS,cdc_num);
     USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num);
   }
