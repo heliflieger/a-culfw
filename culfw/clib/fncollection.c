@@ -19,6 +19,7 @@
 #include "led.h"                        // for LED_OFF, LED_ON
 #include "qfs.h"                        // for fs_sync
 #include "stringfunc.h"                 // for fromhex, fromip, fromdec
+#include "hw_autodetect.h"
 #ifdef HAS_USB
 #ifdef SAM7
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
@@ -383,6 +384,10 @@ version(char *in)
   else
 #endif
     DS_P( PSTR(BOARD_ID_STR) );
+#ifdef USE_HW_AUTODETECT
+  DC('_');
+  DH2(get_hw_features());
+#endif
   if (IS433MHZ) {
      DS_P( PSTR(" (F-Band: 433MHz)") );
   } else {

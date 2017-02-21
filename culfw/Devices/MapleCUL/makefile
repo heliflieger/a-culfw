@@ -42,6 +42,7 @@ SRCS += ../../clib/fastrf.c
 SRCS += ../../clib/fband.c
 SRCS += ../../clib/fht.c
 SRCS += ../../clib/fncollection.c
+SRCS += ../../clib/hw_autodetect.c
 SRCS += ../../clib/intertechno.c 
 SRCS += ../../clib/kopp-fc.c 
 SRCS += ../../clib/multi_CC.c 
@@ -191,10 +192,8 @@ COMPILE = $(CC) $(CFLAGS) $(GENDEPFLAGS)
 .PHONY: proj
 
 all:
-	make TARGET=MapleCUL build clean2
-	make TARGET=MapleCULx4 build clean2
-	make TARGET=MapleCUN build clean2
-	make TARGET=MapleCUNx4 build clean2
+	make TARGET=MapleCUNx4_W5100 build clean2
+	make TARGET=MapleCUNx4_W5500 build clean2
 
 MapleCUL: 
 	make TARGET=MapleCUL build 
@@ -207,6 +206,12 @@ MapleCULx4:
 
 MapleCUNx4: 
 	make TARGET=MapleCUNx4 build
+
+MapleCUNx4_W5100: 
+	make TARGET=MapleCUNx4_W5100 build
+
+MapleCUNx4_W5500: 
+	make TARGET=MapleCUNx4_W5500 build
 			
 build: $(TARGET).elf
 

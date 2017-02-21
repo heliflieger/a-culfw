@@ -42,6 +42,7 @@
 #include "fband.h"
 #include "multi_CC.h"
 #include "rf_mode.h"
+#include "hw_autodetect.h"
 
 #ifdef HAS_UART
 #include "serial.h"
@@ -453,6 +454,10 @@ int main(void)
   ethernet_init();
   #endif
 
+#ifdef USE_HW_AUTODETECT
+  hw_autodetect();
+#endif
+
   TRACE_INFO("init USB\n\r");
   CDCDSerialDriver_Initialize();
   USBD_Connect();
@@ -549,7 +554,9 @@ int main(void)
         AT91C_BASE_RSTC->RSTC_RMR=AT91C_RSTC_URSTEN | 0xa5<<24;
         break;
       case 'H':
-
+#ifdef USE_HW_AUTODETECT
+  hw_autodetect();
+#endif
 
         break;
       case 'S':

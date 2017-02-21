@@ -8,6 +8,7 @@
 #include "display.h"
 #include "ttydata.h"
 #include "rf_mode.h"
+#include "hw_autodetect.h"
 
 extern const t_fntab fntab[];
 extern const t_fntab fntab1[];
@@ -39,8 +40,22 @@ uint8_t callfn2(char *buf)
     if(!n)
       break;
     if(buf == 0) {
-      DC(' ');
-      DC(n);
+#ifdef USE_HW_AUTODETECT
+      if((n != '*') || has_CC(CC1101.instance+1) )
+#endif
+      {
+        DC(' ');
+        DC(n);
+      }
+#ifdef USE_HW_AUTODETECT
+    } else if((buf[0] == n ) && (n == '*')) {
+      if(has_CC(CC1101.instance+1)) {
+        fn(buf);
+        return 1;
+      } else {
+        return 0;
+      }
+#endif
     } else if(buf[0] == n) {
       fn(buf);
       return 1;

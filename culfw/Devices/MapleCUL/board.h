@@ -15,11 +15,30 @@
 #define NUM_SLOWRF          2
 #define HAS_WIZNET
 
+#elif defined MapleCUNx4_W5100
+#define BOARD_NAME          "MapleCUNx4"
+#define BOARD_ID_STR        "MapleCUNx4"
+#define HAS_MULTI_CC        4
+#define NUM_SLOWRF          2
+#define HAS_WIZNET
+#define _WIZCHIP_           5100
+#define USE_HW_AUTODETECT
+
+#elif defined MapleCUNx4_W5500
+#define BOARD_NAME          "MapleCUNx4"
+#define BOARD_ID_STR        "MapleCUNx4"
+#define HAS_MULTI_CC        4
+#define NUM_SLOWRF          2
+#define HAS_WIZNET
+#define _WIZCHIP_           5500
+#define USE_HW_AUTODETECT
+
 #elif defined MapleCULx4
 #define BOARD_NAME          "MapleCULx4"
 #define BOARD_ID_STR        "MapleCULx4"
 #define HAS_MULTI_CC        4
 #define NUM_SLOWRF          2
+#define USE_HW_AUTODETECT
 
 #elif defined MapleCUN
 #define BOARD_NAME          "MapleCUN"
@@ -134,7 +153,9 @@
                           }
 
 #ifdef HAS_WIZNET
+#ifndef _WIZCHIP_
 #define _WIZCHIP_      5100
+#endif
 #endif
 
 #ifndef CDC_COUNT

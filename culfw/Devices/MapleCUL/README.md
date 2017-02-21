@@ -22,7 +22,7 @@ USB zu TTL Adapter.
 - Auf Next drücken.
 - Auf Next drücken.
 - Download to device auswählen.
-- Datei MapleCUL.bin bzw. MapleCUN.bin öffnen.
+- Datei MapleCUNx4_W5100.bin bzw. MapleCUNx4_W5500.bin öffnen.
 - Erase necessary pages auswählen.
 - Auf Next drücken.
 - Warten bis Flashvorgang abgeschlossen ist.

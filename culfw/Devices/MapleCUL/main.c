@@ -6,8 +6,6 @@
 //         Headers
 //------------------------------------------------------------------------------
 
-#include "board.h"
-
 #include <stm32f1xx_hal.h>
 #include <stm32f103xb.h>
 #include <hal_spi.h>
@@ -37,6 +35,9 @@
 #include "fband.h"
 #include "multi_CC.h"
 #include "rf_mode.h"
+#include "hw_autodetect.h"
+
+#include "board.h"
 #ifdef HAS_UART
 #include "serial.h"
 #endif
@@ -422,7 +423,10 @@ int main(void)
   LED2_OFF();
   LED3_OFF();
 
+
+
   spi_init();
+
   fht_init();
   tx_init();
 
@@ -430,6 +434,10 @@ int main(void)
   TRACE_INFO("init Ethernet\n\r");
   ethernet_init();
   #endif
+
+#ifdef USE_HW_AUTODETECT
+  hw_autodetect();
+#endif
 
   TRACE_INFO("init USB\n\r");
   MX_USB_DEVICE_Init();
@@ -450,7 +458,10 @@ int main(void)
   display_channel = DISPLAY_USB;
 
 #ifdef HAS_WIZNET
-  display_channel |= DISPLAY_TCP;
+#ifdef USE_HW_AUTODETECT
+  if(has_ethernet())
+#endif
+    display_channel |= DISPLAY_TCP;
 #endif
 
   TRACE_INFO("init Complete\n\r");
@@ -508,7 +519,11 @@ int main(void)
     #if CDC_COUNT > 1
       cdc_uart_task();
     #endif
+
     #ifdef HAS_WIZNET
+    #ifdef USE_HW_AUTODETECT
+    if(has_ethernet())
+    #endif
       Ethernet_Task();
     #endif
 

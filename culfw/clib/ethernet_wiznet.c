@@ -86,6 +86,21 @@ void my_ip_conflict(void) {
   TRACE_INFO_WP("CONFLICT IP from DHCP\r\n");
 }
 
+
+uint8_t check_Net_MAC() {
+  uint8_t buf[3] = {0x00, 0x80, 0x41};
+
+  ctlnetwork(CN_GET_NETINFO, (void*) &gWIZNETINFO);
+
+  if(memcmp(buf,gWIZNETINFO.mac,3)) {
+    return 0;
+  }
+
+  return 1;
+
+}
+
+
 static void Display_Net_Conf()
 {
 

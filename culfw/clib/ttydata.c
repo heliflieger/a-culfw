@@ -5,6 +5,7 @@
 #include "display.h"                    // for display_channel, DC, DS_P, etc
 #include "ttydata.h"
 #include "rf_mode.h"
+#include "hw_autodetect.h"
 
 void (*input_handle_func)(uint8_t channel);
 
@@ -23,8 +24,22 @@ callfn(char *buf)
     if(!n)
       break;
     if(buf == 0) {
+#ifdef USE_HW_AUTODETECT
+      if((n != '*') || has_CC(CC1101.instance+1) )
+#endif
+      {
       DC(' ');
       DC(n);
+      }
+#ifdef USE_HW_AUTODETECT
+    } else if((buf[0] == n ) && (n == '*')) {
+      if(has_CC(CC1101.instance+1)) {
+        fn(buf);
+        return 1;
+      } else {
+        return 0;
+      }
+#endif
     } else if(buf[0] == n) {
       fn(buf);
       return 1;

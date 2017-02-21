@@ -35,12 +35,12 @@
 #include "stm32f1xx.h"
 
 /* USER CODE BEGIN 0 */
-#include "board.h"
 #include "led.h"
 #include "hal_gpio.h"
 #include "stm32f103xb.h"
 #include "hal_usart.h"
 #include <utility/trace.h>
+#include "board.h"
 
 /* USER CODE END 0 */
 

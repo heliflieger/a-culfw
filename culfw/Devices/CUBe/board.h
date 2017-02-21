@@ -18,6 +18,7 @@
 #define BOARD_ID_STR        "CUBEx4"
 #define HAS_MULTI_CC        4
 #define NUM_SLOWRF          2
+#define USE_HW_AUTODETECT
 
 #else
 #define CUBE
