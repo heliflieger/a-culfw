@@ -259,6 +259,9 @@ const t_fntab fntab[] = {
 #if HAS_MULTI_CC > 1
 const t_fntab fntab1[] = {
 
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
   { 'C', ccreg },
   { 'F', fs20send },
 #ifdef HAS_INTERTECHNO
@@ -309,6 +312,9 @@ const t_fntab fntab1[] = {
 #if HAS_MULTI_CC > 2
 const t_fntab fntab2[] = {
 
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
   { 'C', ccreg },
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
@@ -346,30 +352,33 @@ const t_fntab fntab2[] = {
 #if HAS_MULTI_CC > 3
 const t_fntab fntab3[] = {
 
-    { 'C', ccreg },
-  #ifdef HAS_ASKSIN
-    { 'A', asksin_func },
-  #endif
-  #ifdef HAS_MORITZ
-    { 'Z', moritz_func },
-  #endif
-  #ifdef HAS_RFNATIVE
-    { 'N', native_func },
-  #endif
-  #ifdef HAS_RWE
-    { 'E', rwe_func },
-  #endif
-  #ifdef HAS_MAICO
-    { 'L', maico_func },
-  #endif
-  #ifdef HAS_SOMFY_RTS
-    { 'Y', somfy_rts_func },
-  #endif
-    { 'V', version },
-    { 'X', set_txreport },
-  #ifdef HAS_FASTRF
-    { 'f', fastrf_func },
-  #endif
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
+  { 'C', ccreg },
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+  { 'V', version },
+  { 'X', set_txreport },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
+#endif
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif

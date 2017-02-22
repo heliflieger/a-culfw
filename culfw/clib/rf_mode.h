@@ -11,6 +11,8 @@ typedef enum {
   RF_mode_slow,
   RF_mode_asksin,
   RF_mode_moritz,
+  RF_mode_WMBUS_S,
+  RF_mode_WMBUS_T,
   RF_mode_maico,
   RF_mode_native1,
   RF_mode_native2,
@@ -20,8 +22,7 @@ typedef enum {
   RF_mode_rwe,
   RF_mode_fast,
   RF_mode_zwave,
-  RF_mode_WMBUS_S,
-  RF_mode_WMBUS_T,
+
 } RF_mode_t;
 
 #ifdef HAS_MULTI_CC

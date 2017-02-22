@@ -97,15 +97,17 @@ void save_RF_mode(void) {
 
 void set_RF_mode(RF_mode_t mode) {
 
-  CC1101.RF_mode[CC1101.instance] = mode;
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+  uint8_t instance = CC1101.instance;
+#endif
 
   switch(mode) {
     case RF_mode_slow:
       set_txrestore();
       if(!CC1101.tx_report[CC1101.instance])
-        CC1101.RF_mode[CC1101.instance] = RF_mode_off;
+        mode = RF_mode_off;
       if(!(CC1101.instance < NUM_SLOWRF))
-        CC1101.RF_mode[CC1101.instance] = RF_mode_off;
+        mode = RF_mode_off;
       break;
 #ifdef HAS_ASKSIN
     case RF_mode_asksin:
@@ -161,13 +163,23 @@ void set_RF_mode(RF_mode_t mode) {
       break;
 #endif
 #ifdef HAS_MBUS
-    case   RF_mode_WMBUS_S:
-      rf_mbus_init(WMBUS_SMODE,RADIO_MODE_RX);
-    break;
+    case RF_mode_WMBUS_S:
     case RF_mode_WMBUS_T:
-      rf_mbus_init(WMBUS_TMODE,RADIO_MODE_RX);
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+      for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++) {
+        if((CC1101.instance != instance) && ((CC1101.RF_mode[CC1101.instance] & 0xFE) == RF_mode_WMBUS_S)) {
+          set_RF_mode(RF_mode_off);
+        }
+      }
+      CC1101.instance = instance;
+#endif
+      if(mode == RF_mode_WMBUS_S)
+        rf_mbus_init(WMBUS_SMODE,RADIO_MODE_RX);
+      else
+        rf_mbus_init(WMBUS_TMODE,RADIO_MODE_RX);
       break;
 #endif
+
     default:
       set_ccoff();
 #ifdef HAS_FASTRF
@@ -179,8 +191,10 @@ void set_RF_mode(RF_mode_t mode) {
 #ifdef HAS_MBUS
       mbus_mode = WMBUS_NONE;
 #endif
-      CC1101.RF_mode[CC1101.instance] = RF_mode_off;
+      mode = RF_mode_off;
   }
+
+  CC1101.RF_mode[CC1101.instance] = mode;
 #ifdef ARM
   TRACE_INFO_WP("%d:Set RF mode to %d\r\n",CC1101.instance,CC1101.RF_mode[CC1101.instance]);
 #endif

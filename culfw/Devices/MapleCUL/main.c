@@ -255,6 +255,9 @@ const t_fntab fntab[] = {
 #if HAS_MULTI_CC > 1
 const t_fntab fntab1[] = {
 
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
   { 'C', ccreg },
   { 'F', fs20send },
 #ifdef HAS_INTERTECHNO
@@ -305,6 +308,9 @@ const t_fntab fntab1[] = {
 #if HAS_MULTI_CC > 2
 const t_fntab fntab2[] = {
 
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
   { 'C', ccreg },
 #ifdef HAS_ASKSIN
   { 'A', asksin_func },
