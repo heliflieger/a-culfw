@@ -132,7 +132,7 @@ SRCS += ../../Wiznet/Internet/DHCP/dhcp.c
 
 # Every subdirectory with include files must be described here
 H_SUBDIRS := \
-../MapleCUL \
+../MapleCUN \
 ../../clib \
 ../../STM32 \
 ../../STM32/usbd \
