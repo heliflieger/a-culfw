@@ -1,5 +1,12 @@
 ## Changelog:
 
+#### 1.24.00
+- ARM Models: 
+  - Rework of multi CC1101
+  - Add RF mode switching
+  - Add hardware autodetection
+- MapleCUN: Add W5500
+
 #### 1.23.09
 - Add new device: megaCUL
 - megaCUL: disabled by default: Honeywell evohome

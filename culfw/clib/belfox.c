@@ -21,10 +21,12 @@
 #include "delay.h"                      // for my_delay_us, my_delay_ms
 #include "led.h"                        // for LED_OFF, LED_ON
 #include "rf_receive.h"                 // for set_txreport, tx_report
-
+#include "rf_mode.h"
 #ifdef HAS_MORITZ
 #include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
 #endif
+
+
 
 // define timings
 #define BELFOX_ZERO_HIGH               1000  // 1000uS
@@ -70,6 +72,10 @@ send_belfox(char *msg)
   cli();
 #endif
 
+#ifdef USE_RF_MODE
+  change_RF_mode(RF_mode_slow);
+#else
+
 #ifdef HAS_MORITZ
   uint8_t restore_moritz = 0;
   if(moritz_on) {
@@ -81,6 +87,7 @@ send_belfox(char *msg)
 
   if(!cc_on)
     set_ccon();
+#endif
   ccTX();                                       // Enable TX 
   do {
     send_sync();                                // sync
@@ -94,7 +101,7 @@ send_belfox(char *msg)
 
   } while(--repeat > 0);
 
-  if(tx_report) {                               // Enable RX
+  if(TX_REPORT) {                               // Enable RX
     ccRX();
   } else {
     ccStrobe(CC1100_SIDLE);
@@ -104,11 +111,14 @@ send_belfox(char *msg)
   sei(); 
 #endif
 
+#ifdef USE_RF_MODE
+  restore_RF_mode();
+#else
 #ifdef HAS_MORITZ
   if(restore_moritz)
     rf_moritz_init();
 #endif
-
+#endif
   LED_OFF();
 }
 

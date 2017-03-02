@@ -3,11 +3,8 @@
 #include "board.h"                      // for SPI_DDR, SPI_SCLK, HAS_DOGM, etc
 #include "spi.h"
 
-__attribute__((weak)) void spi_init(void)
+void spi_init(void)
 {
-#ifdef ARM
-
-#else
 #ifdef PRR0
   PRR0 &= ~_BV(PRSPI);
 #endif
@@ -21,17 +18,11 @@ __attribute__((weak)) void spi_init(void)
   SPCR  = _BV(MSTR) | _BV(SPE);
   SPSR |= _BV(SPI2X);
 #endif
-#endif
 
 }
-
-__attribute__((weak)) uint8_t spi_send(uint8_t data)
+uint8_t spi_send(uint8_t data)
 {
-#ifdef ARM
-  return 0;
-#else
   SPDR = data;
   while (!(SPSR & _BV(SPIF)));
   return SPDR;
-#endif
 }

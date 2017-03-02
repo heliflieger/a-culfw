@@ -16,10 +16,11 @@ void udp_appcall(void);
 void tcp_appcall(void);
 void eth_func(char *);
 
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 extern rb_t NET_Tx_Buffer;
 void NET_Receive_next (uint8_t socket_num);
 void Net_Write(uint8_t *data, uint16_t size,  uint8_t socket);
+uint8_t check_Net_MAC();
 
 #define NET1  0
 #define NET2  1

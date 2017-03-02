@@ -24,10 +24,11 @@
 #include <stdint.h>                     // for uint8_t
 
 #include "fband.h"                      // for IS433MHZ
-#ifdef ARM
-#include <hal_gpio.h>
-#include <hal_timer.h>
+#ifdef USE_HAL
+#include "hal.h"
 #endif
+#include "rf_mode.h"
+
 #ifdef HAS_REVOLT
 /*
  * Description in header
@@ -72,14 +73,14 @@ bool is_revolt(bucket_t *b, pulse_t *hightime, pulse_t *lowtime)
     b->bitidx  = 7;
     b->data[0] = 0;
     #ifdef SAM7
-        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE/8*3);
+    HAL_timer_set_reload_register(CC_INSTANCE,SILENCE/8*3);
     #elif defined STM32
-        HAL_TIMER_SET_RELOAD_REGISTER(SILENCE);
+    HAL_timer_set_reload_register(CC_INSTANCE,SILENCE);
     #else
         OCR1A = SILENCE;
     #endif
-    #ifdef ARM
-        hal_enable_CC_timer_int(TRUE);
+    #ifdef USE_HAL
+        hal_enable_CC_timer_int(CC_INSTANCE,TRUE);
     #else
         TIMSK1 = _BV(OCIE1A);
     #endif

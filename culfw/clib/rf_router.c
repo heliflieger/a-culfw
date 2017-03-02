@@ -13,6 +13,7 @@
 #include "rf_router.h"
 #include "ringbuffer.h"                 // for rb_reset, rb_t, rb_put, etc
 #include "ttydata.h"                    // for TTY_Rx_Buffer, etc
+#include "rf_mode.h"
 
 uint8_t rf_router_status;
 uint8_t rf_router_myid;
@@ -52,7 +53,7 @@ rf_router_init()
   rf_router_myid = erb(EE_RF_ROUTER_ID);
   rf_router_target = erb(EE_RF_ROUTER_ROUTER);
   if(rf_router_target) {
-    tx_report = 0x21;
+    TX_REPORT = 0x21;
     set_txrestore();
   }
 #ifdef RFR_FILTER

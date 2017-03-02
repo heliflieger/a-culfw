@@ -35,18 +35,33 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hal_timer.h"
 #include "board.h"
+#include "rf_mode.h"
+#include <aic/aic.h>
 
-void hal_enable_CC_timer_int(uint8_t enable) {
+void hal_enable_CC_timer_int(uint8_t instance, uint8_t enable) {
+
+  AT91PS_TC  timer;
+  uint32_t   timerID;
+
+  if(instance == 0) {
+    timer=AT91C_BASE_TC1;
+    timerID=AT91C_ID_TC1;
+  } else if(instance == 1) {
+    timer=AT91C_BASE_TC2;
+    timerID=AT91C_ID_TC2;
+  } else
+    return;
+
   if (enable) {
-    AT91C_BASE_TC1->TC_SR;
+    timer->TC_SR;
     #ifdef LONG_PULSE
-        AT91C_BASE_TC1->TC_CMR &= ~(AT91C_TC_CPCTRG);
+    timer->TC_CMR &= ~(AT91C_TC_CPCTRG);
     #endif
-    AT91C_BASE_AIC->AIC_IECR= 1 << AT91C_ID_TC1;
+    AT91C_BASE_AIC->AIC_IECR= 1 << timerID;
   } else {
-    AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_TC1; //Disable Interrupt
+    AT91C_BASE_AIC->AIC_IDCR = 1 << timerID; //Disable Interrupt
     #ifdef LONG_PULSE
-    AT91C_BASE_TC1->TC_CMR |= AT91C_TC_CPCTRG;
+    timer->TC_CMR |= AT91C_TC_CPCTRG;
     #endif
   }
 }
@@ -75,9 +90,90 @@ void ISR_Timer0() {
 void ISR_Timer1() {
   // Clear status bit to acknowledge interrupt
   AT91C_BASE_TC1->TC_SR;
+#ifdef USE_RF_MODE
+  uint8_t old_instance = CC1101.instance;
+  CC1101.instance = 0;
   rf_receive_TimerElapsedCallback();
+  CC1101.instance = old_instance;
+#else
+  rf_receive_TimerElapsedCallback();
+#endif
 }
 
+void ISR_Timer2() {
+  // Clear status bit to acknowledge interrupt
+  AT91C_BASE_TC2->TC_SR;
+#ifdef USE_RF_MODE
+  uint8_t old_instance = CC1101.instance;
+  CC1101.instance = 1;
+  rf_receive_TimerElapsedCallback();
+  CC1101.instance = old_instance;
+#else
+  rf_receive_TimerElapsedCallback();
+#endif
+}
 
+void HAL_timer_set_reload_register(uint8_t instance, uint32_t value) {
+  if(instance == 0)
+    (AT91C_BASE_TC1->TC_RC) = value;
+  else if(instance == 1)
+    (AT91C_BASE_TC2->TC_RC) = value;
+  else
+    return;
+}
+
+uint32_t HAL_timer_get_counter_value(uint8_t instance) {
+  if(instance == 0)
+    return AT91C_BASE_TC1->TC_CV;
+  else if(instance == 1)
+    return AT91C_BASE_TC2->TC_CV;
+  else
+    return 0;
+}
+
+void HAL_timer_reset_counter_value(uint8_t instance) {
+  if(instance == 0)
+    AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+  else if(instance == 1)
+    AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+  else
+    return;
+}
+
+void HAL_timer_init() {
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC0);
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKDIS;
+  AT91C_BASE_TC0->TC_IDR = 0xFFFFFFFF;
+  AT91C_BASE_TC0->TC_SR;
+  AT91C_BASE_TC0->TC_CMR = AT91C_TC_CLKS_TIMER_DIV5_CLOCK | AT91C_TC_CPCTRG;
+  AT91C_BASE_TC0->TC_RC = 375;
+  AT91C_BASE_TC0->TC_IER = AT91C_TC_CPCS;
+  AIC_ConfigureIT(AT91C_ID_TC0, AT91C_AIC_PRIOR_LOWEST, ISR_Timer0);
+  AIC_EnableIT(AT91C_ID_TC0);
+  AT91C_BASE_TC0->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+
+  // Configure timer 1
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC1);
+  AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKDIS; //Stop clock
+  AT91C_BASE_TC1->TC_IDR = 0xFFFFFFFF;    //Disable Interrupts
+  AT91C_BASE_TC1->TC_SR;            //Read Status register
+  AT91C_BASE_TC1->TC_CMR = AT91C_TC_CLKS_TIMER_DIV4_CLOCK | AT91C_TC_CPCTRG;  // Timer1: 2,666us = 48MHz/128
+  AT91C_BASE_TC1->TC_RC = 0xffff;
+  AT91C_BASE_TC1->TC_IER = AT91C_TC_CPCS;
+  AIC_ConfigureIT(AT91C_ID_TC1, 1, ISR_Timer1);
+  AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+
+  // Configure timer 1
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_TC2);
+  AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKDIS; //Stop clock
+  AT91C_BASE_TC2->TC_IDR = 0xFFFFFFFF;    //Disable Interrupts
+  AT91C_BASE_TC2->TC_SR;            //Read Status register
+  AT91C_BASE_TC2->TC_CMR = AT91C_TC_CLKS_TIMER_DIV4_CLOCK | AT91C_TC_CPCTRG;  // Timer1: 2,666us = 48MHz/128
+  AT91C_BASE_TC2->TC_RC = 0xffff;
+  AT91C_BASE_TC2->TC_IER = AT91C_TC_CPCS;
+  AIC_ConfigureIT(AT91C_ID_TC2, 1, ISR_Timer2);
+  AT91C_BASE_TC2->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG;
+
+}
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

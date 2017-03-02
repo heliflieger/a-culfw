@@ -6,15 +6,15 @@
 //         Headers
 //------------------------------------------------------------------------------
 
-#include "board.h"
-
 #include <stm32f1xx_hal.h>
+#include <stm32f103xb.h>
 #include <hal_spi.h>
 #include <hal_usart.h>
 #include <usb_device.h>
 #include <hal_gpio.h>
 #include <hal_timer.h>
 #include <utility/trace.h>
+#include <utility/dbgu.h>
 #include <avr/eeprom.h>
 #include <avr/wdt.h>
 
@@ -33,10 +33,15 @@
 #include "display.h"
 #include "fastrf.h"
 #include "fband.h"
+#include "multi_CC.h"
+#include "rf_mode.h"
+#include "hw_autodetect.h"
+
+#include "board.h"
 #ifdef HAS_UART
 #include "serial.h"
 #endif
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 #include "ethernet.h"
 #endif
 #ifdef HAS_ASKSIN
@@ -241,10 +246,138 @@ const t_fntab fntab[] = {
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
-
+#if HAS_MULTI_CC > 1
+  { '*', multiCC_func },
+#endif
   { 0, 0 },
 };
 
+#if HAS_MULTI_CC > 1
+const t_fntab fntab1[] = {
+
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
+  { 'C', ccreg },
+  { 'F', fs20send },
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
+  { 'G', rawsend },
+  { 'M', em_send },
+  { 'K', ks_send },
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
+#ifdef HAS_UNIROLL
+  { 'U', ur_send },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+  { 'R', read_eeprom },
+  { 'T', fhtsend },
+  { 'V', version },
+  { 'W', write_eeprom },
+  { 'X', set_txreport },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
+#endif
+#ifdef HAS_ZWAVE
+  { 'z', zwave_func },
+#endif
+#if HAS_MULTI_CC > 2
+  { '*', multiCC_func },
+#endif
+  { 0, 0 },
+};
+#endif
+
+#if HAS_MULTI_CC > 2
+const t_fntab fntab2[] = {
+
+#ifdef HAS_MBUS
+  { 'b', rf_mbus_func },
+#endif
+  { 'C', ccreg },
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+#ifdef HAS_RWE
+  { 'E', rwe_func },
+#endif
+#ifdef HAS_MAICO
+  { 'L', maico_func },
+#endif
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+  { 'V', version },
+  { 'X', set_txreport },
+#ifdef HAS_FASTRF
+  { 'f', fastrf_func },
+#endif
+#ifdef HAS_ZWAVE
+  { 'z', zwave_func },
+#endif
+#if HAS_MULTI_CC > 3
+  { '*', multiCC_func },
+#endif
+  { 0, 0 },
+};
+#endif
+
+#if HAS_MULTI_CC > 3
+const t_fntab fntab3[] = {
+
+    { 'C', ccreg },
+  #ifdef HAS_ASKSIN
+    { 'A', asksin_func },
+  #endif
+  #ifdef HAS_MORITZ
+    { 'Z', moritz_func },
+  #endif
+  #ifdef HAS_RFNATIVE
+    { 'N', native_func },
+  #endif
+  #ifdef HAS_RWE
+    { 'E', rwe_func },
+  #endif
+  #ifdef HAS_MAICO
+    { 'L', maico_func },
+  #endif
+  #ifdef HAS_SOMFY_RTS
+    { 'Y', somfy_rts_func },
+  #endif
+    { 'V', version },
+    { 'X', set_txreport },
+  #ifdef HAS_FASTRF
+    { 'f', fastrf_func },
+  #endif
+#ifdef HAS_ZWAVE
+  { 'z', zwave_func },
+#endif
+    { 0, 0 },
+};
+#endif
 
 //------------------------------------------------------------------------------
 //         Exported functions
@@ -263,6 +396,7 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_TIM3_Init();
 
   DBGU_init();
 
@@ -295,14 +429,21 @@ int main(void)
   LED2_OFF();
   LED3_OFF();
 
+
+
   spi_init();
+
   fht_init();
   tx_init();
 
-  #ifdef HAS_W5100
+  #ifdef HAS_WIZNET
   TRACE_INFO("init Ethernet\n\r");
   ethernet_init();
   #endif
+
+#ifdef USE_HW_AUTODETECT
+  hw_autodetect();
+#endif
 
   TRACE_INFO("init USB\n\r");
   MX_USB_DEVICE_Init();
@@ -322,29 +463,35 @@ int main(void)
 
   display_channel = DISPLAY_USB;
 
-#ifdef HAS_W5100
-  display_channel |= DISPLAY_TCP;
+#ifdef HAS_WIZNET
+#ifdef USE_HW_AUTODETECT
+  if(has_ethernet())
+#endif
+    display_channel |= DISPLAY_TCP;
 #endif
 
   TRACE_INFO("init Complete\n\r");
 
-  checkFrequency();
+#if defined(HAS_MULTI_CC)
+    for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
+      checkFrequency();
+    CC1101.instance = 0;
+#else
+    checkFrequency();
+#endif
 
   // Main loop
   while (1) {
 
     CDC_Task();
     Minute_Task();
-    RfAnalyze_Task();
 
-    #if CDC_COUNT > 1
-      cdc_uart_task();
-    #endif
+#ifdef USE_RF_MODE
+    rf_mode_task();
+#else
+    RfAnalyze_Task();
     #ifdef HAS_FASTRF
       FastRF_Task();
-    #endif
-    #ifdef HAS_RF_ROUTER
-      rf_router_task();
     #endif
     #ifdef HAS_ASKSIN
       rf_asksin_task();
@@ -361,17 +508,28 @@ int main(void)
     #ifdef HAS_RFNATIVE
       native_task();
     #endif
-    #ifdef HAS_KOPP_FC
-      kopp_fc_task();
-    #endif
     #ifdef HAS_ZWAVE
       rf_zwave_task();
     #endif
     #ifdef HAS_MAICO
       rf_maico_task();
     #endif
+#endif
 
-    #ifdef HAS_W5100
+    #ifdef HAS_RF_ROUTER
+      rf_router_task();
+    #endif
+    #ifdef HAS_KOPP_FC
+      kopp_fc_task();
+    #endif
+    #if CDC_COUNT > 1
+      cdc_uart_task();
+    #endif
+
+    #ifdef HAS_WIZNET
+    #ifdef USE_HW_AUTODETECT
+    if(has_ethernet())
+    #endif
       Ethernet_Task();
     #endif
 
@@ -380,6 +538,7 @@ int main(void)
       unsigned char x;
 
       x=DBGU_GetChar();
+      SWO_PrintChar(x,0);
       switch(x) {
 
       case 'd':

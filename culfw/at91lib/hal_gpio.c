@@ -5,6 +5,7 @@
 #include "delay.h"
 #include <pio/pio.h>
 #include <aic/aic.h>
+#include "multi_CC.h"
 
 static const Pin pinsLeds[] = {PINS_LEDS};
 
@@ -17,7 +18,7 @@ const transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
 
 void HAL_GPIO_Init(void) {
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
-  #ifdef CUBE
+  #ifdef AT91SAM7X256
   AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOB);
   #endif
 }
@@ -92,9 +93,27 @@ __attribute__((weak)) void CC1100_in_callback()
 
 void ISR_PioA() {
   // Read PIO controller status
+
+#ifdef HAS_MULTI_CC
+  uint8_t old_instance = CC1101.instance;
+  uint32_t temp;
+
+  temp = AT91C_BASE_PIOA->PIO_ISR;
+
+  if(temp & _BV(CCtransceiver[0].pin[CC_Pin_In])) {
+    CC1101.instance = 0;
+    CC1100_in_callback();
+  }
+
+  if(temp & _BV(CCtransceiver[1].pin[CC_Pin_In])) {
+    CC1101.instance = 1;
+    CC1100_in_callback();
+    }
+  CC1101.instance = old_instance;
+#else
   AT91C_BASE_PIOA->PIO_ISR;
   CC1100_in_callback();
-
+#endif
 }
 
 #ifdef AT91C_ID_PIOB
@@ -111,7 +130,7 @@ void hal_enable_CC_GDOin_int(uint8_t cc_num, uint8_t enable) {
   uint32_t PIO_ID;
   void* ISR_Pio;
 
-  if(cc_num)
+  if(!(cc_num < NUM_SLOWRF ))
     return;
 
 #ifdef AT91C_ID_PIOB

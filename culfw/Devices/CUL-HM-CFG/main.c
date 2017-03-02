@@ -38,6 +38,8 @@
 #include "display.h"
 #include "fastrf.h"
 #include "rf_router.h"		// rf_router_func
+#include "fband.h"
+#include "rf_mode.h"
 
 #ifdef HAS_MEMFN
 #include "memory.h"		// getfreemem
@@ -341,8 +343,55 @@ int main(void)
 
     CDC_Task();
     Minute_Task();
-    RfAnalyze_Task();
 
+#ifdef USE_RF_MODE
+
+    {
+      switch(get_RF_mode()) {
+        case RF_mode_slow:
+          RfAnalyze_Task();
+          break;
+        case RF_mode_asksin:
+          rf_asksin_task();
+          break;
+        case RF_mode_moritz:
+          rf_moritz_task();
+          break;
+        case RF_mode_maico:
+          rf_maico_task();
+          break;
+        case RF_mode_native1:
+        case RF_mode_native2:
+        case RF_mode_native3:
+          native_task();
+          break;
+        case RF_mode_rwe:
+          rf_rwe_task();
+          break;
+        case RF_mode_fast:
+          FastRF_Task();
+          break;
+        case RF_mode_zwave:
+          rf_zwave_task();
+          break;
+        case RF_mode_WMBUS_S:
+        case RF_mode_WMBUS_T:
+          rf_mbus_task();
+          break;
+        case RF_mode_off:
+        case RF_mode_somfy:
+        case RF_mode_intertechno:
+          break;
+      }
+    }
+
+    #ifdef HAS_KOPP_FC
+      kopp_fc_task();
+    #endif
+
+
+#else
+    RfAnalyze_Task();
     #ifdef HAS_FASTRF
       FastRF_Task();
     #endif
@@ -373,6 +422,7 @@ int main(void)
     #ifdef HAS_MAICO
       rf_maico_task();
     #endif
+#endif
 
 
 #ifdef DBGU_UNIT_IN

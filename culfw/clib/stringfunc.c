@@ -1,4 +1,3 @@
-#include "board.h"                      // IWYU pragma: keep (for ARM for MapleCUL)
 #include "stringfunc.h"
 
 #include <stdint.h>                     // for uint8_t, uint16_t
@@ -74,7 +73,6 @@ fromdec(const char *in, uint8_t *out)
   *(uint16_t*)out = h;
 }
 
-#ifdef ARM
 void
 fromdec32(const char *in, uint32_t *out)
 {
@@ -86,7 +84,6 @@ fromdec32(const char *in, uint32_t *out)
       h = h*10 + (c-'0');
   *out = h;
 }
-#endif
 
 // Just one byte
 void

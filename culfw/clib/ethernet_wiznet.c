@@ -1,5 +1,5 @@
 #include "board.h"
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 
 #include <DHCP/dhcp.h>
 #include <avr/eeprom.h>
@@ -85,6 +85,21 @@ void my_ip_assign(void) {
 void my_ip_conflict(void) {
   TRACE_INFO_WP("CONFLICT IP from DHCP\r\n");
 }
+
+
+uint8_t check_Net_MAC() {
+  uint8_t buf[3] = {0x00, 0x80, 0x41};
+
+  ctlnetwork(CN_GET_NETINFO, (void*) &gWIZNETINFO);
+
+  if(memcmp(buf,gWIZNETINFO.mac,3)) {
+    return 0;
+  }
+
+  return 1;
+
+}
+
 
 static void Display_Net_Conf()
 {
@@ -251,6 +266,7 @@ int32_t rxtx(uint8_t net_num) {
     if(ret <= 0) return ret;
 
     net_rx_size[net_num] = size;
+    TRACE_DEBUG_WP("%d:NET_UART_TRANSMIT: %d\r\n",net_num+1, size);
     switch (net_num) {
     case 0:
       HAL_UART_Transmit_IT(&huart2, &net_rx_buffer[net_num][0], net_rx_size[net_num]);

@@ -42,8 +42,10 @@ SRCS += ../../clib/fastrf.c
 SRCS += ../../clib/fband.c
 SRCS += ../../clib/fht.c
 SRCS += ../../clib/fncollection.c
+SRCS += ../../clib/hw_autodetect.c
 SRCS += ../../clib/intertechno.c 
 SRCS += ../../clib/kopp-fc.c 
+SRCS += ../../clib/multi_CC.c 
 SRCS += ../../clib/rf_asksin.c
 SRCS += ../../clib/rf_maico.c
 SRCS += ../../clib/rf_mbus.c
@@ -51,6 +53,7 @@ SRCS += ../../clib/mbus/mbus_packet.c
 SRCS += ../../clib/mbus/manchester.c
 SRCS += ../../clib/mbus/3outof6.c
 SRCS += ../../clib/mbus/crc.c
+SRCS += ../../clib/rf_mode.c
 SRCS += ../../clib/rf_moritz.c
 SRCS += ../../clib/rf_native.c
 SRCS += ../../clib/rf_router.c
@@ -69,7 +72,6 @@ SRCS += ../../clib/rf_zwave.c
 SRCS += ../../clib/ringbuffer.c
 SRCS += ../../clib/serial.c
 SRCS += ../../clib/somfy_rts.c
-SRCS += ../../clib/spi.c
 SRCS += ../../clib/stringfunc.c
 SRCS += ../../clib/ttydata.c
 
@@ -90,6 +92,8 @@ SRCS += ../../STM32/avr/interrupt.c
 SRCS += ../../STM32/avr/eeprom.c
 SRCS += ../../STM32/avr/wdt.c
 SRCS += ../../STM32/util/parity.c
+
+SRCS += ../../STM32/utility/dbgu.c
 
 SRCS += ../../STM32/Drivers/$(MCU_FAMILY)xx_HAL_Driver/Src/stm32f1xx_hal.c
 SRCS += ../../STM32/Drivers/$(MCU_FAMILY)xx_HAL_Driver/Src/stm32f1xx_hal_cortex.c
@@ -121,13 +125,14 @@ SRCS += ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq
 SRCS += ../../STM32/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c
 
 SRCS += ../../Wiznet/Ethernet/W5100/w5100.c
+SRCS += ../../Wiznet/Ethernet/W5500/w5500.c
 SRCS += ../../Wiznet/Ethernet/socket.c
 SRCS += ../../Wiznet/Ethernet/wizchip_conf.c
 SRCS += ../../Wiznet/Internet/DHCP/dhcp.c
 
 # Every subdirectory with include files must be described here
 H_SUBDIRS := \
-../MapleCUL \
+../MapleCUN \
 ../../clib \
 ../../STM32 \
 ../../STM32/usbd \
@@ -187,8 +192,8 @@ COMPILE = $(CC) $(CFLAGS) $(GENDEPFLAGS)
 .PHONY: proj
 
 all:
-	make TARGET=MapleCUL build clean2
-	make TARGET=MapleCUN build clean2
+	make TARGET=MapleCUNx4_W5100 build clean2
+	make TARGET=MapleCUNx4_W5500 build clean2
 
 MapleCUL: 
 	make TARGET=MapleCUL build 
@@ -196,6 +201,18 @@ MapleCUL:
 MapleCUN: 
 	make TARGET=MapleCUN build 
 		
+MapleCULx4: 
+	make TARGET=MapleCULx4 build 
+
+MapleCUNx4: 
+	make TARGET=MapleCUNx4 build
+
+MapleCUNx4_W5100: 
+	make TARGET=MapleCUNx4_W5100 build
+
+MapleCUNx4_W5500: 
+	make TARGET=MapleCUNx4_W5500 build
+			
 build: $(TARGET).elf
 
 %.o: %.c

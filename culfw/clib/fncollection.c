@@ -19,6 +19,7 @@
 #include "led.h"                        // for LED_OFF, LED_ON
 #include "qfs.h"                        // for fs_sync
 #include "stringfunc.h"                 // for fromhex, fromip, fromdec
+#include "hw_autodetect.h"
 #ifdef HAS_USB
 #ifdef SAM7
 #include <usb/device/cdc-serial/CDCDSerialDriver.h>
@@ -35,6 +36,7 @@
 #include "ethernet.h"                   // for ethernet_reset
 #include "fswrapper.h"                  // for fs
 #include "mysleep.h"                    // for sleep_time
+#include "multi_CC.h"
 
 uint8_t led_mode = 2;   // Start blinking
 
@@ -82,7 +84,7 @@ display_ee_mac(uint8_t *a)
   display_ee_bytes( a, 6 );
 }
 
-#if defined(HAS_ETHERNET) | defined(HAS_W5100)
+#if defined(HAS_ETHERNET) | defined(HAS_WIZNET)
 static void
 display_ee_ip4(uint8_t *a)
 {
@@ -102,7 +104,7 @@ read_eeprom(char *in)
   uint8_t hb[2], d;
   uint16_t addr;
 
-#if defined(HAS_ETHERNET) | defined(HAS_W5100)
+#if defined(HAS_ETHERNET) | defined(HAS_WIZNET)
   if(in[1] == 'i') {
            if(in[2] == 'm') { display_ee_mac(EE_MAC_ADDR);
     } else if(in[2] == 'd') { DH2(erb(EE_USE_DHCP));
@@ -126,6 +128,14 @@ read_eeprom(char *in)
     else
       addr = hb[0];
 
+#ifdef HAS_MULTI_CC
+    if(CC1101.instance == 1) {
+      if((addr >= (uint32_t)EE_CC1100_CFG) && (addr < (uint32_t)EE_CC1100_CFG + EE_CC1100_CFG_SIZE)) {
+        addr = addr - (uint32_t)EE_CC1100_CFG + (uint32_t)EE_CC1100_CFG1;
+      }
+    }
+#endif
+
     d = erb((uint8_t *)addr);
     DC('R');                    // prefix
     DH(addr,4);                 // register number
@@ -142,7 +152,7 @@ write_eeprom(char *in)
 {
   uint8_t hb[6], d = 0;
 
-#if defined(HAS_ETHERNET) | defined(HAS_W5100)
+#if defined(HAS_ETHERNET) | defined(HAS_WIZNET)
   if(in[1] == 'i') {
     uint8_t *addr = 0;
            if(in[2] == 'm') { d=6; fromhex(in+3,hb,6); addr=EE_MAC_ADDR;
@@ -172,7 +182,15 @@ write_eeprom(char *in)
       addr = hb[0];
     else
       addr = (hb[0] << 8) | hb[1];
-      
+
+#ifdef HAS_MULTI_CC
+    if(CC1101.instance == 1) {
+      if((addr >= (uint32_t)EE_CC1100_CFG) && (addr < (uint32_t)EE_CC1100_CFG + EE_CC1100_CFG_SIZE)) {
+        addr = addr - (uint32_t)EE_CC1100_CFG + (uint32_t)EE_CC1100_CFG1;
+      }
+    }
+#endif
+
     ewb((uint8_t*)addr, hb[d-1]);
 
     if (addr == 15 || addr == 16 || addr == 17)
@@ -242,7 +260,7 @@ eeprom_factory_reset(char *in)
   ewb(EE_BRIGHTNESS, 0x80);
   ewb(EE_SLEEPTIME, 30);
 #endif
-#if defined(HAS_ETHERNET) | defined(HAS_W5100)
+#if defined(HAS_ETHERNET) | defined(HAS_WIZNET)
   ethernet_reset();
 #endif
 #ifdef HAS_FS
@@ -253,7 +271,7 @@ eeprom_factory_reset(char *in)
   ewb(EE_RF_ROUTER_ROUTER, 0x00);
 #endif
 
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
   EE_write_baud(0,CDC_BAUD_RATE);
   EE_write_baud(1,CDC_BAUD_RATE);
 #endif
@@ -351,6 +369,7 @@ prepare_boot(char *in)
 void
 version(char *in)
 {
+  MULTICC_PREFIX();
 #if defined(CUL_HW_REVISION)
   if (in[1] == 'H') {
     DS_P( PSTR(CUL_HW_REVISION) );
@@ -365,6 +384,10 @@ version(char *in)
   else
 #endif
     DS_P( PSTR(BOARD_ID_STR) );
+#ifdef USE_HW_AUTODETECT
+  DC('_');
+  DH2(get_hw_features());
+#endif
   if (IS433MHZ) {
      DS_P( PSTR(" (F-Band: 433MHz)") );
   } else {

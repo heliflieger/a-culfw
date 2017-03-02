@@ -42,10 +42,11 @@ OC = $(ARMPATH)$(TOOLPREFIX)objcopy
 OD = $(ARMPATH)$(TOOLPREFIX)objdump
 SIZE = $(ARMPATH)$(TOOLPREFIX)size
 
+DEVICE_ID := AT91SAM7S128
 CPUFLAGS = -mcpu=arm7tdmi-s
 OPTFLAGS = -Os -fno-isolate-erroneous-paths-dereference
 DEBUGFLAGS = -DTRACE_LEVEL=4 -DDBGU_UNIT_IN
-CFLAGS = -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable -mlong-calls -ffunction-sections -std=c99 -Dflash -D$(OUTPUT) $(DEBUGFLAGS) -g $(GENDEPFLAGS)
+CFLAGS = -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable -mlong-calls -ffunction-sections -std=c99 -Dflash -D$(OUTPUT) -D$(DEVICE_ID) $(DEBUGFLAGS) -g $(GENDEPFLAGS)
 INC = -I. -I../.. -I../../at91lib -I../../at91lib/usb -I../../clib -I../../at91lib/avr -I../../avr-uip/uip -I../../avr-uip -I$(INCLUDEPATH)
 ASFLAGS = -g $(OPTFLAGS) -I. -I../../at91lib -D__ASSEMBLY__ -Dflash
 LDFLAGS = -g -nostartfiles -Wl,--gc-sections -T"$(OUTPUT)_flash.lds"  -Xlinker -Map=$(OUTPUT).map
@@ -62,7 +63,6 @@ COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(OPTFLAGS) $(INC)
 ##### output
 #####
 ###############################################################
-#OUTPUT = CUBE
 OUTPUT = HM_CFG_BL
 
 ###############################################################

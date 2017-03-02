@@ -13,7 +13,9 @@
 #define MAX_ASKSIN_MSG 50
 #endif
 
+#ifndef USE_RF_MODE
 extern uint8_t asksin_on;
+#endif
 
 void rf_asksin_init(void);
 void rf_asksin_task(void);

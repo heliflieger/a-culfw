@@ -6,12 +6,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 
-#define HAL_TIMER_SET_RELOAD_REGISTER(x)    ((AT91C_BASE_TC1->TC_RC) = (x))
-#define HAL_TIMER_GET_COUNTER_VALUE()       (AT91C_BASE_TC1->TC_CV)
-#define HAL_TIMER_RESET_COUNTER_VALUE()     (AT91C_BASE_TC1->TC_CCR = AT91C_TC_CLKEN | AT91C_TC_SWTRG)
+void hal_enable_CC_timer_int(uint8_t instance, uint8_t enable);
 
-
-void hal_enable_CC_timer_int(uint8_t enable);
-
+void HAL_timer_set_reload_register(uint8_t instance, uint32_t value);
+uint32_t HAL_timer_get_counter_value(uint8_t instance);
+void HAL_timer_reset_counter_value(uint8_t instance);
+void HAL_timer_init(void);
 
 #endif /*__ hal_timer_H */
