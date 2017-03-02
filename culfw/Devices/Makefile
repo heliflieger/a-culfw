@@ -100,4 +100,4 @@ clean:
 	make -C CUL-HM-CFG/bootloader clean
 	make -C CUBe clean
 	make -C CUBe/bootloader clean
-	make -C MapleCUL clean
+	make -C MapleCUN clean
