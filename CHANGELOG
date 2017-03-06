@@ -1,5 +1,8 @@
 ## Changelog:
 
+#### 1.24.01
+- MapleCUN: Add bootloader
+
 #### 1.24.00
 - ARM Models: 
   - Rework of multi CC1101

@@ -24,6 +24,7 @@
 #include "ttydata.h"
 #include "cdc.h"
 #include "clock.h"
+#include "delay.h"
 #include "fncollection.h"
 #include "rf_receive.h"
 #include "spi.h"
@@ -89,6 +90,8 @@
 //------------------------------------------------------------------------------
 //         Local functions
 //------------------------------------------------------------------------------
+
+
 
 /** System Clock Configuration
 */
@@ -429,8 +432,6 @@ int main(void)
   LED2_OFF();
   LED3_OFF();
 
-
-
   spi_init();
 
   fht_init();
@@ -447,7 +448,6 @@ int main(void)
 
   TRACE_INFO("init USB\n\r");
   MX_USB_DEVICE_Init();
-  USBD_Connect();
 
   #ifdef HAS_UART
   uart_init(UART_BAUD_RATE);
@@ -470,15 +470,19 @@ int main(void)
     display_channel |= DISPLAY_TCP;
 #endif
 
-  TRACE_INFO("init Complete\n\r");
+  USBD_Disconnect();
+  my_delay_ms(15);
+  USBD_Connect();
 
 #if defined(HAS_MULTI_CC)
-    for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
-      checkFrequency();
-    CC1101.instance = 0;
-#else
+  for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++)
     checkFrequency();
+  CC1101.instance = 0;
+#else
+  checkFrequency();
 #endif
+
+  TRACE_INFO("init Complete\n\r");
 
   // Main loop
   while (1) {
