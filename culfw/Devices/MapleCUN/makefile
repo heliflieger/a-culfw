@@ -146,7 +146,6 @@ H_SUBDIRS := \
 ../../Wiznet/Ethernet/W5100 \
 ../../Wiznet/Internet 
 
-LD_FILE := $(DEVICE_ID)_FLASH.ld
 
 OBJS := $(patsubst %.s,%.o,$(SRCS:%.c=%.o)) 
 
@@ -164,10 +163,17 @@ OPTIMIZE	 = -Os
 LTO_FLAGS	 =  -flto -fuse-linker-plugin $(OPTIMIZE) -DTRACE_LEVEL=4
 endif
 
-
 CFLAGS := -mcpu=$(CPU) -mthumb
 CFLAGS := $(CFLAGS) -D$(DEVICE_ID) -D$(MCU_FAMILY) -D$(TARGET) 
-CFLAGS := $(CFLAGS) -DSTM32 -DDBGU_UNIT_IN -DUSE_HAL_DRIVER -D$(MPU_TYPE)
+CFLAGS := $(CFLAGS) -DSTM32 -DDBGU_UNIT_IN -DUSE_HAL_DRIVER -D$(MPU_TYPE) 
+
+ifeq ($(BOOTLOADER),TRUE)
+LD_FILE := $(DEVICE_ID)_FLASH_BL.ld
+CFLAGS := $(CFLAGS) -DBOOTLOADER
+else
+LD_FILE := $(DEVICE_ID)_FLASH.ld
+endif
+
 CFLAGS := $(CFLAGS) -std=c99 
 CFLAGS := $(CFLAGS) $(foreach d,$(H_SUBDIRS),-I$(d))
 CFLAGS := $(CFLAGS) $(LTO_FLAGS) -g3 -Wall -fmessage-length=0 -ffunction-sections -c 
@@ -192,8 +198,8 @@ COMPILE = $(CC) $(CFLAGS) $(GENDEPFLAGS)
 .PHONY: proj
 
 all:
-	make TARGET=MapleCUNx4_W5100 build clean2
-	make TARGET=MapleCUNx4_W5500 build clean2
+	make TARGET=MapleCUNx4_W5100_BL BOOTLOADER=TRUE build clean2
+	make TARGET=MapleCUNx4_W5500_BL BOOTLOADER=TRUE build clean2
 
 MapleCUL: 
 	make TARGET=MapleCUL build 
@@ -212,7 +218,13 @@ MapleCUNx4_W5100:
 
 MapleCUNx4_W5500: 
 	make TARGET=MapleCUNx4_W5500 build
-			
+
+MapleCUNx4_W5100_BL: 
+	make TARGET=MapleCUNx4_W5100_BL BOOTLOADER=TRUE build
+
+MapleCUNx4_W5500_BL: 
+	make TARGET=MapleCUNx4_W5500_BL BOOTLOADER=TRUE build
+				
 build: $(TARGET).elf
 
 %.o: %.c

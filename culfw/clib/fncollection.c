@@ -47,6 +47,12 @@ uint8_t led_mode = 2;   // Start blinking
 #if defined(CDC_COUNT) && CDC_COUNT > 1
 #include "cdc_uart.h"                   // for EE_write_baud
 #endif
+
+#if defined STM32
+#define RTC_BOOTLOADER_FLAG 0x424C
+#define RTC_BOOTLOADER_JUST_UPLOADED 0x424D
+#include <stm32f103xb.h>
+#endif
 //////////////////////////////////////////////////
 // EEprom
 
@@ -343,6 +349,17 @@ prepare_boot(char *in)
 
 #elif defined STM32
 	USBD_Disconnect();
+
+	RCC->APB1ENR |= (RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN);
+	    PWR->CR |= PWR_CR_DBP;
+	if(bl) {
+	  // Next reboot we'd like to jump to the bootloader.
+    BKP->DR10 = RTC_BOOTLOADER_FLAG;
+	} else {
+    BKP->DR10 = RTC_BOOTLOADER_JUST_UPLOADED;
+	}
+	PWR->CR &=~ PWR_CR_DBP;
+
 	while (1);                 // go to bed, the wathchdog will take us to reset
 #else
   if(bl)                     // Next reboot we'd like to jump to the bootloader.

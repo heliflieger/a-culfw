@@ -8,14 +8,14 @@
 
 #define TTY_BUFSIZE          256      // RAM: TTY_BUFSIZE*4
 
-#if defined MapleCUNx4
+#if defined MapleCUNx4 || defined MapleCUNx4_BL
 #define BOARD_NAME          "MapleCUNx4"
 #define BOARD_ID_STR        "MapleCUNx4"
 #define HAS_MULTI_CC        4
 #define NUM_SLOWRF          2
 #define HAS_WIZNET
 
-#elif defined MapleCUNx4_W5100
+#elif defined MapleCUNx4_W5100 || defined MapleCUNx4_W5100_BL
 #define BOARD_NAME          "MapleCUNx4"
 #define BOARD_ID_STR        "MapleCUNx4"
 #define HAS_MULTI_CC        4
@@ -24,7 +24,7 @@
 #define _WIZCHIP_           5100
 #define USE_HW_AUTODETECT
 
-#elif defined MapleCUNx4_W5500
+#elif defined MapleCUNx4_W5500 || defined MapleCUNx4_W5500_BL
 #define BOARD_NAME          "MapleCUNx4"
 #define BOARD_ID_STR        "MapleCUNx4"
 #define HAS_MULTI_CC        4
@@ -33,19 +33,19 @@
 #define _WIZCHIP_           5500
 #define USE_HW_AUTODETECT
 
-#elif defined MapleCULx4
+#elif defined MapleCULx4 || defined MapleCULx4_BL
 #define BOARD_NAME          "MapleCULx4"
 #define BOARD_ID_STR        "MapleCULx4"
 #define HAS_MULTI_CC        4
 #define NUM_SLOWRF          2
 #define USE_HW_AUTODETECT
 
-#elif defined MapleCUN
+#elif defined MapleCUN || defined MapleCULx4_BL
 #define BOARD_NAME          "MapleCUN"
 #define BOARD_ID_STR        "MapleCUN"
 #define HAS_WIZNET
 
-#elif defined MapleCUL
+#elif defined MapleCUL || defined MapleCUL_BL
 #define BOARD_NAME          "MapleCUL"
 #define BOARD_ID_STR        "MapleCUL"
 #else
@@ -53,7 +53,6 @@
 #define BOARD_NAME          "MapleCUL"
 #define BOARD_ID_STR        "MapleCUL"
 #endif
-
 
 #define ARM
 
