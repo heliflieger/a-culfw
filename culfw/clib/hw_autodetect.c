@@ -27,6 +27,7 @@ void hw_autodetect(void) {
       case 0x04:
       case 0x05:
       case 0x07:
+      case 0x08:
         hw_features |= 1<<CC1101.instance;
         TRACE_INFO("Detected CC%x: PN 0x%02x  VER 0x%02x \n\r", CC1101.instance,pn,ver);
         break;
