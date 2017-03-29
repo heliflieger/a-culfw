@@ -26,6 +26,7 @@
 #include "rf_receive.h"                 // for REP_RSSI
 #include "stringfunc.h"                 // for fromhex
 #include "rf_mode.h"
+#include "multi_CC.h"
 
 #ifdef USE_HAL
 #include "hal.h"
@@ -126,8 +127,8 @@ void rf_mbus_init(uint8_t mmode, uint8_t rmode) {
   radio_mode = RADIO_MODE_NONE;
 
 #ifdef USE_HAL
-  hal_CC_GDO_init(0,INIT_MODE_IN_CS_IN);
-  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 
 #else
   CLEAR_BIT( GDO0_DDR, GDO0_BIT );
@@ -230,7 +231,7 @@ void rf_mbus_task(void) {
      // RX active, awaiting SYNC
     case 1:
 #ifdef USE_HAL
-      if (hal_CC_Pin_Get(0,CC_Pin_In)) {
+      if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
 #else
       if (bit_is_set(GDO2_PIN,GDO2_BIT)) {
 #endif
@@ -241,7 +242,7 @@ void rf_mbus_task(void) {
     // awaiting pkt len to read
     case 2:
 #ifdef USE_HAL
-      if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
+      if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_Out)) {
 #else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
 #endif
@@ -306,7 +307,7 @@ void rf_mbus_task(void) {
     // awaiting more data to be read
     case 3:
 #ifdef USE_HAL
-      if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
+      if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_Out)) {
 #else
       if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
 #endif
@@ -330,7 +331,7 @@ void rf_mbus_task(void) {
 
   // END OF PAKET
 #ifdef USE_HAL
-  if (!hal_CC_Pin_Get(0,CC_Pin_In) && RXinfo.state>1) {
+  if (!hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In) && RXinfo.state>1) {
 #else
   if (!bit_is_set(GDO2_PIN,GDO2_BIT) && RXinfo.state>1) {
 #endif
@@ -349,6 +350,7 @@ void rf_mbus_task(void) {
 
     if (rxStatus == PACKET_OK) {
 
+      MULTICC_PREFIX();
       DC( 'b' );
 
       for (uint8_t i=0; i < packetSize(MBpacket[0]); i++) {
@@ -458,7 +460,7 @@ uint16 txSendPacket(uint8* pPacket, uint8* pBytes, uint8 mode) {
   while (!TXinfo.complete) {
 
 #ifdef USE_HAL
-    if (hal_CC_Pin_Get(0,CC_Pin_Out)) {
+    if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_Out)) {
 #else
     if (bit_is_set(GDO0_PIN,GDO0_BIT)) {
 #endif
@@ -506,17 +508,22 @@ static void mbus_status(void) {
   if (radio_mode == RADIO_MODE_RX ) {
     switch (mbus_mode) {
     case WMBUS_SMODE:
+      MULTICC_PREFIX();
       DS_P(PSTR("SMODE"));
       break;
     case WMBUS_TMODE:
+      MULTICC_PREFIX();
       DS_P(PSTR("TMODE"));
       break;
     default:
+      MULTICC_PREFIX();
       DS_P(PSTR("OFF"));
     }
   }
-  else 
+  else {
+    MULTICC_PREFIX();
     DS_P(PSTR("OFF"));
+  }
   DNL();
 }
 
@@ -565,6 +572,7 @@ void rf_mbus_func(char *in) {
     }
     
 #else
+    MULTICC_PREFIX();
     DS_P(PSTR("not compiled in\r\n"));
 #endif    
     
