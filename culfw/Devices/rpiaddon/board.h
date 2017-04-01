@@ -88,6 +88,7 @@
 #define HAS_BELFOX                  // PROGMEM:  214
 #define HAS_RFNATIVE                // PROGMEM:  580
 #define LACROSSE_HMS_EMU            // PROGMEM: 2206
+#define HAS_MANCHESTER
 #define HAS_MBUS                    // PROGMEM: 2536
 #define MBUS_NO_TX                  // PROGMEM:  962
 #define HAS_ZWAVE                   // PROGMEM:  882
