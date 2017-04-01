@@ -42,7 +42,6 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
 		../../clib/rf_mbus.c                                 \
-		../../clib/rf_mbus.c                                 \
 		../../clib/mbus/3outof6.c                            \
 		../../clib/mbus/mbus_packet.c                        \
 		../../clib/mbus/crc.c                                \
