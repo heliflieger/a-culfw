@@ -232,7 +232,7 @@ ccInitChip(uint8_t *cfg)
 #endif
 
 #ifdef USE_HAL
-  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
 #else
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output

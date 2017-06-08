@@ -110,7 +110,7 @@ const uint8_t PROGMEM MODE_CFG[MAX_MODES][20] = {
 void native_init(uint8_t mode) {
 
 #ifdef USE_HAL
-  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
   hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...

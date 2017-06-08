@@ -47,7 +47,7 @@ void checkFrequency(void) {
   }
   uint16_t frequency = 26*(value_0D*256*256+value_0E*256+value_0F)/65536;
 
-#ifdef HAS_MULTI_CC
+#ifdef USE_RF_MODE
   if (frequency > 500) {
     CC1101.frequencyMode[CC1101.instance] = MODE_868_MHZ;
   } else {
