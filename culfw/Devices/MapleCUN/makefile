@@ -74,6 +74,7 @@ SRCS += ../../clib/serial.c
 SRCS += ../../clib/somfy_rts.c
 SRCS += ../../clib/stringfunc.c
 SRCS += ../../clib/ttydata.c
+SRCS += ../../clib/onewire.c
 
 SRCS += ../../clib/ethernet_wiznet.c
 
@@ -81,6 +82,7 @@ SRCS += ../../STM32/hal_usart.c
 SRCS += ../../STM32/hal_spi.c
 SRCS += ../../STM32/hal_gpio.c
 SRCS += ../../STM32/hal_timer.c
+SRCS += ../../STM32/hal_twimaster.c
 SRCS += ../../STM32/stdio.c
 
 SRCS += ../../STM32/usbd/usb_device.c

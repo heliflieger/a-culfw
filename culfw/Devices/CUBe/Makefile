@@ -50,7 +50,7 @@ CFLAGS = -Wall -Wno-strict-aliasing -Wno-unused-but-set-variable -mlong-calls -f
 INC = -I. -I../.. -I../../at91lib -I../../at91lib/usb -I../../clib -I../../at91lib/avr -I../../avr-uip/uip -I../../avr-uip -I$(INCLUDEPATH)
 ASFLAGS = -g $(OPTFLAGS) -I. -I../../at91lib -D__ASSEMBLY__ -Dflash
 LDFLAGS = -g -nostartfiles -Wl,--gc-sections -T"$(LINK)_flash.lds"  -Xlinker -Map=$(OUTPUT).map
-LIBS = -lc
+LIBS = -lc -lm
 THUMBFLAGS = -mthumb
 
 

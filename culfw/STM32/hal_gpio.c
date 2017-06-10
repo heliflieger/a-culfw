@@ -40,7 +40,8 @@
 #include "delay.h"
 #include "rf_mode.h"
 
-const transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
+transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
+
 
 /*----------------------------------------------------------------------------*/
 /* Configure GPIO                                                             */

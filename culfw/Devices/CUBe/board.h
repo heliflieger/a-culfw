@@ -39,6 +39,7 @@
 //#define HAS_UART                1
 #define USE_RF_MODE
 #define USE_HAL
+#define HAS_ONEWIRE             10        // OneWire Support
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -131,12 +132,22 @@
                             {CC1100_3_OUT_PIN,  CC1100_3_CS_PIN,  CC1100_3_IN_PIN}  }\
                           }
 
+
+//TWI
+#define TWI_SCL_PIN       CC1100_2_IN_PIN
+#define TWI_SCL_BASE      CC1100_2_IN_BASE
+#define TWI_SDA_PIN       CC1100_2_CS_PIN
+#define TWI_SDA_BASE      CC1100_2_CS_BASE
+
+
 #define BOOTLOADER_PIN		(1<<14)
 
 #define HAS_ETHERNET            1       // undef or define...1
 #define HAS_ETHERNET_KEEPALIVE  1
 #define ETHERNET_KEEPALIVE_TIME 30
 #define HAS_NTP                 1       // undef or define...1
+
+
 
 //------------------------------------------------------------------------------
 //         Headers
