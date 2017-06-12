@@ -76,6 +76,27 @@ void hw_autodetect(void) {
   }
   CC1101.instance = 0;
 
+
+  uint8_t x = 0;
+
+  for(uint8_t i=0; i< HAS_MULTI_CC; i++) {
+    if(hw_features & (1<<i)) {
+      x += 1;
+    } else {
+      for(uint8_t j=i; j < HAS_MULTI_CC;j++) {
+        if(hw_features & (1<<j)) {
+          hal_CC_move_transceiver_pins(j,x);
+          hw_features |= 1<<x;
+          hw_features &= ~(1<<j);
+          x += 1;
+          break;
+        }
+      }
+    }
+  }
+
+
+
 #if defined(HAS_WIZNET) || defined(HAS_ETHERNET)
 #if defined(CUBE) || defined(CUBE_BL) || defined(CUBEx4) || defined(CUBEx4_BL)
   hw_features |= 1<<FEATURE_ETHERNET;

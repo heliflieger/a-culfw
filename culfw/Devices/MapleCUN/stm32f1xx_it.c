@@ -292,6 +292,16 @@ void EXTI4_IRQHandler(void)
   hal_GPIO_EXTI_IRQHandler();
 }
 
+void EXTI9_5_IRQHandler(void)
+{
+  hal_GPIO_EXTI_IRQHandler();
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+  hal_GPIO_EXTI_IRQHandler();
+}
+
 /**
 * @brief This function handles USART1 global interrupt.
 */
