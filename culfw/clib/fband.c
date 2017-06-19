@@ -33,12 +33,20 @@ void checkFrequency(void) {
   uint16_t value_0E;
   uint8_t  value_0F;
 #ifdef HAS_MULTI_CC
+#if NUM_SLOWRF > 1
   if (CC1101.instance == 1) {
     value_0D = erb((uint8_t *)EE_CC1100_CFG1 + 0x0D);
     value_0E = erb((uint8_t *)EE_CC1100_CFG1 + 0x0E);
     value_0F = erb((uint8_t *)EE_CC1100_CFG1 + 0x0F);
-
   } else
+#endif
+#if NUM_SLOWRF > 2
+    if (CC1101.instance == 2) {
+    value_0D = erb((uint8_t *)EE_CC1100_CFG2 + 0x0D);
+    value_0E = erb((uint8_t *)EE_CC1100_CFG2 + 0x0E);
+    value_0F = erb((uint8_t *)EE_CC1100_CFG2 + 0x0F);
+  } else
+#endif
 #endif
   {
   value_0D = readEEpromValue("0F");

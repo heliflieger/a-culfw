@@ -300,7 +300,9 @@ const t_fntab fntab1[] = {
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'V', version },
+#if NUM_SLOWRF > 1
   { 'W', write_eeprom },
+#endif
   { 'X', set_txreport },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -341,6 +343,9 @@ const t_fntab fntab2[] = {
   { 'Y', somfy_rts_func },
 #endif
   { 'V', version },
+#if NUM_SLOWRF > 2
+  { 'W', write_eeprom },
+#endif
   { 'X', set_txreport },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -407,6 +412,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
 
   DBGU_init();
 

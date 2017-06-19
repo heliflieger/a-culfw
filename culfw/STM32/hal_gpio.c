@@ -262,6 +262,14 @@ void hal_GPIO_EXTI_IRQHandler(void) {
     CC1100_in_callback();
     CC1101.instance = old_instance;
   }
+
+  if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[2].pin[CC_Pin_In])) != RESET) {
+    __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[2].pin[CC_Pin_In]));
+    CC1101.instance = 2;
+    CC1100_in_callback();
+    CC1101.instance = old_instance;
+  }
+
 #else
   if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[0].pin[CC_Pin_In])) != RESET) {
     __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[0].pin[CC_Pin_In]));
