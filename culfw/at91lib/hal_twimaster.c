@@ -3,6 +3,7 @@
 #include "i2cmaster.h"
 #include "delay.h"
 
+#ifdef HAS_ONEWIRE
 #define TWI_DELAY           my_delay_us(4)
 
 #define TWI_SET_SCL         TWI_SCL_BASE->PIO_SODR =  _BV(TWI_SCL_PIN)
@@ -195,3 +196,5 @@ unsigned char i2c_readNak(void)
 {
   return i2c_Read(0);
 }/* i2c_readNak */
+
+#endif

@@ -97,7 +97,7 @@ CUBE_BL:
 	make OUTPUT=CUBE_BL LINK=CUBE_BL target
 
 CUBEx4_BL:
-	make OUTPUT=CUBEx4_BL target
+	make OUTPUT=CUBEx4_BL LINK=CUBE_BL target
 	
 CUBE:
 	make OUTPUT=CUBE LINK=CUBE target
@@ -110,8 +110,9 @@ target:	$(OUTPUT).bin
 	
 all:
 	make clean2
-	make CUBE
 	make CUBE_BL
+	make clean3
+	make CUBEx4_BL
 	make clean3
 
 %.bin: %.elf
