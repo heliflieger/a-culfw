@@ -25,13 +25,20 @@ callfn(char *buf)
       break;
     if(buf == 0) {
 #ifdef USE_HW_AUTODETECT
-      if((n != '*') || has_CC(CC1101.instance+1) )
+      if( !(((n == '*') && !has_CC(CC1101.instance+1)) || ((n == 'O') && !has_onewire())) )
 #endif
       {
       DC(' ');
       DC(n);
       }
 #ifdef USE_HW_AUTODETECT
+    } else if((buf[0] == n ) && (n == 'O')) {
+        if(has_onewire()) {
+          fn(buf);
+          return 1;
+        } else {
+          return 0;
+        }
     } else if((buf[0] == n ) && (n == '*')) {
       if(has_CC(CC1101.instance+1)) {
         fn(buf);

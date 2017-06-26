@@ -470,7 +470,7 @@ signed int fprintf(FILE *pStream, const char *pFormat, ...)
 /// arguments.
 /// \param pFormat  Format string.
 //------------------------------------------------------------------------------
-signed int printf(const char *pFormat, ...)
+signed int _printf(const char *pFormat, ...)
 {
     va_list ap;
     signed int result;

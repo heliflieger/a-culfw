@@ -135,11 +135,20 @@ read_eeprom(char *in)
       addr = hb[0];
 
 #ifdef HAS_MULTI_CC
+#if NUM_SLOWRF > 1
     if(CC1101.instance == 1) {
       if((addr >= (uint32_t)EE_CC1100_CFG) && (addr < (uint32_t)EE_CC1100_CFG + EE_CC1100_CFG_SIZE)) {
         addr = addr - (uint32_t)EE_CC1100_CFG + (uint32_t)EE_CC1100_CFG1;
       }
     }
+#endif
+#if NUM_SLOWRF > 2
+    if(CC1101.instance == 2) {
+      if((addr >= (uint32_t)EE_CC1100_CFG) && (addr < (uint32_t)EE_CC1100_CFG + EE_CC1100_CFG_SIZE)) {
+        addr = addr - (uint32_t)EE_CC1100_CFG + (uint32_t)EE_CC1100_CFG2;
+      }
+    }
+#endif
 #endif
 
     d = erb((uint8_t *)addr);
@@ -190,11 +199,20 @@ write_eeprom(char *in)
       addr = (hb[0] << 8) | hb[1];
 
 #ifdef HAS_MULTI_CC
+#if NUM_SLOWRF > 1
     if(CC1101.instance == 1) {
       if((addr >= (uint32_t)EE_CC1100_CFG) && (addr < (uint32_t)EE_CC1100_CFG + EE_CC1100_CFG_SIZE)) {
         addr = addr - (uint32_t)EE_CC1100_CFG + (uint32_t)EE_CC1100_CFG1;
       }
     }
+#endif
+#if NUM_SLOWRF > 2
+    if(CC1101.instance == 2) {
+      if((addr >= (uint32_t)EE_CC1100_CFG) && (addr < (uint32_t)EE_CC1100_CFG + EE_CC1100_CFG_SIZE)) {
+        addr = addr - (uint32_t)EE_CC1100_CFG + (uint32_t)EE_CC1100_CFG2;
+      }
+    }
+#endif
 #endif
 
     ewb((uint8_t*)addr, hb[d-1]);

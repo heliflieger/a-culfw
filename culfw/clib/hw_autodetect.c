@@ -4,15 +4,51 @@
 #include "ethernet.h"
 #include "delay.h"
 
+#ifdef HAS_ONEWIRE
+#include "onewire.h"
+#include "i2cmaster.h"
+#endif
+
+#define FEATURE_ONEWIRE     6
 #define FEATURE_ETHERNET    7
 
 #ifdef USE_HW_AUTODETECT
 
 static uint8_t hw_features =0;
 
+
+int
+detect_ds2482(void)
+{
+  unsigned char ret;
+  unsigned char status;
+
+  i2c_init();
+
+  ret = i2c_start(DS2482_I2C_ADDR+I2C_WRITE);
+  ret |= i2c_write(DS2482_CMD_SRP);
+  ret |= i2c_write(DS2482_READPTR_SR);
+
+  i2c_stop(); //release bus, as this was just an initialization
+  ret |= i2c_start(DS2482_I2C_ADDR+I2C_READ);
+
+  status = i2c_readNak();
+  i2c_stop();
+
+  if(ret)
+    return 0;
+
+  if(status)
+    return 1;
+
+  return 0;
+}
+
+
 void hw_autodetect(void) {
 
   for (CC1101.instance = 0; CC1101.instance < HAS_MULTI_CC; CC1101.instance++) {
+    hal_CC_GDO_init(CC1101.instance,INIT_MODE_IN_CS_IN);
     ccStrobe( CC1100_SRES );                   // Send SRES command
     my_delay_us(100);
   }
@@ -40,6 +76,27 @@ void hw_autodetect(void) {
   }
   CC1101.instance = 0;
 
+
+  uint8_t x = 0;
+
+  for(uint8_t i=0; i< HAS_MULTI_CC; i++) {
+    if(hw_features & (1<<i)) {
+      x += 1;
+    } else {
+      for(uint8_t j=i; j < HAS_MULTI_CC;j++) {
+        if(hw_features & (1<<j)) {
+          hal_CC_move_transceiver_pins(j,x);
+          hw_features |= 1<<x;
+          hw_features &= ~(1<<j);
+          x += 1;
+          break;
+        }
+      }
+    }
+  }
+
+
+
 #if defined(HAS_WIZNET) || defined(HAS_ETHERNET)
 #if defined(CUBE) || defined(CUBE_BL) || defined(CUBEx4) || defined(CUBEx4_BL)
   hw_features |= 1<<FEATURE_ETHERNET;
@@ -53,6 +110,15 @@ void hw_autodetect(void) {
 #endif
 #endif
 
+#ifdef HAS_ONEWIRE
+  if(detect_ds2482()) {
+   hw_features |= 1<<FEATURE_ONEWIRE;
+     TRACE_INFO("Detected onewire \n\r");
+   } else {
+     TRACE_INFO("Not detected onewire \n\r");
+  }
+#endif
+
 }
 
 uint8_t has_CC(uint8_t num) {
@@ -62,6 +128,14 @@ uint8_t has_CC(uint8_t num) {
 uint8_t has_ethernet(void) {
 #if defined(HAS_WIZNET) || defined(HAS_ETHERNET)
   return hw_features & (1<<FEATURE_ETHERNET);
+#else
+  return 0;
+#endif
+}
+
+uint8_t has_onewire(void) {
+#if defined(HAS_ONEWIRE)
+  return hw_features & (1<<FEATURE_ONEWIRE);
 #else
   return 0;
 #endif

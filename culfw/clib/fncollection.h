@@ -51,7 +51,7 @@ void do_wdt_enable(uint8_t t);
 # define EE_IP4_TCPLINK_PORT (EE_IP4_NTPSERVER+4)               // Offset x79
 # define EE_IP4_NTPOFFSET    (EE_IP4_TCPLINK_PORT+2)
 
-#if CDC_COUNT > 1
+#if defined(CDC_COUNT) && (CDC_COUNT > 1)
 # define EE_CDC1_BAUD        (EE_IP4_NTPOFFSET+1)
 # define EE_CDC2_BAUD        (EE_CDC1_BAUD+4)
 # define EE_ETH_LAST         (EE_CDC2_BAUD+4)
@@ -75,8 +75,15 @@ void do_wdt_enable(uint8_t t);
 # define EE_LCD_LAST          EE_ETH_LAST
 #endif
 
-#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+#if defined(HAS_MULTI_CC)
+
+#if NUM_SLOWRF > 1
 # define EE_CC1100_CFG1       EE_ETH_LAST
+#endif
+#if NUM_SLOWRF > 2
+# define EE_CC1100_CFG2       (EE_CC1100_CFG1+EE_CC1100_CFG_SIZE)
+#endif
+
 #endif
 
 #ifdef HAS_FS

@@ -75,6 +75,11 @@
 #ifdef HAS_MAICO
 #include "rf_maico.h"
 #endif
+#ifdef HAS_ONEWIRE
+#include "onewire.h"
+#include "i2cmaster.h"
+#endif
+//-----
 
 #include "cdc_uart.h"
 //------------------------------------------------------------------------------
@@ -229,7 +234,9 @@ const t_fntab fntab[] = {
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
-
+#ifdef HAS_ONEWIRE
+  { 'O', onewire_func },
+#endif
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -293,7 +300,9 @@ const t_fntab fntab1[] = {
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 'V', version },
+#if NUM_SLOWRF > 1
   { 'W', write_eeprom },
+#endif
   { 'X', set_txreport },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -334,6 +343,9 @@ const t_fntab fntab2[] = {
   { 'Y', somfy_rts_func },
 #endif
   { 'V', version },
+#if NUM_SLOWRF > 2
+  { 'W', write_eeprom },
+#endif
   { 'X', set_txreport },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -400,6 +412,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
 
   DBGU_init();
 
@@ -433,18 +446,30 @@ int main(void)
   LED3_OFF();
 
   spi_init();
-
   fht_init();
-  tx_init();
 
   #ifdef HAS_WIZNET
   TRACE_INFO("init Ethernet\n\r");
   ethernet_init();
   #endif
 
-#ifdef USE_HW_AUTODETECT
+  #ifdef USE_HW_AUTODETECT
   hw_autodetect();
-#endif
+  #endif
+
+  tx_init();
+
+  #ifdef HAS_ONEWIRE
+  #ifdef USE_HW_AUTODETECT
+  if(has_onewire())
+  #endif
+  {
+    TRACE_INFO("init ONEWIRE\n\r");
+    i2c_init();
+    onewire_Init();
+    onewire_FullSearch();
+  }
+  #endif
 
   TRACE_INFO("init USB\n\r");
   MX_USB_DEVICE_Init();

@@ -49,6 +49,7 @@ extern PCD_HandleTypeDef hpcd_USB_FS;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
 
 /******************************************************************************/
 /*            Cortex-M3 Processor Interruption and Exception Handlers         */ 
@@ -276,6 +277,10 @@ void TIM3_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim3);
 }
 
+void TIM4_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&htim4);
+}
 /**
 * @brief This function handles EXTI line0 interrupt.
 */
@@ -288,6 +293,16 @@ void EXTI0_IRQHandler(void)
 * @brief This function handles EXTI line0 interrupt.
 */
 void EXTI4_IRQHandler(void)
+{
+  hal_GPIO_EXTI_IRQHandler();
+}
+
+void EXTI9_5_IRQHandler(void)
+{
+  hal_GPIO_EXTI_IRQHandler();
+}
+
+void EXTI15_10_IRQHandler(void)
 {
   hal_GPIO_EXTI_IRQHandler();
 }
