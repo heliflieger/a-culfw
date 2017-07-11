@@ -6,6 +6,11 @@
 #include "ttydata.h"
 #include "rf_mode.h"
 #include "hw_autodetect.h"
+#ifdef ARM
+#include <utility/trace.h>
+#else
+#define TRACE_DEBUG(...)      { }
+#endif
 
 void (*input_handle_func)(uint8_t channel);
 
@@ -83,6 +88,7 @@ analyze_ttydata(uint8_t channel)
 #endif
 
       cmdbuf[cmdlen] = 0;
+      TRACE_DEBUG("TTYDATA received: %s\n\r", cmdbuf);
       if(!callfn(cmdbuf)) {
         DS_P(PSTR("? ("));
         display_string(cmdbuf);

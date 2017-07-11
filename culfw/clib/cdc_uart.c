@@ -153,13 +153,14 @@ void cdc_uart_func(char *in) {
     uint32_t baud;
     uint8_t num;
     in[3] = 0;
-    fromdec(in+2,&num);
+    fromdec8(in+2,&num);
     fromdec32(in+4,&baud);
     TRACE_DEBUG("UART set Baud: %u@%u\n\r", num,baud);
     HAL_UART_Set_Baudrate(num,baud);
 
 #ifdef HAS_WIZNET
   } else if (in[1] == 's') {  // store baudrate
+    TRACE_DEBUG("UART store Baud\n\r");
     EE_write_baud(0,HAL_UART_Get_Baudrate(0));
     EE_write_baud(1,HAL_UART_Get_Baudrate(1));
 #endif
