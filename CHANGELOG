@@ -1,5 +1,8 @@
 ## Changelog:
 
+#### 1.25.01
+- MapleCUN: Fix baud rate setting command
+
 #### 1.25.00
 - ARM Models: 
   - Add onewire
