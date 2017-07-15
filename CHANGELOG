@@ -1,5 +1,17 @@
 ## Changelog:
 
+#### 1.25.02
+- megaCUL: changed buffer size
+
+#### 1.25.01
+- MapleCUN: Fix baud rate setting command
+
+#### 1.25.00
+- ARM Models: 
+  - Add onewire
+  - Improve hardware autodetection
+- MapleCUN: Add 3rd SlowRF transceiver
+
 #### 1.24.02
 - Add CC113L to hardware autodetection
 - Fix tcp_putchar
