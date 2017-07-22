@@ -36,6 +36,7 @@ SRC = nanoCUL.c                                            \
 		../../clib/lacrosse.c                                \
 		../../clib/helper.c                                  \
 		../../clib/rf_asksin.c                               \
+		../../clib/rf_betty.c                               \
 		../../clib/rf_moritz.c                               \
 		../../clib/rf_rwe.c                                  \
 		../../clib/somfy_rts.c                               \

@@ -22,6 +22,7 @@ typedef enum {
   RF_mode_rwe,
   RF_mode_fast,
   RF_mode_zwave,
+  RF_mode_betty
 
 } RF_mode_t;
 

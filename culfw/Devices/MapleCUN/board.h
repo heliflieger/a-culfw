@@ -96,6 +96,7 @@
 #define HAS_RFNATIVE
 #define HAS_ZWAVE
 #define HAS_MBUS
+#define HAS_BETTY
 
 #define _433MHZ
 

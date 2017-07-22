@@ -66,7 +66,9 @@
 #ifdef HAS_ZWAVE
 #include "rf_zwave.h"
 #endif
-
+#ifdef HAS_BETTY
+#include "rf_betty.h"
+#endif
 
 
 #ifdef HAS_CC1100_433
@@ -142,6 +144,9 @@ const PROGMEM t_fntab fntab[] = {
   { 'x', ccsetpa },
 #ifdef HAS_SOMFY_RTS
   { 'Y', somfy_rts_func },
+#endif
+#ifdef HAS_BETTY
+  { 'y', betty_func },
 #endif
 #ifdef HAS_MORITZ
   { 'Z', moritz_func },
@@ -237,6 +242,9 @@ main(void)
 #endif
 #ifdef HAS_ZWAVE
     rf_zwave_task();
+#endif
+#ifdef HAS_BETTY
+  rf_betty_task();
 #endif
   }
 

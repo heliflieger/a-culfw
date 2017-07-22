@@ -87,6 +87,9 @@
 #ifdef HAS_MAICO
 #include "rf_maico.h"
 #endif
+#ifdef HAS_BETTY
+#include "rf_betty.h"
+#endif
 #ifdef HAS_ONEWIRE
 #include "onewire.h"
 #include "i2cmaster.h"
@@ -252,6 +255,9 @@ const t_fntab fntab[] = {
   { 'u', rf_router_func },
 #endif
   { 'x', ccsetpa },
+#ifdef HAS_BETTY
+  { 'y', betty_func },
+#endif
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
@@ -301,6 +307,9 @@ const t_fntab fntab1[] = {
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
+#ifdef HAS_BETTY
+  { 'y', betty_func },
+#endif
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
@@ -344,6 +353,9 @@ const t_fntab fntab2[] = {
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
+#ifdef HAS_BETTY
+  { 'y', betty_func },
+#endif
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
@@ -381,6 +393,9 @@ const t_fntab fntab3[] = {
 #endif
   { 'V', version },
   { 'X', set_txreport },
+#ifdef HAS_BETTY
+  { 'y', betty_func },
+#endif
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
@@ -547,6 +562,9 @@ int main(void)
     #ifdef HAS_MAICO
       rf_maico_task();
     #endif
+    #ifdef HAS_BETTY
+      rf_betty_task();
+		#endif
 #endif
 
     #ifdef HAS_RF_ROUTER

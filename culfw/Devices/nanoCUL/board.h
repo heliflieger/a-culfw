@@ -116,6 +116,7 @@ extern const uint8_t mark433_pin;
 #  define HAS_HOMEEASY
 #  define HAS_BELFOX
 #  define HAS_MANCHESTER
+#  define HAS_BETTY
 #endif
 
 #if defined (nanoCUL868)

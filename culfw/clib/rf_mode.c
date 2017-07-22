@@ -47,6 +47,9 @@
 #ifdef HAS_MAICO
 #include "rf_maico.h"
 #endif
+#ifdef HAS_BETTY
+#include "rf_betty.h"
+#endif
 #ifdef HAS_RWE
 #include "rf_rwe.h"
 #endif
@@ -122,6 +125,11 @@ void set_RF_mode(RF_mode_t mode) {
 #ifdef HAS_MAICO
     case RF_mode_maico:
       rf_maico_init();
+      break;
+#endif
+#ifdef HAS_BETTY
+    case RF_mode_betty:
+      rf_betty_init();
       break;
 #endif
 #ifdef HAS_RFNATIVE
@@ -235,6 +243,11 @@ void rf_mode_task(void) {
         #ifdef HAS_MAICO
         case RF_mode_maico:
           rf_maico_task();
+          break;
+        #endif
+        #ifdef HAS_BETTY
+        case RF_mode_betty:
+          rf_betty_task();
           break;
         #endif
         #ifdef HAS_RFNATIVE
