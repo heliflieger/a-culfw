@@ -156,12 +156,11 @@ main(void)
 {
   wdt_disable();
   clock_prescale_set(clock_div_1);
-
-  LED_ON_DDR  |= _BV( LED_ON_PIN );
-  LED_ON_PORT |= _BV( LED_ON_PIN );
+  
+  MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
+  MARK915_PORT |= _BV( MARK915_BIT ); // Pull 915MHz marker
 
   led_init();
-  LED_ON();
 
   spi_init();
 
@@ -199,9 +198,7 @@ main(void)
   display_channel |= DISPLAY_RFROUTER;
 #endif
 
-  checkFrequency(); 
-  LED_OFF();
-
+  checkFrequency();
   sei();
 
   for(;;) {
