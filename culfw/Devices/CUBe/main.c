@@ -87,7 +87,10 @@
 #ifdef HAS_MAICO
 #include "rf_maico.h"
 #endif
-
+#ifdef HAS_ONEWIRE
+#include "onewire.h"
+#include "i2cmaster.h"
+#endif
 //------------------------------------------------------------------------------
 //         Local definitions
 //------------------------------------------------------------------------------
@@ -230,7 +233,9 @@ const t_fntab fntab[] = {
   { 'V', version },
   { 'W', write_eeprom },
   { 'X', set_txreport },
-
+#ifdef HAS_ONEWIRE
+  { 'O', onewire_func },
+#endif
   { 'e', eeprom_factory_reset },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
@@ -457,15 +462,28 @@ int main(void)
 
   spi_init();
   fht_init();
-  tx_init();
 
   #ifdef HAS_ETHERNET
   ethernet_init();
   #endif
 
-#ifdef USE_HW_AUTODETECT
+  #ifdef USE_HW_AUTODETECT
   hw_autodetect();
-#endif
+  #endif
+
+  tx_init();
+
+  #ifdef HAS_ONEWIRE
+  #ifdef USE_HW_AUTODETECT
+  if(has_onewire())
+  #endif
+  {
+    TRACE_INFO("init ONEWIRE\n\r");
+    i2c_init();
+    onewire_Init();
+    onewire_FullSearch();
+  }
+  #endif
 
   TRACE_INFO("init USB\n\r");
   CDCDSerialDriver_Initialize();

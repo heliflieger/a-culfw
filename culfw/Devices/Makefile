@@ -56,7 +56,7 @@ all:
 	make -C CUL-HM-CFG/bootloader clean
 	make -C CUL-HM-CFG/bootloader all
 	make -C CUBe clean
-	make -C CUBe CUBE_BL
+	make -C CUBe all
 	make -C CUBe/bootloader clean
 	make -C CUBe/bootloader all
 	make -C MapleCUN clean

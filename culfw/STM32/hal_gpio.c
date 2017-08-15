@@ -35,12 +35,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hal_gpio.h"
 #include <board.h>
+#include <string.h>
 #include "stm32f103xb.h"
 #include "led.h"
 #include "delay.h"
 #include "rf_mode.h"
 
-const transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
+transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
+
 
 /*----------------------------------------------------------------------------*/
 /* Configure GPIO                                                             */
@@ -181,6 +183,13 @@ void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode) {
 
   HAL_NVIC_SetPriority(EXTI4_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 
@@ -214,6 +223,9 @@ uint32_t hal_CC_Pin_Get(uint8_t cc_num, CC_PIN pin) {
   return 0;
 }
 
+void hal_CC_move_transceiver_pins(uint8_t source, uint8_t dest) {
+  memcpy(&CCtransceiver[dest], &CCtransceiver[source], sizeof(transceiver_t));
+}
 
 __weak void CC1100_in_callback()
 {
@@ -250,6 +262,14 @@ void hal_GPIO_EXTI_IRQHandler(void) {
     CC1100_in_callback();
     CC1101.instance = old_instance;
   }
+
+  if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[2].pin[CC_Pin_In])) != RESET) {
+    __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[2].pin[CC_Pin_In]));
+    CC1101.instance = 2;
+    CC1100_in_callback();
+    CC1101.instance = old_instance;
+  }
+
 #else
   if(__HAL_GPIO_EXTI_GET_IT(_BV(CCtransceiver[0].pin[CC_Pin_In])) != RESET) {
     __HAL_GPIO_EXTI_CLEAR_IT(_BV(CCtransceiver[0].pin[CC_Pin_In]));

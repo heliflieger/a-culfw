@@ -105,7 +105,7 @@ const PROGMEM const uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    SimpleRX: Async, SimpleTX: Async+Unmodulated
  */
 };
-#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+#if defined(HAS_MULTI_CC) && (NUM_SLOWRF > 1)
 const PROGMEM const uint8_t CC1100_CFG1[EE_CC1100_CFG_SIZE] = {
 // CULFW   IDX NAME     RESET STUDIO COMMENT
    0x0D, // 00 IOCFG2   *29   *0B    GDO2 as serial output
@@ -232,7 +232,7 @@ ccInitChip(uint8_t *cfg)
 #endif
 
 #ifdef USE_HAL
-  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
 #else
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
@@ -308,10 +308,17 @@ cc_factory_reset(void)
   for(uint8_t i = 0; i < sizeof(FASTRF_CFG); i++)
     ewb(t++, __LPM(FASTRF_CFG+i));
 #endif
-#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+#if defined(HAS_MULTI_CC)
+#if NUM_SLOWRF > 1
   t = EE_CC1100_CFG1;
   for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++)
     ewb(t++, __LPM(CC1100_CFG1+i));
+#endif
+#if NUM_SLOWRF > 2
+  t = EE_CC1100_CFG2;
+  for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++)
+    ewb(t++, __LPM(CC1100_CFG+i));
+#endif
 #endif
 
 #ifdef MULTI_FREQ_DEVICE
@@ -477,8 +484,15 @@ void
 set_ccon(void)
 {
 #ifdef HAS_MULTI_CC
-  if(CC1101.instance == 1)
+  if (0) {}
+#if NUM_SLOWRF > 1
+  else if(CC1101.instance == 1)
     ccInitChip(EE_CC1100_CFG1);
+#endif
+#if NUM_SLOWRF > 2
+  else if(CC1101.instance == 2)
+      ccInitChip(EE_CC1100_CFG2);
+#endif
   else
     ccInitChip(EE_CC1100_CFG);
 #else

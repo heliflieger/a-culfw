@@ -175,7 +175,7 @@ rf_zwave_init(void)
 {
 
 #ifdef USE_HAL
-	hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+	hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
 #else
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );
 #endif

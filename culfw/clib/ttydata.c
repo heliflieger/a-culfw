@@ -6,6 +6,11 @@
 #include "ttydata.h"
 #include "rf_mode.h"
 #include "hw_autodetect.h"
+#ifdef ARM
+#include <utility/trace.h>
+#else
+#define TRACE_DEBUG(...)      { }
+#endif
 
 void (*input_handle_func)(uint8_t channel);
 
@@ -25,13 +30,20 @@ callfn(char *buf)
       break;
     if(buf == 0) {
 #ifdef USE_HW_AUTODETECT
-      if((n != '*') || has_CC(CC1101.instance+1) )
+      if( !(((n == '*') && !has_CC(CC1101.instance+1)) || ((n == 'O') && !has_onewire())) )
 #endif
       {
       DC(' ');
       DC(n);
       }
 #ifdef USE_HW_AUTODETECT
+    } else if((buf[0] == n ) && (n == 'O')) {
+        if(has_onewire()) {
+          fn(buf);
+          return 1;
+        } else {
+          return 0;
+        }
     } else if((buf[0] == n ) && (n == '*')) {
       if(has_CC(CC1101.instance+1)) {
         fn(buf);
@@ -76,6 +88,7 @@ analyze_ttydata(uint8_t channel)
 #endif
 
       cmdbuf[cmdlen] = 0;
+      TRACE_DEBUG("TTYDATA received: %s\n\r", cmdbuf);
       if(!callfn(cmdbuf)) {
         DS_P(PSTR("? ("));
         display_string(cmdbuf);

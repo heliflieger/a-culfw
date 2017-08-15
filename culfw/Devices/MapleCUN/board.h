@@ -12,14 +12,14 @@
 #define BOARD_NAME          "MapleCUNx4"
 #define BOARD_ID_STR        "MapleCUNx4"
 #define HAS_MULTI_CC        4
-#define NUM_SLOWRF          2
+#define NUM_SLOWRF          3
 #define HAS_WIZNET
 
 #elif defined MapleCUNx4_W5100 || defined MapleCUNx4_W5100_BL
 #define BOARD_NAME          "MapleCUNx4"
 #define BOARD_ID_STR        "MapleCUNx4"
 #define HAS_MULTI_CC        4
-#define NUM_SLOWRF          2
+#define NUM_SLOWRF          3
 #define HAS_WIZNET
 #define _WIZCHIP_           5100
 #define USE_HW_AUTODETECT
@@ -28,7 +28,7 @@
 #define BOARD_NAME          "MapleCUNx4"
 #define BOARD_ID_STR        "MapleCUNx4"
 #define HAS_MULTI_CC        4
-#define NUM_SLOWRF          2
+#define NUM_SLOWRF          3
 #define HAS_WIZNET
 #define _WIZCHIP_           5500
 #define USE_HW_AUTODETECT
@@ -37,10 +37,10 @@
 #define BOARD_NAME          "MapleCULx4"
 #define BOARD_ID_STR        "MapleCULx4"
 #define HAS_MULTI_CC        4
-#define NUM_SLOWRF          2
+#define NUM_SLOWRF          3
 #define USE_HW_AUTODETECT
 
-#elif defined MapleCUN || defined MapleCULx4_BL
+#elif defined MapleCUN || defined MapleCUN_BL
 #define BOARD_NAME          "MapleCUN"
 #define BOARD_ID_STR        "MapleCUN"
 #define HAS_WIZNET
@@ -64,6 +64,7 @@
 #define HAS_XRAM
 #define USE_RF_MODE
 #define USE_HAL
+#define HAS_ONEWIRE             10        // OneWire Support
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -150,6 +151,12 @@
                           { {CC1100_3_OUT_BASE, CC1100_3_CS_BASE, CC1100_3_IN_BASE},\
                             {CC1100_3_OUT_PIN,  CC1100_3_CS_PIN,  CC1100_3_IN_PIN}  },\
                           }
+
+//TWI
+#define TWI_SCL_PIN       CC1100_2_IN_PIN
+#define TWI_SCL_BASE      CC1100_2_IN_BASE
+#define TWI_SDA_PIN       CC1100_2_CS_PIN
+#define TWI_SDA_BASE      CC1100_2_CS_BASE
 
 #ifdef HAS_WIZNET
 #ifndef _WIZCHIP_

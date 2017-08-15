@@ -42,6 +42,7 @@
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 /* TIM1 init function */
 void MX_TIM1_Init(void)
@@ -145,6 +146,38 @@ void MX_TIM3_Init(void)
 
 }
 
+/* TIM2 init function */
+void MX_TIM4_Init(void)
+{
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 71;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 4000;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  __HAL_TIM_ENABLE(&htim4);
+
+}
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
 {
 
@@ -175,6 +208,15 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(TIM3_IRQn);
   }
+  else if(tim_baseHandle->Instance==TIM4)
+  {
+    /* Peripheral clock enable */
+    __HAL_RCC_TIM4_CLK_ENABLE();
+
+    /* Peripheral interrupt init */
+    HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM4_IRQn);
+  }
 }
 
 void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
@@ -203,6 +245,14 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
     /* Peripheral interrupt Deinit*/
     HAL_NVIC_DisableIRQ(TIM3_IRQn);
   }
+  else if(tim_baseHandle->Instance==TIM4)
+  {
+    /* Peripheral clock disable */
+    __HAL_RCC_TIM4_CLK_DISABLE();
+
+    /* Peripheral interrupt Deinit*/
+    HAL_NVIC_DisableIRQ(TIM4_IRQn);
+  }
 } 
 
 void hal_enable_CC_timer_int(uint8_t instance, uint8_t enable) {
@@ -212,6 +262,8 @@ void hal_enable_CC_timer_int(uint8_t instance, uint8_t enable) {
     htim=&htim2;
   else if(instance == 1)
     htim=&htim3;
+  else if(instance == 2)
+    htim=&htim4;
   else
     return;
 
@@ -245,16 +297,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   uint8_t old_instance = CC1101.instance;
 
   if(htim->Instance==TIM1) {
-      clock_TimerElapsedCallback();
-    } else if(htim->Instance==TIM2) {
-      CC1101.instance = 0;
-      rf_receive_TimerElapsedCallback();
-      CC1101.instance = old_instance;
-    } else if(htim->Instance==TIM3) {
-      CC1101.instance = 1;
-      rf_receive_TimerElapsedCallback();
-      CC1101.instance = old_instance;
-    }
+    clock_TimerElapsedCallback();
+  } else if(htim->Instance==TIM2) {
+    CC1101.instance = 0;
+    rf_receive_TimerElapsedCallback();
+    CC1101.instance = old_instance;
+  } else if(htim->Instance==TIM3) {
+    CC1101.instance = 1;
+    rf_receive_TimerElapsedCallback();
+    CC1101.instance = old_instance;
+  } else if(htim->Instance==TIM4) {
+    CC1101.instance = 2;
+    rf_receive_TimerElapsedCallback();
+    CC1101.instance = old_instance;
+  }
 #else
   if(htim->Instance==TIM1) {
     clock_TimerElapsedCallback();
@@ -270,6 +326,8 @@ uint32_t HAL_timer_get_reload_register(uint8_t instance) {
     return TIM2->ARR;
   else if(instance == 1)
     return TIM3->ARR;
+  else if(instance == 2)
+    return TIM4->ARR;
   else
     return 0;
 }
@@ -279,6 +337,8 @@ void HAL_timer_set_reload_register(uint8_t instance, uint32_t value) {
     TIM2->ARR = value;
   else if(instance == 1)
     TIM3->ARR = value;
+  else if(instance == 2)
+    TIM4->ARR = value;
   else
     return;
 }
@@ -288,6 +348,8 @@ uint32_t HAL_timer_get_counter_value(uint8_t instance) {
     return TIM2->CNT;
   else if(instance == 1)
     return TIM3->CNT;
+  else if(instance == 2)
+    return TIM4->CNT;
   else
     return 0;
 }
@@ -297,6 +359,8 @@ void HAL_timer_set_counter_value(uint8_t instance, uint32_t value) {
     TIM2->CNT = value;
   else if(instance == 1)
     TIM3->CNT = value;
+  else if(instance == 2)
+    TIM4->CNT = value;
   else
     return;
 }
@@ -306,6 +370,8 @@ void HAL_timer_reset_counter_value(uint8_t instance) {
     TIM2->CNT = 0;
   else if(instance == 1)
     TIM3->CNT = 0;
+  else if(instance == 2)
+    TIM4->CNT = 0;
   else
     return;
 }

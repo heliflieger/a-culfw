@@ -93,6 +93,7 @@ void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode);
 void hal_enable_CC_GDOin_int(uint8_t cc_num, uint8_t enable);
 void hal_CC_Pin_Set(uint8_t cc_num, CC_PIN pin, GPIO_PinState state);
 uint32_t hal_CC_Pin_Get(uint8_t cc_num, CC_PIN pin);
+void hal_CC_move_transceiver_pins(uint8_t source, uint8_t dest);
 
 void hal_GPIO_EXTI_IRQHandler(void);
 

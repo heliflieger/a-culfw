@@ -108,7 +108,7 @@ tx_init(void)
 #ifdef USE_HAL
 #ifdef HAS_MULTI_CC
   for(uint8_t x=0; x < HAS_MULTI_CC; x++) {
-    hal_CC_GDO_init(x,INIT_MODE_OUT_CS_IN);
+    hal_CC_GDO_init(x,INIT_MODE_IN_CS_IN);
   }
 #else
   hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
