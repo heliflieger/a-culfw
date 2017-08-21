@@ -73,6 +73,7 @@
 
 /* define this device as a 433 MHz one */
 /* this isn't done like a CUL by reading a port pin but instead a fixed value of 0 for mark433_pin is used */ 
+/* so unneeded Protocols wont be included */
 #define MULTI_FREQ_DEVICE
 #define MARK433_PIN 			mark433_pin
 #define MARK433_BIT             0
@@ -100,13 +101,7 @@ extern const uint8_t mark433_pin;
 #define HAS_MEMFN											//Memory Functions
 
 #define HAS_RAWSEND                   // PROGMEM:  198b     RAM:  4b
-#define HAS_RFNATIVE
 
-/* HAS_MBUS requires about 1kB RAM, if you want to use it you
-   should consider disabling other unneeded features
-   to avoid stack overflows
-*/
-//#define HAS_MBUS
 
 #if defined (I2CCUL433)
 /* Intertechno Empfang einschalten */
@@ -119,7 +114,9 @@ extern const uint8_t mark433_pin;
 #define HAS_BELFOX
 #define HAS_MANCHESTER
 #define HAS_TX3
-//#define LACROSSE_HMS_EMU          	// if you like HMS emulation for LaCrosse temp devices
+
+#define HAS_RFNATIVE
+#define LACROSSE_HMS_EMU          	// if you like HMS emulation for LaCrosse temp devices
 //#define HAS_SOMFY_RTS
 #endif
 
@@ -140,6 +137,11 @@ extern const uint8_t mark433_pin;
 //#define FHTBUF_SIZE          174    //     	           RAM: 174b
 //#define HAS_KOPP_FC
 //#define HAS_ZWAVE                   // PROGMEM:  882
+/* HAS_MBUS requires about 1kB RAM, if you want to use it you
+   should consider disabling other unneeded features
+   to avoid stack overflows
+*/
+#define HAS_MBUS
 #endif
 
 
