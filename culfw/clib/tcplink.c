@@ -42,6 +42,17 @@ tcp_putchar(char data)
     s = &(uip_conns[c].appstate);
     if(s->offset < sizeof(s->buffer))
       s->buffer[s->offset++] = data;
+
+    if(s->offset == (sizeof(s->buffer)-1)) {
+
+      uip_periodic(c);
+      if(uip_len > 0) {
+        uip_arp_out();
+        network_send();
+      }
+
+    }
+
   }
 }
 

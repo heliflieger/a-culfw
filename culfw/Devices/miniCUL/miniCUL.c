@@ -55,7 +55,7 @@
 #include "somfy_rts.h"
 #endif
 #ifdef HAS_MBUS
-#include "rf_mbus.h"                    // for rf_mbus_func, rf_mbus_task
+#include "rf_mbus.h"
 #endif
 #ifdef HAS_KOPP_FC
 #include "kopp-fc.h"
@@ -65,6 +65,9 @@
 #endif
 #ifdef HAS_ZWAVE
 #include "rf_zwave.h"
+#endif
+#ifdef HAS_EVOHOME
+#include "rf_evohome.h"
 #endif
 
 const PROGMEM t_fntab fntab[] = {
@@ -82,7 +85,7 @@ const PROGMEM t_fntab fntab[] = {
   { 'e', eeprom_factory_reset },
   { 'F', fs20send },
 #ifdef HAS_FASTRF
- { 'f', fastrf_func },
+  { 'f', fastrf_func },
 #endif
 #ifdef HAS_RAWSEND
   { 'G', rawsend },
@@ -122,6 +125,9 @@ const PROGMEM t_fntab fntab[] = {
   { 'u', rf_router_func },
 #endif
   { 'V', version },
+#ifdef HAS_EVOHOME
+  { 'v', rf_evohome_func },
+#endif
   { 'W', write_eeprom },
   { 'X', set_txreport },
   { 'x', ccsetpa },
@@ -214,6 +220,8 @@ main(void)
 #ifdef HAS_ZWAVE
     rf_zwave_task();
 #endif
+#ifdef HAS_EVOHOME
+    rf_evohome_task();
+#endif
   }
-
 }

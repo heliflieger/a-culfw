@@ -12,6 +12,12 @@
 #include "delay.h"                      // for my_delay_us, my_delay_ms
 #include "display.h"                    // for DC, DH2, DNL
 #include "rf_zwave.h"
+#include "rf_mode.h"
+#include "multi_CC.h"
+
+#ifdef USE_HAL
+#include "hal.h"
+#endif
 
 #ifdef CUL_V4
 #define MAX_ZWAVE_MSG 64        // 1024k SRAM is not enough: no SEC for CUL_V4
@@ -25,11 +31,11 @@ void zwave_doSend(uint8_t *msg, uint8_t hblen);
 #define DRATE_100k '1'
 #define DRATE_9600 '9'
 
-uint8_t zwave_on = 0;
-uint8_t zwave_drate;
-uint8_t zwave_hcid[5];  // HomeId (4byte) + CtrlNodeId (1byte)
-uint8_t zwave_sMsg[MAX_ZWAVE_MSG], zwave_ackState=0, zwave_sLen;
-uint32_t zwave_sStamp;
+uint8_t zwave_on[NUM_ZWAVE] = {0};
+uint8_t zwave_drate[NUM_ZWAVE];
+uint8_t zwave_hcid[NUM_ZWAVE][5];  // HomeId (4byte) + CtrlNodeId (1byte)
+uint8_t zwave_sMsg[NUM_ZWAVE][MAX_ZWAVE_MSG], zwave_ackState[NUM_ZWAVE]={0}, zwave_sLen[NUM_ZWAVE];
+uint32_t zwave_sStamp[NUM_ZWAVE];
 
 // See also: ZAD-12837-1, ITU-G.9959
 /*
@@ -156,8 +162,8 @@ void
 zccRX(void)
 {
   ccRX();
-#ifdef ARM
-  hal_enable_CC_GDOin_int(0,FALSE); // disable INT - we'll poll...
+#ifdef USE_HAL
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
 #endif
@@ -168,8 +174,8 @@ void
 rf_zwave_init(void)
 {
 
-#ifdef ARM
-	hal_CC_GDO_init(0,INIT_MODE_OUT_CS_IN);
+#ifdef USE_HAL
+	hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
 #else
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );
 #endif
@@ -184,17 +190,17 @@ rf_zwave_init(void)
   ccStrobe( CC1100_SRES );
   my_delay_us(100);
 
-  if(zwave_drate == DRATE_9600) {
+  if(zwave_drate[CC_INSTANCE] == DRATE_9600) {
     for (uint8_t i = 0; i < sizeof(ZWAVE_CFG_9600); i += 2)
       cc1100_writeReg( pgm_read_byte(&ZWAVE_CFG_9600[i]),
                        pgm_read_byte(&ZWAVE_CFG_9600[i+1]) );
 
-  } else if(zwave_drate == DRATE_40k) {
+  } else if(zwave_drate[CC_INSTANCE] == DRATE_40k) {
     for (uint8_t i = 0; i < sizeof(ZWAVE_CFG_40k); i += 2)
       cc1100_writeReg( pgm_read_byte(&ZWAVE_CFG_40k[i]),
                        pgm_read_byte(&ZWAVE_CFG_40k[i+1]) );
 
-  } else if(zwave_drate == DRATE_100k) {
+  } else if(zwave_drate[CC_INSTANCE] == DRATE_100k) {
     for (uint8_t i = 0; i < sizeof(ZWAVE_CFG_100k); i += 2)
       cc1100_writeReg( pgm_read_byte(&ZWAVE_CFG_100k[i]),
                        pgm_read_byte(&ZWAVE_CFG_100k[i+1]) );
@@ -210,11 +216,11 @@ rf_zwave_init(void)
 uint8_t
 zwave_forMe(uint8_t *msg)
 {
-  if(msg[0] == zwave_hcid[0] &&
-     msg[1] == zwave_hcid[1] &&
-     msg[2] == zwave_hcid[2] &&
-     msg[3] == zwave_hcid[3] &&
-     (msg[8] == zwave_hcid[4] || msg[8] == 0xff))
+  if(msg[0] == zwave_hcid[CC_INSTANCE][0] &&
+     msg[1] == zwave_hcid[CC_INSTANCE][1] &&
+     msg[2] == zwave_hcid[CC_INSTANCE][2] &&
+     msg[3] == zwave_hcid[CC_INSTANCE][3] &&
+     (msg[8] == zwave_hcid[CC_INSTANCE][4] || msg[8] == 0xff))
     return 1;
   return 0;
 }
@@ -247,13 +253,13 @@ rf_zwave_task(void)
 {
   uint8_t msg[MAX_ZWAVE_MSG];
 
-  if(!zwave_on)
+  if(!zwave_on[CC_INSTANCE])
     return;
-  if(zwave_ackState && ticks > zwave_sStamp)
-    return zwave_doSend(zwave_sMsg, zwave_sLen);
+  if(zwave_ackState[CC_INSTANCE] && ticks > zwave_sStamp[CC_INSTANCE])
+    return zwave_doSend(zwave_sMsg[CC_INSTANCE], zwave_sLen[CC_INSTANCE]);
 
-  #ifdef ARM
-  if (!hal_CC_Pin_Get(0,CC_Pin_In))
+  #ifdef USE_HAL
+  if (!hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In))
 #else
   if(!bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN ))
 #endif
@@ -264,7 +270,7 @@ rf_zwave_task(void)
   cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
   for(uint8_t i=0; i<8; i++) { // FIFO RX threshold is 8
      msg[i] = cc1100_sendbyte( 0 );
-     if(zwave_drate != DRATE_9600)
+     if(zwave_drate[CC_INSTANCE] != DRATE_9600)
        msg[i] ^= 0xff;
   }
   CC1100_DEASSERT;
@@ -279,8 +285,8 @@ rf_zwave_task(void)
   cc1100_writeReg(CC1100_PKTLEN, len );
 
   // 1 byte @ dataRate + 10% margin
-  uint16_t delay = (zwave_drate == DRATE_100k ? 90 :
-                   (zwave_drate == DRATE_40k ? 220 : 920));
+  uint16_t delay = (zwave_drate[CC_INSTANCE] == DRATE_100k ? 90 :
+                   (zwave_drate[CC_INSTANCE] == DRATE_40k ? 220 : 920));
   for(uint8_t mwait=MAX_ZWAVE_MSG-8; mwait > 0; mwait--) {
     my_delay_us(delay);
     uint8_t flen = cc1100_readReg( CC1100_RXBYTES );
@@ -295,7 +301,7 @@ rf_zwave_task(void)
     cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
     for(uint8_t i=0; i<flen; i++) {
       uint8_t d = cc1100_sendbyte( 0 );
-      if(zwave_drate != DRATE_9600)
+      if(zwave_drate[CC_INSTANCE] != DRATE_9600)
         d ^= 0xff;
       msg[off++] = d;
     }
@@ -305,17 +311,18 @@ rf_zwave_task(void)
   }
 
   uint8_t isOk = 0;
-  if(zwave_drate == DRATE_100k) {
+  if(zwave_drate[CC_INSTANCE] == DRATE_100k) {
     uint16_t cs = ((uint16_t)msg[len-2]<<8)+msg[len-1]; // Wrong byte order
     isOk = (zwave_ckSum_16bit(msg,len-2) == cs);
   } else {
     isOk = (zwave_ckSum_8bit(msg,len-1) == msg[len-1]);
   }
 
-  if(zwave_on == 'r' && !zwave_forMe(msg))
+  if(zwave_on[CC_INSTANCE] == 'r' && !zwave_forMe(msg))
     isOk = 0;
 
   if(isOk) {
+    MULTICC_PREFIX();
     DC('z'); 
     for(uint8_t i=0; i<len; i++)
       DH2(msg[i]);
@@ -324,18 +331,18 @@ rf_zwave_task(void)
     //DC('C'); DNL();
   }
 
-  if(zwave_on=='r' && isOk && (msg[5]&3) == 3 && zwave_ackState) // got ACK
-    zwave_ackState = 0;
+  if(zwave_on[CC_INSTANCE]=='r' && isOk && (msg[5]&3) == 3 && zwave_ackState[CC_INSTANCE]) // got ACK
+    zwave_ackState[CC_INSTANCE] = 0;
 
-  if(zwave_on=='r' && isOk && (msg[5]&0x40) &&  // ackReq
+  if(zwave_on[CC_INSTANCE]=='r' && isOk && (msg[5]&0x40) &&  // ackReq
      ((msg[5]&0x80) == 0)) {                    // not routed
     my_delay_ms(10); // Tested with 1,5,10,15
 
     msg[8] = msg[4]; // src -> target
-    msg[4] = zwave_hcid[4]; // src == ctrlId
+    msg[4] = zwave_hcid[CC_INSTANCE][4]; // src == ctrlId
     msg[5] = 0x03;
 
-    if(zwave_drate == DRATE_100k) {
+    if(zwave_drate[CC_INSTANCE] == DRATE_100k) {
       msg[7] = 11;        // Len
       uint16_t cs = zwave_ckSum_16bit(msg, 9);
       msg[9] = (cs >> 8) & 0xff;
@@ -349,6 +356,7 @@ rf_zwave_task(void)
 
     }
 
+    MULTICC_PREFIX();
     DC('z'); DC('a'); DH2(msg[8]); DNL();
 
   } else {
@@ -364,7 +372,7 @@ zwave_doSend(uint8_t *msg, uint8_t hblen)
 {
   LED_ON();
 
-  if (zwave_drate == DRATE_9600) {
+  if (zwave_drate[CC_INSTANCE] == DRATE_9600) {
     cc1100_writeReg(CC1100_MDMCFG2, 0x14);       // No preamble, no manchaster,
     cc1100_writeReg(CC1100_PKTLEN,  2*hblen+19); // we do all this by hand.
 
@@ -376,7 +384,7 @@ zwave_doSend(uint8_t *msg, uint8_t hblen)
   CC1100_ASSERT;
   cc1100_sendbyte(CC1100_WRITE_BURST | CC1100_TXFIFO);
   
-  if(zwave_drate == DRATE_9600) {
+  if(zwave_drate[CC_INSTANCE] == DRATE_9600) {
     for(uint8_t i = 0; i < 15; i++) {
       cc1100_sendbyte(0x66);  // preamble 0x55; manchester code = 0x6666
     }
@@ -410,7 +418,7 @@ zwave_doSend(uint8_t *msg, uint8_t hblen)
   while(cc1100_readReg( CC1100_MARCSTATE ) == MARCSTATE_TX)
     ;
   cc1100_writeReg(CC1100_PKTLEN, 0xff);
-  if(zwave_drate == DRATE_9600) {
+  if(zwave_drate[CC_INSTANCE] == DRATE_9600) {
     cc1100_writeReg(CC1100_MDMCFG2, 0x1e);
   }
 
@@ -418,12 +426,13 @@ zwave_doSend(uint8_t *msg, uint8_t hblen)
   LED_OFF();
 
   if(msg[5] & 0x40) {   // ackReq
-    zwave_sStamp = ticks + 6; // 6/125 = 48ms
-    if(++zwave_ackState > 1) {
-      DC('z'); DC('r'); DH2(zwave_ackState); DNL();
+    zwave_sStamp[CC_INSTANCE] = ticks + 6; // 6/125 = 48ms
+    if(++zwave_ackState[CC_INSTANCE] > 1) {
+      MULTICC_PREFIX();
+      DC('z'); DC('r'); DH2(zwave_ackState[CC_INSTANCE]); DNL();
     }
-    if(zwave_ackState >= 3)
-      zwave_ackState = 0;
+    if(zwave_ackState[CC_INSTANCE] >= 3)
+      zwave_ackState[CC_INSTANCE] = 0;
   }
 }
 
@@ -431,34 +440,41 @@ void
 zwave_func(char *in)
 {
   if(in[1] == 'r' || in[1] == 'm') {// Reception on: receive or monitor
-    zwave_drate = (in[2] ? in[2] : DRATE_40k); // Valid: '1', '4', '9'
-    zwave_on = in[1];
+    zwave_drate[CC_INSTANCE] = (in[2] ? in[2] : DRATE_40k); // Valid: '1', '4', '9'
+    zwave_on[CC_INSTANCE] = in[1];
+#ifdef USE_RF_MODE
+    set_RF_mode(RF_mode_zwave);
+#else
     rf_zwave_init();
+#endif
 
   } else if(in[1] == 's') {         // Send
-    zwave_ackState = 0;
-    zwave_sLen = fromhex(in+2, zwave_sMsg, MAX_ZWAVE_MSG);
-    zwave_doSend(zwave_sMsg, zwave_sLen);
+    zwave_ackState[CC_INSTANCE] = 0;
+    zwave_sLen[CC_INSTANCE] = fromhex(in+2, zwave_sMsg[CC_INSTANCE], MAX_ZWAVE_MSG);
+    zwave_doSend(zwave_sMsg[CC_INSTANCE], zwave_sLen[CC_INSTANCE]);
 
   } else if(in[1] == 'i') {         // set homeId and ctrlId
     if(in[2]) {
-      fromhex(in+2, zwave_hcid, 5);
+      fromhex(in+2, zwave_hcid[CC_INSTANCE], 5);
     } else {
-      DC(zwave_on);
-      DC(zwave_drate);
+      MULTICC_PREFIX();
+      DC(zwave_on[CC_INSTANCE]);
+      DC(zwave_drate[CC_INSTANCE]);
       DC(' ');
-      DH2(zwave_hcid[0]);
-      DH2(zwave_hcid[1]);
-      DH2(zwave_hcid[2]);
-      DH2(zwave_hcid[3]);
+      DH2(zwave_hcid[CC_INSTANCE][0]);
+      DH2(zwave_hcid[CC_INSTANCE][1]);
+      DH2(zwave_hcid[CC_INSTANCE][2]);
+      DH2(zwave_hcid[CC_INSTANCE][3]);
       DC(' ');
-      DH2(zwave_hcid[4]);
+      DH2(zwave_hcid[CC_INSTANCE][4]);
       DNL();
     }
 
   } else {                          // Off
-    zwave_on = 0;
-
+    zwave_on[CC_INSTANCE] = 0;
+#ifdef USE_RF_MODE
+    set_RF_mode(RF_mode_off);
+#endif
   }
 }
 

@@ -1,5 +1,40 @@
 ## Changelog:
 
+#### 1.25.02
+- megaCUL: changed buffer size
+
+#### 1.25.01
+- MapleCUN: Fix baud rate setting command
+
+#### 1.25.00
+- ARM Models: 
+  - Add onewire
+  - Improve hardware autodetection
+- MapleCUN: Add 3rd SlowRF transceiver
+
+#### 1.24.02
+- Add CC113L to hardware autodetection
+- Fix tcp_putchar
+- Fix MBUS for multi CC1101 devices
+
+#### 1.24.01
+- MapleCUN: Add bootloader
+
+#### 1.24.00
+- ARM Models: 
+  - Rework of multi CC1101
+  - Add RF mode switching
+  - Add hardware autodetection
+- MapleCUN: Add W5500
+
+#### 1.23.09
+- Add new device: megaCUL
+- megaCUL: disabled by default: Honeywell evohome
+- miniCUL: Code cleanup
+- miniCUL: disabled by default: Honeywell evohome, M-Bus, ZWave
+- rpiaddon: Code cleanup
+- rpiaddon: disabled by default: Honeywell evohome
+
 #### 1.23.08
 - miniCUL: added Hoermann send + RFR Filter
 - miniCUL: Code cleanup

@@ -1,26 +1,21 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hal_gpio.h"
 #include <board.h>
+#include <string.h>
 #include "led.h"
 #include "delay.h"
 #include <pio/pio.h>
 #include <aic/aic.h>
+#include "multi_CC.h"
 
 static const Pin pinsLeds[] = {PINS_LEDS};
 
-const transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
+transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
 
 
 /*----------------------------------------------------------------------------*/
 /* USB                                                                        */
 /*----------------------------------------------------------------------------*/
-
-void HAL_GPIO_Init(void) {
-  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
-  #ifdef CUBE
-  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOB);
-  #endif
-}
 
 void hal_UCBD_connect_init(void) {
 #ifdef USBD_CONNECT_PIN
@@ -77,7 +72,6 @@ void hal_CC_GDO_init(uint8_t cc_num, uint8_t mode) {
   CCtransceiver[cc_num].base[CC_Pin_CS]->PIO_PER   = _BV(CCtransceiver[cc_num].pin[CC_Pin_CS]);   //Enable PIO control
 
   /*Configure GDO2 (in) pin */
-  CCtransceiver[cc_num].base[CC_Pin_In]->PIO_IER = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);     //Enable input change interrupt
   CCtransceiver[cc_num].base[CC_Pin_In]->PIO_ODR = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);     //Enable input
   CCtransceiver[cc_num].base[CC_Pin_In]->PIO_PER = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);     //Enable PIO control
 
@@ -90,49 +84,61 @@ __attribute__((weak)) void CC1100_in_callback()
    */
 }
 
+void hal_GPIO_IRQHandler(uint32_t pin) {
+#ifdef HAS_MULTI_CC
+  uint8_t old_instance = CC1101.instance;
+
+  if(pin & _BV(CCtransceiver[0].pin[CC_Pin_In])) {
+    CC1101.instance = 0;
+    CC1100_in_callback();
+  }
+
+  if(pin & _BV(CCtransceiver[1].pin[CC_Pin_In])) {
+    CC1101.instance = 1;
+    CC1100_in_callback();
+    }
+  CC1101.instance = old_instance;
+#else
+  CC1100_in_callback();
+#endif
+}
+
 void ISR_PioA() {
   // Read PIO controller status
-  AT91C_BASE_PIOA->PIO_ISR;
-  CC1100_in_callback();
-
+  hal_GPIO_IRQHandler(AT91C_BASE_PIOA->PIO_ISR);
 }
 
 #ifdef AT91C_ID_PIOB
 void ISR_PioB() {
   // Read PIO controller status
-  AT91C_BASE_PIOB->PIO_ISR;
-  CC1100_in_callback();
-
+  hal_GPIO_IRQHandler(AT91C_BASE_PIOB->PIO_ISR);
 }
 #endif
 
 void hal_enable_CC_GDOin_int(uint8_t cc_num, uint8_t enable) {
   /*Configure in pin */
-  uint32_t PIO_ID;
-  void* ISR_Pio;
 
-  if(cc_num)
+  if(!(cc_num < NUM_SLOWRF ))
     return;
 
-#ifdef AT91C_ID_PIOB
-  if(CCtransceiver[cc_num].base[CC_Pin_In] == AT91C_BASE_PIOA) {
-    PIO_ID = AT91C_ID_PIOA;
-    ISR_Pio = ISR_PioA;
-  } else {
-    PIO_ID = AT91C_ID_PIOB;
-    ISR_Pio = ISR_PioB;
-  }
-#else
-  PIO_ID = AT91C_ID_PIOA;
-  ISR_Pio = ISR_PioA;
-#endif
+  if (enable)
+    CCtransceiver[cc_num].base[CC_Pin_In]->PIO_IER = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);     //Enable input change interrupt
+  else
+    CCtransceiver[cc_num].base[CC_Pin_In]->PIO_IDR = _BV(CCtransceiver[cc_num].pin[CC_Pin_In]);     //Disable input change interrupt
 
-  if(enable) {
-    AIC_ConfigureIT(PIO_ID, AT91C_AIC_PRIOR_HIGHEST, ISR_Pio);
-    AT91C_BASE_AIC->AIC_IECR = 1 << PIO_ID;
-  } else {
-    AT91C_BASE_AIC->AIC_IDCR = 1 << PIO_ID;
-  }
+}
+
+void HAL_GPIO_Init(void) {
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOA);
+  AIC_ConfigureIT(AT91C_ID_PIOA, AT91C_AIC_PRIOR_HIGHEST, ISR_PioA);
+  AT91C_BASE_AIC->AIC_IECR = 1 << AT91C_ID_PIOA;
+
+  #ifdef AT91SAM7X256
+  AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_PIOB);
+  AIC_ConfigureIT(AT91C_ID_PIOB, AT91C_AIC_PRIOR_HIGHEST, ISR_PioB);
+  AT91C_BASE_AIC->AIC_IECR = 1 << AT91C_ID_PIOB;
+  #endif
+
 }
 
 void hal_CC_Pin_Set(uint8_t cc_num, CC_PIN pin, GPIO_PinState state) {
@@ -150,6 +156,10 @@ uint32_t hal_CC_Pin_Get(uint8_t cc_num, CC_PIN pin) {
     return (CCtransceiver[cc_num].base[pin]->PIO_PDSR) & _BV(CCtransceiver[cc_num].pin[pin]);
   }
   return 0;
+}
+
+void hal_CC_move_transceiver_pins(uint8_t source, uint8_t dest) {
+  memcpy(&CCtransceiver[dest], &CCtransceiver[source], sizeof(transceiver_t));
 }
 
 

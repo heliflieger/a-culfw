@@ -21,7 +21,7 @@
 #ifdef HAS_VZ
 #include "vz.h"                         // for vz_sectask
 #endif
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
 #include <DHCP/dhcp.h>                  // for DHCP_time_handler
 #endif
 #ifdef JOY_PIN1
@@ -29,6 +29,7 @@
 #include "joy.h"
 #include "mysleep.h"
 #endif
+#include "hw_autodetect.h"
 
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
 #include "ir.h"                         // for ir_sample, ir_send_data
@@ -42,7 +43,7 @@ volatile uint8_t  clock_hsec;
 
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
-#ifdef ARM
+#ifdef USE_HAL
 void clock_TimerElapsedCallback(void)
 {
 #else
@@ -180,14 +181,17 @@ Minute_Task(void)
 #ifdef HAS_ONEWIRE
   // Check if a running conversion is done
   // if HMS Emulation is on, and the Minute timer has expired
-  onewire_HsecTask ();
+  #ifdef USE_HW_AUTODETECT
+  if(has_onewire())
+  #endif
+    onewire_HsecTask ();
 #endif
 
   if(clock_hsec<125)
     return;
   clock_hsec = 0;       // once per second from here on.
 
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
   DHCP_time_handler();
 #endif
 
@@ -201,7 +205,10 @@ Minute_Task(void)
 
 #ifdef HAS_ONEWIRE
   // if HMS Emulation is on, check the HMS timer
-  onewire_SecTask ();
+  #ifdef USE_HW_AUTODETECT
+  if(has_onewire())
+  #endif
+    onewire_SecTask ();
 #endif
 #ifdef HAS_VZ
   vz_sectask();

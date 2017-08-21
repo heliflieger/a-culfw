@@ -38,18 +38,21 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 
-#define HAL_TIMER_SET_RELOAD_REGISTER(x)    ((TIM2->ARR) = (x))
-#define HAL_TIMER_GET_COUNTER_VALUE()       (TIM2->CNT)
-#define HAL_TIMER_RESET_COUNTER_VALUE()     (TIM2->CNT = 0)
-
 extern TIM_HandleTypeDef htim1;
 extern void Error_Handler(void);
 
 void MX_TIM1_Init(void);
 void MX_TIM2_Init(void);
+void MX_TIM3_Init(void);
+void MX_TIM4_Init(void);
 
-void hal_enable_CC_timer_int(uint8_t enable);
+void hal_enable_CC_timer_int(uint8_t instance, uint8_t enable);
 
+uint32_t HAL_timer_get_reload_register(uint8_t instance);
+void HAL_timer_set_reload_register(uint8_t instance, uint32_t value);
+uint32_t HAL_timer_get_counter_value(uint8_t instance);
+void HAL_timer_set_counter_value(uint8_t instance, uint32_t value);
+void HAL_timer_reset_counter_value(uint8_t instance);
 
 #endif /*__ hal_timer_H */
 

@@ -4,31 +4,29 @@
 #define _BV(a) (1<<(a))
 #define bit_is_set(sfr, bit) ((sfr) & _BV(bit))
 
+#define LONG_PULSE
 
-//#define LONG_PULSE
+#define TTY_BUFSIZE          512      // RAM: TTY_BUFSIZE*4
 
-#define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
+#if defined(HM_CFG) || defined(HM_CFG_BL)
+#define BOARD_NAME          "CUL-HM-CFG"
+#define BOARD_ID_STR        "CUL-HM-CFG"
+#define NUM_SLOWRF          1
 
-#if defined(HM_CFG)
-
-#elif defined(HM_CFG_BL)
-#define HM_CFG
-#elif defined(bootloader_HM_CFG)
-#define HM_CFG
-#undef  TTY_BUFSIZE
-#define TTY_BUFSIZE          512
 #else
 #define HM_CFG
-#endif
-
-#define BOARD_NAME 			"CUL-HM-CFG"
+#define BOARD_NAME          "CUL-HM-CFG"
 #define BOARD_ID_STR        "CUL-HM-CFG"
+#define NUM_SLOWRF          1
+#endif
 
 #define ARM
 #define SAM7
 #define HAS_USB
 #define USB_IsConnected		(USBD_GetState() == USBD_STATE_CONFIGURED)
 #define USB_DESCRIPTOR_SN	'1'
+#define USE_RF_MODE
+#define USE_HAL
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -39,7 +37,7 @@
 
 #define FHTBUF_SIZE          174
 #define RCV_BUCKETS            4      //                 RAM: 25b * bucket
-#define RFR_DEBUG
+//#define RFR_DEBUG
 #define FULL_CC1100_PA
 #define HAS_RAWSEND
 #define HAS_FASTRF
@@ -59,6 +57,7 @@
 #define HAS_MAICO
 #define HAS_RFNATIVE
 #define HAS_ZWAVE
+#define HAS_MBUS
 
 #define _433MHZ
 
@@ -71,13 +70,10 @@
 #    define HAS_REVOLT
 #  endif
 
-#define HAS_MBUS
-//#define HAS_MEMFN
-
-#define SPI_SS				(1<<11)
 #define SPI_MISO			(1<<12)
 #define SPI_MOSI			(1<<13)
 #define SPI_SCLK			(1<<14)
+#define SPI_SS				(1<<11)
 
 #define CC1100_CS_PIN       11
 #define CC1100_CS_BASE      AT91C_BASE_PIOA

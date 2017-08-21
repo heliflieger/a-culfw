@@ -10,6 +10,8 @@
 #include "display.h"                    // for display_channel, DC, etc
 #include "fastrf.h"
 #include "fncollection.h"               // for EE_FASTRF_CFG
+#include "rf_mode.h"
+#include "multi_CC.h"
 
 uint8_t fastrf_on;
 
@@ -19,9 +21,13 @@ fastrf_func(char *in)
   uint8_t len = strlen(in);
 
   if(in[1] == 'r') {                // Init
+#ifdef USE_RF_MODE
+    set_RF_mode(RF_mode_fast);
+#else
     ccInitChip(EE_FASTRF_CFG);
     ccRX();
     fastrf_on = 1;
+#endif
 
   } else if(in[1] == 's') {         // Send
 
@@ -37,18 +43,23 @@ fastrf_func(char *in)
     ccRX();                         // set reception again. MCSM1 does not work.
 
   } else {
+#ifdef USE_RF_MODE
+    set_RF_mode(RF_mode_off);
+#else
     fastrf_on = 0;
-
+#endif
   }
 }
 
 void
 FastRF_Task(void)
 {
+
   if(!fastrf_on)
     return;
 
   if(fastrf_on == 1) {
+
     static uint8_t lasttick;         // Querying all the time affects reception.
     if(lasttick != (uint8_t)ticks) {
       if(cc1100_readReg(CC1100_MARCSTATE) == MARCSTATE_RXFIFO_OVERFLOW) {
@@ -72,12 +83,12 @@ FastRF_Task(void)
 
     display_channel=DISPLAY_USB;
     uint8_t i;
+    MULTICC_PREFIX();
     for(i=0; i<len; i++)
       DC(buf[i]);
     DNL();
     display_channel=0xff;
   }
-
   fastrf_on = 1;
 }
 

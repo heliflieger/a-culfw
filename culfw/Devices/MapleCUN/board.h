@@ -6,12 +6,46 @@
 
 #define LONG_PULSE
 
-#define TTY_BUFSIZE          128      // RAM: TTY_BUFSIZE*4
+#define TTY_BUFSIZE          256      // RAM: TTY_BUFSIZE*4
 
-#ifdef MapleCUN
+#if defined MapleCUNx4 || defined MapleCUNx4_BL
+#define BOARD_NAME          "MapleCUNx4"
+#define BOARD_ID_STR        "MapleCUNx4"
+#define HAS_MULTI_CC        4
+#define NUM_SLOWRF          3
+#define HAS_WIZNET
+
+#elif defined MapleCUNx4_W5100 || defined MapleCUNx4_W5100_BL
+#define BOARD_NAME          "MapleCUNx4"
+#define BOARD_ID_STR        "MapleCUNx4"
+#define HAS_MULTI_CC        4
+#define NUM_SLOWRF          3
+#define HAS_WIZNET
+#define _WIZCHIP_           5100
+#define USE_HW_AUTODETECT
+
+#elif defined MapleCUNx4_W5500 || defined MapleCUNx4_W5500_BL
+#define BOARD_NAME          "MapleCUNx4"
+#define BOARD_ID_STR        "MapleCUNx4"
+#define HAS_MULTI_CC        4
+#define NUM_SLOWRF          3
+#define HAS_WIZNET
+#define _WIZCHIP_           5500
+#define USE_HW_AUTODETECT
+
+#elif defined MapleCULx4 || defined MapleCULx4_BL
+#define BOARD_NAME          "MapleCULx4"
+#define BOARD_ID_STR        "MapleCULx4"
+#define HAS_MULTI_CC        4
+#define NUM_SLOWRF          3
+#define USE_HW_AUTODETECT
+
+#elif defined MapleCUN || defined MapleCUN_BL
 #define BOARD_NAME          "MapleCUN"
 #define BOARD_ID_STR        "MapleCUN"
-#elif defined MapleCUL
+#define HAS_WIZNET
+
+#elif defined MapleCUL || defined MapleCUL_BL
 #define BOARD_NAME          "MapleCUL"
 #define BOARD_ID_STR        "MapleCUL"
 #else
@@ -19,7 +53,6 @@
 #define BOARD_NAME          "MapleCUL"
 #define BOARD_ID_STR        "MapleCUL"
 #endif
-
 
 #define ARM
 
@@ -29,6 +62,9 @@
 #define CDC_BAUD_RATE           115200
 #define USB_IsConnected		      (CDC_isConnected(0))
 #define HAS_XRAM
+#define USE_RF_MODE
+#define USE_HAL
+#define HAS_ONEWIRE             10        // OneWire Support
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -72,13 +108,6 @@
 #    define HAS_REVOLT
 #  endif
 
-
-
-//additional CC1101 Transceiver
-//#define CC1100_ASKSIN		1
-//#define CC1100_MORITZ		2
-//#define CC1100_MAICO		3
-
 //PORT 0
 #define CC1100_0_CS_PIN		  4
 #define CC1100_0_CS_BASE	  GPIOA
@@ -95,17 +124,44 @@
 #define CC1100_1_IN_PIN     4
 #define CC1100_1_IN_BASE	  GPIOB
 
+//PORT 2
+#define CC1100_2_CS_PIN     7
+#define CC1100_2_CS_BASE    GPIOB
+#define CC1100_2_OUT_PIN    14
+#define CC1100_2_OUT_BASE   GPIOC
+#define CC1100_2_IN_PIN     6
+#define CC1100_2_IN_BASE    GPIOB
 
-#define CCCOUNT       2
+//PORT 3
+#define CC1100_3_CS_PIN     0
+#define CC1100_3_CS_BASE    GPIOB
+#define CC1100_3_OUT_PIN    0
+#define CC1100_3_OUT_BASE   NULL
+#define CC1100_3_IN_PIN     13
+#define CC1100_3_IN_BASE    GPIOC
+
+#define CCCOUNT             4
 #define CCTRANSCEIVERS    {\
                           { {CC1100_0_OUT_BASE, CC1100_0_CS_BASE, CC1100_0_IN_BASE},\
                             {CC1100_0_OUT_PIN,  CC1100_0_CS_PIN,  CC1100_0_IN_PIN}  },\
                           { {CC1100_1_OUT_BASE, CC1100_1_CS_BASE, CC1100_1_IN_BASE},\
                             {CC1100_1_OUT_PIN,  CC1100_1_CS_PIN,  CC1100_1_IN_PIN}  },\
+                          { {CC1100_2_OUT_BASE, CC1100_2_CS_BASE, CC1100_2_IN_BASE},\
+                            {CC1100_2_OUT_PIN,  CC1100_2_CS_PIN,  CC1100_2_IN_PIN}  },\
+                          { {CC1100_3_OUT_BASE, CC1100_3_CS_BASE, CC1100_3_IN_BASE},\
+                            {CC1100_3_OUT_PIN,  CC1100_3_CS_PIN,  CC1100_3_IN_PIN}  },\
                           }
 
-#ifdef MapleCUN
-#define HAS_W5100
+//TWI
+#define TWI_SCL_PIN       CC1100_2_IN_PIN
+#define TWI_SCL_BASE      CC1100_2_IN_BASE
+#define TWI_SDA_PIN       CC1100_2_CS_PIN
+#define TWI_SDA_BASE      CC1100_2_CS_BASE
+
+#ifdef HAS_WIZNET
+#ifndef _WIZCHIP_
+#define _WIZCHIP_      5100
+#endif
 #endif
 
 #ifndef CDC_COUNT
@@ -121,13 +177,13 @@
 #define LED_GPIO              GPIOB
 #define LED_PIN               1
 
-#define LED2_GPIO             GPIOB
-#define LED2_PIN              0
+//#define LED2_GPIO             GPIOB
+//#define LED2_PIN              0
 
 #define USBD_CONNECT_PORT     GPIOB
 #define USBD_CONNECT_PIN      9
 
-#ifdef MapleCUN
+#ifdef HAS_WIZNET
 
 #define WIZNET_CS_PIN         12
 #define WIZNET_CS_GPIO        GPIOB

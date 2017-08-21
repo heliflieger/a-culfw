@@ -52,15 +52,15 @@ all:
 	make -C rpiaddon clean
 	make -C rpiaddon all
 	make -C CUL-HM-CFG clean
-	make -C CUL-HM-CFG
+	make -C CUL-HM-CFG all
 	make -C CUL-HM-CFG/bootloader clean
-	make -C CUL-HM-CFG/bootloader
+	make -C CUL-HM-CFG/bootloader all
 	make -C CUBe clean
-	make -C CUBe
+	make -C CUBe all
 	make -C CUBe/bootloader clean
-	make -C CUBe/bootloader
-	make -C MapleCUL clean
-	make -C MapleCUL
+	make -C CUBe/bootloader all
+	make -C MapleCUN clean
+	make -C MapleCUN all
 	find . -name \*.eep | xargs rm
 	find . -name \*.elf | xargs rm
 	find . -name \*.lss | xargs rm
@@ -100,4 +100,4 @@ clean:
 	make -C CUL-HM-CFG/bootloader clean
 	make -C CUBe clean
 	make -C CUBe/bootloader clean
-	make -C MapleCUL clean
+	make -C MapleCUN clean

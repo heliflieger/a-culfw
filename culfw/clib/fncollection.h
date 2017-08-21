@@ -41,7 +41,7 @@ void do_wdt_enable(uint8_t t);
 #define EE_DUDETTE_PRIV      (EE_DUDETTE_MAC-16)		// 128bit RSA private key 
 #define EE_DUDETTE_PUBL      (EE_DUDETTE_PRIV-16)		// 128bit RSA public key
 
-#if defined(HAS_ETHERNET) | defined(HAS_W5100)
+#if defined(HAS_ETHERNET) | defined(HAS_WIZNET)
 # define EE_MAC_ADDR         (EE_RF_ROUTER_ROUTER+1)
 # define EE_USE_DHCP         (EE_MAC_ADDR+6)                    // Offset x62
 # define EE_IP4_ADDR         (EE_USE_DHCP+1)
@@ -51,17 +51,19 @@ void do_wdt_enable(uint8_t t);
 # define EE_IP4_TCPLINK_PORT (EE_IP4_NTPSERVER+4)               // Offset x79
 # define EE_IP4_NTPOFFSET    (EE_IP4_TCPLINK_PORT+2)
 
-#if CDC_COUNT > 1
+#if defined(CDC_COUNT) && (CDC_COUNT > 1)
 # define EE_CDC1_BAUD        (EE_IP4_NTPOFFSET+1)
 # define EE_CDC2_BAUD        (EE_CDC1_BAUD+4)
 # define EE_ETH_LAST         (EE_CDC2_BAUD+4)
 #else
 # define EE_ETH_LAST         (EE_IP4_NTPOFFSET+1)       // 
 #endif
+#else
+# define EE_ETH_LAST         (EE_RF_ROUTER_ROUTER+1)
 #endif
 
 #ifdef HAS_LCD
-#if defined(HAS_ETHERNET) | defined(HAS_W5100)
+#if defined(HAS_ETHERNET) | defined(HAS_WIZNET)
 # define EE_CONTRAST          EE_ETH_LAST
 #else
 # define EE_CONTRAST          (EE_FASTRF_CFG+EE_CC1100_CFG_SIZE)
@@ -71,6 +73,17 @@ void do_wdt_enable(uint8_t t);
 # define EE_LCD_LAST          (EE_SLEEPTIME+1)
 #else
 # define EE_LCD_LAST          EE_ETH_LAST
+#endif
+
+#if defined(HAS_MULTI_CC)
+
+#if NUM_SLOWRF > 1
+# define EE_CC1100_CFG1       EE_ETH_LAST
+#endif
+#if NUM_SLOWRF > 2
+# define EE_CC1100_CFG2       (EE_CC1100_CFG1+EE_CC1100_CFG_SIZE)
+#endif
+
 #endif
 
 #ifdef HAS_FS

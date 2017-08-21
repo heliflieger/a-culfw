@@ -38,7 +38,8 @@
 #include "hal_gpio.h"
 #include "usbd_cdc_if.h"
 #include "usb_device.h"
-#ifdef HAS_W5100
+#include "utility/dbgu.h"
+#ifdef HAS_WIZNET
 #include "ethernet.h"
 #endif
 
@@ -49,9 +50,6 @@ UART_HandleTypeDef huart3;
 static uint8_t inbyte1;
 static uint8_t inbyte2;
 static uint8_t inbyte3;
-
-static uint8_t DBGU_RxByte;
-static uint8_t DBGU_RxReady;
 
 /* USART1 init function */
 
@@ -223,44 +221,6 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   }
 } 
 
-int fputc(int ch, FILE *f) {
-  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
-
-  return ch;
-}
-
-signed int fputs(const char *pStr, FILE *pStream)
-{
-    signed int num = 0;
-
-    while (*pStr != 0) {
-
-        if (fputc(*pStr, pStream) == -1) {
-
-            return -1;
-        }
-        num++;
-        pStr++;
-    }
-
-    return num;
-}
-
-void DBGU_init(void) {
-  MX_USART1_UART_Init();
-}
-
-unsigned int DBGU_IsRxReady() {
-    return DBGU_RxReady;
-}
-
-
-unsigned char DBGU_GetChar(void) {
-  DBGU_RxReady = 0;
-  return DBGU_RxByte;
-}
-
-
 __weak void UART2_Rx_Callback(uint8_t data)
 {
   /* NOTE : This function Should not be modified, when the callback is needed,
@@ -304,13 +264,13 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 
   } else if(UartHandle->Instance==USART2) {
     CDC_Receive_next(CDC1);
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
     NET_Receive_next(NET1);
 #endif
 
   } else if(UartHandle->Instance==USART3) {
     CDC_Receive_next(CDC2);
-#ifdef HAS_W5100
+#ifdef HAS_WIZNET
     NET_Receive_next(NET2);
 #endif
 

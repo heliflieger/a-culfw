@@ -55,6 +55,7 @@ extern void Error_Handler(void);
 
 void MX_SPI1_Init(void);
 
+uint8_t spi_send(uint8_t data);
 uint8_t spi2_send(uint8_t data);
 
 uint8_t spi2_transmit_burst(uint8_t *pData, uint16_t Size);
