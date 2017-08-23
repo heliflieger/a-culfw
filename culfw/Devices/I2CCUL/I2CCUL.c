@@ -1,8 +1,4 @@
-/* Copyright Rudolf Koenig, 2008.
-   Released under the GPL Licence, Version 2
-   Inpired by the MyUSB USBtoSerial demo, Copyright (C) Dean Camera, 2008.
-	 
-	 I2CCUL - ProMini(ATmega328) as I2CSlave
+/*  I2CCUL - ProMini(ATmega328) as I2CSlave
 	 
 	 Diggen85 (Benny_Stark@live.de)
 	 19.01.2017	-	Add Communication as I2C Slave
