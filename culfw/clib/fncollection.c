@@ -428,6 +428,11 @@ version(char *in)
   } else {
      DS_P( PSTR(" (F-Band: 868MHz)") );
   }
+#ifdef HAS_I2CSLAVE
+		DS_P( PSTR(" (I2C: 0x") );
+		display_hex2(i2cSlaveAddr);
+		DS_P( PSTR(")") );
+#endif	
   DNL();
 }
 

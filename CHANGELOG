@@ -1,5 +1,9 @@
 ## Changelog:
 
+#### 1.26.00
+- Add I2C slave
+- Add I2CCUL: Example device for communication over I2C
+
 #### 1.25.02
 - megaCUL: changed buffer size
 
