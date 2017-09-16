@@ -1,5 +1,8 @@
 ## Changelog:
 
+#### 1.26.01
+- MapleCUN/CUBe: Fix SlowRF/ethernet keepalive
+
 #### 1.26.00
 - Add I2C slave
 - Add I2CCUL: Example device for communication over I2C
