@@ -61,6 +61,8 @@ all:
 	make -C CUBe/bootloader all
 	make -C MapleCUN clean
 	make -C MapleCUN all
+	make -C I2CCUL clean
+	make -C I2CCUL all
 	find . -name \*.eep | xargs rm
 	find . -name \*.elf | xargs rm
 	find . -name \*.lss | xargs rm
@@ -101,3 +103,5 @@ clean:
 	make -C CUBe clean
 	make -C CUBe/bootloader clean
 	make -C MapleCUN clean
+	make -C I2CCUL clean
+	

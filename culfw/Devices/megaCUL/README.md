@@ -8,7 +8,8 @@ FLASHING FIRMWARE
 
 For programming the device with a-culfw execute:
 
-	make program
+	make clean
+	make
 
 on the computer itself. This will require some tools installed upfront. 
 Use:

@@ -55,7 +55,7 @@
 #include "somfy_rts.h"
 #endif
 #ifdef HAS_MBUS
-#include "rf_mbus.h"                    // for rf_mbus_func, rf_mbus_task
+#include "rf_mbus.h"
 #endif
 #ifdef HAS_KOPP_FC
 #include "kopp-fc.h"

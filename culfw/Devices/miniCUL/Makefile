@@ -42,7 +42,6 @@ SRC = $(TARGET).c                                                    \
 		../../clib/ttydata.c                                 \
 		../../clib/spi.c                                     \
 		../../clib/rf_mbus.c                                 \
-		../../clib/rf_mbus.c                                 \
 		../../clib/mbus/3outof6.c                            \
 		../../clib/mbus/mbus_packet.c                        \
 		../../clib/mbus/crc.c                                \
@@ -135,15 +134,15 @@ usbprogram:
 
 avdude_arduino868Mhz: TARGET=miniCUL
 avdude_arduino868Mhz: FREQUENCE=_868MHZ
-avdude_arduino868Mhz: MCU=atmega32u4
-avdude_arduino868Mhz: PORT=/dev/ttyACM0
+avdude_arduino868Mhz: MCU=atmega328p
+avdude_arduino868Mhz: PORT=/dev/ttyUSB0
 avdude_arduino868Mhz: BAUD=57600
 avdude_arduino868Mhz: do_avdude
 
 avdude_arduino433Mhz: TARGET=miniCUL
 avdude_arduino433Mhz: FREQUENCE=_433MHZ
-avdude_arduino433Mhz: MCU=atmega32u4
-avdude_arduino433Mhz: PORT=/dev/ttyACM0
+avdude_arduino433Mhz: MCU=atmega328p
+avdude_arduino433Mhz: PORT=/dev/ttyUSB0
 avdude_arduino433Mhz: BAUD=57600
 avdude_arduino433Mhz: do_avdude
 
