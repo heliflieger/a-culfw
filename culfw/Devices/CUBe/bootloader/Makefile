@@ -94,7 +94,7 @@ all: $(OUTPUT).bin
 	$(SIZE) $(OUTPUT).elf
 		
 %.bin: %.elf
-	$(OC) -O binary $< $@
+	$(OC) -O binary $< ../$@
 
 %.hex: %.elf
 	$(OC) -O ihex $< $@

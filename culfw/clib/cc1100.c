@@ -265,6 +265,9 @@ ccInitChip(uint8_t *cfg)
 
   ccStrobe( CC1100_SCAL );
   my_delay_ms(1);
+#ifdef USE_HAL
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+#endif
 }
 
 //--------------------------------------------------------------------

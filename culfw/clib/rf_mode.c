@@ -275,5 +275,8 @@ void rf_mode_task(void) {
           break;
       }
     }
+#if defined(HAS_MULTI_CC) && (HAS_MULTI_CC > 1)
+    CC1101.instance = 0;
+#endif
 }
 #endif

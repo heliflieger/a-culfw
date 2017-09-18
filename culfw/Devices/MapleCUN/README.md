@@ -4,7 +4,7 @@
 
 - STM32 Flash loader demonstrator: http://www.st.com/en/development-tools/flasher-stm32.html
 - oder alternativ stm32flash : https://sourceforge.net/p/stm32flash/wiki/Home
-- Maple mini Bootloader: https://github.com/rogerclarkmelbourne/STM32duino-bootloader/raw/master/STM32F1/binaries/maple_mini_boot20.bin
+- Maple mini Bootloader: https://github.com/rogerclarkmelbourne/STM32duino-bootloader/blob/master/binaries/maple_mini_boot20.bin
 - dfu-util: http://dfu-util.sourceforge.net/
 - a-culfw: https://www.mediafire.com/folder/iuf7lue8r578c/a-culfw
 - USB zu TTL Adapter. 
