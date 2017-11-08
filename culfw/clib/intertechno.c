@@ -106,6 +106,7 @@ uint16_t heeusync_low = 1300;
 #define DATATYPE_HEEU     3
 
 uint8_t it_repetition = 6;
+uint8_t it_repetition_set = 0;
 uint8_t restore_asksin = 0;
 uint8_t restore_moritz = 0;
 unsigned char it_frequency[] = {0x10, 0xb0, 0x71};
@@ -352,6 +353,15 @@ it_send (char *in, uint8_t datatype) {
       mode = 1; // IT V3
       
     }
+	
+	//First call of function?
+	if(it_repetition_set == 0)
+	{
+		//yep, first call -> read it_repetition from eeprom
+		it_repetition = erb(EE_ITREPETITIONS);
+		it_repetition_set = 1;
+	}
+	
     for(i = 0; i < it_repetition; i++)  {
       if (datatype == DATATYPE_IT) {
         if (mode == 1) {    
@@ -507,12 +517,22 @@ it_send (char *in, uint8_t datatype) {
 void
 it_func(char *in)
 {
+	uint8_t it_repetition_new = 6;
+	
 	if (in[1] == 't') {
 			fromdec (in+2, (uint8_t *)&it_interval);
 			DU(it_interval,0); DNL();
 	} else if (in[1] == 's') {
         if (in[2] == 'r') {		// Modify Repetition-counter
-            fromdec (in+3, (uint8_t *)&it_repetition);
+            fromdec (in+3, (uint8_t *)&it_repetition_new);
+			
+			//it_repetition counter changed?
+			if (it_repetition != it_repetition_new)
+			{
+				//Yes, counter changed -> change global var & write changed value to eeprom
+				it_repetition = it_repetition_new;
+				ewb(EE_ITREPETITIONS, it_repetition);
+			}
             MULTICC_PREFIX();
             DU(it_repetition,0); DNL();
 #ifdef HAS_HOMEEASY
