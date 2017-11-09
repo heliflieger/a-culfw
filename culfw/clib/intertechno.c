@@ -359,6 +359,8 @@ it_send (char *in, uint8_t datatype) {
 	{
 		//yep, first call -> read it_repetition from eeprom
 		it_repetition = erb(EE_ITREPETITIONS);
+		//check if it is 0xff (default eeprom value), then set default to 6
+		if(it_repetition == 0xff) it_repetition = 6;
 		it_repetition_set = 1;
 	}
 	
