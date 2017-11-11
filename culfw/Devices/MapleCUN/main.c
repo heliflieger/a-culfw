@@ -512,6 +512,11 @@ int main(void)
   // Main loop
   while (1) {
 
+#ifdef HAS_UART
+    if(!USB_IsConnected)
+      uart_task();
+#endif
+
     CDC_Task();
     Minute_Task();
 

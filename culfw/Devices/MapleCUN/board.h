@@ -62,6 +62,8 @@
 #define CDC_BAUD_RATE           115200
 #define USB_IsConnected		      (CDC_isConnected(0))
 #define HAS_XRAM
+#define UART_BAUD_RATE          115200
+#define HAS_UART                1
 #define USE_RF_MODE
 #define USE_HAL
 #define HAS_ONEWIRE             10        // OneWire Support

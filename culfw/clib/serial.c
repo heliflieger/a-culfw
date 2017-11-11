@@ -21,6 +21,11 @@ static const Pin pins[] = {
 
 #endif
 
+#ifdef STM32
+#include "hal_usart.h"
+#include "cdc.h"
+#endif
+
 //#include "led.h"
 #include "serial.h"
 
@@ -55,6 +60,23 @@ void ISR_Usart0(void)
 
 }
 #elif defined STM32
+
+void UART_Tx_Callback(void) {
+  static uint8_t TXdata;
+
+  if(!USB_IsConnected) {
+    if (TTY_Tx_Buffer.nbytes) {
+      TXdata = rb_get(&TTY_Tx_Buffer);
+      HAL_UART_Write(UART_NUM, &TXdata, 1);
+    }
+  }
+}
+
+void UART_Rx_Callback(uint8_t data) {
+  if(!USB_IsConnected) {
+    rb_put(&TTY_Rx_Buffer, data);
+  }
+}
 
 #else
 // TX complete (data buffer empty) 
@@ -116,6 +138,8 @@ void uart_init(unsigned int baudrate)
     USART_SetTransmitterEnabled(AT91C_BASE_US0, 1);
     USART_SetReceiverEnabled(AT91C_BASE_US0, 1);
 #elif defined STM32
+    HAL_UART_init(UART_NUM);
+    HAL_UART_Set_Baudrate(UART_NUM,baudrate);
 
 #else
      /* Set baud rate */
@@ -148,7 +172,10 @@ void uart_flush(void)
   if (!bit_is_set(AT91C_BASE_US0->US_IMR, AT91C_US_TXRDY) && TTY_Tx_Buffer.nbytes)
     AT91C_BASE_US0->US_IER = AT91C_US_TXRDY;
 #elif defined STM32
-  //TODO STM32 UART flush
+    if (TTY_Tx_Buffer.nbytes && HAL_UART_TX_is_idle(UART_NUM) ) {
+      UART_Tx_Callback();
+    }
+
 #else
      if (!bit_is_set(UCSR0B, UDRIE0) && TTY_Tx_Buffer.nbytes)
 	  UCSR0B |= _BV(UDRIE0);

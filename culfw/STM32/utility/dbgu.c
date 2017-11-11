@@ -30,7 +30,9 @@ void SWO_PrintChar(char c, uint8_t portNo) {
 }
 
 int fputc(int ch, FILE *f) {
+#ifndef HAS_UART
   HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+#endif
   SWO_PrintChar((uint8_t)ch,0);
   return ch;
 }
@@ -53,7 +55,9 @@ signed int fputs(const char *pStr, FILE *pStream)
 }
 
 void DBGU_init(void) {
+#ifndef HAS_UART
   MX_USART1_UART_Init();
+#endif
 }
 
 unsigned int DBGU_IsRxReady() {

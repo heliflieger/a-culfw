@@ -82,8 +82,8 @@ uint32_t EE_read_baud(uint8_t num) {
 #endif
 
 void cdc_uart_init(void) {
-  MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
+  HAL_UART_init(0);
+  HAL_UART_init(1);
 
 #ifdef HAS_WIZNET
   TRACE_DEBUG("UART Baud: %u@%u\n\r", 0,EE_read_baud(0));
