@@ -36,7 +36,7 @@
 #define USB_DESCRIPTOR_SN	'1'
 #define HAS_XRAM
 #define UART_BAUD_RATE          115200
-//#define HAS_UART                1
+#define HAS_UART                1
 #define USE_RF_MODE
 #define USE_HAL
 #define HAS_ONEWIRE             10        // OneWire Support
