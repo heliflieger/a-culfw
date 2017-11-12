@@ -91,6 +91,7 @@ void do_wdt_enable(uint8_t t);
 # define EE_FS_LAST           (EE_LOGENABLED+1)
 #endif
 
+# define EE_ITREPETITIONS     (EE_LCD_LAST+1)
 
 
 extern uint8_t led_mode;
