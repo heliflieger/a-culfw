@@ -105,7 +105,7 @@ uint16_t heeusync_low = 1300;
 #define DATATYPE_HE       2
 #define DATATYPE_HEEU     3
 
-uint8_t it_repetition = 6;
+uint8_t it_repetition = 0xff;
 uint8_t restore_asksin = 0;
 uint8_t restore_moritz = 0;
 unsigned char it_frequency[] = {0x10, 0xb0, 0x71};
@@ -352,6 +352,16 @@ it_send (char *in, uint8_t datatype) {
       mode = 1; // IT V3
       
     }
+	
+	//First call of function and no it_repetition was set before with isr cmd?
+	if(it_repetition == 0xff)
+	{
+		//yep, first call -> read it_repetition from eeprom
+		it_repetition = erb(EE_ITREPETITIONS);
+		//check if it is 0xff (uninitialized eeprom value), then set default to 6
+		if(it_repetition == 0xff) it_repetition = 6;
+	}
+	
     for(i = 0; i < it_repetition; i++)  {
       if (datatype == DATATYPE_IT) {
         if (mode == 1) {    
@@ -507,19 +517,39 @@ it_send (char *in, uint8_t datatype) {
 void
 it_func(char *in)
 {
+	uint8_t it_repetition_old = 0xff;
+	
 	if (in[1] == 't') {
 			fromdec (in+2, (uint8_t *)&it_interval);
 			DU(it_interval,0); DNL();
 	} else if (in[1] == 's') {
-        if (in[2] == 'r') {		// Modify Repetition-counter
-            fromdec (in+3, (uint8_t *)&it_repetition);
-            MULTICC_PREFIX();
-            DU(it_repetition,0); DNL();
+        if (in[2] == 'r') {
+			// Modify Repetition-counter (on the fly or eeprom default value)
+			
+			//RAM or EEPROM value?
+			if (in[3] == 'd') {
+				// Modify default Repetition-counter value (which gets used when no isr cmd is received, ex.: on firmware start)
+				fromdec (in+4, (uint8_t *)&it_repetition);
+				it_repetition_old = erb(EE_ITREPETITIONS);
+				
+				//Does new value differ from old value (to prevent too much eeprom writes)?
+				if(it_repetition != it_repetition_old)
+				{
+					//write new value to eeprom
+					ewb(EE_ITREPETITIONS, it_repetition);
+				}
+				
+			}else{
+				//Modify Repetition-counter on the fly in RAM
+				fromdec (in+3, (uint8_t *)&it_repetition);
+				MULTICC_PREFIX();
+				DU(it_repetition,0); DNL();
+			}
 #ifdef HAS_HOMEEASY
-            } else if (in[2] == 'h') {		// HomeEasy
-                it_send (in, DATATYPE_HE);	
-            } else if (in[2] == 'e') {		// HomeEasy EU
-                it_send (in, DATATYPE_HEEU);	
+        } else if (in[2] == 'h') {		// HomeEasy
+            it_send (in, DATATYPE_HE);	
+        } else if (in[2] == 'e') {		// HomeEasy EU
+            it_send (in, DATATYPE_HEEU);	
 #endif	
         } else {
             it_send (in, DATATYPE_IT);				// Sending real data
