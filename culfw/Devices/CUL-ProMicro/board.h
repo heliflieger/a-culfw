@@ -55,13 +55,13 @@
 #if defined(_868MHZ)
 #    define HAS_HMS
 #    define HAS_ESA
-#    define HAS_MORITZ
-//#    define HAS_HOERMANN
-//#  define HAS_MBUS                      // PROGMEM: 2536
-#  define MBUS_NO_TX                       // PROGMEM:  962
-#  define HAS_RFNATIVE                  // PROGMEM:  580
-//#  define LACROSSE_HMS_EMU              // PROGMEM: 2206
-#  define HAS_KOPP_FC                   // PROGMEM: 3370
+//# define HAS_MORITZ			// PROGMEM: 1676
+//# define HAS_HOERMANN
+//# define HAS_MBUS			// PROGMEM: 2536
+#  define MBUS_NO_TX			// PROGMEM:  962
+#  define HAS_RFNATIVE			// PROGMEM:  580
+#  define LACROSSE_HMS_EMU		// PROGMEM: 2206
+#  define HAS_KOPP_FC			// PROGMEM: 3370
 #endif
 
 
