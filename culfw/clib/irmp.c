@@ -302,11 +302,11 @@
 #endif
 
 #ifdef unix                                                                 // test on linux/unix
+#include <inttypes.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
+#include <unistd.h>
 
 #define ANALYZE
 #define PROGMEM
@@ -317,6 +317,7 @@
 #ifdef WIN32
 #include <stdio.h>
 #include <string.h>
+
 typedef unsigned char   uint8_t;
 typedef unsigned short  uint16_t;
 #define ANALYZE
@@ -328,6 +329,7 @@ typedef unsigned short  uint16_t;
 #ifdef PIC_CCS_COMPILER
 
 #include <string.h>
+
 typedef unsigned int8   uint8_t;
 typedef unsigned int16  uint16_t;
 #define PROGMEM
@@ -335,12 +337,12 @@ typedef unsigned int16  uint16_t;
 
 #else // AVR:
 
+#include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
-#include <avr/io.h>
 #include <util/delay.h>
-#include <avr/pgmspace.h>
 
 #endif  // PIC_CCS_COMPILER
 

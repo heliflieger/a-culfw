@@ -22,13 +22,14 @@
 
 #include <avr/io.h>
 #include <avr/pgmspace.h>
+#include <string.h>
+
 #include "board.h"
 #include "display.h"
-#include "uip.h"
 #include "drivers/interfaces/network.h"            // network_send
 #include "mdns_sd.h"
+#include "uip.h"
 #include "version.h"
-#include <string.h>
 
 #ifdef HAS_MDNS
 

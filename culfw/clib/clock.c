@@ -1,36 +1,39 @@
-#include <avr/io.h>
-#include <avr/wdt.h>
-#include <avr/interrupt.h>
+#include <avr/io.h>                     // for SREG
+#include <avr/interrupt.h>              // for ISR, ISR_BLOCK, cli
+#include <avr/wdt.h>                    // for wdt_reset
+#include <stdint.h>                     // for uint8_t, int16_t, uint32_t
 
-#include "board.h"
-#include "led.h"
+#include "board.h"                      // for HAS_IRRX, HAS_FHT_80b, etc
+#include "led.h"                        // for LED_TOGGLE
 #ifdef XLED
 #include "xled.h"
 #endif
-#include "fncollection.h"
 #include "clock.h"
-#include "display.h"
-#include "battery.h"
-#include "joy.h"
-#include "fht.h"
-#include "fswrapper.h"                 // fs_sync();
-#include "rf_send.h"                   // credit_10ms
-#include "mysleep.h"
-#include "pcf8833.h"
-#ifdef HAS_USB
-#include "cdc.h"
-#endif
-#include "rf_router.h"                  // rf_router_flush();
-#include "ntp.h"
+#include "display.h"                    // for DH2, DNL
+#include "fht.h"                        // for fht_tf_timeout_Array, etc
+#include "fncollection.h"               // IWYU pragma: keep (for led_mode)
+#include "ntp.h"                        // for ntp_hsec, ntp_sec, etc
+#include "rf_router.h"                  // for rf_router_flush, etc
+#include "rf_send.h"                    // for credit_10ms, MAX_CREDIT
 #ifdef HAS_ONEWIRE
-#include "onewire.h"
+#include "onewire.h"                    // for onewire_HsecTask, etc
 #endif
 #ifdef HAS_VZ
-#include "vz.h"
+#include "vz.h"                         // for vz_sectask
 #endif
+#ifdef HAS_WIZNET
+#include <DHCP/dhcp.h>                  // for DHCP_time_handler
+#endif
+#ifdef JOY_PIN1
+#include "cdc.h"
+#include "joy.h"
+#include "mysleep.h"
+#endif
+#include "hw_autodetect.h"
 
 #if defined (HAS_IRRX) || defined (HAS_IRTX)
-#include "ir.h"
+#include "ir.h"                         // for ir_sample, ir_send_data
+
 uint8_t ir_ticks = 0;
 uint8_t ir_ticks_thrd = 0;
 #endif
@@ -40,11 +43,9 @@ volatile uint8_t  clock_hsec;
 
 // count & compute in the interrupt, else long runnning tasks would block
 // a "minute" task too long
-#ifdef ARM
-void ISR_Timer0() 
+#ifdef USE_HAL
+void clock_TimerElapsedCallback(void)
 {
-	// Clear status bit to acknowledge interrupt
-	AT91C_BASE_TC0->TC_SR;
 #else
 ISR(TIMER0_COMPA_vect, ISR_BLOCK)
 {
@@ -180,12 +181,19 @@ Minute_Task(void)
 #ifdef HAS_ONEWIRE
   // Check if a running conversion is done
   // if HMS Emulation is on, and the Minute timer has expired
-  onewire_HsecTask ();
+  #ifdef USE_HW_AUTODETECT
+  if(has_onewire())
+  #endif
+    onewire_HsecTask ();
 #endif
 
   if(clock_hsec<125)
     return;
   clock_hsec = 0;       // once per second from here on.
+
+#ifdef HAS_WIZNET
+  DHCP_time_handler();
+#endif
 
 #ifndef XLED
   if(led_mode & 2)
@@ -197,7 +205,10 @@ Minute_Task(void)
 
 #ifdef HAS_ONEWIRE
   // if HMS Emulation is on, check the HMS timer
-  onewire_SecTask ();
+  #ifdef USE_HW_AUTODETECT
+  if(has_onewire())
+  #endif
+    onewire_SecTask ();
 #endif
 #ifdef HAS_VZ
   vz_sectask();

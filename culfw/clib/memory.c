@@ -1,8 +1,11 @@
-#include <stdlib.h>
-#include <string.h>
-#include <inttypes.h>
-#include <avr/io.h>
-#include "display.h"
+#include <avr/io.h>                     // IWYU pragma: keep (for AVR_STACK_POINTER_REG)
+// IWYU pragma: no_include <avr/common.h>
+#include <avr/pgmspace.h>               // for PSTR
+#include <stdint.h>                     // for uint16_t
+#include <stdlib.h>                     // for free, __malloc_heap_end, etc
+#include <string.h>                     // for memset
+
+#include "display.h"                    // for DNL, DS_P, DC, DU, etc
 
 extern char * const __brkval;
 

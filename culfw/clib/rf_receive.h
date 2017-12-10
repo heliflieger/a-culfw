@@ -1,27 +1,9 @@
 #ifndef _RF_RECEIVE_H
 #define _RF_RECEIVE_H
 
-
+#include <avr/io.h>                     // for _BV
+#include <stdint.h>                     // for uint8_t
 #include "board.h"
-
-#include "fband.h"
-#include "helper.h"
-
-#include "rf_receive_bucket.h"
-#ifdef HAS_TCM97001
-#include "rf_receive_tcm97001.h"
-#endif
-#ifdef HAS_IT
-#include "rf_receive_it.h"
-#endif
-#include "rf_receive_tx3.h"
-#include "rf_receive_revolt.h"
-#ifdef HAS_ESA
-#include "rf_receive_esa.h"
-#endif
-#ifdef HAS_HMS
-#include "rf_receive_hms.h"
-#endif
 
 #define TYPE_EM      'E'
 
@@ -56,7 +38,13 @@ uint8_t cksum1(uint8_t s, uint8_t *buf, uint8_t len);
 uint8_t cksum2(uint8_t *buf, uint8_t len);
 uint8_t cksum3(uint8_t *buf, uint8_t len);
 
+#ifndef NUM_SLOWRF
+#define NUM_SLOWRF    1
+#endif
+
+#ifndef USE_RF_MODE
 extern uint8_t tx_report;
+#endif
 
 void RfAnalyze_Task(void);
 

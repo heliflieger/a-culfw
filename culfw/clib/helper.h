@@ -6,8 +6,7 @@
 #ifndef _HELPER_H
 #define _HELPER_H
 
-#include <stdio.h>
-#include "rf_receive_bucket.h"
+#include <stdint.h>                     // for uint8_t
 
 
 

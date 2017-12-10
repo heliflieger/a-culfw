@@ -15,7 +15,8 @@ FLASHING FIRMWARE
 For programming the device simple call ./flash.sh
 or execute:
 
-	make program
+	make clean
+	make
 
 on the computer itself. This will require some tools installed upfront. 
 Use:

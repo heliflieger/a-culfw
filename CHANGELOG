@@ -1,5 +1,100 @@
 ## Changelog:
 
+#### 1.26.01
+- MapleCUN/CUBe: Fix SlowRF/ethernet keepalive
+
+#### 1.26.00
+- Add I2C slave
+- Add I2CCUL: Example device for communication over I2C
+
+#### 1.25.02
+- megaCUL: changed buffer size
+
+#### 1.25.01
+- MapleCUN: Fix baud rate setting command
+
+#### 1.25.00
+- ARM Models: 
+  - Add onewire
+  - Improve hardware autodetection
+- MapleCUN: Add 3rd SlowRF transceiver
+
+#### 1.24.02
+- Add CC113L to hardware autodetection
+- Fix tcp_putchar
+- Fix MBUS for multi CC1101 devices
+
+#### 1.24.01
+- MapleCUN: Add bootloader
+
+#### 1.24.00
+- ARM Models: 
+  - Rework of multi CC1101
+  - Add RF mode switching
+  - Add hardware autodetection
+- MapleCUN: Add W5500
+
+#### 1.23.09
+- Add new device: megaCUL
+- megaCUL: disabled by default: Honeywell evohome
+- miniCUL: Code cleanup
+- miniCUL: disabled by default: Honeywell evohome, M-Bus, ZWave
+- rpiaddon: Code cleanup
+- rpiaddon: disabled by default: Honeywell evohome
+
+#### 1.23.08
+- miniCUL: added Hoermann send + RFR Filter
+- miniCUL: Code cleanup
+- rpiaddon: added Hoermann send + RFR Filter
+
+#### 1.23.07
+- ARM Models: fix MBus
+
+#### 1.23.06
+- FIX: Remove LED flicker
+- Use include-what-you-use (and some manual fixes) to fix many header includes.
+
+#### 1.23.05
+- CUBe: fix rf_native 
+
+#### 1.23.04
+- MapleCUL/MapleCUN: 
+  - Access of UART2+3 via USB/network
+  - Add multi CC1101 support
+  - Activate Hoermann send
+- ARM Models: add HAL
+
+#### 1.23.03
+- Hoermann Send (activated for CUBe + CUL-HM-CFG)
+
+#### 1.23.02
+- Fix IT V3 Dimmer - send mode
+
+#### 1.23.01
+- Fix nanoCUL device
+- Fix miniCUL flash Skript
+- Change sending for IT V1 D bit (Unitec/Intertek)
+
+#### 1.23.00
+- Support for EIM-826 (Unitec/Intertek) (Forum #48515 and #45022)
+- Code upgrade from culfw Version 1.67 (2016-11-26)
+- Hoermann Send (activated for CUL + nanoCUL)
+- RFR filter: ufKERV forwards only messages starting with one of KERV
+- intertechno: modify interval
+- ZWave: no ack for routed packages (work in progress)
+- RFR: do not report FHT if T01 is zero and RFR target is on (Forum #50756)
+
+#### 1.22.00
+- Add STM32 support 
+- Add new device: MapleCUL/MapleCUN
+
+#### 1.21.02
+- miniCUL: added MULTI_FREQ_DEVICE in the board definition
+
+#### 1.21.01
+- Fix define dependencies 
+- Add CUL-ProMini with 8Mhz)
+
 #### 1.21.00
 - Fix receive of GT-WT-02
 

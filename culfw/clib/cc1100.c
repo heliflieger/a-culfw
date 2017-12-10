@@ -1,23 +1,26 @@
-#include <stdio.h>
-#include <string.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-#include <avr/eeprom.h>
+#include <avr/pgmspace.h>               // for PROGMEM, __LPM, PSTR
+#include <stdint.h>                     // for uint8_t
 
-
-#include "delay.h"
-#include "display.h"
-#include "fncollection.h"
 #include "cc1100.h"
-
-#include "rf_asksin.h"  // asksin_on
-#include "rf_moritz.h"  // moritz_on
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DH2, DNL, DS_P, DC, DU
+#include "fncollection.h"               // for ewb, EE_CC1100_CFG, erb, etc
+#include "rf_asksin.h"                  // for asksin_on
+#include "stringfunc.h"                 // for fromhex
+#include "rf_mode.h"
+#include "multi_CC.h"
 
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for moritz_on
 #endif
 
+#ifdef USE_HAL
+#include "hal.h"
+#endif
+
+#ifndef USE_RF_MODE
 uint8_t cc_on;
+#endif
 
 // NOTE: FS20 devices can receive/decode signals sent with PA ramping,
 // but the CC1101 cannot
@@ -102,6 +105,61 @@ const PROGMEM const uint8_t CC1100_CFG[EE_CC1100_CFG_SIZE] = {
    SimpleRX: Async, SimpleTX: Async+Unmodulated
  */
 };
+#if defined(HAS_MULTI_CC) && (NUM_SLOWRF > 1)
+const PROGMEM const uint8_t CC1100_CFG1[EE_CC1100_CFG_SIZE] = {
+// CULFW   IDX NAME     RESET STUDIO COMMENT
+   0x0D, // 00 IOCFG2   *29   *0B    GDO2 as serial output
+   0x2E, // 01 IOCFG1    2E    2E    Tri-State
+   0x2D, // 02 IOCFG0   *3F   *0C    GDO0 for input
+   0x07, // 03 FIFOTHR   07   *47
+   0xD3, // 04 SYNC1     D3    D3
+   0x91, // 05 SYNC0     91    91
+   0x3D, // 06 PKTLEN   *FF    3D
+   0x04, // 07 PKTCTRL1  04    04
+   0x32, // 08 PKTCTRL0 *45    32
+   0x00, // 09 ADDR      00    00
+   0x00, // 0A CHANNR    00    00
+   0x06, // 0B FSCTRL1  *0F    06    152kHz IF Frquency
+   0x00, // 0C FSCTRL0   00    00
+   0x10, // 0D FREQ2    *1E    21    433.92 (def:800MHz)
+   0xb0, // 0E FREQ1    *C4    65
+   0x71, // 0F FREQ0    *EC    e8
+   //0x55, // 10 MDMCFG4  *8C    55    bWidth 325kHz
+   0x57, // 10 MDMCFG4  *8C    55    bWidth 325kHz
+   //0xe4, // 11 MDMCFG3  *22   *43    Drate:1500 ((256+228)*2^5)*26000000/2^28
+   0xC4, // 11 MDMCFG3 (x)   DataRate: 5603,79 Baud ((256+196)*2^7)*26000000/(2^28)
+   0x30, // 12 MDMCFG2  *02   *B0    Modulation: ASK
+   0x23, // 13 MDMCFG1  *22    23
+   0xb9, // 14 MDMCFG0  *F8    b9    ChannelSpace: 350kHz
+   0x00, // 15 DEVIATN  *47    00
+   0x07, // 16 MCSM2     07    07
+   0x00, // 17 MCSM1     30    30
+   0x18, // 18 MCSM0    *04    18    Calibration: RX/TX->IDLE
+   0x14, // 19 FOCCFG   *36    14
+   0x6C, // 1A BSCFG     6C    6C
+   0x07, // 1B AGCCTRL2 *03   *03    42 dB instead of 33dB
+   0x00, // 1C AGCCTRL1 *40   *40
+   0x90, // 1D AGCCTRL0 *91   *92    4dB decision boundery
+   0x87, // 1E WOREVT1   87    87
+   0x6B, // 1F WOREVT0   6B    6B
+   0xF8, // 20 WORCTRL   F8    F8
+   0x56, // 21 FREND1    56    56
+   0x11, // 22 FREND0   *16    17    0x11 for no PA ramping
+   0xE9, // 23 FSCAL3   *A9    E9
+   0x2A, // 24 FSCAL2   *0A    2A
+   0x00, // 25 FSCAL1    20    00
+   0x1F, // 26 FSCAL0    0D    1F
+   0x41, // 27 RCCTRL1   41    41
+   0x00, // 28 RCCTRL0   00    00
+
+ /*
+ Conf1: SmartRF Studio:
+   Xtal: 26Mhz, RF out: 0dB, PA ramping, Dev:5kHz, Data:1kHz, Modul: ASK/OOK,
+   RF: 868.30MHz, Chan:350kHz, RX Filter: 325kHz
+   SimpleRX: Async, SimpleTX: Async+Unmodulated
+ */
+};
+#endif
 
 #if defined(HAS_FASTRF) || defined(HAS_RF_ROUTER)
 const PROGMEM const uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
@@ -154,12 +212,8 @@ const PROGMEM const uint8_t FASTRF_CFG[EE_CC1100_CFG_SIZE] = {
 uint8_t
 cc1100_sendbyte(uint8_t data)
 {
-#ifdef ARM
-  // Send data
-  while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_TXEMPTY) == 0);
-  AT91C_BASE_SPI0->SPI_TDR = data;
-  while ((AT91C_BASE_SPI0->SPI_SR & AT91C_SPI_RDRF) == 0);
-  return AT91C_BASE_SPI0->SPI_RDR & 0xFF;
+#ifdef USE_HAL
+  return spi_send(data);
 #else
   SPDR = data;		        // send byte
   while (!(SPSR & _BV (SPIF)));	// wait until transfer finished
@@ -171,15 +225,14 @@ cc1100_sendbyte(uint8_t data)
 void
 ccInitChip(uint8_t *cfg)
 {
+#ifndef USE_RF_MODE
 #ifdef HAS_MORITZ
   moritz_on = 0; //loading this configuration overwrites moritz cfg
 #endif
+#endif
 
-#ifdef ARM
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID;
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN); 	//Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);		//Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);		//Enable PIO control
+#ifdef USE_HAL
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
 #else
   EIMSK &= ~_BV(CC1100_INT);                 
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
@@ -212,6 +265,9 @@ ccInitChip(uint8_t *cfg)
 
   ccStrobe( CC1100_SCAL );
   my_delay_ms(1);
+#ifdef USE_HAL
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+#endif
 }
 
 //--------------------------------------------------------------------
@@ -255,6 +311,18 @@ cc_factory_reset(void)
   for(uint8_t i = 0; i < sizeof(FASTRF_CFG); i++)
     ewb(t++, __LPM(FASTRF_CFG+i));
 #endif
+#if defined(HAS_MULTI_CC)
+#if NUM_SLOWRF > 1
+  t = EE_CC1100_CFG1;
+  for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++)
+    ewb(t++, __LPM(CC1100_CFG1+i));
+#endif
+#if NUM_SLOWRF > 2
+  t = EE_CC1100_CFG2;
+  for(uint8_t i = 0; i < sizeof(CC1100_CFG); i++)
+    ewb(t++, __LPM(CC1100_CFG+i));
+#endif
+#endif
 
 #ifdef MULTI_FREQ_DEVICE
   // check 433MHz version marker and patch default frequency
@@ -289,8 +357,8 @@ void
 ccTX(void)
 {
   uint8_t cnt = 0xff;
-#ifdef ARM
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID;
+#ifdef USE_HAL
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE);
 #else
   EIMSK  &= ~_BV(CC1100_INT);
 #endif
@@ -311,8 +379,8 @@ ccRX(void)
   while(cnt-- &&
         (ccStrobe(CC1100_SRX) & CC1100_STATUS_STATE_BM) != CC1100_STATE_RX)
     my_delay_us(10);
-#ifdef ARM
-    AT91C_BASE_AIC->AIC_IECR = 1 << CC1100_IN_PIO_ID;
+#ifdef USE_HAL
+    hal_enable_CC_GDOin_int(CC_INSTANCE,TRUE);
 #else
   EIMSK |= _BV(CC1100_INT);
 #endif
@@ -335,12 +403,17 @@ ccreg(char *in)
 
     if(hb == 0x99) {
       for(uint8_t i = 0; i < 0x30; i++) {
+#ifdef HAS_MULTI_CC
+        if((i&7) == 0)
+          multiCC_prefix();
+#endif
         DH2(cc1100_readReg(i));
         if((i&7) == 7)
           DNL();
       }
     } else {
       out = cc1100_readReg(hb);
+      MULTICC_PREFIX();
       DC('C');                    // prefix
       DH2(hb);                    // register number
       DS_P( PSTR(" = ") );
@@ -386,42 +459,6 @@ ccStrobe(uint8_t strobe)
 
 //--------------------------------------------------------------------
 
-#ifdef ARM
-
-#ifdef CCCOUNT
-transceiver_t CCtransceiver[CCCOUNT] = CCTRANSCEIVERS;
-#endif
-
-uint8_t
-cc1100_readReg2(uint8_t addr, transceiver_t* device)
-{
-  device->CS_base->PIO_CODR = (1<<device->CS_pin);	//assert CS
-  cc1100_sendbyte( addr|CC1100_READ_BURST );
-  uint8_t ret = cc1100_sendbyte( 0 );
-  device->CS_base->PIO_SODR = (1<<device->CS_pin);	//deassert CS
-  return ret;
-}
-
-void
-cc1100_writeReg2(uint8_t addr, uint8_t data, transceiver_t* device)
-{
-  device->CS_base->PIO_CODR = (1<<device->CS_pin);	//assert CS
-  cc1100_sendbyte( addr|CC1100_WRITE_BURST );
-  cc1100_sendbyte( data );
-  device->CS_base->PIO_SODR = (1<<device->CS_pin);	//deassert CS
-}
-
-uint8_t
-ccStrobe2(uint8_t strobe, transceiver_t* device)
-{
-  device->CS_base->PIO_CODR = (1<<device->CS_pin);	//assert CS
-  uint8_t ret = cc1100_sendbyte( strobe );
-  CCtransceiver->CS_base->PIO_SODR = (1<<device->CS_pin);	//deassert CS
-
-  return ret;
-}
-#endif
-
 void
 set_ccoff(void)
 {
@@ -433,7 +470,7 @@ set_ccoff(void)
 #else
   ccStrobe(CC1100_SIDLE);
 #endif
-
+#ifndef USE_RF_MODE
   cc_on = 0;
 
 #ifdef HAS_ASKSIN
@@ -443,12 +480,29 @@ set_ccoff(void)
 #ifdef HAS_MORITZ
   moritz_on = 0;
 #endif
+#endif
 }
 
 void
 set_ccon(void)
 {
+#ifdef HAS_MULTI_CC
+  if (0) {}
+#if NUM_SLOWRF > 1
+  else if(CC1101.instance == 1)
+    ccInitChip(EE_CC1100_CFG1);
+#endif
+#if NUM_SLOWRF > 2
+  else if(CC1101.instance == 2)
+      ccInitChip(EE_CC1100_CFG2);
+#endif
+  else
+    ccInitChip(EE_CC1100_CFG);
+#else
   ccInitChip(EE_CC1100_CFG);
+#endif
+
+#ifndef USE_RF_MODE
   cc_on = 1;
 
 #ifdef HAS_ASKSIN
@@ -460,6 +514,7 @@ set_ccon(void)
 #ifdef HAS_MORITZ
 #ifndef CC1100_MORITZ
   moritz_on = 0;
+#endif
 #endif
 #endif
 }

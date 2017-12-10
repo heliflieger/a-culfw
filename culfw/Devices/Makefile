@@ -11,6 +11,8 @@ all:
 	make -C CUL all
 	make -C CUL-Arduino clean
 	make -C CUL-Arduino all
+	make -C CUL-ProMicro clean
+	make -C CUL-ProMicro all
 	make -C CUN clean
 	make -C CUN all
 	make -C CUNO clean 
@@ -50,13 +52,17 @@ all:
 	make -C rpiaddon clean
 	make -C rpiaddon all
 	make -C CUL-HM-CFG clean
-	make -C CUL-HM-CFG
+	make -C CUL-HM-CFG all
 	make -C CUL-HM-CFG/bootloader clean
-	make -C CUL-HM-CFG/bootloader
+	make -C CUL-HM-CFG/bootloader all
 	make -C CUBe clean
-	make -C CUBe
+	make -C CUBe all
 	make -C CUBe/bootloader clean
-	make -C CUBe/bootloader
+	make -C CUBe/bootloader all
+	make -C MapleCUN clean
+	make -C MapleCUN all
+	make -C I2CCUL clean
+	make -C I2CCUL all
 	find . -name \*.eep | xargs rm
 	find . -name \*.elf | xargs rm
 	find . -name \*.lss | xargs rm
@@ -72,6 +78,7 @@ clean:
 	make -C CCD clean
 	make -C CUL clean
 	make -C CUL-Arduino clean
+	make -C CUL-ProMicro clean
 	make -C CUN clean
 	make -C CUNO clean 
 	make -C CUNO2 clean
@@ -95,4 +102,6 @@ clean:
 	make -C CUL-HM-CFG/bootloader clean
 	make -C CUBe clean
 	make -C CUBe/bootloader clean
-
+	make -C MapleCUN clean
+	make -C I2CCUL clean
+	

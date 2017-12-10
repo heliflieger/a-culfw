@@ -4,14 +4,13 @@
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
-    
-#include "led.h"
-#include "serial.h"
-#include "vz.h"
 #include <string.h>
 
-#include "ttydata.h"
 #include "display.h"
+#include "led.h"
+#include "serial.h"
+#include "ttydata.h"
+#include "vz.h"
 
 volatile uint8_t vz_temp[VZ_MSG_SIZE];
 volatile uint8_t vz_data[VZ_MSG_SIZE];

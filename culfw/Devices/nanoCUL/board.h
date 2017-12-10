@@ -1,6 +1,7 @@
 #ifndef _BOARD_H
 #define _BOARD_H
 
+#include <avr/io.h>
 #include <stdint.h>
 
 /* if you have an Arduino with only 8MHz disable the next line */
@@ -85,7 +86,6 @@ extern const uint8_t mark433_pin;
 #define HAS_RAWSEND                   //
 #define HAS_FASTRF                    // PROGMEM:  468b  RAM:  1b
 #define HAS_ASKSIN
-
 /* Intertechno Senden einschalten */
 #define HAS_INTERTECHNO
 
@@ -103,10 +103,10 @@ extern const uint8_t mark433_pin;
 #  define HAS_TX3
 #  define HAS_UNIROLL
 
-#  define HAS_MEMFN
-#  define HAS_SOMFY_RTS
+//#  define HAS_SOMFY_RTS
 #  define HAS_RFNATIVE
 
+//#  define HAS_MEMFN
 
 #if defined (nanoCUL433)
 /* Intertechno Empfang einschalten */
@@ -124,8 +124,17 @@ extern const uint8_t mark433_pin;
 #  define HAS_RWE
 #  define HAS_ESA
 //#  define HAS_HOERMANN
+//#  define HAS_HOERMANN_SEND
 #  define HAS_HMS
 #  define OFF_LACROSSE_HMS_EMU          // if you like HMS emulation for LaCrosse temp devices
+
+//#define HAS_SOMFY_RTS
+//#define HAS_FHT_80b                     // PROGMEM: 1374b, RAM: 90b
+//#define HAS_FHT_8v                    // PROGMEM:  586b  RAM: 23b
+//#define HAS_FHT_TF
+//#define FHTBUF_SIZE          174      //                 RAM: 174b
+//#define HAS_KOPP_FC
+//#define HAS_ZWAVE                     // PROGMEM:  882
 #endif
 
 #endif

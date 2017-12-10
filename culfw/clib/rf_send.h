@@ -2,12 +2,15 @@
 #define _RF_SEND_H
 
 
+#include <stdint.h>                     // for uint8_t, uint16_t
+
 /* public prototypes */
 void fs20send(char *in);
 void rawsend(char *in);
 void em_send(char *in);
 void ks_send(char *in);
 void ur_send(char *in);
+void hm_send(char *in);
 void addParityAndSend(char *in, uint8_t startcs, uint8_t repeat);
 void addParityAndSendData(uint8_t *hb, uint8_t hblen,
                         uint8_t startcs, uint8_t repeat);

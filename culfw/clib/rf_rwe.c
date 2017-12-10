@@ -1,16 +1,28 @@
-#include "board.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromhex
 #ifdef HAS_RWE
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "fband.h"
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM
 
+#include "cc1100.h"                     // for ccStrobe, CC1100_DEASSERT, etc
+#include "delay.h"                      // for my_delay_ms, my_delay_us
+#include "display.h"                    // for DC, DH2, DNL
+#include "fband.h"                      // for checkFrequency
+#include "rf_receive.h"                 // for set_txrestore, REP_BINTIME, etc
 #include "rf_rwe.h"
+#include "rf_mode.h"
+#include "multi_CC.h"
 
+#ifdef USE_HAL
+#include "hal.h"
+#endif
+
+#ifndef USE_RF_MODE
 uint8_t rwe_on = 0;
+#endif
 
 const uint8_t PROGMEM RWE_CFG[60] = {
 //     0x00, 0x0E,
@@ -45,11 +57,9 @@ void
 rf_rwe_init(void)
 {
 
-#ifdef ARM
-  AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;	// disable INT - we'll poll...
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);			//Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);			//Enable PIO control
+#ifdef USE_HAL
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
@@ -87,11 +97,17 @@ rf_rwe_task(void)
   uint8_t enc[MAX_RWE_MSG];
   uint8_t rssi;
 
+#ifndef USE_RF_MODE
   if(!rwe_on)
     return;
+#endif
 
   // see if a CRC OK pkt has been arrived
+#ifdef USE_HAL
+  if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
+#else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
+#endif
 
     enc[0] = cc1100_readReg( CC1100_RXFIFO ) & 0x7f; // read len
 
@@ -114,7 +130,9 @@ rf_rwe_task(void)
     ccStrobe( CC1100_SNOP  );
     ccStrobe( CC1100_SRX   );
 
-    if (tx_report & REP_BINTIME) {
+    MULTICC_PREFIX();
+
+    if(TX_REPORT & REP_BINTIME) {
       
       DC('w');
       for (uint8_t i=0; i<=enc[0]; i++)
@@ -125,8 +143,8 @@ rf_rwe_task(void)
       
       for (uint8_t i=0; i<=enc[0]; i++)
         DH2( enc[i] );
-      
-      if (tx_report & REP_RSSI)
+
+      if (TX_REPORT & REP_RSSI)
         DH2(rssi);
       
       DNL();
@@ -150,7 +168,6 @@ rf_rwe_task(void)
     break;
        
   }
-
 }
 
 void
@@ -165,11 +182,15 @@ rwe_send(char *in)
     return;
   }
 
+#ifdef USE_RF_MODE
+  change_RF_mode(RF_mode_rwe);
+#else
   // in Moritz mode already?
   if(!rwe_on) {
     rf_rwe_init();
     my_delay_ms(3);             // 3ms: Found by trial and error
   }
+#endif
 
   ccStrobe(CC1100_SIDLE);
 
@@ -212,26 +233,39 @@ rwe_send(char *in)
     my_delay_ms(5);
   
   ccStrobe(CC1100_SIDLE);
-
+#ifdef USE_RF_MODE
+  if(!restore_RF_mode()) {
+    ccRX();
+  }
+#else
   if(rwe_on) {
     ccRX();
   } else {
     set_txrestore();
   }
+#endif
 }
 
 void
 rwe_func(char *in)
 {
   if(in[1] == 'r') {                // Reception on
+#ifdef USE_RF_MODE
+    set_RF_mode(RF_mode_rwe);
+#else
     rf_rwe_init();
     rwe_on = 1;
+#endif
 
   } else if(in[1] == 's') {         // Send
 //    rwe_send(in+1);
 
   } else {                          // Off
+#ifdef USE_RF_MODE
+    set_RF_mode(RF_mode_off);
+#else
     rwe_on = 0;
+#endif
 
   }
 }

@@ -1,6 +1,16 @@
-#include "display.h"
+#include <avr/pgmspace.h>               // for PSTR, PROGMEM, __LPM, etc
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for TTY_BUFSIZE
+#include "display.h"                    // for display_channel, DC, DS_P, etc
 #include "ttydata.h"
-#include <avr/pgmspace.h>
+#include "rf_mode.h"
+#include "hw_autodetect.h"
+#ifdef ARM
+#include <utility/trace.h>
+#else
+#define TRACE_DEBUG(...)      { }
+#endif
 
 void (*input_handle_func)(uint8_t channel);
 
@@ -19,8 +29,29 @@ callfn(char *buf)
     if(!n)
       break;
     if(buf == 0) {
+#ifdef USE_HW_AUTODETECT
+      if( !(((n == '*') && !has_CC(CC1101.instance+1)) || ((n == 'O') && !has_onewire())) )
+#endif
+      {
       DC(' ');
       DC(n);
+      }
+#ifdef USE_HW_AUTODETECT
+    } else if((buf[0] == n ) && (n == 'O')) {
+        if(has_onewire()) {
+          fn(buf);
+          return 1;
+        } else {
+          return 0;
+        }
+    } else if((buf[0] == n ) && (n == '*')) {
+      if(has_CC(CC1101.instance+1)) {
+        fn(buf);
+        return 1;
+      } else {
+        return 0;
+      }
+#endif
     } else if(buf[0] == n) {
       fn(buf);
       return 1;
@@ -52,7 +83,12 @@ analyze_ttydata(uint8_t channel)
       if(!cmdlen)       // empty return
         continue;
 
+#ifdef HAS_MULTI_CC
+      CC1101.instance = 0;
+#endif
+
       cmdbuf[cmdlen] = 0;
+      TRACE_DEBUG("TTYDATA received: %s\n\r", cmdbuf);
       if(!callfn(cmdbuf)) {
         DS_P(PSTR("? ("));
         display_string(cmdbuf);

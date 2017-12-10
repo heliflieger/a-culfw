@@ -1,20 +1,19 @@
-#include "uip.h"
-#include <avr/pgmspace.h>
-#include "uip_arp.h"            // uip_arp_out;
-#include "drivers/interfaces/network.h"            // network_send
-#include "delay.h"
 #include <avr/eeprom.h>
-
-#include <string.h>
+#include <avr/pgmspace.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "board.h"
-#include "version.h"
-#include "ringbuffer.h"
+#include "delay.h"
 #include "display.h"
-#include "tcplink.h"
+#include "drivers/interfaces/network.h"            // network_send
 #include "fncollection.h"
+#include "ringbuffer.h"
+#include "tcplink.h"
 #include "ttydata.h"
+#include "uip.h"
+#include "uip_arp.h"            // uip_arp_out;
+#include "version.h"
 
 #define STATE_CLOSED 0
 #define STATE_OPEN   1
@@ -43,6 +42,17 @@ tcp_putchar(char data)
     s = &(uip_conns[c].appstate);
     if(s->offset < sizeof(s->buffer))
       s->buffer[s->offset++] = data;
+
+    if(s->offset == (sizeof(s->buffer)-1)) {
+
+      uip_periodic(c);
+      if(uip_len > 0) {
+        uip_arp_out();
+        network_send();
+      }
+
+    }
+
   }
 }
 

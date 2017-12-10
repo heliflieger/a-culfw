@@ -1,13 +1,11 @@
-#include "board.h"
- 
-#include <avr/io.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "display.h"
-#include "fncollection.h"
+#include <avr/pgmspace.h>               // for PSTR
+#include <stdint.h>                     // for uint8_t
 
+#include "cc1100.h"                     // for cc1100_readReg, ccStrobe, etc
 #include "cc1101_pllcheck.h"
-
+#include "delay.h"                      // for my_delay_us
+#include "display.h"                    // for DS_P
+#include "multi_CC.h"
 
 #ifdef HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
 uint8_t disable_PLLNOLOCK_MSG = 0;				// do not display PLLNOLOCK related errors if > 0
@@ -26,8 +24,12 @@ cc1101_checkPLL(void)  // noansi: returns 0 on success
 
 #ifdef HAS_CC1101_PLL_LOCK_CHECK_MSG
 # ifdef HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
-	if (!disable_PLLNOLOCK_MSG) DS_P( PSTR( "PLL0\r\n" ) );			// PLL0 -> PLL Lock problem found. Message gives enough time to switch to IDLE state
-	else ccStrobe( CC1100_SNOP );									// wait a moment to give time to switch to IDLE state, this should be enough
+	if (!disable_PLLNOLOCK_MSG) {
+	  MULTICC_PREFIX();
+	  DS_P( PSTR( "PLL0\r\n" ) );			            // PLL0 -> PLL Lock problem found. Message gives enough time to switch to IDLE state
+	}	else {
+	  ccStrobe( CC1100_SNOP );									// wait a moment to give time to switch to IDLE state, this should be enough
+	}
 # else
 	DS_P( PSTR( "PLL0\r\n" ) );										// PLL0 -> PLL Lock problem found. Message gives enough time to switch to IDLE state
 # endif
@@ -46,7 +48,10 @@ cc1101_checkPLL(void)  // noansi: returns 0 on success
 
 #ifdef HAS_CC1101_PLL_LOCK_CHECK_MSG
 # ifdef HAS_CC1101_PLL_LOCK_CHECK_MSG_SW
-	if (!disable_PLLNOLOCK_MSG) DS_P( PSTR( "PLL1\r\n" ) );			// PLL1 -> Failed to recover from PLL Lock problem
+	if (!disable_PLLNOLOCK_MSG) {
+	  MULTICC_PREFIX();
+	  DS_P( PSTR( "PLL1\r\n" ) );			            // PLL1 -> Failed to recover from PLL Lock problem
+	}
 # else
 	DS_P( PSTR( "PLL1\r\n" ) );										// PLL1 -> Failed to recover from PLL Lock problem
 # endif
@@ -136,21 +141,6 @@ cc1101_toTX_PLLcheck(void)
 
 #ifdef HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 // check if stuck in RX state without PLL Lock and try to recover
-#ifdef ARM
-void
-cc1101_RX_check_PLL_wait_task2( transceiver_t* device)
-{
-  if (cc1100_readReg2( CC1100_MARCSTATE, device ) == MARCSTATE_RX)
-  {
-	// try init or recalibration, if stuck in RX State with no PLL Lock as seen in extended read timeout logging
-	if (cc1100_readReg2( CC1100_FSCAL1, device ) == 0x3f)							// no PLL Lock?  as described in CC1101 errata
-	{
-		cc1101_checkPLL();													// try calibration to recover, takes about 735us
-		while ((ccStrobe2( CC1100_SRX, device ) & CC1100_STATUS_STATE_BM) != 0x10);	// Set RX again until Status Byte indicates RX, this will take up to 799us depending on AUTOCAL setting! see cc1101 doc
-	}
-  }
-}
-#endif
 void
 cc1101_RX_check_PLL_wait_task(void)
 {

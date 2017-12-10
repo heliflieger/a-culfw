@@ -3,6 +3,7 @@
 
 
 /* public prototypes */
+void it_tunein(void);
 void it_func(char *in);
 
 #endif

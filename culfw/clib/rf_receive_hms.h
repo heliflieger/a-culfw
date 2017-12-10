@@ -6,11 +6,10 @@
 #ifndef _RF_RECEIVE_HMS_H
 #define _RF_RECEIVE_HMS_H
 
-#include <stdio.h>
-#include <util/parity.h>
-#include "board.h"
-#include "rf_receive_bucket.h"
-#include "fband.h"
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for HAS_HMS
+#include "rf_receive_bucket.h"          // for bucket_t
 
 #ifdef HAS_HMS
 #define TYPE_HMS     'H'

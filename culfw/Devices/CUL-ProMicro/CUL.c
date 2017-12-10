@@ -23,17 +23,17 @@
 #include "delay.h"
 #include "display.h"
 #include "fncollection.h"
-#include "led.h"		// ledfunc
+#include "led.h"        // ledfunc
 #include "ringbuffer.h"
 #include "rf_receive.h"
-#include "rf_send.h"		// fs20send
+#include "rf_send.h"        // fs20send
 #include "ttydata.h"
-#include "fht.h"		// fhtsend
-#include "fastrf.h"		// fastrf_func
-#include "rf_router.h"		// rf_router_func
+#include "fht.h"        // fhtsend
+#include "fastrf.h"        // fastrf_func
+#include "rf_router.h"        // rf_router_func
 
 #ifdef HAS_MEMFN
-#include "memory.h"		// getfreemem
+#include "memory.h"        // getfreemem
 #endif
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
@@ -41,11 +41,11 @@
 #ifdef HAS_MORITZ
 #include "rf_moritz.h"
 #endif
-#ifdef HAS_RFNATIVE
-#include "rf_native.h"
-#endif
 #ifdef HAS_RWE
 #include "rf_rwe.h"
+#endif
+#ifdef HAS_RFNATIVE
+#include "rf_native.h"
 #endif
 #ifdef HAS_INTERTECHNO
 #include "intertechno.h"
@@ -65,7 +65,7 @@
 #ifdef HAS_ZWAVE
 #include "rf_zwave.h"
 #endif
-#ifdef HAS_CC1100_433					// we don't used the HW feature from org. CUL
+#ifdef HAS_CC1100_433                    // we don't used the HW feature from org. CUL
   #warning "## 433MHz Build ##"
   const uint8_t mark433_pin = 0x00;
 #else
@@ -75,72 +75,77 @@
 
 const PROGMEM t_fntab fntab[] = {
 
+#ifdef HAS_ASKSIN
+  { 'A', asksin_func },
+#endif
   { 'B', prepare_boot },
 #ifdef HAS_MBUS
   { 'b', rf_mbus_func },
 #endif
   { 'C', ccreg },
-  { 'F', fs20send },
-#ifdef HAS_INTERTECHNO
-  { 'i', it_func },
-#endif
-#ifdef HAS_ASKSIN
-  { 'A', asksin_func },
-#endif
-#ifdef HAS_MORITZ
-  { 'Z', moritz_func },
-#endif
-#ifdef HAS_RFNATIVE
-  { 'N', native_func },
-#endif
 #ifdef HAS_RWE
   { 'E', rwe_func },
 #endif
-#ifdef HAS_KOPP_FC
-  { 'k', kopp_fc_func },
-#endif
-#ifdef HAS_RAWSEND
-  { 'G', rawsend },
-  { 'M', em_send },
-  { 'K', ks_send },
-#endif
-#ifdef HAS_UNIROLL
-  { 'U', ur_send },
-#endif
-#ifdef HAS_SOMFY_RTS
-  { 'Y', somfy_rts_func },
-#endif
-  { 'R', read_eeprom },
-  { 'T', fhtsend },
-  { 'V', version },
-  { 'W', write_eeprom },
-  { 'X', set_txreport },
-
   { 'e', eeprom_factory_reset },
+  { 'F', fs20send },
 #ifdef HAS_FASTRF
   { 'f', fastrf_func },
 #endif
-#ifdef HAS_MEMFN
-  { 'm', getfreemem },
+#ifdef HAS_RAWSEND
+  { 'G', rawsend },
+#endif
+#ifdef HAS_HOERMANN_SEND
+  { 'h', hm_send },
+#endif
+#ifdef HAS_INTERTECHNO
+  { 'i', it_func },
+#endif
+#ifdef HAS_RAWSEND
+  { 'K', ks_send },
+#endif
+#ifdef HAS_KOPP_FC
+  { 'k', kopp_fc_func },
 #endif
 #ifdef HAS_BELFOX
   { 'L', send_belfox },
 #endif
   { 'l', ledfunc },
+#ifdef HAS_RAWSEND
+  { 'M', em_send },
+#endif
+#ifdef HAS_MEMFN
+  { 'm', getfreemem },
+#endif
+#ifdef HAS_RFNATIVE
+  { 'N', native_func },
+#endif
+  { 'R', read_eeprom },
+  { 'T', fhtsend },
   { 't', gettime },
+#ifdef HAS_UNIROLL
+  { 'U', ur_send },
+#endif
 #ifdef HAS_RF_ROUTER
   { 'u', rf_router_func },
 #endif
+  { 'V', version },
+  { 'W', write_eeprom },
+  { 'X', set_txreport },
   { 'x', ccsetpa },
+#ifdef HAS_SOMFY_RTS
+  { 'Y', somfy_rts_func },
+#endif
+#ifdef HAS_MORITZ
+  { 'Z', moritz_func },
+#endif
 #ifdef HAS_ZWAVE
   { 'z', zwave_func },
 #endif
-
   { 0, 0 },
 };
 
 
-static void
+void static
 start_bootloader(void)
 {
   cli();
@@ -160,7 +165,7 @@ main(void)
 {
   wdt_enable(WDTO_2S);
 #if defined(CUL_ARDUINO)
-  clock_prescale_set(clock_div_1); 		// for 8MHz clock div schould be 1
+  clock_prescale_set(clock_div_1);         // for 8MHz clock div schould be 1
 #endif
 
   MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
@@ -237,4 +242,5 @@ main(void)
 
   }
 }
+
 

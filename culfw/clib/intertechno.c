@@ -4,35 +4,42 @@
  * License: GPL v2
  */
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <stdio.h>
-#include <util/parity.h>
-#include <string.h>
+#include <avr/interrupt.h>              // for cli, sei
+#include <stdint.h>                     // for int8_t
+#include <string.h>                     // for strlen
+#ifdef USE_HAL
+#include "hal.h"
+#endif
 
-#include "board.h"
+#include <avr/pgmspace.h>               // for __LPM, PROGMEM
+#include "board.h"                      // for HAS_ASKSIN, HAS_MORITZ, etc
+#include <avr/io.h>                     // for _BV
+
+#include "stringfunc.h"                 // for fromdec, fromhex
 
 #ifdef HAS_INTERTECHNO
 
-#include "delay.h"
-#include "rf_send.h"
-#include "rf_receive.h"
-#include "led.h"
-#include "cc1100.h"
-#include "display.h"
-#include "fncollection.h"
-#include "fht.h"
+#include "cc1100.h"                     // for CC1100_CLEAR_OUT, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DC, DNL, DH2, DU
+#include "fncollection.h"               // for EE_CC1100_CFG_SIZE, erb, etc
 #include "intertechno.h"
+#include "led.h"                        // for LED_OFF, LED_ON, SET_BIT
+#include "rf_receive.h"                 // for set_txrestore, tx_report
+#include "rf_mode.h"
+#include "multi_CC.h"
 
+#ifndef USE_RF_MODE
 #ifdef HAS_ASKSIN
-#include "rf_asksin.h"
+#include "rf_asksin.h"                  // for asksin_on, rf_asksin_init
 #endif
 
 #ifdef HAS_MORITZ
-#include "rf_moritz.h"
+#include "rf_moritz.h"                  // for moritz_on, rf_moritz_init
 #endif
 
 static uint8_t intertechno_on = 0;
+#endif
 
 const PROGMEM const uint8_t CC1100_ITCFG[EE_CC1100_CFG_SIZE] = {
 // CULFW   IDX NAME     RESET STUDIO COMMENT
@@ -103,16 +110,14 @@ uint8_t restore_asksin = 0;
 uint8_t restore_moritz = 0;
 unsigned char it_frequency[] = {0x10, 0xb0, 0x71};
 
-static void
+void
 it_tunein(void)
 {
 		  int8_t i;
 		  
-#ifdef ARM
-  		AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_PIOA;	// disable INT - we'll poll...
-  		AT91C_BASE_PIOA->PIO_PPUER = _BV(CC1100_CS_PIN); 		//Enable pullup
-  		AT91C_BASE_PIOA->PIO_OER = _BV(CC1100_CS_PIN);			//Enable output
-  		AT91C_BASE_PIOA->PIO_PER = _BV(CC1100_CS_PIN);			//Enable PIO control
+#ifdef USE_HAL
+		  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_OUT_CS_IN);
+		  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
 		  EIMSK &= ~_BV(CC1100_INT);
   		SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN ); // CS as output
@@ -151,7 +156,9 @@ it_tunein(void)
 
   		ccStrobe( CC1100_SCAL );
   		my_delay_ms(1);
-  		cc_on = 1;																	// Set CC_ON	
+#ifndef USE_RF_MODE
+  		cc_on = 1;																	// Set CC_ON
+#endif
 }
 
 static void
@@ -177,6 +184,18 @@ send_IT_bit(uint8_t bit)
   	my_delay_us(it_interval);
  	  CC1100_CLEAR_OUT;       // Low
 	  my_delay_us(it_interval * 3);
+// Quad-State
+  } else if (bit == 3) {
+      CC1100_SET_OUT;         // High
+      my_delay_us(it_interval * 3);
+      CC1100_CLEAR_OUT;       // Low
+      my_delay_us(it_interval);
+      
+      CC1100_SET_OUT;         // High
+      my_delay_us(it_interval);
+      CC1100_CLEAR_OUT;       // Low
+      my_delay_us(it_interval * 3);
+// Quad-State
   } else {
   	CC1100_SET_OUT;         // High
   	my_delay_us(it_interval);
@@ -298,7 +317,10 @@ it_send (char *in, uint8_t datatype) {
     #if defined (HAS_IRRX) || defined (HAS_IRTX) //Blockout IR_Reception for the moment
       cli(); 
     #endif
-  
+
+#ifdef USE_RF_MODE
+  change_RF_mode(RF_mode_intertechno);
+#else
 	// If NOT InterTechno mode
 	if(!intertechno_on)  {
 	#ifdef HAS_ASKSIN
@@ -313,9 +335,10 @@ it_send (char *in, uint8_t datatype) {
 			moritz_on = 0;
 		}
 	#endif
-	it_tunein();
-	my_delay_ms(3);             // 3ms: Found by trial and error
+		it_tunein();
+		my_delay_ms(3);             // 3ms: Found by trial and error
     }
+#endif
   	ccStrobe(CC1100_SIDLE);
   	ccStrobe(CC1100_SFRX );
   	ccStrobe(CC1100_SFTX );
@@ -329,7 +352,7 @@ it_send (char *in, uint8_t datatype) {
       mode = 1; // IT V3
       
     }
-		for(i = 0; i < it_repetition; i++)  {
+    for(i = 0; i < it_repetition; i++)  {
       if (datatype == DATATYPE_IT) {
         if (mode == 1) {    
           send_IT_sync_V3();  
@@ -357,8 +380,8 @@ it_send (char *in, uint8_t datatype) {
         startCount = 2;
       } 
 #endif
-		  for(j = startCount; j < sizeOfPackage; j++)  {
-			  if(in[j+1] == '0') {
+      for(j = startCount; j < sizeOfPackage; j++)  {
+	if(in[j+1] == '0') {
           if (datatype == DATATYPE_IT) {
             if (mode == 1) {
 					    send_IT_bit_V3(0);
@@ -370,7 +393,7 @@ it_send (char *in, uint8_t datatype) {
             send_IT_bit_HE(0, datatype);
 #endif
           }
-				} else if (in[j+1] == '1') {
+	} else if (in[j+1] == '1') {
           if (datatype == DATATYPE_IT) {
             if (mode == 1) {
 					    send_IT_bit_V3(1);
@@ -384,19 +407,36 @@ it_send (char *in, uint8_t datatype) {
           }
         } else if (in[j+1] == '2') {
           send_IT_bit_V3(2);
-				} else {
+// Quad
+        } else if (in[j+1] == 'D') {
           if (mode == 1) {
-					  send_IT_bit_V3(3);
-				  } else {
-					  send_IT_bit(2);
-				  }
-			  }
-			}
+	        send_IT_bit_V3(3);
+	  } else {
+	    send_IT_bit(3);
+	  }
+// Quad
+	} else {
+      if (mode == 1) {
+	    send_IT_bit_V3(3);
+	  } else {
+	    send_IT_bit(2);
+	  }
+	}
+      }
       //if (mode == 1) {  
       //  send_IT_sync_V3();
       //}
 		} //Do it n Times
-	
+#ifdef USE_RF_MODE
+    if(!restore_RF_mode()) {
+      // enable RX again
+      if (TX_REPORT) {
+        ccRX();
+      } else {
+        ccStrobe(CC1100_SIDLE);
+      }
+    }
+#else
   	if(intertechno_on) {
 			if(tx_report) {                               // Enable RX
 	    	ccRX();
@@ -410,24 +450,25 @@ it_send (char *in, uint8_t datatype) {
    			rf_asksin_init();
 				asksin_on = 1;
    		 	ccRX();
-  		}  
+  	}
   	#endif
 	#ifdef HAS_MORITZ
-	else if (restore_moritz) {
-		restore_moritz = 0;
-		rf_moritz_init();
-	}
+      else if (restore_moritz) {
+        restore_moritz = 0;
+        rf_moritz_init();
+    }
 	#endif
-  	else {
-    	set_txrestore();
+      else {
+        set_txrestore();
   	}	
+#endif
 
     #if defined (HAS_IRRX) || defined (HAS_IRTX) //Activate IR_Reception again
       sei(); 
     #endif		  
 
 		LED_OFF();
-	
+		MULTICC_PREFIX();
 		DC('i');DC('s');
 #ifdef HAS_HOMEEASY
     if (datatype == DATATYPE_HE) {
@@ -443,6 +484,12 @@ it_send (char *in, uint8_t datatype) {
 				DC('1');
 			} else if (in[j+1] == '2') {
 				DC('2');
+                        } else if (in[j+1] == 'D') {
+	  //if (mode == 1) {  
+     		// Not supported
+        //  } else {
+	     DC('D');
+          //}
 			} else {
         if (datatype == DATATYPE_IT) {
           if (mode == 1) {  
@@ -466,6 +513,7 @@ it_func(char *in)
 	} else if (in[1] == 's') {
         if (in[2] == 'r') {		// Modify Repetition-counter
             fromdec (in+3, (uint8_t *)&it_repetition);
+            MULTICC_PREFIX();
             DU(it_repetition,0); DNL();
 #ifdef HAS_HOMEEASY
             } else if (in[2] == 'h') {		// HomeEasy
@@ -477,6 +525,9 @@ it_func(char *in)
             it_send (in, DATATYPE_IT);				// Sending real data
         } //sending real data
 	} else if (in[1] == 'r') { // Start of "Set Frequency" (f)
+#ifdef USE_RF_MODE
+	  set_RF_mode(RF_mode_intertechno);
+#else
 		#ifdef HAS_ASKSIN
 			if (asksin_on) {
 				restore_asksin = 1;
@@ -491,6 +542,7 @@ it_func(char *in)
 		#endif
 		it_tunein ();
 		intertechno_on = 1;
+#endif
 	} else if (in[1] == 'f') { // Set Frequency
 		  if (in[2] == '0' ) {
 		  	it_frequency[0] = 0x10;
@@ -499,13 +551,17 @@ it_func(char *in)
 		  } else {
 				fromhex (in+2, it_frequency, 3);
 			}
+		  MULTICC_PREFIX();
 			DC('i');DC('f');DC(':');
 		  DH2(it_frequency[0]);
 		  DH2(it_frequency[1]);
 		  DH2(it_frequency[2]);
 		  DNL();
 	} else if (in[1] == 'x') { 		                    // Reset Frequency back to Eeprom value
-		if(0) { ;
+#ifdef USE_RF_MODE
+	  set_RF_mode(RF_mode_off);
+#else
+	  if(0) { ;
 		#ifdef HAS_ASKSIN
 		} else if (restore_asksin) {
 			restore_asksin = 0;
@@ -527,6 +583,7 @@ it_func(char *in)
 			}
 		}
 		intertechno_on = 0;
+#endif
 	} else if (in[1] == 'c') {		// Modify Clock-counter
         fromdec (in+1, (uint8_t *)&it_interval);
     }

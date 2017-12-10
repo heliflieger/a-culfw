@@ -1,11 +1,12 @@
 #include <avr/io.h>
+
+#include "adcw.h"
 #include "board.h"
 #include "cc1100.h"
 #include "delay.h"
-#include "stringfunc.h"
-#include "rf_receive.h"
-#include "adcw.h"
 #include "display.h"
+#include "rf_receive.h"
+#include "stringfunc.h"
 
 // CC1101.pdf, Page 15, 4.7:
 // -40: 0.651V

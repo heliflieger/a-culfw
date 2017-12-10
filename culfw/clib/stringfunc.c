@@ -1,5 +1,7 @@
 #include "stringfunc.h"
 
+#include <stdint.h>                     // for uint8_t, uint16_t
+
 /*
  * Converts a hex string to a buffer. Not hex characters will be skipped
  * Returns the hex bytes found. Single-Nibbles wont be converted.
@@ -71,6 +73,29 @@ fromdec(const char *in, uint8_t *out)
   *(uint16_t*)out = h;
 }
 
+void
+fromdec8(const char *in, uint8_t *out)
+{
+  uint8_t c;
+  uint8_t h = 0;
+
+  while((c = *in++))
+    if(c >= '0' && c <= '9')
+      h = h*10 + (c-'0');
+  *out = h;
+}
+
+void
+fromdec32(const char *in, uint32_t *out)
+{
+  uint8_t c;
+  uint32_t h = 0;
+
+  while((c = *in++))
+    if(c >= '0' && c <= '9')
+      h = h*10 + (c-'0');
+  *out = h;
+}
 
 // Just one byte
 void

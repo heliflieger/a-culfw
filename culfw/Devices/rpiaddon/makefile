@@ -243,8 +243,7 @@ deb: $(TARGET).hex
 	cp -r DEBIAN .f/
 	rm -fr .f/DEBIAN/CVS
 	cp $(TARGET).hex .f/tmp/CSM-rpiaddon.hex	
-	find .f -type f -print |\
-		xargs perl -pi -e 's/=VERS=/$(VERS)/g;s/=DATE=/$(DATE)/g'
+	find .f -type f -print | xargs perl -pi -e 's/=VERS=/$(VERS)/g;s/=DATE=/$(DATE)/g'
 	chown -R root:root .f
 	mv .f $(DESTDIR)
 	dpkg-deb --build $(DESTDIR)

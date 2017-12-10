@@ -8,20 +8,30 @@
  *
  * License: GPL v2
  */
-#include "board.h"
+#include <avr/io.h>                     // for _BV, bit_is_set
+#include <stdint.h>                     // for uint8_t
+
+#include "board.h"                      // for CC1100_CS_DDR, etc
+#include "led.h"                        // for SET_BIT
+#include "stringfunc.h"                 // for fromdec
 #ifdef HAS_RFNATIVE
-#include <string.h>
-#include <avr/pgmspace.h>
-#include "cc1100.h"
-#include "delay.h"
-#include "rf_receive.h"
-#include "display.h"
-#include "fband.h"
+#include <avr/pgmspace.h>               // for pgm_read_byte, PROGMEM, etc
 
+#include "cc1100.h"                     // for ccStrobe, CC1100_FIFOTHR, etc
+#include "delay.h"                      // for my_delay_us, my_delay_ms
+#include "display.h"                    // for DH2, DNL, DC, DS_P
+#include "fband.h"                      // for checkFrequency
 #include "rf_native.h"
-#include "cc1100.h"
+#include "rf_mode.h"
+#include "multi_CC.h"
 
+#ifdef USE_HAL
+#include "hal.h"
+#endif
+
+#ifndef USE_RF_MODE
 static uint8_t native_on = 0;
+#endif
 
 #ifdef LACROSSE_HMS_EMU
 uint8_t payload[5];
@@ -99,20 +109,17 @@ const uint8_t PROGMEM MODE_CFG[MAX_MODES][20] = {
 
 void native_init(uint8_t mode) {
 
-#ifdef ARM
-
-  AT91C_BASE_AIC->AIC_IDCR = 1 << CC1100_IN_PIO_ID; // disable INT - we'll poll...
-
-  CC1100_CS_BASE->PIO_PPUER = _BV(CC1100_CS_PIN);     //Enable pullup
-  CC1100_CS_BASE->PIO_OER = _BV(CC1100_CS_PIN);     //Enable output
-  CC1100_CS_BASE->PIO_PER = _BV(CC1100_CS_PIN);     //Enable PIO control
-
+#ifdef USE_HAL
+  hal_CC_GDO_init(CC_INSTANCE,INIT_MODE_IN_CS_IN);
+  hal_enable_CC_GDOin_int(CC_INSTANCE,FALSE); // disable INT - we'll poll...
 #else
   EIMSK &= ~_BV(CC1100_INT);                 // disable INT - we'll poll...
   SET_BIT( CC1100_CS_DDR, CC1100_CS_PIN );   // CS as output
 #endif
 
+#ifndef USE_RF_MODE
   native_on = 0;
+#endif
 
   CC1100_DEASSERT;                           // Toggle chip select signal
   my_delay_us(30);
@@ -150,7 +157,9 @@ void native_init(uint8_t mode) {
   
   ccStrobe( CC1100_SCAL );
 
+#ifndef USE_RF_MODE
   native_on = mode;
+#endif
   checkFrequency(); 
   my_delay_ms(1);
 }
@@ -158,11 +167,17 @@ void native_init(uint8_t mode) {
 void native_task(void) {
   uint8_t len, byte, i;
 
+#ifndef USE_RF_MODE
   if(!native_on)
     return;
+#endif
 
   // wait for CC1100_FIFOTHR given bytes to arrive in FIFO:
+#ifdef USE_HAL
+  if (hal_CC_Pin_Get(CC_INSTANCE,CC_Pin_In)) {
+#else
   if (bit_is_set( CC1100_IN_PORT, CC1100_IN_PIN )) {
+#endif
 
     // start over syncing
     ccStrobe( CC1100_SIDLE );
@@ -174,17 +189,24 @@ void native_task(void) {
       CC1100_ASSERT;
       cc1100_sendbyte( CC1100_READ_BURST | CC1100_RXFIFO );
 
+      MULTICC_PREFIX();
       DC( 'N' );
+#ifdef USE_RF_MODE
+      DH2(get_RF_mode() - RF_mode_native1 + 1);
+#else
       DH2(native_on);
+#endif
+
+
 
       for (i=0; i<len; i++) {
-	byte = cc1100_sendbyte( 0 );
+         byte = cc1100_sendbyte( 0 );
 
 #if defined(LACROSSE_HMS_EMU)
-	if (i<sizeof(payload))
-	  payload[i] = byte;
+        if (i<sizeof(payload))
+          payload[i] = byte;
 #endif
-	DH2( byte );
+        DH2( byte );
       }
       
       CC1100_DEASSERT;
@@ -214,38 +236,55 @@ void native_task(void) {
     break;
        
   }
-
 }
 
 
 void native_func(char *in) {
+#ifdef ARM
+  uint16_t mode = 0;
+#else
   uint8_t mode = 0;
+#endif
+
+
 
   if(in[1] == 'r') {                // Reception on
     
     // "Er<x>" - where <x> is mode
     if (in[2])
-      fromdec(in+2, &mode);
+      fromdec(in+2, ( uint8_t*)&mode);
 
     if (!mode || mode>MAX_MODES) {
+      MULTICC_PREFIX();
       DS_P(PSTR("specify valid mode number\r\n"));
       return;
     }
     
+#ifdef USE_RF_MODE
+    set_RF_mode(RF_mode_native1 + mode - 1);
+#else
     native_init(mode);
+#endif
 
   } else if(in[1] == 'x') {        // Reception off
 
+#ifdef USE_RF_MODE
+    set_RF_mode(RF_mode_off);
+#else
     if (native_on)
       ccStrobe( CC1100_SIDLE );
     
     native_on = 0;
+#endif
 
   }
-
+  MULTICC_PREFIX();
+#ifdef USE_RF_MODE
+  DH2(get_RF_mode() - RF_mode_native1 + 1);
+#else
   DH2(native_on);
+#endif
   DNL();
-  
 }
 
 #endif
