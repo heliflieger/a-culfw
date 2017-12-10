@@ -58,7 +58,7 @@
 #if defined(_868MHZ)
 #    define HAS_HMS
 #    define HAS_ESA                       // PROGMEM:  286
-#    define HAS_MORITZ                    // PROGMEM: 1696
+//#    define HAS_MORITZ                    // PROGMEM: 1696
 //#    define HAS_HOERMANN
 //#  define HAS_MBUS                      // PROGMEM: 2536
 #  define MBUS_NO_TX                       // PROGMEM:  962
@@ -152,4 +152,5 @@ extern const uint8_t mark433_pin;
 #define MARK915_BIT             5
 
 #endif // __BOARD_H__
+
 

@@ -23,17 +23,17 @@
 #include "delay.h"
 #include "display.h"
 #include "fncollection.h"
-#include "led.h"		// ledfunc
+#include "led.h"        // ledfunc
 #include "ringbuffer.h"
 #include "rf_receive.h"
-#include "rf_send.h"		// fs20send
+#include "rf_send.h"        // fs20send
 #include "ttydata.h"
-#include "fht.h"		// fhtsend
-#include "fastrf.h"		// fastrf_func
-#include "rf_router.h"		// rf_router_func
+#include "fht.h"        // fhtsend
+#include "fastrf.h"        // fastrf_func
+#include "rf_router.h"        // rf_router_func
 
 #ifdef HAS_MEMFN
-#include "memory.h"		// getfreemem
+#include "memory.h"        // getfreemem
 #endif
 #ifdef HAS_ASKSIN
 #include "rf_asksin.h"
@@ -65,7 +65,7 @@
 #ifdef HAS_ZWAVE
 #include "rf_zwave.h"
 #endif
-#ifdef HAS_CC1100_433					// we don't used the HW feature from org. CUL
+#ifdef HAS_CC1100_433                    // we don't used the HW feature from org. CUL
   #warning "## 433MHz Build ##"
   const uint8_t mark433_pin = 0x00;
 #else
@@ -165,7 +165,7 @@ main(void)
 {
   wdt_enable(WDTO_2S);
 #if defined(CUL_ARDUINO)
-  clock_prescale_set(clock_div_1); 		// for 8MHz clock div schould be 1
+  clock_prescale_set(clock_div_1);         // for 8MHz clock div schould be 1
 #endif
 
   MARK433_PORT |= _BV( MARK433_BIT ); // Pull 433MHz marker
@@ -242,4 +242,5 @@ main(void)
 
   }
 }
+
 
