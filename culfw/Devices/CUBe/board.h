@@ -40,6 +40,7 @@
 #define USE_RF_MODE
 #define USE_HAL
 #define HAS_ONEWIRE             10        // OneWire Support
+#define MAX_CREDIT 3600       // max 36 seconds burst / 100% of the hourly budget
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
@@ -107,8 +108,8 @@
 //PORT 2
 #define CC1100_2_CS_PIN		  10
 #define CC1100_2_CS_BASE	  AT91C_BASE_PIOA
-#define CC1100_2_OUT_PIN    9
-#define CC1100_2_OUT_BASE   AT91C_BASE_PIOA
+#define CC1100_2_OUT_PIN    22
+#define CC1100_2_OUT_BASE   AT91C_BASE_PIOB
 #define CC1100_2_IN_PIN     11
 #define CC1100_2_IN_BASE	  AT91C_BASE_PIOA
 

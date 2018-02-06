@@ -1,5 +1,11 @@
 ## Changelog:
 
+#### 1.26.02
+- MapleCUN/CUBe: add UART HAL
+- MapleCUN/CUBe: increase MAX_CREDIT to 3600
+- MapleCUN: Move serial console to DBG UART if USB is not connected
+- MapleCUN: Some bugfix
+
 #### 1.26.01
 - MapleCUN/CUBe: Fix SlowRF/ethernet keepalive
 
