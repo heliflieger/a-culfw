@@ -34,53 +34,22 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __hal_usart_H
 #define __hal_usart_H
-#ifdef __cplusplus
- extern "C" {
-#endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
-
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
+#define UART_NUM                0xff
 
 extern void Error_Handler(void);
-
-void MX_USART1_UART_Init(void);
-void MX_USART2_UART_Init(void);
-void MX_USART3_UART_Init(void);
-
-/* USER CODE BEGIN Prototypes */
-void DBGU_init(void);
-unsigned int DBGU_IsRxReady(void);
-unsigned char DBGU_GetChar(void);
 
 void HAL_UART_Set_Baudrate(uint8_t UART_num, uint32_t baudrate);
 uint32_t HAL_UART_Get_Baudrate(uint8_t UART_num);
 void HAL_UART_Write(uint8_t UART_num, uint8_t* Buf, uint16_t Len);
+void HAL_UART_init(uint8_t UART_num);
+uint8_t HAL_UART_TX_is_idle(uint8_t UART_num);
 
-/* USER CODE END Prototypes */
-
-#ifdef __cplusplus
-}
 #endif
-#endif /*__ usart_H */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

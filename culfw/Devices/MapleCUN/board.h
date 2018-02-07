@@ -6,7 +6,7 @@
 
 #define LONG_PULSE
 
-#define TTY_BUFSIZE          256      // RAM: TTY_BUFSIZE*4
+#define TTY_BUFSIZE          512      // RAM: TTY_BUFSIZE*4
 
 #if defined MapleCUNx4 || defined MapleCUNx4_BL
 #define BOARD_NAME          "MapleCUNx4"
@@ -62,9 +62,12 @@
 #define CDC_BAUD_RATE           115200
 #define USB_IsConnected		      (CDC_isConnected(0))
 #define HAS_XRAM
+#define UART_BAUD_RATE          115200
+#define HAS_UART                1
 #define USE_RF_MODE
 #define USE_HAL
 #define HAS_ONEWIRE             10        // OneWire Support
+#define MAX_CREDIT 3600       // max 36 seconds burst / 100% of the hourly budget
 
 #define HAS_FHT_80b
 #define HAS_FHT_8v
