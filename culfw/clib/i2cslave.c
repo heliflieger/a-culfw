@@ -1,8 +1,11 @@
 /*
 	i2cslave.c - I2C Slave Communication instead of UART
 	
-	 19.01.2017	-	Diggen85 (Benny_Stark@live.de)
+	19.01.2017	-	Diggen85 (Benny_Stark@live.de)
 							-	Add Communication as I2C Slave
+	19.02.2018	- Defined a Macro for TWCR_INIT, TWCR_OFF to reuse in rf_send.c
+							-	Fixed sending from rf_send.c - Disable/Enable Interrupt
+								Thanks to Markus
 */
 #include <util/twi.h>
 #include <avr/interrupt.h>
@@ -36,13 +39,8 @@ void I2CSlave_init(void)
 	I2CSLAVE_ADDR_PORT	&= 	~((1<<I2CSLAVE_ADDR_A1)|(1<<I2CSLAVE_ADDR_A0));
 #endif
 
-	TWAR =  (i2cSlaveAddr<<1);			//Set Slave Address / Shift left because BIT 1 = General CALL
-	TWCR = 	(1<<TWEN)|              //TWI enabled.
-					(1<<TWIE)|(0<<TWINT)|   //Enable TWI Interrupt and dont touch TWINT,else it wont work
-					(1<<TWEA)|							//Prepare to ACK next time the Slave is addressed.
-					(0<<TWSTA)|(0<<TWSTO)|  //No Start as Slave / Stop as Slave would release   
-					(0<<TWWC);      				//Write Collision
-	
+	TWAR =  (i2cSlaveAddr<<1);		//Set Slave Address / Shift left because BIT 1 = General CALL
+	TWCR_INIT;
 }
 
 void I2CSlave_task(void) 

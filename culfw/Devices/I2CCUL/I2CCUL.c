@@ -1,10 +1,11 @@
-/*  I2CCUL - ProMini(ATmega328) as I2CSlave
+/*	I2CCUL - ProMini(ATmega328) as I2CSlave
 	 
-	 Diggen85 (Benny_Stark@live.de)
-	 19.01.2017	-	Add Communication as I2C Slave
-	 29.01.2017 - Cleanup, remove unneeded defines, added Makefile defines
+	Diggen85 (Benny_Stark@live.de)
+	19.01.2017	-	Add Communication as I2C Slave
+	29.01.2017 	- Cleanup, remove unneeded defines, added Makefile defines
 							- Added IR
 							- Changed CC1100OUT to ProMini A0 - PC0
+	19.02.2018	- Changed Protocol definition
 */
 
 #include <avr/boot.h>
@@ -222,9 +223,8 @@ main(void)
   sei();
 
   for(;;) {
-		I2CSlave_task();
-		
-    RfAnalyze_Task();
+	I2CSlave_task();
+	RfAnalyze_Task();
     Minute_Task();
 #ifdef HAS_FASTRF
     FastRF_Task();

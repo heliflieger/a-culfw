@@ -1,3 +1,13 @@
+/*	I2CCUL - ProMini(ATmega328) as I2CSlave
+	 
+	Diggen85 (Benny_Stark@live.de)
+	19.01.2017	-	Add Communication as I2C Slave
+	29.01.2017 	- Cleanup, remove unneeded defines, added Makefile defines
+							- Added IR
+							- Changed CC1100OUT to ProMini A0 - PC0
+	19.02.2018	- Changed Protocol definition
+*/
+
 #ifndef _BOARD_H
 #define _BOARD_H
 
@@ -103,7 +113,7 @@ extern const uint8_t mark433_pin;
 #define HAS_MEMFN											//Memory Functions
 
 #define HAS_RAWSEND                   // PROGMEM:  198b     RAM:  4b
-
+#define HAS_RFNATIVE
 
 #if defined (I2CCUL433)
 /* Intertechno Send */
@@ -116,10 +126,7 @@ extern const uint8_t mark433_pin;
 #define HAS_BELFOX
 #define HAS_MANCHESTER
 #define HAS_TX3
-
-#define HAS_RFNATIVE
-#define LACROSSE_HMS_EMU          	// if you like HMS emulation for LaCrosse temp devices
-//#define HAS_SOMFY_RTS
+#define HAS_SOMFY_RTS
 #endif
 
 #if defined (I2CCUL868)
@@ -130,10 +137,11 @@ extern const uint8_t mark433_pin;
 #define HAS_RWE
 #define HAS_ESA
 #define HAS_HMS
+#define LACROSSE_HMS_EMU          	// if you like HMS emulation for LaCrosse temp devices
 #define HAS_UNIROLL
-#define HAS_FHT_80b                 // PROGMEM: 1374b, RAM: 90b
-#define HAS_FHT_8v                  // PROGMEM:  586b  RAM: 23b
-#define HAS_FHT_TF
+//#define HAS_FHT_80b                 // PROGMEM: 1374b, RAM: 90b
+//#define HAS_FHT_8v                  // PROGMEM:  586b  RAM: 23b
+//#define HAS_FHT_TF
 //#define HAS_HOERMANN
 //#define HAS_HOERMANN_SEND
 //#define HAS_KOPP_FC
@@ -144,8 +152,5 @@ extern const uint8_t mark433_pin;
 */
 //#define HAS_MBUS
 #endif
-
-
-
 
 #endif
