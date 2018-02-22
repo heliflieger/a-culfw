@@ -19,6 +19,7 @@
 #include "rf_send.h"
 #include "stringfunc.h"                 // for fromhex
 #include "rf_mode.h"
+#include "i2cslave.h"										// for TWCR_INIT, TWCR_OFF
 
 #ifdef HAS_DMX
 #include "dmx.h"                        // for dmx_fs20_emu
@@ -109,8 +110,11 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
 
   LED_ON();
 
-#if defined (HAS_IRRX) || defined (HAS_IRTX) // Block IR_Reception
+#if defined (HAS_IRRX) || defined (HAS_IRTX) || defined (HAS_I2CSLAVE) // Block IR_Reception
   cli();
+#  if defined (HAS_I2CSLAVE) // Disable I2C
+    TWCR_OFF;
+#  endif		
 #endif
 
 #ifdef USE_RF_MODE
@@ -160,8 +164,11 @@ sendraw(uint8_t *msg, uint8_t sync, uint8_t nbyte, uint8_t bitoff,
     ccStrobe(CC1100_SIDLE);
   }
 
-#if defined (HAS_IRRX) || defined (HAS_IRTX) // Activate IR_Reception
+#if defined (HAS_IRRX) || defined (HAS_IRTX) || defined(HAS_I2CSLAVE) // Activate IR_Reception
   sei(); 
+#  if defined (HAS_I2CSLAVE) // Enable TWI again
+    TWCR_INIT;
+#  endif				
 #endif
 
 #ifdef USE_RF_MODE
