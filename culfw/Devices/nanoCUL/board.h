@@ -8,17 +8,15 @@
 #define HAS_16MHZ_CLOCK
 
 /* if you are using a CC1101 module for 868MHz disable the next line */
-#if defined (nanoCUL433)
-#define HAS_CC1100_433
-#endif
+
 
 #define SPI_PORT		PORTB
 #define SPI_DDR			DDRB
-#define SPI_SS			2
-#define SPI_MISO		4
-#define SPI_MOSI		3
+#define SPI_SS			2 //d10
+#define SPI_MISO		4 //d12
+#define SPI_MOSI		3 // d11
 /* die aufgelötete gelbe LED ist an PB5/SCLK angeschlossen! */
-#define SPI_SCLK		5
+#define SPI_SCLK		5 //d13
 
 #define CC1100_CS_DDR		SPI_DDR
 #define CC1100_CS_PORT          SPI_PORT
@@ -26,24 +24,17 @@
 
 
 /* CC1101 GDO0 Tx / Temperature Sensor */
-#if 0
-#define CC1100_OUT_DDR		DDRC
-#define CC1100_OUT_PORT         PORTC
-#define CC1100_OUT_PIN          PC0
-#define CC1100_OUT_IN           PINC
-#define CCTEMP_MUX              CC1100_OUT_PIN
-#else
 #define CC1100_OUT_DDR		DDRD
 #define CC1100_OUT_PORT         PORTD
 #define CC1100_OUT_PIN          PD3
-#define CC1100_OUT_IN           PIND
+#define CC1100_OUT_IN           PIND //d3
 #define CCTEMP_MUX              CC1100_OUT_PIN
-#endif
+
 
 /* CC1101 GDO2 Rx Interrupt */
 #define CC1100_IN_DDR		DDRD
 #define CC1100_IN_PORT          PIND
-#define CC1100_IN_PIN           PD2
+#define CC1100_IN_PIN           PD2 //d2
 #define CC1100_IN_IN            PIND
 
 #define CC1100_INT		INT0
@@ -54,7 +45,7 @@
 /* externe LED */
 #define LED_DDR                 DDRB
 #define LED_PORT                PORTB
-#define LED_PIN                 1
+#define LED_PIN                 1 //d9
 
 //#define LED_ON_DDR              DDRB
 //#define LED_ON_PORT             PORTB

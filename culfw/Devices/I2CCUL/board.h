@@ -93,6 +93,8 @@ extern const uint8_t mark433_pin;
 
 //define Protocols and options
 #define RCV_BUCKETS            2      //                 RAM: 25b * bucket
+#define FHTBUF_SIZE          174    //     	           RAM: 174b
+
 #define FULL_CC1100_PA                // PROGMEM:  108b
 #define HAS_CC1101_RX_PLL_LOCK_CHECK_TASK_WAIT
 #define HAS_CC1101_PLL_LOCK_CHECK_MSG
@@ -104,9 +106,9 @@ extern const uint8_t mark433_pin;
 
 
 #if defined (I2CCUL433)
-/* Intertechno Empfang einschalten */
+/* Intertechno Send */
 #define HAS_IT
-/* Intertechno Senden einschalten */
+/* Intertechno Receive einschalten */
 #define HAS_INTERTECHNO
 #define HAS_REVOLT
 #define HAS_TCM97001
@@ -129,19 +131,18 @@ extern const uint8_t mark433_pin;
 #define HAS_ESA
 #define HAS_HMS
 #define HAS_UNIROLL
+#define HAS_FHT_80b                 // PROGMEM: 1374b, RAM: 90b
+#define HAS_FHT_8v                  // PROGMEM:  586b  RAM: 23b
+#define HAS_FHT_TF
 //#define HAS_HOERMANN
 //#define HAS_HOERMANN_SEND
-//#define HAS_FHT_80b                 // PROGMEM: 1374b, RAM: 90b
-//#define HAS_FHT_8v                  // PROGMEM:  586b  RAM: 23b
-//#define HAS_FHT_TF
-//#define FHTBUF_SIZE          174    //     	           RAM: 174b
 //#define HAS_KOPP_FC
 //#define HAS_ZWAVE                   // PROGMEM:  882
 /* HAS_MBUS requires about 1kB RAM, if you want to use it you
    should consider disabling other unneeded features
    to avoid stack overflows
 */
-#define HAS_MBUS
+//#define HAS_MBUS
 #endif
 
 
