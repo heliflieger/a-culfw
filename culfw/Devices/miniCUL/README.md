@@ -1,7 +1,7 @@
 Firmware for miniCUL device
 
 See
-http://forum.fhem.de/index.php/topic,42998.0.html
+https://forum.fhem.de/index.php/topic,42998.0.html
 for details.
 
 ------------------------------------------------------------------------
