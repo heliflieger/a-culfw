@@ -6,7 +6,7 @@ lock: 0x0f
 
 
 recommended Optiboot ATMEGA328P 8MHz 3.3V Bootloader
-lfuse=0xff
-hfuse=0xde
-efuse=0x05
-lock=0x0f
+lfuse: 0xff
+hfuse: 0xde
+efuse: 0x05
+lock: 0x0f
