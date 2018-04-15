@@ -1,5 +1,12 @@
 ## Changelog:
 
+#### 1.26.03
+- I2CCUL: changed Protocol definition
+- MapleCUN: added LaCrosse
+- MapleCUN: added HMS Device Emulation for LaCrosse
+- miniCUL: added Optiboot bootloader
+- rpiaddon: added OneWire
+
 #### 1.26.02
 - MapleCUN/CUBe: add UART HAL
 - MapleCUN/CUBe: increase MAX_CREDIT to 3600
