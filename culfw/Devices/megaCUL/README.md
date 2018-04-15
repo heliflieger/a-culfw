@@ -1,7 +1,7 @@
 Firmware for megaCUL (ATMEGA1284P) device.
 
 See
-http://forum.fhem.de/index.php
+https://forum.fhem.de/index.php/topic,24651.msg177502.html#msg177502
 for details.
 
 FLASHING FIRMWARE
