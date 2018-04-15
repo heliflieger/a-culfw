@@ -124,6 +124,9 @@ const PROGMEM t_fntab fntab[] = {
 #ifdef HAS_RFNATIVE
   { 'N', native_func },
 #endif
+#ifdef HAS_ONEWIRE
+  { 'O', onewire_func },
+#endif
   { 'R', read_eeprom },
   { 'T', fhtsend },
   { 't', gettime },
