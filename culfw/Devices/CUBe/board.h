@@ -70,6 +70,7 @@
 #define HAS_SOMFY_RTS
 #define HAS_MAICO
 #define HAS_RFNATIVE
+#define LACROSSE_HMS_EMU
 #define HAS_ZWAVE
 #define HAS_MBUS
 

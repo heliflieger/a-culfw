@@ -1,5 +1,8 @@
 ## Changelog:
 
+#### 1.26.04
+- CUBe: added HMS Device Emulation for LaCrosse
+
 #### 1.26.03
 - I2CCUL: changed Protocol definition
 - MapleCUN: added LaCrosse
