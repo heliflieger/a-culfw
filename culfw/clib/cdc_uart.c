@@ -102,8 +102,8 @@ void cdc_uart_task(void) {
 static uint32_t lasttick[CDC_COUNT] = {0};
 
 #if CDC_COUNT > 1
-for(uint8_t x = 1;x<CDC_COUNT;x++) {
-    if(CDC_rx_next[x] && (CDC_get_Transmit_status(x) == USBD_OK)) {
+for(uint8_t x = 0;x<CDC_COUNT;x++) {
+    if(CDC_rx_next[x]) {
       CDC_Receive_next(x);
     }
   }

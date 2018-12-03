@@ -398,14 +398,13 @@ unsigned char CDC_isConnected(uint8_t cdc_num)
 void CDC_Receive_next (uint8_t cdc_num)
 {
   if((cdc_num < CDC_COUNT) && (CDC_isConnected(cdc_num))) {
-
-    if (CDC_get_Transmit_status(cdc_num) == USBD_BUSY){
-      CDC_rx_next[cdc_num] = 1;
-    } else {
-      USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS,cdc_num);
-      USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num);
-      CDC_rx_next[cdc_num] = 0;
-    }
+    USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS,cdc_num);
+    if (USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num) == USBD_BUSY){
+          CDC_rx_next[cdc_num] = 1;
+          TRACE_DEBUG_WP("%d:RX next USBD_BUSY\r\n",cdc_num);
+        } else {
+          CDC_rx_next[cdc_num] = 0;
+       }
   }
 }
 
