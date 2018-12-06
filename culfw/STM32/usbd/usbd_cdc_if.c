@@ -35,9 +35,9 @@
 /* USER CODE BEGIN INCLUDE */
 #include "board.h"
 #include "usb_device.h"
-#include "usbd_def.h"
 #include <utility/trace.h>
 #include "hal_usart.h"
+#include "atomic.h"
 
 /* USER CODE END INCLUDE */
 
@@ -96,7 +96,6 @@ uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 /* USER CODE BEGIN PRIVATE_VARIABLES */
 
 uint8_t CDC_connected[CDC_COUNT];
-uint8_t CDC_rx_next[CDC_COUNT];
 /* USER CODE END PRIVATE_VARIABLES */
 
 /**
@@ -356,19 +355,6 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len, uint8_t cdc_num)
   return result;
 }
 
-uint8_t CDC_get_Transmit_status(uint8_t cdc_num)
-{
-  uint8_t result = USBD_OK;
-
-  /* USER CODE BEGIN 7 */
-  USBD_CDC_HandleTypeDef *hcdc = &((USBD_CDC_HandleTypeDef*)hUsbDeviceFS.pClassData)[cdc_num];
-  if (hcdc->TxState != 0){
-    return USBD_BUSY;
-  }
-
-  return result;
-}
-
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
 
 //------------------------------------------------------------------------------
@@ -383,7 +369,11 @@ unsigned char CDCDSerialDriver_Write(void *data,
                                      void* dummy1,
                                      uint8_t CDC_num)
 {
-  return CDC_Transmit_FS(data,size,CDC_num);
+  uint8_t ret;
+  ATOMIC_BLOCK() {
+    ret =  CDC_Transmit_FS(data,size,CDC_num);
+  }
+  return ret;
 }
 
 
@@ -399,12 +389,9 @@ void CDC_Receive_next (uint8_t cdc_num)
 {
   if((cdc_num < CDC_COUNT) && (CDC_isConnected(cdc_num))) {
     USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS,cdc_num);
-    if (USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num) == USBD_BUSY){
-          CDC_rx_next[cdc_num] = 1;
-          TRACE_DEBUG_WP("%d:RX next USBD_BUSY\r\n",cdc_num);
-        } else {
-          CDC_rx_next[cdc_num] = 0;
-       }
+    ATOMIC_BLOCK() {
+      USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num);
+    }
   }
 }
 

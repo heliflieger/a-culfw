@@ -102,14 +102,6 @@ void cdc_uart_task(void) {
 static uint32_t lasttick[CDC_COUNT] = {0};
 
 #if CDC_COUNT > 1
-for(uint8_t x = 0;x<CDC_COUNT;x++) {
-    if(CDC_rx_next[x]) {
-      CDC_Receive_next(x);
-    }
-  }
-#endif
-
-#if CDC_COUNT > 1
   for(uint8_t x = 0;x<CDC_COUNT-1;x++) {
     if(UART_Rx_Buffer[x].nbytes) {
       while(UART_Rx_Buffer[x].nbytes && CDC_Tx_len[x] < CDC_DATA_HS_MAX_PACKET_SIZE) {
@@ -118,7 +110,7 @@ for(uint8_t x = 0;x<CDC_COUNT;x++) {
     }
 
     if(CDC_Tx_len[x]) {
-      if(CDC_Tx_len[x] == CDC_DATA_HS_MAX_PACKET_SIZE || lasttick[x]+4 < HAL_GetTick()) {
+      if(CDC_Tx_len[x] == CDC_DATA_HS_MAX_PACKET_SIZE || (HAL_GetTick() - lasttick[x] > 4) ) {
         int32_t ret;
         if(CDC_isConnected(CDC1+x)) {
           ret = CDCDSerialDriver_Write(CDC_Tx_buffer[x],CDC_Tx_len[x], 0, CDC1+x);

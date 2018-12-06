@@ -70,7 +70,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
     __HAL_RCC_USB_CLK_ENABLE();
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USB_LP_CAN1_RX0_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USB_LP_CAN1_RX0_IRQn);
   /* USER CODE BEGIN USB_MspInit 1 */
 
@@ -451,14 +451,8 @@ USBD_StatusTypeDef  USBD_LL_PrepareReceive(USBD_HandleTypeDef *pdev,
                                            uint8_t  *pbuf,
                                            uint16_t  size)
 {
-  HAL_StatusTypeDef ret;
-  ret = HAL_PCD_EP_Receive((PCD_HandleTypeDef*) pdev->pData, ep_addr, pbuf, size);
-  switch(ret) {
-  case HAL_OK: return USBD_OK;
-  case HAL_BUSY: return USBD_BUSY;
-  default: return USBD_FAIL;
-  }
-  return ret;
+  HAL_PCD_EP_Receive((PCD_HandleTypeDef*) pdev->pData, ep_addr, pbuf, size);
+  return USBD_OK;
 }
 
 /**

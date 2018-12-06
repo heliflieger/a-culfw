@@ -39,8 +39,6 @@
 #endif
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc.h"
-#include "board.h"
-
 /* USER CODE BEGIN INCLUDE */
 /* USER CODE END INCLUDE */
 
@@ -67,8 +65,6 @@
   * @{
   */  
 /* USER CODE BEGIN EXPORTED_TYPES */
-
- extern uint8_t CDC_rx_next[CDC_COUNT];
 
  typedef struct {
 
@@ -118,7 +114,7 @@ extern USBD_CDC_ItfTypeDef  USBD_Interface_fops_FS;
   * @{
   */ 
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len, uint8_t cdc_num);
-uint8_t CDC_get_Transmit_status(uint8_t cdc_num);
+
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
 unsigned char CDCDSerialDriver_Write(void *data, unsigned int size, void* dummy1, uint8_t CDC_num);
 unsigned char CDC_isConnected(uint8_t cdc_num);
