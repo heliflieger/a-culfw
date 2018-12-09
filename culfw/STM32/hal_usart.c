@@ -42,6 +42,7 @@
 #ifdef HAS_WIZNET
 #include "ethernet.h"
 #endif
+#include "atomic.h"
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -133,7 +134,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART1_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
 
@@ -158,7 +159,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART2_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
   }
   else if(uartHandle->Instance==USART3)
@@ -181,7 +182,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART3_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(USART3_IRQn);
   }
 }
@@ -259,15 +260,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
     DBGU_RxByte = inbyte1;
     DBGU_RxReady = 1;
 #endif
-    HAL_UART_Receive_IT(&huart1, &inbyte1, 1);
+    ATOMIC_BLOCK() {
+      HAL_UART_Receive_IT(&huart1, &inbyte1, 1);
+    }
 
   } else if(UartHandle->Instance==USART2) {
     UART2_Rx_Callback(inbyte2);
-    HAL_UART_Receive_IT(&huart2, &inbyte2, 1);
+    ATOMIC_BLOCK() {
+      HAL_UART_Receive_IT(&huart2, &inbyte2, 1);
+    }
 
   } else if(UartHandle->Instance==USART3) {
     UART3_Rx_Callback(inbyte3);
-    HAL_UART_Receive_IT(&huart3, &inbyte3, 1);
+    ATOMIC_BLOCK() {
+      HAL_UART_Receive_IT(&huart3, &inbyte3, 1);
+    }
 
   }
 
@@ -333,16 +340,18 @@ uint32_t HAL_UART_Get_Baudrate(uint8_t UART_num) {
 }
 
 void HAL_UART_Write(uint8_t UART_num, uint8_t* Buf, uint16_t Len) {
-  switch(UART_num) {
-  case 0:
-    HAL_UART_Transmit_IT(&huart2, Buf, Len);
-    break;
-  case 1:
-    HAL_UART_Transmit_IT(&huart3, Buf, Len);
-    break;
-  case UART_NUM:
-    HAL_UART_Transmit_IT(&huart1, Buf, Len);
-    break;
+  ATOMIC_BLOCK() {
+    switch(UART_num) {
+    case 0:
+      HAL_UART_Transmit_IT(&huart2, Buf, Len);
+      break;
+    case 1:
+      HAL_UART_Transmit_IT(&huart3, Buf, Len);
+      break;
+    case UART_NUM:
+      HAL_UART_Transmit_IT(&huart1, Buf, Len);
+      break;
+    }
   }
   return;
 }

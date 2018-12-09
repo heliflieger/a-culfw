@@ -37,6 +37,7 @@
 #include "usb_device.h"
 #include <utility/trace.h>
 #include "hal_usart.h"
+#include "atomic.h"
 
 /* USER CODE END INCLUDE */
 
@@ -368,7 +369,11 @@ unsigned char CDCDSerialDriver_Write(void *data,
                                      void* dummy1,
                                      uint8_t CDC_num)
 {
-  return CDC_Transmit_FS(data,size,CDC_num);
+  uint8_t ret;
+  ATOMIC_BLOCK() {
+    ret =  CDC_Transmit_FS(data,size,CDC_num);
+  }
+  return ret;
 }
 
 
@@ -384,7 +389,9 @@ void CDC_Receive_next (uint8_t cdc_num)
 {
   if((cdc_num < CDC_COUNT) && (CDC_isConnected(cdc_num))) {
     USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS,cdc_num);
-    USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num);
+    ATOMIC_BLOCK() {
+      USBD_CDC_ReceivePacket(&hUsbDeviceFS, cdc_num);
+    }
   }
 }
 

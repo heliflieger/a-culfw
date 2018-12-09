@@ -267,13 +267,7 @@ int32_t rxtx(uint8_t net_num) {
 
     net_rx_size[net_num] = size;
     TRACE_DEBUG_WP("%d:NET_UART_TRANSMIT: %d\r\n",net_num+1, size);
-    switch (net_num) {
-    case 0:
-      HAL_UART_Transmit_IT(&huart2, &net_rx_buffer[net_num][0], net_rx_size[net_num]);
-      break;
-    case 1:
-      HAL_UART_Transmit_IT(&huart3, &net_rx_buffer[net_num][0], net_rx_size[net_num]);
-    }
+    HAL_UART_Write(net_num, &net_rx_buffer[net_num][0], net_rx_size[net_num]);
   }
   return 1;
 }
