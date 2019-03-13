@@ -27,7 +27,7 @@
 #include <stdint.h>                     // for uint8_t, uint16_t
 
 #include "board.h"                      // for HAS_IT, HAS_REVOLT, etc
-
+#include "rf_receive.h"
 
 #define STATE_SYNC_PACKAGE      11
 //#define STATE_BRESSER 12
@@ -80,7 +80,7 @@ struct {
    uint8_t isnotrep:1; // 1 Bit for is repeated value
    uint8_t packageOK:1; // Received packet is ok
    // 5 bits free
-} packetCheckValues;
+} packetCheckValues[NUM_SLOWRF];
 
 
 /*
