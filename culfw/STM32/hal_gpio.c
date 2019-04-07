@@ -42,7 +42,7 @@
 #include "rf_mode.h"
 
 transceiver_t CCtransceiver[] = CCTRANSCEIVERS;
-
+uint8_t i2cPort;
 
 /*----------------------------------------------------------------------------*/
 /* Configure GPIO                                                             */
@@ -224,7 +224,14 @@ uint32_t hal_CC_Pin_Get(uint8_t cc_num, CC_PIN pin) {
 }
 
 void hal_CC_move_transceiver_pins(uint8_t source, uint8_t dest) {
+  transceiver_t tempCC;
+  memcpy(&tempCC, &CCtransceiver[dest], sizeof(transceiver_t));
   memcpy(&CCtransceiver[dest], &CCtransceiver[source], sizeof(transceiver_t));
+  memcpy(&CCtransceiver[source], & tempCC, sizeof(transceiver_t));
+}
+
+void hal_I2C_Set_Port(uint8_t port) {
+  i2cPort= port;
 }
 
 __weak void CC1100_in_callback()

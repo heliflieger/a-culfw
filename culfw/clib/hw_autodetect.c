@@ -77,18 +77,18 @@ void hw_autodetect(void) {
   CC1101.instance = 0;
 
 
-  uint8_t x = 0;
+  uint8_t numCC = 0;
 
   for(uint8_t i=0; i< HAS_MULTI_CC; i++) {
     if(hw_features & (1<<i)) {
-      x += 1;
+      numCC += 1;
     } else {
       for(uint8_t j=i; j < HAS_MULTI_CC;j++) {
         if(hw_features & (1<<j)) {
-          hal_CC_move_transceiver_pins(j,x);
-          hw_features |= 1<<x;
+          hal_CC_move_transceiver_pins(j,numCC);
+          hw_features |= 1<<numCC;
           hw_features &= ~(1<<j);
-          x += 1;
+          numCC += 1;
           break;
         }
       }
@@ -111,10 +111,17 @@ void hw_autodetect(void) {
 #endif
 
 #ifdef HAS_ONEWIRE
-  if(detect_ds2482()) {
-   hw_features |= 1<<FEATURE_ONEWIRE;
+  uint8_t i;
+  for(i=numCC; i< HAS_MULTI_CC; i++) {
+    hal_I2C_Set_Port(i);
+    if(detect_ds2482()) {
+     hw_features |= 1<<FEATURE_ONEWIRE;
      TRACE_INFO("Detected onewire \n\r");
-   } else {
+     break;
+    }
+  }
+
+  if(i>=HAS_MULTI_CC) {
      TRACE_INFO("Not detected onewire \n\r");
   }
 #endif
