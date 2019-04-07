@@ -135,13 +135,6 @@
                           }
 
 
-//TWI
-#define TWI_SCL_PIN       CC1100_2_IN_PIN
-#define TWI_SCL_BASE      CC1100_2_IN_BASE
-#define TWI_SDA_PIN       CC1100_2_CS_PIN
-#define TWI_SDA_BASE      CC1100_2_CS_BASE
-
-
 #define BOOTLOADER_PIN		(1<<14)
 
 #define HAS_ETHERNET            1       // undef or define...1

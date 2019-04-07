@@ -86,7 +86,7 @@ static uint8_t bucket_in[NUM_SLOWRF];                 // Pointer to the in(terru
 static uint8_t bucket_out[NUM_SLOWRF];                // Pointer to the out (analyze) queue
 static uint8_t bucket_nrused[NUM_SLOWRF];             // Number of unprocessed buckets
 static uint8_t nibble; // parity-stripped output
-static uint8_t roby, robuf[MAXMSG];       // for Repeat check: buffer and time
+static uint8_t roby[NUM_SLOWRF], robuf[NUM_SLOWRF][MAXMSG];       // for Repeat check: buffer and time
 static uint32_t reptime[NUM_SLOWRF];
 static uint16_t maxLevel[NUM_SLOWRF];
 
@@ -292,18 +292,18 @@ void checkForRepeatedPackage(uint8_t *datatype, bucket_t *b) {
   if (*datatype == TYPE_IT) {
 #endif
 #if defined (HAS_IT) || defined (HAS_TCM97001)
-      if (packetCheckValues.isrep == 1 && packetCheckValues.isnotrep == 0) { 
-        packetCheckValues.isnotrep = 1;
-        packetCheckValues.packageOK = 1;
-      } else if (packetCheckValues.isrep == 1) {
-        packetCheckValues.packageOK = 0;
+      if (packetCheckValues[CC_INSTANCE].isrep == 1 && packetCheckValues[CC_INSTANCE].isnotrep == 0) {
+        packetCheckValues[CC_INSTANCE].isnotrep = 1;
+        packetCheckValues[CC_INSTANCE].packageOK = 1;
+      } else if (packetCheckValues[CC_INSTANCE].isrep == 1) {
+        packetCheckValues[CC_INSTANCE].packageOK = 0;
       } else {
-        packetCheckValues.isnotrep = 0;
+        packetCheckValues[CC_INSTANCE].isnotrep = 0;
       }
   } else {
 #endif
-      if (!packetCheckValues.isrep) {
-        packetCheckValues.packageOK = 1;
+      if (!packetCheckValues[CC_INSTANCE].isrep) {
+        packetCheckValues[CC_INSTANCE].packageOK = 1;
       }
 #if defined (HAS_IT) || defined (HAS_TCM97001)
   }
@@ -456,27 +456,29 @@ RfAnalyze_Task(void)
 
   if(datatype && (TX_REPORT & REP_KNOWN)) {
 
-    packetCheckValues.isrep = 0;
-    packetCheckValues.packageOK = 0;
-    //packetCheckValues.isnotrep = 0;
+    packetCheckValues[CC_INSTANCE].isrep = 0;
+    packetCheckValues[CC_INSTANCE].packageOK = 0;
     if(!(TX_REPORT & REP_REPEATED)) {      // Filter repeated messages
       
       // compare the data
-      if(roby == oby) {
-        for(roby = 0; roby < oby; roby++)
-          if(robuf[roby] != obuf[roby]) {
-            packetCheckValues.isnotrep = 0;
+      if(roby[CC_INSTANCE] == oby) {
+        for(roby[CC_INSTANCE] = 0; roby[CC_INSTANCE] < oby; roby[CC_INSTANCE]++)
+          if(robuf[CC_INSTANCE][roby[CC_INSTANCE]] != obuf[roby[CC_INSTANCE]]) {
+            packetCheckValues[CC_INSTANCE].isnotrep = 0;
             break;
           }
-        if(roby == oby && (ticks - reptime[CC_INSTANCE] < REPTIME)) // 38/125 = 0.3 sec
-          packetCheckValues.isrep = 1;
+        if(roby[CC_INSTANCE] == oby && (ticks - reptime[CC_INSTANCE] < REPTIME)) // 38/125 = 0.3 sec
+          packetCheckValues[CC_INSTANCE].isrep = 1;
       }
 
       // save the data
-      for(roby = 0; roby < oby; roby++)
-        robuf[roby] = obuf[roby];
+      for(roby[CC_INSTANCE] = 0; roby[CC_INSTANCE] < oby; roby[CC_INSTANCE]++)
+        robuf[CC_INSTANCE][roby[CC_INSTANCE]] = obuf[roby[CC_INSTANCE]];
       reptime[CC_INSTANCE] = ticks;
 
+    } else {
+      packetCheckValues[CC_INSTANCE].isnotrep = 0;
+      packetCheckValues[CC_INSTANCE].isrep = 1;
     }
 
     if(datatype == TYPE_FHT && !(TX_REPORT & REP_FHTPROTO) &&
@@ -485,16 +487,16 @@ RfAnalyze_Task(void)
         obuf[2] == FHT_CAN_XMIT   || obuf[2] == FHT_CAN_RCV ||
         obuf[2] == FHT_START_XMIT || obuf[2] == FHT_END_XMIT ||
         (obuf[3] & 0x70) == 0x70))
-      packetCheckValues.isrep = 1;
+      packetCheckValues[CC_INSTANCE].isrep = 1;
 
     checkForRepeatedPackage(&datatype, b);
 
 #if defined(HAS_RF_ROUTER) && defined(HAS_FHT_80b)
     if(datatype == TYPE_FHT && rf_router_target && !fht_hc0) // Forum #50756
-      packetCheckValues.packageOK = 0;
+      packetCheckValues[CC_INSTANCE].packageOK = 0;
 #endif
 
-    if(packetCheckValues.packageOK) {
+    if(packetCheckValues[CC_INSTANCE].packageOK) {
       MULTICC_PREFIX();
       DC(datatype);
 #ifdef HAS_HOMEEASY
@@ -595,7 +597,7 @@ void reset_input(void)
 #endif
   bucket_array[CC_INSTANCE][bucket_in[CC_INSTANCE]].state = STATE_RESET;
 #if defined (HAS_IT) || defined (HAS_TCM97001)
-  packetCheckValues.isnotrep = 0;
+  packetCheckValues[CC_INSTANCE].isnotrep = 0;
 #endif
 #ifdef SAM7
         HAL_timer_set_reload_register(CC_INSTANCE,0);

@@ -1,5 +1,10 @@
 ## Changelog:
 
+#### 1.26.06
+- MapleCUN/CUBe: Bugfix repeated messages filter
+- MapleCUN/CUBe: Autodetect onewire on any CC port
+- MapleCUN: Changed to bus powered USB configuration descriptor
+
 #### 1.26.05
 - MapleCUN: Fix CDC
 

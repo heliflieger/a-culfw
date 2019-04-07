@@ -18,7 +18,7 @@ MPU_TYPE_LOWER_CASE := stm32f103xb
 CPU := cortex-m3
 
 # Debugger options, must be empty or GDB
-DEBUG ?=
+DEBUG ?= 
 
 ###############################################################
 #####
@@ -160,7 +160,7 @@ OBJS := $(patsubst %.s,%.o,$(SRCS:%.c=%.o))
 
 ifeq ($(DEBUG),GDB)
 OPTIMIZE	 = -O0
-LTO_FLAGS	 = $(OPTIMIZE) -DTRACE_LEVEL=5
+LTO_FLAGS	 = $(OPTIMIZE) -DTRACE_LEVEL=4
 else
 OPTIMIZE	 = -Os
 LTO_FLAGS	 =  -flto -fuse-linker-plugin $(OPTIMIZE) -DTRACE_LEVEL=4

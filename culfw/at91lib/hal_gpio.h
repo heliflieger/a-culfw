@@ -51,6 +51,9 @@ typedef enum {
   CC_Pin_In
 }CC_PIN;
 
+extern transceiver_t CCtransceiver[];
+extern uint8_t i2cPort;
+
 void HAL_GPIO_Init(void);
 
 //void hal_UCBD_connect_init(void);
@@ -64,6 +67,7 @@ void hal_enable_CC_GDOin_int(uint8_t cc_num, uint8_t enable);
 void hal_CC_Pin_Set(uint8_t cc_num, CC_PIN pin, GPIO_PinState state);
 uint32_t hal_CC_Pin_Get(uint8_t cc_num, CC_PIN pin);
 void hal_CC_move_transceiver_pins(uint8_t source, uint8_t dest);
+void hal_I2C_Set_Port(uint8_t port);
 
 //void hal_GPIO_EXTI_IRQHandler(void);
 

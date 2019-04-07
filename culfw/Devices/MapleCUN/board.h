@@ -156,12 +156,6 @@
                             {CC1100_3_OUT_PIN,  CC1100_3_CS_PIN,  CC1100_3_IN_PIN}  },\
                           }
 
-//TWI
-#define TWI_SCL_PIN       CC1100_2_IN_PIN
-#define TWI_SCL_BASE      CC1100_2_IN_BASE
-#define TWI_SDA_PIN       CC1100_2_CS_PIN
-#define TWI_SDA_BASE      CC1100_2_CS_BASE
-
 #ifdef HAS_WIZNET
 #ifndef _WIZCHIP_
 #define _WIZCHIP_      5100

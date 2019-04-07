@@ -6,6 +6,11 @@
 
 #define TWI_DELAY           my_delay_us(4)
 
+#define TWI_SCL_PIN       CCtransceiver[i2cPort].pin[CC_Pin_In]
+#define TWI_SCL_BASE      CCtransceiver[i2cPort].base[CC_Pin_In]
+#define TWI_SDA_PIN       CCtransceiver[i2cPort].pin[CC_Pin_CS]
+#define TWI_SDA_BASE      CCtransceiver[i2cPort].base[CC_Pin_CS]
+
 #define TWI_SET_SCL         HAL_GPIO_WritePin(TWI_SCL_BASE, _BV(TWI_SCL_PIN), GPIO_PIN_SET)
 #define TWI_CLEAR_SCL       HAL_GPIO_WritePin(TWI_SCL_BASE, _BV(TWI_SCL_PIN), GPIO_PIN_RESET)
 

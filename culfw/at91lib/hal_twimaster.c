@@ -2,9 +2,15 @@
 
 #include "i2cmaster.h"
 #include "delay.h"
+#include "hal_gpio.h"
 
 #ifdef HAS_ONEWIRE
 #define TWI_DELAY           my_delay_us(4)
+
+#define TWI_SCL_PIN       CCtransceiver[i2cPort].pin[CC_Pin_In]
+#define TWI_SCL_BASE      CCtransceiver[i2cPort].base[CC_Pin_In]
+#define TWI_SDA_PIN       CCtransceiver[i2cPort].pin[CC_Pin_CS]
+#define TWI_SDA_BASE      CCtransceiver[i2cPort].base[CC_Pin_CS]
 
 #define TWI_SET_SCL         TWI_SCL_BASE->PIO_SODR =  _BV(TWI_SCL_PIN)
 #define TWI_CLEAR_SCL       TWI_SCL_BASE->PIO_CODR =  _BV(TWI_SCL_PIN)
