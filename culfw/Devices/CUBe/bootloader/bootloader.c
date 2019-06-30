@@ -233,10 +233,10 @@ int main(void)
   MSDDriver_Initialize(luns, 1);
   USBD_Connect();
 
-  if (AT91C_BASE_PIOA->PIO_IFER = 0xaa) {
-    unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
-    *ram = 0xaa;
-  }
+
+  unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
+  *ram = 0xaa;
+
   // Main loop
   while (1) {
 
