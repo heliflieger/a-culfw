@@ -17,26 +17,27 @@
 #include <pit/pit.h>
 #include <aic/aic.h>
 #include <utility/trace.h>
-#include <usb/device/cdc-serial/CDCDSerialDriver.h>
-#include <usb/device/cdc-serial/CDCDSerialDriverDescriptors.h>
+
+#include <usb/common/core/USBConfigurationDescriptor.h>
+#include <usb/device/core/USBD.h>
+#include <usb/device/massstorage/MSDDriver.h>
+#include <usb/device/massstorage/MSDLun.h>
+#include <usb/device/core/USBDCallbacks.h>
 #include <avr/wdt.h>
 #include <led.h>
 #include "ringbuffer.h"
 #include "flash/flashd.h"
 #include <utility/assert.h>
 #include <avr/wdt.h>
+
 //------------------------------------------------------------------------------
 //         Local definitions
 //------------------------------------------------------------------------------
 //Cubeloader Version
-#define VERSION 	"1.01"
+#define VERSION 	"2.00"
 
 /// PIT period value in µseconds.
 #define PIT_PERIOD          1000
-
-/// Size in bytes of the buffer used for reading data from the USB
-#define DATABUFFERSIZE \
-    BOARD_USB_ENDPOINTS_MAXPACKETSIZE(CDCDSerialDriverDescriptors_DATAIN)
 
 /// Use for power management
 #define STATE_IDLE    0
@@ -46,59 +47,46 @@
 #define STATE_RESUME  5
 /// The USB device is in resume state
 #define STATE_RX	  6
-/// Start programm
-#define TARGETSTART		0x104000
-/// Xmodem
-#define SOH				0x01
-#define NAK				0x15
-#define ACK				0x06
-#define EOT				0x04
-#define XPACKET			0x01
-#define XDATA			0x03
-#define XCHKSUM			0x83
-#define XDATALEN		0x80
-#define CMDBUFFERLEN	132
-#define WRITE_PACKETS	8
-#define WRITEBUFFERLEN	(XDATALEN * WRITE_PACKETS)
+
+/// Size of one block in bytes.
+#define BLOCK_SIZE          512
+
+/// Maximum number of LUNs which can be defined.
+#define MAX_LUNS            1
 
 //------------------------------------------------------------------------------
 //         Local variables
 //------------------------------------------------------------------------------
 
-///Xmodem
-unsigned char xmodem=0;
-unsigned long lasttimestamp=0;
-unsigned char nak_timeout=0;
-unsigned char packetcounter=0;
-unsigned long packetcounterL=0;
-unsigned long cmdbuffercounter=0;
-unsigned char cmdbuffer[CMDBUFFERLEN];
-unsigned char packetscount=0;
-unsigned char writebuffer[WRITEBUFFERLEN];
-unsigned int writeaddress=TARGETSTART;
-
 /// Global timestamp in milliseconds since start of application.
 volatile unsigned int timestamp = 0;
 
- /// State of USB, for suspend and resume
- unsigned char USBState = STATE_IDLE;
+/// State of USB, for suspend and resume
+unsigned char USBState = STATE_IDLE;
 
- /// Buffer for storing incoming USB data.
- static unsigned char usbBuffer[DATABUFFERSIZE];
+/// Device LUNs.
+MSDLun luns[MAX_LUNS];
 
-#define DATABUFFERSIZEOUT \
-    BOARD_USB_ENDPOINTS_MAXPACKETSIZE(CDCDSerialDriverDescriptors_DATAOUT)
+/// LUN read/write buffer.
+unsigned char msdBuffer[BLOCK_SIZE];
 
- static unsigned char usbBufferOut[DATABUFFERSIZEOUT];
-
- rb_t TTY_Tx_Buffer;
- rb_t TTY_Rx_Buffer;
-
+volatile int timeout=2400;
 //------------------------------------------------------------------------------
 //         Local functions
 //------------------------------------------------------------------------------
 
 
+ //------------------------------------------------------------------------------
+ /// Initialize memory for LUN
+ //------------------------------------------------------------------------------
+ static void MemoryInitialization(void)
+ {
+
+     TRACE_DEBUG("LUN SDRAM\n\r");
+
+     LUN_Init(&(luns[0]),0,msdBuffer, 0, 4096000, BLOCK_SIZE);
+
+ }
 //------------------------------------------------------------------------------
 /// Handler for PIT interrupt. Increments the timestamp counter.
 //------------------------------------------------------------------------------
@@ -114,7 +102,6 @@ void ISR_Pit(void)
         timestamp += (PIT_GetPIVR() >> 20);
     }
 }
-
 
 //------------------------------------------------------------------------------
 /// Configure the periodic interval timer to generate an interrupt every
@@ -157,245 +144,6 @@ void USBDCallbacks_Suspended(void)
 }
 
 //------------------------------------------------------------------------------
-/// Callback invoked when data has been received on the USB.
-//------------------------------------------------------------------------------
-static void UsbDataReceived(unsigned int unused,
-                            unsigned char status,
-                            unsigned int received,
-                            unsigned int remaining)
-{
-    // Check that data has been received successfully
-    if (status == USBD_STATUS_SUCCESS) {
-
-    	for(unsigned int i=0;i<received;i++) {
-    		rb_put(&TTY_Rx_Buffer, usbBuffer[i]);
-    	}
-
-        // Check if bytes have been discarded
-        if ((received == DATABUFFERSIZE) && (remaining > 0)) {
-
-            TRACE_WARNING(
-                      "UsbDataReceived: %u bytes discarded\n\r",
-                      remaining);
-        }
-    }
-    else {
-
-        TRACE_WARNING( "UsbDataReceived: Transfer error\n\r");
-    }
-
-    // Restart USB read
-   CDCDSerialDriver_Read(usbBuffer,
-						 DATABUFFERSIZE,
-						 (TransferCallback) UsbDataReceived,
-						 0);
-
-}
-
-signed int puts2(const char *pStr)
-{
-    signed int num = 0;
-
-    while (*pStr != 0) {
-
-    	rb_put(&TTY_Tx_Buffer, *pStr);
-        num++;
-        pStr++;
-    }
-
-    return num;
-}
-
-
-////////////////////
-// Fill data from USB to the RingBuffer and vice-versa
-void
-CDC_Task(void)
-{
-
-  unsigned char x;
-  unsigned char result;
-  if(!USB_IsConnected)
-    return;
-
-  switch(xmodem) {
-  case 0:
-    while(TTY_Rx_Buffer.nbytes && !xmodem) {
-      x=rb_get(&TTY_Rx_Buffer);
-      if(x==SOH) {
-        //Beginn Übertragung
-        xmodem=2;
-        lasttimestamp=timestamp;
-        nak_timeout=0;
-        packetcounter=0;
-        packetcounterL=0;
-        writeaddress=TARGETSTART;
-        cmdbuffercounter=0;
-        cmdbuffer[cmdbuffercounter++]=x;
-        lasttimestamp=timestamp;
-        TRACE_INFO("-- Xmodem start\n\r");
-      } else {
-        switch(x) {
-        case 'V':
-          puts2("\n\rCUBELOADER V" VERSION "\n\r");
-          break;
-        default:
-          DBGU_PutChar(x);
-        }
-      }
-    }
-    if(xmodem == 0) {
-      //Alle 5s NAK senden
-      if((timestamp > lasttimestamp+5000) && !packetcounterL) {
-        rb_put(&TTY_Tx_Buffer, NAK);
-        lasttimestamp=timestamp;
-      }
-    }
-    break;
-  case 1:
-
-    if(nak_timeout > 10) {
-      //Nach 10 NAK abbrechen
-      xmodem=0;
-      TRACE_INFO("-- Xmodem abort; nak_timeout\n\r");
-    }
-
-    if(TTY_Rx_Buffer.nbytes) {
-      x=rb_get(&TTY_Rx_Buffer);
-      if(x==SOH) {
-        xmodem=2;
-        cmdbuffercounter=0;
-        cmdbuffer[cmdbuffercounter++]=x;
-        lasttimestamp=timestamp;
-        TRACE_INFO("-- Xmodem SOH\n\r");
-        nak_timeout=0;
-      } else if (x==EOT) {
-        xmodem=3;
-        TRACE_INFO("-- Xmodem EOT; send ACK\n\r");
-        rb_put(&TTY_Tx_Buffer, ACK);
-        if(packetscount) {
-          unsigned long i;
-          unsigned char* fl;
-          result=FLASHD_Write(writeaddress,writebuffer,packetscount * XDATALEN);
-          fl=writeaddress;
-          for (i=0;i<packetscount * XDATALEN;i++) {
-            if (fl[i] != writebuffer[i]) break;
-          }
-          TRACE_INFO("-- Xmodemwrite flash; %08X: %X : %X\n\r",writeaddress,result,i);
-          writeaddress+=packetscount * XDATALEN;
-          packetscount=0;
-        }
-      } else {
-
-      }
-    } else {
-      if(timestamp > lasttimestamp+5000) {
-        //Nach 5s inaktivität abbrechen
-        xmodem=0;
-        TRACE_INFO("-- Xmodem abort; timeout\n\r");
-      }
-    }
-    break;
-  case 2:
-    while((TTY_Rx_Buffer.nbytes) && (xmodem==2)) {
-      cmdbuffer[cmdbuffercounter++]=rb_get(&TTY_Rx_Buffer);
-
-      if(cmdbuffercounter==CMDBUFFERLEN) {
-        unsigned char checksum=0;
-        for(unsigned long i=0;i<XDATALEN;i++) {
-          checksum+=cmdbuffer[i+XDATA];
-        }
-        if(cmdbuffer[XPACKET]==packetcounter) {
-          //Paket bereits empfangen
-          rb_put(&TTY_Tx_Buffer, ACK);
-          TRACE_INFO("-- Xmodem packet %02u received again; send ACK:\n\r",cmdbuffer[XPACKET]);
-        } else if (cmdbuffer[XPACKET]!=(unsigned char)(packetcounter+1)) {
-          //Falsche Paketnummer
-          nak_timeout++;
-          rb_put(&TTY_Tx_Buffer, NAK);
-          TRACE_INFO("-- Xmodem wrong packet %02u received; send NAK:\n\r",cmdbuffer[XPACKET]);
-        } else if (cmdbuffer[XCHKSUM]!=checksum) {
-          //Falsche Paketnummer
-          nak_timeout++;
-          rb_put(&TTY_Tx_Buffer, NAK);
-          TRACE_INFO("-- Xmodem wrong checksum; send NAK:\n\r");
-        } else {
-          //Paket OK
-          TRACE_INFO("-- Xmodem packet %02u received; send ACK\n\r",cmdbuffer[XPACKET]);
-          for(unsigned long i=0; i<XDATALEN;i++) {
-            writebuffer[i+(XDATALEN * packetscount)]=cmdbuffer[i+XDATA];
-          }
-          packetscount++;
-
-          if(packetscount==WRITE_PACKETS) {
-            unsigned long i;
-            unsigned char* fl;
-            result=FLASHD_Write(writeaddress,writebuffer,packetscount * XDATALEN);
-            fl=writeaddress;
-            for (i=0;i<packetscount * XDATALEN;i++) {
-              if (fl[i] != writebuffer[i]) break;
-            }
-            TRACE_INFO("-- Xmodemwrite flash; %08X: %X : %X\n\r",writeaddress,result,i);
-            writeaddress+=WRITEBUFFERLEN;
-            packetscount=0;
-          }
-          nak_timeout=0;
-          packetcounter++;
-          packetcounterL++;
-          cmdbuffercounter=0;
-          rb_put(&TTY_Tx_Buffer, ACK);
-
-        }
-        xmodem=1;
-      }
-      lasttimestamp=timestamp;
-    }
-    if(timestamp > lasttimestamp+5000) {
-      //Nach 5s inaktivität NAK senden
-      nak_timeout++;
-      lasttimestamp=timestamp;
-      rb_put(&TTY_Tx_Buffer, NAK);
-      TRACE_INFO("-- Xmodem receive timeout; send NAK\n\r");
-      xmodem=1;
-    }
-    break;
-  case 3:
-    //Reset
-    TRACE_INFO("Restart\n\r");
-    {
-      unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
-      unsigned int timeout;
-
-      USBD_Disconnect();
-      timeout=timestamp;
-      while(timestamp<timeout+1000){
-        LED_TOGGLE();
-      }
-
-      *ram = 0x55;
-      AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
-      while (1);
-    }
-    xmodem=0;
-  }
-
-
-  if(TTY_Tx_Buffer.nbytes) {
-    unsigned long i=0;
-
-    while(TTY_Tx_Buffer.nbytes && i<DATABUFFERSIZEOUT) {
-
-       usbBufferOut[i++]=rb_get(&TTY_Tx_Buffer);
-    }
-
-    while (CDCDSerialDriver_Write(usbBufferOut,i, 0, 0) != USBD_STATUS_SUCCESS);
-
-  }
-
-
-}
-
-//------------------------------------------------------------------------------
 //         Exported functions
 //------------------------------------------------------------------------------
 
@@ -433,8 +181,10 @@ int main(void)
   unsigned long LEDcounter=0;
 
   // DBGU configuration
+#if (TRACE_LEVEL > TRACE_LEVEL_NO_TRACE)
   TRACE_CONFIGURE(DBGU_STANDARD, 115200, BOARD_MCK);
   puts("\n\rCUBELOADER gestartet\n\r");
+#endif
   TRACE_INFO("-- Compiled: %s %s --\n\r", __DATE__, __TIME__);
 
   //Configure Reset Controller
@@ -445,13 +195,6 @@ int main(void)
   ConfigurePit();
 
   FLASHD_Initialize(BOARD_MCK);
-
-  rb_reset(&TTY_Rx_Buffer);
-  rb_reset(&TTY_Tx_Buffer);
-
-  TRACE_INFO("-- init USB\n\r");
-  CDCDSerialDriver_Initialize();
-  USBD_Connect();
 
   led_init();
 
@@ -483,10 +226,22 @@ int main(void)
   TRACE_INFO("Chip ID %08X\n\r",AT91C_BASE_DBGU->DBGU_CIDR );
   TRACE_INFO("Chip ID Extention %08X\n\r",AT91C_BASE_DBGU->DBGU_EXID );
 
+  MemoryInitialization();
+  TRACE_INFO("%u Medias defined\n\r", 1);
+
+  // BOT driver initialization
+  MSDDriver_Initialize(luns, 1);
+  USBD_Connect();
+
+
+  unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
+  *ram = 0xaa;
+
   // Main loop
   while (1) {
 
-    CDC_Task();
+    //CDC_Task();
+    MSDDriver_StateMachine();
 
 #ifdef DBGU_UNIT_IN
     if(DBGU_IsRxReady()){
@@ -529,21 +284,12 @@ int main(void)
         while (1);
         break;
 
-      default:
-        rb_put(&TTY_Tx_Buffer, x);
+      //default:
+        //rb_put(&TTY_Tx_Buffer, x);
       }
     }
 #endif
 
-    if (USBD_GetState() == USBD_STATE_CONFIGURED) {
-      if( USBState == STATE_IDLE ) {
-        CDCDSerialDriver_Read(usbBuffer,
-                              DATABUFFERSIZE,
-                              (TransferCallback) UsbDataReceived,
-                              0);
-        USBState=STATE_RX;
-      }
-    }
     if( USBState == STATE_SUSPEND ) {
       TRACE_INFO("suspend  !\n\r");
       //LowPowerMode();
@@ -559,7 +305,18 @@ int main(void)
     if(timestamp>LEDcounter + 125) {
       LEDcounter=timestamp;
       LED_TOGGLE();
+      if(timeout==0) {
+        unsigned char volatile * const ram = (unsigned char *) AT91C_ISRAM;
+        USBD_Disconnect();
+        //Reset
+        *ram = 0x55;
+        AT91C_BASE_RSTC->RSTC_RCR = AT91C_RSTC_PROCRST | AT91C_RSTC_PERRST | AT91C_RSTC_EXTRST   | 0xA5<<24;
+        while (1);
+      } else if ( timeout > 0) {
+        timeout--;
+      }
     }
+
   }
 }
 

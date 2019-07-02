@@ -39,7 +39,9 @@
 #define HAS_UART                1
 #define USE_RF_MODE
 #define USE_HAL
+#ifdef USE_HW_AUTODETECT
 #define HAS_ONEWIRE             10        // OneWire Support
+#endif
 #define MAX_CREDIT 3600       // max 36 seconds burst / 100% of the hourly budget
 
 #define HAS_FHT_80b

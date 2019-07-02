@@ -378,6 +378,8 @@ prepare_boot(char *in)
 	}
 	PWR->CR &=~ PWR_CR_DBP;
 
+	wdt_enable(WDTO_2S);
+
 	while (1);                 // go to bed, the wathchdog will take us to reset
 #else
   if(bl)                     // Next reboot we'd like to jump to the bootloader.

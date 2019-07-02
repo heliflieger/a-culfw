@@ -1,5 +1,9 @@
 ## Changelog:
 
+#### 1.26.07
+- MapleCUN/CUBe: MSC bootloader
+- CUBe: Bugfix HW autodetect
+
 #### 1.26.06
 - MapleCUN/CUBe: Bugfix repeated messages filter
 - MapleCUN/CUBe: Autodetect onewire on any CC port

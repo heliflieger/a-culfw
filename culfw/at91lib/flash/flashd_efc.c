@@ -131,7 +131,7 @@ unsigned char FLASHD_Erase(void)
     return error;
 }
 
-static unsigned char pPageBuffer[AT91C_IFLASH_PAGE_SIZE];
+static unsigned char pPageBuffer[AT91C_IFLASH_PAGE_SIZE] __attribute__ ((aligned (4)));;
 
 //------------------------------------------------------------------------------
 /// Writes a data buffer in the internal flash. This function works in polling
@@ -234,7 +234,7 @@ unsigned char FLASHD_Write(
 
 #else 
         pAlignedDestination = (unsigned int*)pageAddress;
-        pAlignedSource = (unsigned int*)pPageBuffer;        
+        pAlignedSource = (unsigned int*)pPageBuffer;
         sizeTmp = AT91C_IFLASH_PAGE_SIZE;
         while (sizeTmp >= 4) {
 

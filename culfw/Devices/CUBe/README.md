@@ -3,9 +3,7 @@
 
 ## benötigte Tools
 
-SAM-BA 2.xx: http://www.atmel.com/tools/ATMELSAM-BAIN-SYSTEMPROGRAMMER.aspx
-ggf. USB CDC Treiber: http://www.atmel.com/tools/ATMELSAM-BAIN-SYSTEMPROGRAMMER.aspx
-Tera Term: http://ttssh2.osdn.jp/index.html.en
+SAM-BA 2.xx: https://www.microchip.com/DevelopmentTools/ProductDetails/PartNO/Atmel%20SAM-BA%20In-system%20Programmer
 a-culfw: https://www.mediafire.com/folder/iuf7lue8r578c/a-culfw
 
 ## Bootloader flashen
@@ -37,13 +35,5 @@ Alternative für SAM-BA unter Linux: https://forum.fhem.de/index.php/topic,38404.
 - Knopf loslassen.
 - Falls bereits die a-culfw auf dem Cube installiert ist kann der Bootloader auch in einer Terminalverbindung mit dem Kommando „B01“ aktiviert werden.
 - Bei aktivierten Bootloader blink D1 vier mal pro Sekunde.
-- Unter Windows erscheint im Gerätemanager ein neuer COM Port "AT91 USB to Serial Converter".
-- Tera Term starten.
-- Datei --> Neue Verbindung --> Seriell auswählen.
-- Com Port auswählen.
-- Auf OK drücken.
-- Datei --> Transfer --> XMODEM --> Senden auswählen.
-- Die Datei CUBE_BL.bin öffnen.
+- Die Datei CUBE_BL.bin auf das vom Bootloader bereitgestellte USB-Laufwerk kopieren.
 - Nach erfolgreicher Übetragung startet der Cube neu und D1 blinkt im Sekundentakt.
-
-Alternative für Tera Term unter Linux: https://forum.fhem.de/index.php/topic,38404.msg348429.html#msg348429
