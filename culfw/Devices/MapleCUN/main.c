@@ -172,11 +172,6 @@ void Error_Handler(void)
 //------------------------------------------------------------------------------
 //         Callbacks re-implementation
 //------------------------------------------------------------------------------
-void HAL_SYSTICK_Callback(void) {
-#if CDC_COUNT > 1
-  cdc_uart_task();
-#endif
-}
 
 //------------------------------------------------------------------------------
 /// Callback invoked when data has been received on the USB.
@@ -573,6 +568,9 @@ int main(void)
     #endif
     #ifdef HAS_KOPP_FC
       kopp_fc_task();
+    #endif
+    #if CDC_COUNT > 1
+      cdc_uart_task();
     #endif
 
 

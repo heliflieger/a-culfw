@@ -1,5 +1,8 @@
 ## Changelog:
 
+#### 1.26.08
+- MapleCUN: Fix serial2net
+
 #### 1.26.07
 - MapleCUN/CUBe: MSC bootloader
 - CUBe: Bugfix HW autodetect
