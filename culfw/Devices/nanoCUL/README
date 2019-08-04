@@ -17,7 +17,7 @@ To update firmware with culfw execute:
 on the a computer which has the avr toolchain installed. This will require some tools installed upfront. 
 Use:
 
-	apt-get install make avrdude
+	apt-get install make avrdude gcc-avr
 
 
 to flash the recompiled nanoCUL.hex file.
