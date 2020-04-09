@@ -54,7 +54,12 @@ void do_wdt_enable(uint8_t t);
 #if defined(CDC_COUNT) && (CDC_COUNT > 1)
 # define EE_CDC1_BAUD        (EE_IP4_NTPOFFSET+1)
 # define EE_CDC2_BAUD        (EE_CDC1_BAUD+4)
+#if (CDC_COUNT > 3)
+# define EE_CDC3_BAUD        (EE_CDC2_BAUD+4)
+# define EE_ETH_LAST         (EE_CDC3_BAUD+4)
+#else
 # define EE_ETH_LAST         (EE_CDC2_BAUD+4)
+#endif // CDC_COUNT > 3
 #else
 # define EE_ETH_LAST         (EE_IP4_NTPOFFSET+1)       // 
 #endif

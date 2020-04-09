@@ -230,6 +230,10 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length, uint
         HAL_UART_Set_Baudrate(0,line_coding->dwDTERate);
       } else if(cdc_num == CDC2) {
         HAL_UART_Set_Baudrate(1,line_coding->dwDTERate);
+#if CDC_COUNT > 3
+      } else if(cdc_num == CDC3) {
+        HAL_UART_Set_Baudrate(2,line_coding->dwDTERate);
+#endif
       }
     }
 
@@ -290,6 +294,19 @@ __weak uint8_t CDCDSerialDriver_Receive_Callback2(uint8_t* Buf, uint32_t *Len)
    */
   return 1;
 }
+
+/**
+  * @brief  CDCDSerialDriver_Receive callback.
+  * @retval None
+  */
+__weak uint8_t CDCDSerialDriver_Receive_Callback3(uint8_t* Buf, uint32_t *Len)
+{
+  /* NOTE : This function Should not be modified, when the callback is needed,
+            the CDCDSerialDriver_Receive_Callback could be implemented in the user file
+   */
+  return 1;
+}
+
 /**
   * @brief  CDC_Receive_FS
   *         Data received over USB OUT endpoint are sent over CDC interface 
@@ -317,6 +334,9 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len, uint8_t cdc_num)
       break;
     case 2:
       restart = CDCDSerialDriver_Receive_Callback2(Buf, Len);
+      break;
+    case 3:
+      restart = CDCDSerialDriver_Receive_Callback3(Buf, Len);
       break;
   }
 

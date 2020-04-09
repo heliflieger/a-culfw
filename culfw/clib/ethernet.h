@@ -24,6 +24,7 @@ uint8_t check_Net_MAC();
 
 #define NET1  0
 #define NET2  1
+#define NET3  2
 #endif
 
 // NOTE:

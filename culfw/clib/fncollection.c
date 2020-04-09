@@ -298,6 +298,9 @@ eeprom_factory_reset(char *in)
 #ifdef HAS_WIZNET
   EE_write_baud(0,CDC_BAUD_RATE);
   EE_write_baud(1,CDC_BAUD_RATE);
+#if CDC_COUNT > 3
+  EE_write_baud(2,CDC_BAUD_RATE);
+#endif  
 #endif
 
   if(in[1] != 'x')

@@ -256,9 +256,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
   if(UartHandle->Instance==USART1) {
 #ifdef HAS_UART
     UART_Rx_Callback(inbyte1);
-#else
+#elif CDC_COUNT < 4
     DBGU_RxByte = inbyte1;
     DBGU_RxReady = 1;
+#else
+	  UART1_Rx_Callback(inbyte1);
 #endif
     ATOMIC_BLOCK() {
       HAL_UART_Receive_IT(&huart1, &inbyte1, 1);
@@ -288,6 +290,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
   if(UartHandle->Instance==USART1) {
 #ifdef HAS_UART
     UART_Tx_Callback();
+#else    
+    CDC_Receive_next(CDC3);
+#ifdef HAS_WIZNET
+    NET_Receive_next(NET3);
+#endif
 #endif
   } else if(UartHandle->Instance==USART2) {
     CDC_Receive_next(CDC1);
@@ -317,6 +324,7 @@ void HAL_UART_Set_Baudrate(uint8_t UART_num, uint32_t baudrate) {
   case 1:
     UartHandle = &huart3;
     break;
+  case 2:
   case UART_NUM:
     UartHandle = &huart1;
     break;
@@ -335,6 +343,8 @@ uint32_t HAL_UART_Get_Baudrate(uint8_t UART_num) {
     return huart2.Init.BaudRate;
   case 1:
     return huart3.Init.BaudRate;
+  case 2:
+    return huart1.Init.BaudRate;
   }
   return 0;
 }
@@ -348,6 +358,7 @@ void HAL_UART_Write(uint8_t UART_num, uint8_t* Buf, uint16_t Len) {
     case 1:
       HAL_UART_Transmit_IT(&huart3, Buf, Len);
       break;
+    case 2:
     case UART_NUM:
       HAL_UART_Transmit_IT(&huart1, Buf, Len);
       break;
@@ -364,6 +375,7 @@ void HAL_UART_init(uint8_t UART_num) {
   case 1:
     MX_USART3_UART_Init();
     break;
+  case 2:
   case UART_NUM:
     MX_USART1_UART_Init();
     break;
@@ -382,6 +394,7 @@ uint8_t HAL_UART_TX_is_idle(uint8_t UART_num) {
   case 1:
     UartHandle = &huart3;
     break;
+  case 2:
   case UART_NUM:
     UartHandle = &huart1;
     break;

@@ -64,6 +64,10 @@
 #define CDC3_OUT_EP                                 0x05  /* EP5 for data OUT */
 #define CDC3_CMD_EP                                 0x86  /* EP6 for CDC commands */
 
+#define CDC4_IN_EP                                  0x87  /* EP5 for data IN */
+#define CDC4_OUT_EP                                 0x07  /* EP5 for data OUT */
+#define CDC4_CMD_EP                                 0x88  /* EP6 for CDC commands */
+
 /* CDC Endpoints parameters: you can fine tune these values depending on the needed baudrates and performance. */
 #define CDC_DATA_HS_MAX_PACKET_SIZE                 64  /* Endpoint IN & OUT Packet size */
 #define CDC_DATA_FS_MAX_PACKET_SIZE                 64  /* Endpoint IN & OUT Packet size */
