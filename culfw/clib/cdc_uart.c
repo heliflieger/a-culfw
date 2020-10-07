@@ -41,6 +41,12 @@ uint8_t CDCDSerialDriver_Receive_Callback2(uint8_t* Buf, uint32_t *Len) {
   return 0;
 }
 
+uint8_t CDCDSerialDriver_Receive_Callback3(uint8_t* Buf, uint32_t *Len) {
+  HAL_UART_Write(2, Buf, (uint16_t)*Len);
+  TRACE_DEBUG_WP("3:UART_TX: %d\r\n", (uint16_t)*Len);
+  return 0;
+}
+
 #if CDC_COUNT > 1
 void UART2_Rx_Callback(uint8_t data) {
   rb_put(&UART_Rx_Buffer[0], data);
@@ -50,6 +56,12 @@ void UART2_Rx_Callback(uint8_t data) {
 #if CDC_COUNT > 2
 void UART3_Rx_Callback(uint8_t data) {
   rb_put(&UART_Rx_Buffer[1], data);
+}
+#endif
+
+#if CDC_COUNT > 3
+void UART1_Rx_Callback(uint8_t data) {
+  rb_put(&UART_Rx_Buffer[2], data);
 }
 #endif
 
@@ -72,7 +84,11 @@ void EE_write_baud(uint8_t num, uint32_t baud) {
 uint32_t EE_read_baud(uint8_t num) {
   uint8_t b[4];
 
+#if CDC_COUNT > 3
+  if(num > 2)
+#else  
   if(num > 1)
+#endif  
     return 0;
 
   for(uint8_t i = 0; i < 4; i++)
@@ -80,20 +96,30 @@ uint32_t EE_read_baud(uint8_t num) {
 
   uint32_t* baud = (uint32_t*)b;
 
-  return *baud;
+  uint32_t res = *baud > 0 && *baud < 115200 ? *baud : CDC_BAUD_RATE;
+  return res;
 }
 #endif
 
 void cdc_uart_init(void) {
   HAL_UART_init(0);
   HAL_UART_init(1);
+#if CDC_COUNT > 3
+  HAL_UART_init(2);
+#endif
 
 #ifdef HAS_WIZNET
   TRACE_DEBUG("UART Baud: %u@%u\n\r", 0,EE_read_baud(0));
   TRACE_DEBUG("UART Baud: %u@%u\n\r", 1,EE_read_baud(1));
+#if CDC_COUNT > 3
+  TRACE_DEBUG("UART Baud: %u@%u\n\r", 2,EE_read_baud(2));
+#endif
 
   HAL_UART_Set_Baudrate(0,EE_read_baud(0));
   HAL_UART_Set_Baudrate(1,EE_read_baud(1));
+#if CDC_COUNT > 3
+  HAL_UART_Set_Baudrate(2,EE_read_baud(2));
+#endif
 #endif
 }
 
@@ -174,6 +200,9 @@ void cdc_uart_func(char *in) {
     TRACE_DEBUG("UART store Baud\n\r");
     EE_write_baud(0,HAL_UART_Get_Baudrate(0));
     EE_write_baud(1,HAL_UART_Get_Baudrate(1));
+#if CDC_COUNT > 3    
+    EE_write_baud(2,HAL_UART_Get_Baudrate(2));
+#endif    
 #endif
   }
 }

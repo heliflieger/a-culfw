@@ -30,7 +30,7 @@ void SWO_PrintChar(char c, uint8_t portNo) {
 }
 
 int fputc(int ch, FILE *f) {
-#ifndef HAS_UART
+#if !defined(HAS_UART) && CDC_COUNT < 4
   HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
 #endif
   SWO_PrintChar((uint8_t)ch,0);

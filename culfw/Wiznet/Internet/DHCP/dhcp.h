@@ -46,6 +46,7 @@
 #define _DHCP_H_
 
 #include <stdint.h>
+#include <board.h>
 
 /*
  * @brief 
@@ -67,7 +68,9 @@
 
 #define MAGIC_COOKIE             0x63825363  ///< Any number. You can be modifyed it any number
 
+#ifndef DCHP_HOST_NAME
 #define DCHP_HOST_NAME           "WIZnet\0"
+#endif
 
 /* 
  * @brief return value of @ref DHCP_run()

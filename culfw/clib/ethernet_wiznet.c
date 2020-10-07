@@ -19,11 +19,17 @@
 #include "stringfunc.h"
 #include "ttydata.h"
 
+#define NET_COUNT     CDC_COUNT-1
+
 //////////////////////////////////////////////////
 // Socket & Port number definition for Examples //
 //////////////////////////////////////////////////
 
+#if NET_COUNT < 3
 #define SOCK_DHCP 3
+#else 
+#define SOCK_DHCP 4
+#endif
 
 ////////////////////////////////////////////////
 // Shared Buffer Definition for Loopback test //
@@ -248,7 +254,6 @@ int32_t rxtx_0() {
 }
 
 #define NET_BUF_SIZE  64
-#define NET_COUNT     CDC_COUNT-1
 
 uint8_t net_rx_buffer[NET_COUNT][NET_BUF_SIZE];
 volatile uint8_t net_rx_size[NET_COUNT];
@@ -379,6 +384,9 @@ void Ethernet_Task(void) {
 #if NET_COUNT > 1
   tcp_server( 2, 2325 );
 #endif
+#if NET_COUNT > 2
+  tcp_server( 3, 2326 );
+#endif  
 }
 
 void NET_Receive_next(uint8_t net_num) {

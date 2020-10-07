@@ -54,6 +54,7 @@ unsigned char USBD_GetState(void);
 #define CDC0  0
 #define CDC1  1
 #define CDC2  2
+#define CDC3  3
 
 #ifdef __cplusplus
 }

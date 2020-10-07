@@ -56,14 +56,22 @@
 
 #define ARM
 
+#define DCHP_HOST_NAME "MapleCUN\0"
+
 #define HAS_USB
 //#define USB_FIX_SERIAL          "012345"
 #define CDC_COUNT               3
+// #define CDC_COUNT                 4
 #define CDC_BAUD_RATE           115200
 #define USB_IsConnected		      (CDC_isConnected(0))
 #define HAS_XRAM
+#if CDC_COUNT < 4
 #define UART_BAUD_RATE          115200
 #define HAS_UART                1
+#else
+#undef UART_BAUD_RATE
+#undef HAS_UART
+#endif
 #define USE_RF_MODE
 #define USE_HAL
 #define HAS_ONEWIRE             10        // OneWire Support
