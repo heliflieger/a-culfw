@@ -23,6 +23,8 @@
 #include <avr/io.h>                     // for _BV
 #include <stdint.h>                     // for uint8_t
 
+packetCheckValues_t packetCheckValues[NUM_SLOWRF];
+
 uint8_t makeavg(uint8_t i, uint8_t j)
 {
   return (i+i+i+j)/4;

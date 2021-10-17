@@ -13,8 +13,8 @@ typedef struct _fntab {
 void analyze_ttydata(uint8_t channel);
 uint8_t callfn(char *buf);
 
-void (*input_handle_func)(uint8_t channel);
-void (*output_flush_func)(void);
+extern void (*input_handle_func)(uint8_t channel);
+extern void (*output_flush_func)(void);
 
 extern rb_t TTY_Tx_Buffer;
 extern rb_t TTY_Rx_Buffer;
