@@ -55,8 +55,14 @@ SECTIONS
         *(.data.__ctype_ptr__)
         *(.data.__global_locale)
         . = ALIGN(4);
-        _efixed = .;
     } >flash
+
+    .ARM.exidx :
+    {
+       *(.ARM.exidx*)
+       *(.gnu.linkonce.armexidx.*)
+    } > flash
+    _efixed = .;
 
     .relocate : AT (_efixed)
     {
